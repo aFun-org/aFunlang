@@ -1,0 +1,9 @@
+﻿PROJECT(af_tool LANGUAGES C)
+
+AUX_SOURCE_DIRECTORY(${af_tool_SOURCE_DIR} src)  # 寻找源文件
+ADD_LIBRARY(af_tool ${src})
+
+SET_TARGET_PROPERTIES(af_tool PROPERTIES OUTPUT_NAME "aFunTool")
+TARGET_LINK_LIBRARIES(af_tool af_memory dl)
+
+INSTALL(TARGETS af_tool)

@@ -1,0 +1,3 @@
+﻿PROJECT(dl LANGUAGES C)
+ADD_LIBRARY(dl dlfcn.c)
+INSTALL(TARGETS dl)
