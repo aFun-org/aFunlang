@@ -25,8 +25,9 @@ ADD_DEFINITIONS(-DLIB_TEST1="$<TARGET_FILE:lib_Test1>")  # 设置宏: lib的所�
 ADD_aFunTest(mem test_mem.c)
 ADD_aFunTest(lib test_test_lib.c)
 ADD_aFunTest(dlc test_dlc.c)
+ADD_aFunTest(byte test_byte.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 
-# SET_PASS(lib "num = 100 test = 110")
+SET_PASS(lib "num = 100 test = 110")
 SET_PASS(dlc "a = 100, test = 110")

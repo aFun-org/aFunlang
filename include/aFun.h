@@ -6,4 +6,5 @@
 
 typedef struct af_ByteCode af_ByteCode;
 
+void aFunInit(void);
 #endif //AFUN__H
