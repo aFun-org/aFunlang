@@ -18,7 +18,7 @@
 #define NUL ((char)0)
 #define W_NUL ((wchar_t)0)
 
-typedef int32_t FileLine;  // 文件行号
+typedef uint32_t FileLine;  // 文件行号
 typedef char *FilePath;  // 文件路径
 
 typedef unsigned int ByteCodeUint;  // ByteCode int

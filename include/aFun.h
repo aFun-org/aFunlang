@@ -4,7 +4,9 @@
 #include "macro.h"
 #include "tool.h"
 
-typedef struct af_ByteCode af_ByteCode;
+#include "bytecode.h"
 
+// Init系列函数
 void aFunInit(void);
+
 #endif //AFUN__H

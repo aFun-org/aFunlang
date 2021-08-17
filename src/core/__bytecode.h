@@ -6,6 +6,7 @@
 #ifndef BYTECODE__H
 #define BYTECODE__H
 #include "macro.h"
+#include "bytecode.h"
 
 enum af_ByteCodeType {
     literal = 0,
@@ -13,11 +14,6 @@ enum af_ByteCodeType {
     block,  // 括号
 };
 
-enum af_BlockType {
-    parentheses = 0,  // 小括号
-    brackets,  // 中括号
-    curly,  // 大括号
-};
 
 struct af_ByteCode {  // 一个 ByteCode 的结构体
     enum af_ByteCodeType type;

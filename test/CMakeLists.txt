@@ -5,7 +5,7 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 FUNCTION(ADD_aFunTest TEST_NAME TEST_SOURCE)
     ADD_EXECUTABLE(aFunTest_${TEST_NAME} ${TEST_SOURCE})
-    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} af_tool af_json)
+    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} af_tool af_json af_core)
     ADD_TEST(NAME aFunTest_${TEST_NAME} COMMAND $<TARGET_FILE:aFunTest_${TEST_NAME}>)
 ENDFUNCTION()
 
@@ -26,8 +26,23 @@ ADD_aFunTest(mem test_mem.c)
 ADD_aFunTest(lib test_test_lib.c)
 ADD_aFunTest(dlc test_dlc.c)
 ADD_aFunTest(byte test_byte.c)
+ADD_aFunTest(byte_code test_byte_code.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 
 SET_PASS(lib "num = 100 test = 110")
 SET_PASS(dlc "a = 100, test = 110")
+SET_PASS(byte_code
+"out:
+literal: data func prefix: 44
+variable: var1 prefix: 0
+variable: 2 0 prefix: 0
+literal: data2 func prefix: 0
+variable: var2 prefix: 0
+in:
+literal: data func prefix: 44
+variable: var1 prefix: 0
+variable: 2 0 prefix: 0
+literal: data2 func prefix: 0
+variable: var2 prefix: 0"
+        )

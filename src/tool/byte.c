@@ -4,7 +4,7 @@
 #include "tool.h"
 
 enum af_EndianType endian = little_endian;
-enum af_EndianType save_as = big_endian;  // 以小端序存储
+enum af_EndianType save_as = little_endian;  // 默认以小端序存储
 
 void getEndian() {
     union {
