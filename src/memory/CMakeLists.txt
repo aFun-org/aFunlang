@@ -1,6 +1,0 @@
-﻿PROJECT(af_memory LANGUAGES C)
-
-ADD_LIBRARY(af_memory ${af_memory_SOURCE_DIR}/mem.c)
-SET_TARGET_PROPERTIES(af_memory PROPERTIES OUTPUT_NAME "aFunMemory")
-
-INSTALL(TARGETS af_memory)

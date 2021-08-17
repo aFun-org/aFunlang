@@ -1,12 +1,12 @@
 ﻿#include "mem.h"
 
 int main() {
-    int *p = safeCalloc(1, sizeof(int));
+    int *p = calloc(1, sizeof(int));
     *p = 10;
-    safeFree(p);
+    free(p);
 
-    p = safeCalloc(1, sizeof(int));
+    p = calloc(1, sizeof(int));
     *p = 10;
-    safeFree_(p);
+    free(p);
     return 0;
 }

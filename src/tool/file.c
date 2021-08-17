@@ -56,7 +56,7 @@ char *getFileName(char *path_1){
         *point = NUL;
 
     name = strCopy(slash);
-    safeFree_(path);
+    free(path);
 
     if (!isalpha(*name) && *name != '_')
         name = strJoin("_", name, false, true);

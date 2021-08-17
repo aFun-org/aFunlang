@@ -39,7 +39,7 @@ wchar_t *wstrWithWchar(wchar_t *str, size_t size, int free_old, ...) {  // free_
         tmp[base_len + i] = (wchar_t)va_arg(va, int);
     va_end(va);
     if (free_old)
-        safeFree_(str);
+        free(str);
     return tmp;
 }
 
@@ -54,7 +54,7 @@ wchar_t *wstrWithWchar_(wchar_t *str, wint_t new, bool free_old) {
         wcscpy(tmp, str);
     tmp[base_len] = new;
     if (free_old)
-        safeFree_(str);
+        free(str);
     return tmp;
 }
 
@@ -68,7 +68,7 @@ wchar_t *wstrExpansion(wchar_t *str, size_t size, bool free_old) {
     if (base_len != 0)
         wcscpy(tmp, str);
     if (free_old)
-        safeFree_(str);
+        free(str);
     return tmp;
 }
 
@@ -107,9 +107,9 @@ char *strJoin(char *first, char *second, bool free_first, bool free_last) {
         strcat(new, second);
 
     if (free_first)
-        safeFree_(first);
+        free(first);
     if (free_last)
-        safeFree_(second);
+        free(second);
     return new;
 }
 
@@ -123,9 +123,9 @@ char *strJoin_(char *first, char *second, bool free_first, bool free_last) {
     if (second != NULL)
         strcat(new, second);
     if (free_first)
-        safeFree_(first);
+        free(first);
     if (free_last)
-        safeFree_(second);
+        free(second);
     return new;
 }
 
@@ -148,9 +148,9 @@ wchar_t *wstrJoin(wchar_t *first, wchar_t *second, bool free_first, bool free_la
         wcscat(new, second);
 
     if (free_first)
-        safeFree_(first);
+        free(first);
     if (free_last)
-        safeFree_(second);
+        free(second);
     return new;
 }
 
@@ -164,9 +164,9 @@ wchar_t *wstrJoin_(wchar_t *first, wchar_t *second, bool free_first, bool free_l
         wcscat(new, second);
 
     if (free_first)
-        safeFree_(first);
+        free(first);
     if (free_last)
-        safeFree_(second);
+        free(second);
     return new;
 }
 
@@ -185,7 +185,7 @@ wchar_t *wstrCopySelf(wchar_t *str, long times){
     for (long i=0; i < times; i++)
         new_str = wstrJoin_(new_str, str, true, false);
     if (need_free)
-        safeFree_(str);
+        free(str);
     return new_str;
 }
 
@@ -210,7 +210,7 @@ wchar_t *convertToWstr(char *str, bool free_old) {
     wchar_t *tmp = NEW_WSTR(len);
     mbstowcs(tmp, str, len);
     if (free_old)
-        safeFree_(str);
+        free(str);
     return tmp;
 }
 
@@ -223,6 +223,6 @@ char *convertToStr(wchar_t *wstr, bool free_old) {
     char *tmp = NEW_STR(len);
     wcstombs(tmp, wstr, len);
     if (free_old)
-        safeFree_(wstr);
+        free(wstr);
     return tmp;
 }

@@ -29,8 +29,8 @@ time33_t w_time33(wchar_t *str);
 // string 工具
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
 #define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
-#define NEW_STR(size) (char *)safeCalloc((size) + 1, sizeof(char))
-#define NEW_WSTR(size) (wchar_t *)safeCalloc((size) + 1, sizeof(wchar_t))
+#define NEW_STR(size) (char *)calloc((size) + 1, sizeof(char))
+#define NEW_WSTR(size) (wchar_t *)calloc((size) + 1, sizeof(wchar_t))
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
 #define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))
 char *strCopy(const char *str);
@@ -121,6 +121,6 @@ struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds);
 struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name);
 void freeSymbol_(struct DlcSymbol_ *symbol);
 bool freeLibary(struct DlcHandle *dlc);
-void dlcExit();
+void dlcExit(void);
 
 #endif //TOOL__H

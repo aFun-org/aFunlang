@@ -8,11 +8,11 @@
 #endif
 
 static void *safeMalloc(size_t size) {
-    return safeCalloc(1, size);
+    return calloc(1, size);
 }
 
 void cJsonInit() {
-    static cJSON_Hooks hooks = {.malloc_fn=safeMalloc, .free_fn=safeFree_};
+    static cJSON_Hooks hooks = {.malloc_fn=safeMalloc, .free_fn=free};
     cJSON_InitHooks(&hooks);
 }
 
@@ -29,6 +29,6 @@ cJSON *parseJsonFile(FILE *file) {
     }
 
     re = cJSON_Parse(tmp);
-    safeFree_(tmp);
+    free(tmp);
     return re;
 }

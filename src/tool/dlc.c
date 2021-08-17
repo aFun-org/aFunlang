@@ -21,10 +21,7 @@ struct DlcHandle {
 static struct DlcHandle *dlc_l = NULL;
 static int gc_count = 0;
 
-#include <stdio.h>
-
 struct DlcHandle *openLibary(const char *file, int mode) {
-    printf("file = %s\n", file);
     void *handle = dlopen(file, mode);
     struct DlcHandle *dlc;
 
@@ -39,7 +36,7 @@ struct DlcHandle *openLibary(const char *file, int mode) {
         }
     }
 
-    dlc = safeCalloc(1, sizeof(struct DlcHandle));
+    dlc = calloc(1, sizeof(struct DlcHandle));
     dlc->handle = handle;
 
     dlc->count = 1;
@@ -73,12 +70,12 @@ static bool freeLibary_(struct DlcHandle *dlc, bool f) {
     if (dlc->next != NULL)
         dlc->next->last = dlc->last;
 
-    safeFree_(dlc);
+    free(dlc);
     return true;
 }
 
 struct DlcSymbol_ *makeSymbol_(void *symbol) {
-    struct DlcSymbol_ *ds = safeCalloc(1, sizeof(struct DlcSymbol_));
+    struct DlcSymbol_ *ds = calloc(1, sizeof(struct DlcSymbol_));
     ds->symbol = symbol;
     ds->dlc = NULL;
     return ds;
@@ -96,7 +93,7 @@ struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds) {
     if (ds == NULL)
         return NULL;
 
-    struct DlcSymbol_ *new = safeCalloc(1, sizeof(struct DlcSymbol_));
+    struct DlcSymbol_ *new = calloc(1, sizeof(struct DlcSymbol_));
     new->symbol = ds->symbol;
     if (ds->dlc != NULL)
         blindSymbol(new, ds->dlc);
@@ -108,13 +105,13 @@ struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name) {
     if (symbol == NULL)
         return NULL;
 
-    struct DlcSymbol_ *ds = safeCalloc(1, sizeof(struct DlcSymbol_));
+    struct DlcSymbol_ *ds = calloc(1, sizeof(struct DlcSymbol_));
     ds->symbol = symbol;
     blindSymbol(ds, dlc);
     return ds;
 }
 
-void dlcGC() {
+void dlcGC(void) {
     for (struct DlcHandle *tmp = dlc_l, *next; tmp != NULL; tmp = next) {
         next = tmp->next;
         if (tmp->link == 0 && tmp->count == 0)
@@ -128,13 +125,13 @@ void freeSymbol_(struct DlcSymbol_ *symbol) {
         gc_count++;
     }
 
-    safeFree_(symbol);
+    free(symbol);
 
     if (gc_count >= GC_SZIE)
         dlcGC();
 }
 
-void dlcExit() {
+void dlcExit(void) {
     while (dlc_l != NULL)
         freeLibary_(dlc_l, true);
 }

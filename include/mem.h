@@ -6,40 +6,19 @@
 #ifndef MEM__H
 #define MEM__H
 
-#include "stdlib.h"
+#if BUILD_MEM
+#include <stdlib.h>
 
-// 开关
-#define BUILD_VTMEM 1
+static void *safeCalloc(size_t n, size_t size);
+static void *safeCalloc(size_t n, size_t size) {
+    void *re = calloc(n, size);
+    if (re == NULL)
+        exit(1);
+    return re;
+}
 
-// 默认情况
-#define safeCalloc(n, size) (calloc((n), (size)))
-#define safeFree(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)
-#define print_memInfo() NULL
-#define safeFree_ free
+#define calloc(n, size) (safeCalloc(n, size))
+#define free(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)
 
-#if BUILD_VTMEM
-#undef safeCalloc
-
-void *safeCalloc(size_t n, size_t size);
-
-#if DEBUG_VTMEM
-#undef safeFree
-#undef safeFree_
-#undef print_memInfo
-
-void safeFreeDebug(void *p);
-int print_memInfo();
-
-#define safeFree safeFreeDebug
-#define safeFree_ safeFreeDebug
-#else
-
-#undef safeFree_
-void safeFree_(void *p);
-
-#endif  // DEBUG_VTMEM
-#elif DEBUG_VTMEM
-#error "The option \"debug afmem\" can be turned on only when the option \"build afmem\" is turned on"
-#endif  // BUILD_VTMEM
-
+#endif
 #endif  // MEM__H
