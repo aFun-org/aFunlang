@@ -6,8 +6,10 @@
 #ifndef MEM__H
 #define MEM__H
 
-#if BUILD_MEM
 #include <stdlib.h>
+#define free(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)  // free不是可选的宏
+
+#if BUILD_MEM
 
 static void *safeCalloc(size_t n, size_t size);
 static void *safeCalloc(size_t n, size_t size) {
@@ -18,7 +20,6 @@ static void *safeCalloc(size_t n, size_t size) {
 }
 
 #define calloc(n, size) (safeCalloc(n, size))
-#define free(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)
 
 #endif
 #endif  // MEM__H

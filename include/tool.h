@@ -29,6 +29,9 @@ time33_t w_time33(wchar_t *str);
 // string 工具
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
 #define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
+
+#define pathCopy(path) ((FilePath)strCopy((char *)(path)))
+
 #define NEW_STR(size) (char *)calloc((size) + 1, sizeof(char))
 #define NEW_WSTR(size) (wchar_t *)calloc((size) + 1, sizeof(wchar_t))
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))

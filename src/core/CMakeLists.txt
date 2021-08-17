@@ -1,0 +1,9 @@
+﻿PROJECT(af_core LANGUAGES C)
+
+AUX_SOURCE_DIRECTORY(${af_core_SOURCE_DIR} src)  # 寻找源文件
+ADD_LIBRARY(af_core ${src})
+
+SET_TARGET_PROPERTIES(af_core PROPERTIES OUTPUT_NAME "aFunCore")
+TARGET_LINK_LIBRARIES(af_core ${libary})
+
+INSTALL(TARGETS af_core)
