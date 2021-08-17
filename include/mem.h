@@ -13,7 +13,7 @@
 
 // 默认情况
 #define safeCalloc(n, size) (calloc((n), (size)))
-#define safeFree(p) ((((p)!=NULL) ? free(p) : NULL), (p)=NULL)
+#define safeFree(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)
 #define print_memInfo() NULL
 #define safeFree_ free
 

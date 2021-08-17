@@ -110,7 +110,7 @@ struct DlcHandle *dlc; \
 #define MAKE_SYMBOL(symbol, TYPE) ((struct DLC##TYPE##SYMBOL *) (makeSymbol_(symbol)))
 #define COPY_SYMBOL(ds, TYPE) ((struct DLC##TYPE##SYMBOL *) (copySymbol_((DlcSymbol_ *)(ds))))
 #define READ_SYMBOL(dlc, name, TYPE) ((struct DLC##TYPE##SYMBOL *) (getSymbol_((dlc), (name))))
-#define FREE_SYMBOL(symbol) ((symbol) != NULL ? (freeSymbol_((DlcSymbol_ *)(symbol))) : NULL)
+#define FREE_SYMBOL(symbol) ((symbol) != NULL ? (freeSymbol_((DlcSymbol_ *)(symbol)), NULL) : NULL)
 
 typedef struct DlcSymbol_ DlcSymbol_;
 typedef struct DlcHandle DlcHandle;

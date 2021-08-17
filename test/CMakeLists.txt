@@ -17,10 +17,10 @@ FUNCTION(SET_LINK TEST_NAME LIB)
     TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} ${LIB})
 ENDFUNCTION()
 
-ADD_DEFINITIONS(-DTEST_LIB_PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")  # 设置宏: lib的所在路径
-
 ADD_LIBRARY(lib_Test1 test_lib.c)  # 测试程序需要使用的动态库
 SET_TARGET_PROPERTIES(lib_Test1 PROPERTIES OUTPUT_NAME "Test1")
+
+ADD_DEFINITIONS(-DLIB_TEST1="$<TARGET_FILE:lib_Test1>")  # 设置宏: lib的所在路径
 
 ADD_aFunTest(mem test_mem.c)
 ADD_aFunTest(lib test_test_lib.c)
@@ -28,5 +28,5 @@ ADD_aFunTest(dlc test_dlc.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 
-SET_PASS(lib "num = 100 test = 110")
+# SET_PASS(lib "num = 100 test = 110")
 SET_PASS(dlc "a = 100, test = 110")

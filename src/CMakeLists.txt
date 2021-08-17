@@ -7,7 +7,7 @@ ADD_SUBDIRECTORY(memory)
 ADD_SUBDIRECTORY(tool)
 ADD_SUBDIRECTORY(cjson)
 
-SET(libary af_memory)
+SET(libary af_memory af_tool af_json)
 
 ADD_EXECUTABLE(aFun main.c)
 TARGET_LINK_LIBRARIES(aFun ${libary})
