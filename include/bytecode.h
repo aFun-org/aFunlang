@@ -1,6 +1,5 @@
-﻿#ifndef AFUN_BYTECODE_H
-#define AFUN_BYTECODE_H
-// 相关结构体的定义
+﻿#ifndef AFUN__BYTECODE_H_PUBLIC
+#define AFUN__BYTECODE_H_PUBLIC
 typedef struct af_ByteCode af_ByteCode;
 
 enum af_BlockType {
@@ -21,4 +20,4 @@ bool writeAllByteCode(af_ByteCode *bt, FILE *file);
 bool readAllByteCode(af_ByteCode **bt, FILE *file);
 void printByteCode(af_ByteCode *bt);
 
-#endif //AFUN_BYTECODE_H
+#endif //AFUN__BYTECODE_H_PUBLIC

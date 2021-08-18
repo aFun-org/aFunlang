@@ -1,8 +1,8 @@
-﻿#ifndef CJSON__H
-#define CJSON__H
+﻿#ifndef AFUN__CJSON_H
+#define AFUN__CJSON_H
 #include "macro.h"
 #include "cJSON/cJSON.h"
 void cJsonInit();
 cJSON *parseJsonFile(FILE *file);
 
-#endif // CJSON__H
+#endif // AFUN__CJSON_H

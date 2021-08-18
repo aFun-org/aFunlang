@@ -4,8 +4,8 @@
  * aFunTool是aFun实用工具库, 内含aFun调用的实用函数
  */
 
-#ifndef TOOL__H
-#define TOOL__H
+#ifndef AFUN__TOOL_H
+#define AFUN__TOOL_H
 #include <wchar.h>
 #include <string.h>
 #include <signal.h>
@@ -155,4 +155,4 @@ bool byteReadUint_16(FILE *file, uint16_t *num);
 bool byteReadUint_32(FILE *file, uint32_t *num);
 bool byteReadUint_64(FILE *file, uint64_t *num);
 bool byteReadStr(FILE *file, char **str);
-#endif //TOOL__H
+#endif //AFUN__TOOL_H

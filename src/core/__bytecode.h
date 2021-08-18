@@ -1,10 +1,10 @@
 ﻿/*
- * 文件名: bytecode.h
+ * 文件名: __bytecode.h
  * 目标: 定义ByteCode结构体
  */
 
-#ifndef BYTECODE__H
-#define BYTECODE__H
+#ifndef AFUN__BYTECODE_H
+#define AFUN__BYTECODE_H
 #include "macro.h"
 #include "bytecode.h"
 
@@ -40,4 +40,4 @@ struct af_ByteCode {  // 一个 ByteCode 的结构体
     struct af_ByteCode *next;
 };
 
-#endif //BYTECODE__H
+#endif //AFUN__BYTECODE_H

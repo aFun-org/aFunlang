@@ -3,8 +3,8 @@
  * 目标: 内存管理工具的头文件
  */
 
-#ifndef MEM__H
-#define MEM__H
+#ifndef AFUN__MEM_H
+#define AFUN__MEM_H
 
 #include <stdlib.h>
 #define free(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)  // free不是可选的宏
@@ -22,4 +22,4 @@ static void *safeCalloc(size_t n, size_t size) {
 #define calloc(n, size) (safeCalloc(n, size))
 
 #endif
-#endif  // MEM__H
+#endif  // AFUN__MEM_H

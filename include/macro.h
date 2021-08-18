@@ -3,8 +3,8 @@
  * 目标: 定义公共宏 和 公共头文件
  */
 
-#ifndef MACRO__H
-#define MACRO__H
+#ifndef AFUN__MACRO_H
+#define AFUN__MACRO_H
 #include <stdbool.h>
 #include <inttypes.h>
 #include "mem.h"
@@ -23,4 +23,4 @@ typedef char *FilePath;  // 文件路径
 
 typedef unsigned int ByteCodeUint;  // ByteCode int
 
-#endif //MACRO__H
+#endif //AFUN__MACRO_H
