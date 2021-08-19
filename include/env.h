@@ -2,6 +2,7 @@
 #define AFUN__ENV_H_PUBLIV
 
 typedef struct af_Environment af_Environment;
+typedef struct af_Message af_Message;
 
 #include "bytecode.h"
 #include "object.h"
@@ -16,4 +17,10 @@ void pushActivity(af_ByteCode *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Obj
                   af_Environment *env);
 void popActivity(af_Environment *env);
 
+af_Message *makeMessage(char *type, size_t size);
+af_Message *freeMessage(af_Message *msg);
+void pushMessageUp(af_Message *msg, af_Environment *env);
+void pushMessageDown(af_Message *msg, af_Environment *env);
+af_Message *popMessageUp(char *type, af_Environment *env);
+af_Message *popMessageDown(char *type, af_Environment *env);
 #endif //AFUN__ENV_H_PUBLIV

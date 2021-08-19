@@ -144,6 +144,59 @@ static void freeAllActivity(af_Activity *activity) {
         activity = freeActivity(activity);
 }
 
+af_Message *makeMessage(char *type, size_t size) {
+    af_Message *msg = calloc(sizeof(af_Message), 1);
+    msg->type = strCopy(type);
+    if (size != 0)
+        msg->msg = calloc(size, 1);
+    msg->size = size;
+    return msg;
+}
+
+af_Message *freeMessage(af_Message *msg) {
+    af_Message *next = msg->next;
+    free(msg->msg);
+    free(msg);
+    return next;
+}
+
+void freeAllMessage(af_Message *msg) {
+    while (msg != NULL)
+        msg = freeMessage(msg);
+}
+
+void pushMessageUp(af_Message *msg, af_Environment *env) {
+    msg->next = env->activity->msg_up;
+    env->activity->msg_up = msg;
+}
+
+void pushMessageDown(af_Message *msg, af_Environment *env) {
+    msg->next = env->activity->msg_down;
+    env->activity->msg_down = msg;
+}
+
+af_Message *popMessageUp(char *type, af_Environment *env) {
+    for (af_Message **pmsg = &env->activity->msg_up; *pmsg != NULL; pmsg = &((*pmsg)->next)) {
+        if (EQ_STR((*pmsg)->type, type)) {
+            af_Message *msg = *pmsg;
+            *pmsg = msg->next;
+            return msg;
+        }
+    }
+    return NULL;
+}
+
+af_Message *popMessageDown(char *type, af_Environment *env) {
+    for (af_Message **pmsg = &env->activity->msg_down; *pmsg != NULL; pmsg = &((*pmsg)->next)) {
+        if (EQ_STR((*pmsg)->type, type)) {
+            af_Message *msg = *pmsg;
+            *pmsg = msg->next;
+            return msg;
+        }
+    }
+    return NULL;
+}
+
 af_Environment *makeEnvironment(void) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
     env->core = makeCore();

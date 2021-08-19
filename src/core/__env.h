@@ -30,8 +30,18 @@ struct af_Core {  // 解释器核心
     struct af_VarSpace *protect;  // 顶级保护变量空间
 };
 
+struct af_Message {
+    char *type;  // 消息类型
+    void *msg;  // 信息内容
+    size_t size;
+    struct af_Message *next;
+};
+
 struct af_Activity {  // 活动记录器
     struct af_Activity *prev;  // 上一个活动记录器
+
+    struct af_Message *msg_down;  // 被调用者向调用者传递信息
+    struct af_Message *msg_up;  // 调用者向被调用者传递信息
 
     struct af_ByteCode *bt_start;  // 代码的起始位置
     struct af_ByteCode *bt;  // 指示代码运行的地方
