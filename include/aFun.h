@@ -4,7 +4,7 @@
 #include "macro.h"
 #include "tool.h"
 
-#include "bytecode.h"
+#include "code.h"
 #include "object.h"
 #include "var.h"
 #include "env.h"

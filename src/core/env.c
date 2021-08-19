@@ -6,7 +6,7 @@ static bool checkInheritAPI(af_ObjectData *od);
 static void checkInherit(af_Inherit **ih, af_Object *obj);
 static bool enableCore(af_Core *core);
 
-static af_Activity *makeActivity(af_ByteCode *bt,bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong);
+static af_Activity *makeActivity(af_Code *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 
@@ -115,7 +115,7 @@ static bool enableCore(af_Core *core) {
     return true;
 }
 
-static af_Activity *makeActivity(af_ByteCode *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong) {
+static af_Activity *makeActivity(af_Code *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong) {
     af_Activity *activity = calloc(sizeof(af_Activity), 1);
     activity->bt = bt;
     activity->bt_start = bt;
@@ -271,7 +271,7 @@ af_Environment *makeEnvironment(void) {
     return env;
 }
 
-bool enableEnvironment(af_ByteCode *bt, af_Environment *env) {
+bool enableEnvironment(af_Code *bt, af_Environment *env) {
     if (!enableCore(env->core))
         return false;
 
@@ -290,8 +290,8 @@ void freeEnvironment(af_Environment *env) {
     free(env);
 }
 
-void pushActivity(af_ByteCode *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong,
-                 af_Environment *env) {
+void pushActivity(af_Code *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong,
+                  af_Environment *env) {
     af_Activity *activity = makeActivity(bt, new_vs, vsl, belong);
     activity->prev = env->activity;
     env->activity = activity;

@@ -1,15 +1,15 @@
 ﻿/*
  * 文件名: bytecode.c
- * 目标: 管理ByteCode结构体的函数
+ * 目标: 管理Code结构体的函数
  */
 
 #include <stdio.h>
 #include "aFun.h"
-#include "__bytecode.h"
+#include "__code.h"
 #include "tool.h"
 
-static af_ByteCode *makeByteCode(char prefix, FileLine line, FilePath path) {
-    af_ByteCode *bt = calloc(1, sizeof(af_ByteCode));
+static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
+    af_Code *bt = calloc(1, sizeof(af_Code));
     bt->line = line;
     bt->prefix = prefix;
     if (path != NULL)
@@ -17,8 +17,8 @@ static af_ByteCode *makeByteCode(char prefix, FileLine line, FilePath path) {
     return bt;
 }
 
-af_ByteCode *makeLiteralByteCode(char *literal_data, char *func, char prefix, FileLine line, FilePath path) {
-    af_ByteCode *bt = makeByteCode(prefix, line, path);
+af_Code *makeLiteralCode(char *literal_data, char *func, char prefix, FileLine line, FilePath path) {
+    af_Code *bt = makeCode(prefix, line, path);
     bt->type = literal;
     bt->literal.literal_data = strCopy(literal_data);
     bt->literal.func = strCopy(func);
@@ -26,8 +26,8 @@ af_ByteCode *makeLiteralByteCode(char *literal_data, char *func, char prefix, Fi
 }
 
 
-af_ByteCode *makeVariableByteCode(char *var, char prefix, FileLine line, FilePath path) {
-    af_ByteCode *bt = makeByteCode(prefix, line, path);
+af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path) {
+    af_Code *bt = makeCode(prefix, line, path);
     bt->type = variable;
     bt->variable.name = strCopy(var);
     return bt;
@@ -37,8 +37,8 @@ af_ByteCode *makeVariableByteCode(char *var, char prefix, FileLine line, FilePat
  * 函数名: countElement
  * 目标: 统计元素个数（不包括元素的子元素）
  */
-static bool countElement(af_ByteCode *element, ByteCodeUint *count, af_ByteCode **next) {
-    ByteCodeUint to_next = 0;  // 表示紧接着的元素都不纳入统计(指block的子元素)
+static bool countElement(af_Code *element, CodeUint *count, af_Code **next) {
+    CodeUint to_next = 0;  // 表示紧接着的元素都不纳入统计(指block的子元素)
 
     for (*count = 0; element != NULL; *next = element, element = element->next) {
         if (to_next == 0)
@@ -55,10 +55,10 @@ static bool countElement(af_ByteCode *element, ByteCodeUint *count, af_ByteCode 
     return true;
 }
 
-af_ByteCode *makeBlockByteCode(enum af_BlockType type, af_ByteCode *element, char prefix, FileLine line, FilePath path, af_ByteCode **next) {
-    af_ByteCode *bt = NULL;
-    af_ByteCode *tmp = NULL;
-    ByteCodeUint count = 0;
+af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
+    af_Code *bt = NULL;
+    af_Code *tmp = NULL;
+    CodeUint count = 0;
 
     if (next == NULL)
         next = &tmp;
@@ -66,7 +66,7 @@ af_ByteCode *makeBlockByteCode(enum af_BlockType type, af_ByteCode *element, cha
     if (!countElement(element, &count, next))
         return NULL;
 
-    bt = makeByteCode(prefix, line, path);
+    bt = makeCode(prefix, line, path);
     bt->type = block;
     bt->block.type = type;
     bt->block.elements = count;
@@ -74,7 +74,7 @@ af_ByteCode *makeBlockByteCode(enum af_BlockType type, af_ByteCode *element, cha
     return bt;
 }
 
-af_ByteCode *connectByteCode(af_ByteCode **base, af_ByteCode *next) {
+af_Code *connectCode(af_Code **base, af_Code *next) {
     while ((*base) != NULL)
         base = &((*base)->next);
     *base = next;
@@ -85,12 +85,12 @@ af_ByteCode *connectByteCode(af_ByteCode **base, af_ByteCode *next) {
     return next;
 }
 
-af_ByteCode *copyByteCode(af_ByteCode *base, FilePath *path) {
-    af_ByteCode *dest = NULL;
-    af_ByteCode **pdest = &dest;
+af_Code *copyCode(af_Code *base, FilePath *path) {
+    af_Code *dest = NULL;
+    af_Code **pdest = &dest;
 
     for (NULL; base != NULL; base = base->next) {
-        *pdest = makeByteCode(base->prefix, base->line, base->path);
+        *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
         switch (base->type) {
             case literal:
@@ -120,11 +120,11 @@ af_ByteCode *copyByteCode(af_ByteCode *base, FilePath *path) {
     return dest;
 }
 
-af_ByteCode *freeByteCode(af_ByteCode *bt) {
+af_Code *freeCode(af_Code *bt) {
     if (bt == NULL)
         return NULL;
 
-    af_ByteCode *next = bt->next;
+    af_Code *next = bt->next;
     free(bt->path);
     switch (bt->type) {
         case literal:
@@ -142,28 +142,28 @@ af_ByteCode *freeByteCode(af_ByteCode *bt) {
     return next;
 }
 
-bool freeByteCodeWithElement(af_ByteCode *bt, af_ByteCode **next) {
-    ByteCodeUint count = 1;  // 要释放的元素个数
+bool freeCodeWithElement(af_Code *bt, af_Code **next) {
+    CodeUint count = 1;  // 要释放的元素个数
     for (NULL; count != 0; count--) {
         if (bt == NULL)
             return false;
         if (bt->type == block)
             count += bt->block.elements;
-        bt = freeByteCode(bt);
+        bt = freeCode(bt);
     }
 
     *next = bt;
     return true;
 }
 
-void freeAllByteCode(af_ByteCode *bt) {
+void freeAllCode(af_Code *bt) {
     while (bt != NULL)
-        bt = freeByteCode(bt);
+        bt = freeCode(bt);
 }
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
 
-static bool writeByteCode(af_ByteCode *bt, FILE *file) {
+static bool writeCode(af_Code *bt, FILE *file) {
     Done(byteWriteUint_8(file, bt->type));
     Done(byteWriteUint_8(file, bt->prefix));
     Done(byteWriteUint_32(file, bt->line));
@@ -194,29 +194,29 @@ static bool writeByteCode(af_ByteCode *bt, FILE *file) {
 }
 
 /*
- * 函数名: writeAllByteCode
- * 目标: 将ByteCode写入字节码文件中
+ * 函数名: writeAllCode
+ * 目标: 将Code写入字节码文件中
  * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可
  */
-bool writeAllByteCode(af_ByteCode *bt, FILE *file) {
+bool writeAllCode(af_Code *bt, FILE *file) {
     uint32_t count = 0;
 
     if (bt == NULL || bt->path == NULL)
         return false;
 
-    for (af_ByteCode *tmp = bt; tmp != NULL; tmp = tmp->next)  // 统计个数
+    for (af_Code *tmp = bt; tmp != NULL; tmp = tmp->next)  // 统计个数
         count++;
 
     Done(byteWriteUint_32(file,count));
     for (NULL; bt != NULL; bt = bt->next) {
-        if (!writeByteCode(bt, file))
+        if (!writeCode(bt, file))
             return false;
     }
 
     return true;
 }
 
-static bool readByteCode(af_ByteCode **bt, FILE *file) {
+static bool readCode(af_Code **bt, FILE *file) {
     uint8_t type;
     uint8_t prefix;
     uint32_t line;
@@ -231,7 +231,7 @@ static bool readByteCode(af_ByteCode **bt, FILE *file) {
     if (have_path)
         Done(byteReadStr(file, &path));
 
-    *bt = makeByteCode((char)prefix, line, path);
+    *bt = makeCode((char)prefix, line, path);
     free(path);
     (*bt)->type = type;
 
@@ -259,22 +259,22 @@ static bool readByteCode(af_ByteCode **bt, FILE *file) {
 }
 
 /*
- * 函数名: writeAllByteCode
- * 目标: 将ByteCode写入字节码文件中
+ * 函数名: writeAllCode
+ * 目标: 将Code写入字节码文件中
  * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可 【语义检查还未实现】
  */
-bool readAllByteCode(af_ByteCode **bt, FILE *file) {
+bool readAllCode(af_Code **bt, FILE *file) {
     uint32_t count;
     Done(byteReadUint_32(file,&count));
 
     for (NULL; count != 0; count--, bt = &((*bt)->next)) {
-        if(!readByteCode(bt, file))
+        if(!readCode(bt, file))
             return false;
     }
     return true;
 }
 
-void printByteCode(af_ByteCode *bt) {
+void printCode(af_Code *bt) {
     for (NULL; bt != NULL; bt = bt->next) {
         switch (bt->type) {
             case literal:

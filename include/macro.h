@@ -21,6 +21,4 @@
 typedef uint32_t FileLine;  // 文件行号
 typedef char *FilePath;  // 文件路径
 
-typedef unsigned int ByteCodeUint;  // ByteCode int
-
 #endif //AFUN__MACRO_H

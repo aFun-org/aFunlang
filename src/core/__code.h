@@ -1,22 +1,24 @@
 ﻿/*
  * 文件名: __bytecode.h
- * 目标: 定义ByteCode结构体
+ * 目标: 定义Code结构体
  */
 
 #ifndef AFUN__BYTECODE_H
 #define AFUN__BYTECODE_H
 #include "macro.h"
-#include "bytecode.h"
+#include "code.h"
 
-enum af_ByteCodeType {
+typedef unsigned int CodeUint;  // Code uint
+
+enum af_CodeType {
     literal = 0,
     variable,
     block,  // 括号
 };
 
 
-struct af_ByteCode {  // 一个 ByteCode 的结构体
-    enum af_ByteCodeType type;
+struct af_Code {  // 一个 Code 的结构体
+    enum af_CodeType type;
     char prefix;  // 前缀
     union {
         struct {
@@ -29,7 +31,7 @@ struct af_ByteCode {  // 一个 ByteCode 的结构体
         } variable;
 
         struct {
-            ByteCodeUint elements;  // 元素个数
+            CodeUint elements;  // 元素个数
             enum af_BlockType type;  // 括号类型
         } block;
     };
@@ -37,7 +39,7 @@ struct af_ByteCode {  // 一个 ByteCode 的结构体
     FileLine line;
     FilePath path;  // path == NULL表示沿用上层地址
 
-    struct af_ByteCode *next;
+    struct af_Code *next;
 };
 
 #endif //AFUN__BYTECODE_H

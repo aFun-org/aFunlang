@@ -3,17 +3,17 @@
 #include "aFun.h"
 
 int main() {
-    af_ByteCode *bt1 = makeLiteralByteCode("data", "func", ',', 0, "Unknow");
-    af_ByteCode *bt2 = makeVariableByteCode("var1", 0, 1, NULL);
+    af_Code *bt1 = makeLiteralCode("data", "func", ',', 0, "Unknow");
+    af_Code *bt2 = makeVariableCode("var1", 0, 1, NULL);
 
-    af_ByteCode *bt3 = makeLiteralByteCode("data2", "func", 0, 0, NULL);
-    af_ByteCode *bt4 = makeVariableByteCode("var2", 0, 1, NULL);
+    af_Code *bt3 = makeLiteralCode("data2", "func", 0, 0, NULL);
+    af_Code *bt4 = makeVariableCode("var2", 0, 1, NULL);
 
-    connectByteCode(&bt1, bt2);
-    connectByteCode(&bt3, bt4);
+    connectCode(&bt1, bt2);
+    connectCode(&bt3, bt4);
 
-    af_ByteCode *bt5 = makeBlockByteCode(parentheses, bt3, 0, 1, NULL, NULL);
-    connectByteCode(&bt2, bt5);
+    af_Code *bt5 = makeBlockCode(parentheses, bt3, 0, 1, NULL, NULL);
+    connectCode(&bt2, bt5);
 
     FILE *file = fopen("test.afb", "wb");
     if (file == NULL) {
@@ -21,31 +21,31 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if(!writeAllByteCode(bt1, file)) {
+    if(!writeAllCode(bt1, file)) {
         fprintf(stderr, "Write test.afb error.\n");
         return EXIT_FAILURE;
     }
     fclose(file);
 
-    af_ByteCode *get;
+    af_Code *get;
     file = fopen("test.afb", "rb");
     if (file == NULL) {
         fprintf(stderr, "Can't not read file: test.afb\n");
         return EXIT_FAILURE;
     }
 
-    if(!readAllByteCode(&get, file)) {
+    if(!readAllCode(&get, file)) {
         fprintf(stderr, "Read test.afb error.\n");
         return EXIT_FAILURE;
     }
     fclose(file);
 
     printf("out:\n");
-    printByteCode(bt1);
+    printCode(bt1);
     printf("in:\n");
-    printByteCode(get);
-    freeAllByteCode(bt1);
-    freeAllByteCode(get);
+    printCode(get);
+    freeAllCode(bt1);
+    freeAllCode(get);
     return EXIT_SUCCESS;
 }
 
