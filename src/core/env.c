@@ -155,6 +155,9 @@ bool enableEnvironment(af_ByteCode *bt, af_Environment *env) {
         return false;
 
     env->activity = makeActivity(bt, false, NULL, env->core->global);
+    env->activity->new_vs_count = 2;
+    env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
+    env->activity->var_list->next = makeVarSpaceList(env->core->protect);
     return true;
 }
 
