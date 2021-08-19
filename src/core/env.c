@@ -130,11 +130,15 @@ static af_Activity *makeActivity(af_ByteCode *bt, bool new_vs, af_VarSpaceListNo
 static af_Activity *freeActivity(af_Activity *activity) {
     af_Activity *prev = activity->prev;
     af_VarSpaceListNode *vs = activity->var_list;
+
     for (int i = activity->new_vs_count; i > 0; i--) {
         if (vs == NULL)  // 发生了错误
             break;
         vs = popLastVarList(vs);
     }
+
+    freeAllMessage(activity->msg_up);  // msg转移后需要将对应成员设置为NULL
+    freeAllMessage(activity->msg_down);
     free(activity);
     return prev;
 }
@@ -211,6 +215,7 @@ bool enableEnvironment(af_ByteCode *bt, af_Environment *env) {
     env->activity->new_vs_count = 2;
     env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
     env->activity->var_list->next = makeVarSpaceList(env->core->protect);
+    env->activity->is_top = true;  // 设置为最顶层
     return true;
 }
 

@@ -50,6 +50,7 @@ struct af_Activity {  // 活动记录器
     ActivityCount new_vs_count;  // 需要释放的空间数
 
     struct af_Object *belong;  // 属对象
+    bool is_top;  // 最顶层
 };
 
 struct af_Environment {  // 运行环境
