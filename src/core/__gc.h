@@ -1,8 +1,6 @@
 ﻿#ifndef AFUN_GC_H
 #define AFUN_GC_H
 #include "macro.h"
-#include "env.h"
-#include "gc.h"
 
 typedef struct GC_Var GC_Var;
 typedef struct GC_VarSpace GC_VarSpace;
@@ -47,7 +45,16 @@ struct GC_VarSpace {
 
 #undef GC_CHAIN
 
+#include "__env.h"  // 这部分内容依赖上面的定义
+#include "gc.h"
+
+void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);  // af_ObjectData 不对外公开
+void gc_addObjectDataByCore(struct af_ObjectData *obj, af_Core *core);
+void gc_addObjectByCore(struct af_Object *obj, af_Core *core);
+void gc_addVarByCore(struct af_Var *obj, af_Core *core);
+void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
+
 bool gc_RunGC(af_Environment *env);
-void gc_addObjectData(struct af_ObjectData *obj, af_Core *core);  // af_ObjectData 不对外公开
+void gc_freeAllValue(af_Core *core);
 
 #endif //AFUN_GC_H

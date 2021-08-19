@@ -57,15 +57,15 @@ af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_i
         obj->belong = env->activity->belong;
 
     if (!env->core->in_init && inherit == NULL) {
-        obj->data->iherit = makenIherit(env->core->object);
+        obj->data->iherit = makeIherit(env->core->object);
     } else
         obj->data->iherit = inherit;
 
     if (!env->core->in_init && inherit_api)
         obj->data->api = obj->data->iherit->obj->data->api;
 
-    gc_addObjectData(obj->data, env->core);
-    gc_addObject(obj, env->core);
+    gc_addObjectData(obj->data, env);
+    gc_addObject(obj, env);
     return obj;
 }
 
@@ -92,7 +92,7 @@ void freeObject(af_Object *obj) {
     free(obj);
 }
 
-af_Inherit *makenIherit(af_Object *obj) {
+af_Inherit *makeIherit(af_Object *obj) {
     af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
     ih->obj = obj;
     return ih;

@@ -1,5 +1,7 @@
 ﻿#ifndef AFUN__BYTECODE_H_PUBLIC
 #define AFUN__BYTECODE_H_PUBLIC
+#include <stdio.h>
+
 typedef struct af_ByteCode af_ByteCode;
 
 enum af_BlockType {

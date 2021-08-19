@@ -1,4 +1,5 @@
 ﻿#include "__var.h"
+#include "__env.h"
 #include "tool.h"
 
 static af_VarNode *makeVarNode(af_Object *obj, char *id);
@@ -108,20 +109,36 @@ void freeAllVarSpaceList(af_VarSpaceListNode *vsl) {
         vsl = freeVarSpaceList(vsl);
 }
 
-void addVarSpaceGC(af_VarSpace *vs, af_Core *core) {
+void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core) {
     if (vs->gc.info.start_gc)
         return;
 
     vs->gc.info.start_gc = true;
-    gc_addVarSpace(vs, core);
+    gc_addVarSpaceByCore(vs, core);
 }
 
-void addVarGC(af_Var *var, af_Core *core) {
+void addVarSpaceGC(af_VarSpace *vs, af_Environment *env) {
+    if (vs->gc.info.start_gc)
+        return;
+
+    vs->gc.info.start_gc = true;
+    gc_addVarSpace(vs, env);
+}
+
+void addVarGCByCore(af_Var *var, af_Core *core) {
     if (var->gc.info.start_gc)
         return;
 
     var->gc.info.start_gc = true;
-    gc_addVar(var, core);
+    gc_addVarByCore(var, core);
+}
+
+void addVarGC(af_Var *var, af_Environment *env) {
+    if (var->gc.info.start_gc)
+        return;
+
+    var->gc.info.start_gc = true;
+    gc_addVar(var, env);
 }
 
 /*
@@ -189,4 +206,14 @@ af_Var *findVarFromVarList(char *name, af_VarSpaceListNode *vsl) {
     }
 
     return NULL;
+}
+
+af_VarSpaceListNode *pushNewVarList(af_VarSpaceListNode *base) {
+    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace());
+    new->next = base;
+    return new;
+}
+
+af_VarSpaceListNode *popLastVarList(af_VarSpaceListNode *base) {
+    return freeVarSpaceList(base);
 }

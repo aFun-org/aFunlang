@@ -5,14 +5,14 @@
 
 #ifndef AFUN__OBJECT_H
 #define AFUN__OBJECT_H
+#include "macro.h"
+#include "tool.h"
 
 // 这些typedef可能会被下面include的文件使用
 typedef struct af_ObjectData af_ObjectData;
 typedef struct af_ObjectAPINode af_ObjectAPINode;
 typedef struct af_ObjectAPI af_ObjectAPI;
 
-#include "macro.h"
-#include "tool.h"
 #include "object.h"
 #include "__gc.h"
 

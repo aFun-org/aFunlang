@@ -1,11 +1,11 @@
 ﻿#ifndef AFUN__VAR_H
 #define AFUN__VAR_H
+#include "macro.h"
 
 // 这些typedef可能会被下面include的文件使用
 typedef struct af_VarNode af_VarNode;
 typedef struct af_VarCup af_VarCup;
 
-#include "macro.h"
 #include "var.h"
 #include "__gc.h"
 
@@ -40,5 +40,7 @@ struct af_VarSpaceListNode {  // 变量链
     struct af_VarSpaceListNode *next;
 };
 
+void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core);
+void addVarGCByCore(af_Var *var, af_Core *core);
 
 #endif //AFUN__VAR_H
