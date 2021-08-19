@@ -4,6 +4,8 @@
 
 typedef struct af_Core af_Core;
 typedef struct af_Activity af_Activity;
+typedef struct af_EnvVarSpace af_EnvVarSpace;
+typedef struct af_EnvVar af_EnvVar;
 
 #include "env.h"
 #include "__object.h"
@@ -11,7 +13,7 @@ typedef struct af_Activity af_Activity;
 #include "__bytecode.h"
 #include "__gc.h"
 
-
+#define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
 
 struct af_Core {  // 解释器核心
@@ -53,9 +55,20 @@ struct af_Activity {  // 活动记录器
     bool is_top;  // 最顶层
 };
 
+struct af_EnvVar {  // 环境变量
+    char *name;
+    char *data;
+    struct af_EnvVar *next;
+};
+
+struct af_EnvVarSpace {  // 环境变量
+    struct af_EnvVar *(var[ENV_VAR_HASH_SIZE]);
+};
+
 struct af_Environment {  // 运行环境
     struct af_Core *core;
     struct af_Activity *activity;
+    struct af_EnvVarSpace *esv;
 };
 
 af_Object *getBaseObjectFromCore(char *name, af_Core *core);

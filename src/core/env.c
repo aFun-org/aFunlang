@@ -10,6 +10,11 @@ static af_Activity *makeActivity(af_ByteCode *bt,bool new_vs, af_VarSpaceListNod
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 
+static af_EnvVar *makeEnvVar(char *name, char *data);
+static af_EnvVar *freeEnvVar(af_EnvVar *var);
+static void freeAllEnvVar(af_EnvVar *var);
+static void freeEnvVarSpace(af_EnvVarSpace *evs);
+
 static af_Core *makeCore(void) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
@@ -201,9 +206,68 @@ af_Message *popMessageDown(char *type, af_Environment *env) {
     return NULL;
 }
 
+static af_EnvVar *makeEnvVar(char *name, char *data) {
+    af_EnvVar *var = calloc(sizeof(af_EnvVar), 1);
+    var->name = strCopy(name);
+    var->data = strCopy(data);
+    return var;
+}
+
+static af_EnvVar *freeEnvVar(af_EnvVar *var) {
+    af_EnvVar *next = var->next;
+    free(var->data);
+    free(var->name);
+    free(var);
+    return next;
+}
+
+static void freeAllEnvVar(af_EnvVar *var) {
+    while (var != NULL)
+        var = freeEnvVar(var);
+}
+
+static af_EnvVarSpace *makeEnvVarSpace(void) {
+    af_EnvVarSpace *esv = calloc(sizeof(af_EnvVarSpace), 1);
+    return esv;
+}
+
+static void freeEnvVarSpace(af_EnvVarSpace *evs) {
+    for (int i = 0; i < ENV_VAR_HASH_SIZE; i++)
+        freeAllEnvVar(evs->var[i]);
+    free(evs);
+}
+
+void setEnvVar(char *name, char *data, af_Environment *env) {
+    time33_t index = time33(name);
+    af_EnvVar **pvar = &env->esv->var[index];
+
+    for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
+        if (EQ_STR((*pvar)->name, name)) {
+            free((*pvar)->data);
+            (*pvar)->data = strCopy(data);
+            return;
+        }
+    }
+
+    *pvar = makeEnvVar(name, data);
+}
+
+char *findEnvVar(char *name, af_Environment *env) {
+    time33_t index = time33(name);
+    af_EnvVar **pvar = &env->esv->var[index];
+
+    for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
+        if (EQ_STR((*pvar)->name, name))
+            return (*pvar)->data;
+    }
+
+    return NULL;
+}
+
 af_Environment *makeEnvironment(void) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
     env->core = makeCore();
+    env->esv = makeEnvVarSpace();
     return env;
 }
 
@@ -222,6 +286,7 @@ bool enableEnvironment(af_ByteCode *bt, af_Environment *env) {
 void freeEnvironment(af_Environment *env) {
     freeCore(env->core);
     freeAllActivity(env->activity);
+    freeEnvVarSpace(env->esv);
     free(env);
 }
 

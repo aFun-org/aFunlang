@@ -24,4 +24,8 @@ void pushMessageUp(af_Message *msg, af_Environment *env);
 void pushMessageDown(af_Message *msg, af_Environment *env);
 af_Message *popMessageUp(char *type, af_Environment *env);
 af_Message *popMessageDown(char *type, af_Environment *env);
-#endif //AFUN__ENV_H_PUBLIV
+
+void setEnvVar(char *name, char *data, af_Environment *env);
+char *findEnvVar(char *name, af_Environment *env);
+
+#endif //AFUN__ENV_H_PUBLIC
