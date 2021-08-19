@@ -15,8 +15,8 @@ int main() {
     NEW_DLC_SYMBOL(int, INT);
     NEW_DLC_SYMBOL(func, FUNC);
 
-    DLC_SYMBOL(INT) *a;
-    DLC_SYMBOL(FUNC) *fun;
+    DLC_SYMBOL(INT) a;
+    DLC_SYMBOL(FUNC) fun;
 
     a = READ_SYMBOL(dlc, "num", INT);
     fun = READ_SYMBOL(dlc, "test", FUNC);

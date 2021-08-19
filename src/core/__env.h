@@ -16,7 +16,7 @@ struct af_Core {  // 解释器核心
 
     // 基本量信息
     struct af_Object *global;  // 顶级属对象
-    struct af_Object *belong;  // 顶级继承对象
+    struct af_Object *object;  // 顶级继承对象
 
     // 保护空间
     bool in_init;  // 是否在初始化模式
@@ -31,6 +31,8 @@ struct af_Activity {  // 活动记录器
 
     struct af_VarSpaceListNode *var_list;  // 变量空间
     bool var_free;  // 是否需要释放变量空间
+
+    af_Object *belong;  // 属对象
 };
 
 struct af_Environment {  // 运行环境

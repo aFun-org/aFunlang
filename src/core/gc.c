@@ -152,7 +152,7 @@ static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
 
 static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist) {
     plist = reachableVarSpace(core->protect, plist);
-    plist = reachableObject(core->belong, plist);
+    plist = reachableObject(core->object, plist);
     plist = reachableObject(core->global, plist);
 
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
@@ -209,45 +209,32 @@ bool resetGC(af_Core *core) {
     return true;
 }
 
-#define FREE_EXCHANGE(obj) do { \
-if ((obj)->gc.prev != NULL) (obj)->gc.prev->gc.next = (obj)->gc.next; \
-if ((obj)->gc.next != NULL) (obj)->gc.next->gc.prev = (obj)->gc.prev; } while(0)
-
 static void freeValue(af_Core *core) {
     for (af_ObjectData *od = core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
-        if (!od->gc.info.reachable) {  // 暂时不考虑析构函数
-            FREE_EXCHANGE(od);
-            // 释放函数
-        }
+        if (!od->gc.info.reachable)  // 暂时不考虑析构函数
+            freeObjectData(od);
     }
 
     for (af_Object *obj = core->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
-        if (!obj->gc.info.reachable) {
-            FREE_EXCHANGE(obj);
-            // 释放函数
-        }
+        if (!obj->gc.info.reachable)
+            freeObject(obj);
     }
 
     for (af_VarSpace *vs = core->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
-        if (!vs->gc.info.reachable) {
-            FREE_EXCHANGE(vs);
-            // 释放函数
-        }
+        if (!vs->gc.info.reachable)
+            freeVarSpace(vs);
     }
 
     for (af_Var *var = core->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
-        if (!var->gc.info.reachable) {
-            FREE_EXCHANGE(var);
-            // 释放函数
-        }
+        if (!var->gc.info.reachable)
+            freeVar(var);
     }
 }
 
-#undef FREE_EXCHANGE
 
 #define GC_ADD_FUNC_DEFINED(type) \
 void gc_add##type(af_##type *obj, af_Core *core) { \

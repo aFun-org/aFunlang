@@ -85,7 +85,7 @@ af_ByteCode *connectByteCode(af_ByteCode **base, af_ByteCode *next) {
     return next;
 }
 
-af_ByteCode *CopyByteCode(af_ByteCode *base, FilePath *path) {
+af_ByteCode *copyByteCode(af_ByteCode *base, FilePath *path) {
     af_ByteCode *dest = NULL;
     af_ByteCode **pdest = &dest;
 

@@ -5,6 +5,12 @@
 
 #ifndef AFUN__OBJECT_H
 #define AFUN__OBJECT_H
+
+// 这些typedef可能会被下面include的文件使用
+typedef struct af_ObjectData af_ObjectData;
+typedef struct af_ObjectAPINode af_ObjectAPINode;
+typedef struct af_ObjectAPI af_ObjectAPI;
+
 #include "macro.h"
 #include "tool.h"
 #include "object.h"
@@ -12,22 +18,18 @@
 
 #define API_HASHTABLE_SIZE (8)
 
-typedef struct af_Inherit af_Inherit;
-typedef struct af_ObjectAPINode af_ObjectAPINode;
-typedef struct af_ObjectAPI af_ObjectAPI;
-
 typedef void pValueAPI();
 NEW_DLC_SYMBOL(pValueAPI, pAPIFUNC);
 
 struct af_ObjectAPINode {
-    char *api_name;  // api名字
+    char *name;  // api名字
     DLC_SYMBOL(pAPIFUNC) api;  // api函数
     struct af_ObjectAPINode *next;
 };
 
 struct af_ObjectAPI {
     uint32_t count;  // api个数记录
-    struct af_ObjectAPINode (*node)[API_HASHTABLE_SIZE];
+    struct af_ObjectAPINode *(node[API_HASHTABLE_SIZE]);
 };
 
 struct af_ObjectData {
@@ -57,5 +59,10 @@ struct af_Inherit {
     struct af_Object *obj;
     struct af_Inherit *next;
 };
+
+void freeObjectData(af_ObjectData *od);  // gc使用
+int addAPIToObjectData(DlcHandle *dlc, char *func_name, char *api_name,
+                       af_ObjectData *od);
+af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
 
 #endif //AFUN__OBJECT_H

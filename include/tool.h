@@ -102,12 +102,12 @@ void safeSleep(double ms);
  * freeLibary: 释放动态库
  * dlcExit: 释放所有动态库
  */
-#define NEW_DLC_SYMBOL(TYPE, NAME) struct DLC##NAME##SYMBOL { \
+#define NEW_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL { \
 TYPE *symbol; \
 struct DlcHandle *dlc; \
-}
+} DLC##NAME##SYMBOL, *pDLC##NAME##SYMBOL
 
-#define DLC_SYMBOL(NAME) struct DLC##NAME##SYMBOL
+#define DLC_SYMBOL(NAME) pDLC##NAME##SYMBOL
 #define GET_SYMBOL(SYMBOL) (*((SYMBOL)->symbol))
 #define MAKE_SYMBOL(symbol, TYPE) ((struct DLC##TYPE##SYMBOL *) (makeSymbol_(symbol)))
 #define COPY_SYMBOL(ds, TYPE) ((struct DLC##TYPE##SYMBOL *) (copySymbol_((DlcSymbol_ *)(ds))))
