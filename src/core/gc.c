@@ -238,6 +238,9 @@ static void freeValue(af_Core *core) {
 #define GC_ADD_FUNC_DEFINED(type) \
 void gc_add##type(af_##type *obj, af_Environment *env) { \
     obj->gc.prev = NULL; \
+    if (env->core->gc_##type != NULL) { \
+        env->core->gc_##type->gc.prev = obj; \
+    }                             \
     obj->gc.next = env->core->gc_##type; \
     env->core->gc_##type = obj; \
 } \

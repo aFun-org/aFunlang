@@ -8,6 +8,7 @@
 #include "object.h"
 #include "var.h"
 #include "env.h"
+#include "run.h"
 #include "gc.h"
 
 // Init系列函数

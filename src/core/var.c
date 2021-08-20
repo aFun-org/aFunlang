@@ -21,7 +21,7 @@ static af_VarNode *makeVarNode(af_Object *obj, char *id) {
 
 static af_VarNode *freeVarNode(af_VarNode *vn) {
     af_VarNode *next = vn->next;
-    free(next->id);
+    free(vn->id);
     free(vn);
     return next;
 }
@@ -148,7 +148,7 @@ void addVarGC(af_Var *var, af_Environment *env) {
  * 否则返回true
  */
 bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
-    time33_t index = time33(var->name);
+    time33_t index = time33(var->name) % VAR_HASHTABLE_SIZE;
     af_VarCup **pCup = &vs->var[index];
 
     if (vs->is_protect)
@@ -204,7 +204,7 @@ static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpac
  * 目标: 在VarSpace中搜索var
  */
 af_Var *findVarFromVarSpace(char *name, af_VarSpace *vs) {
-    return findVarFromVarSpaceByIndex(time33(name), name, vs);
+    return findVarFromVarSpaceByIndex(time33(name) % VAR_HASHTABLE_SIZE, name, vs);
 }
 
 /*
@@ -212,7 +212,7 @@ af_Var *findVarFromVarSpace(char *name, af_VarSpace *vs) {
  * 目标: 在VarSpaceListNode中搜索var
  */
 af_Var *findVarFromVarList(char *name, af_VarSpaceListNode *vsl) {
-    time33_t index = time33(name);
+    time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
     af_Var *var = NULL;
 
     for (NULL; vsl != NULL; vsl = vsl->next) {

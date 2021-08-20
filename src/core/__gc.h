@@ -17,7 +17,7 @@ typedef uint32_t GcCount;
 struct gc_info {
     bool start_gc;  // 启用gc
     bool not_clear;  // 不清除
-    GcCount *reference;  // 引用计数
+    GcCount reference;  // 引用计数
     bool reachable;  // 可达标记 [同时标识已迭代]
 };
 

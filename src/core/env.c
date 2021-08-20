@@ -20,6 +20,8 @@ static af_Core *makeCore(void) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
     core->protect = makeVarSpace();
+    addVarSpaceGCByCore(core->protect, core);
+    gc_addReference(core->protect);  // protect被外部引用, 由gc管理, 此处标记一个Reference
     return core;
 }
 
@@ -28,8 +30,7 @@ static void freeCore(af_Core *core) {
         gc_delReference(core->object);
     if (core->global != NULL)
         gc_delReference(core->global);
-    if (core->protect != NULL)
-        freeVarSpace(core->protect);  // 无论是否gc接管都释放
+    gc_delReference(core->protect);
     gc_freeAllValue(core);
     free(core);
 }
@@ -119,6 +120,7 @@ static bool enableCore(af_Core *core) {
 
     gc_addReference(object);
     gc_addReference(global);
+    addVarSpaceGCByCore(global->data->var_space, core);  // global的vs是全局作用空间, 被外部引用, 所以由gc管理 (不需要要标记Reference, global已经标记了)
     core->in_init = false;
     return true;
 }
@@ -137,7 +139,8 @@ static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return
     activity->belong = belong;
     activity->func = func;
     gc_addReference(belong);
-    gc_addReference(func);
+    if (func != NULL)
+        gc_addReference(func);
 
     activity->bt_top = bt_top;
     activity->bt_start = bt_start;
@@ -153,7 +156,8 @@ static af_Activity *freeActivity(af_Activity *activity) {
     af_Message *msg_up = activity->msg_up;
 
     gc_delReference(activity->belong);
-    gc_delReference(activity->func);
+    if (activity->func != NULL)
+        gc_delReference(activity->func);
 
     if (activity->return_msg != NULL)
         freeMessage(activity->return_msg);
@@ -190,6 +194,7 @@ af_Message *makeMessage(char *type, size_t size) {
 
 af_Message *freeMessage(af_Message *msg) {
     af_Message *next = msg->next;
+    free(msg->type);
     free(msg->msg);
     free(msg);
     return next;
@@ -239,6 +244,13 @@ af_Message *popMessageDown(char *type, af_Environment *env) {
     return NULL;
 }
 
+af_Message *getFirstMessage(af_Environment *env) {
+    af_Message *msg = env->activity->msg_down;
+    env->activity->msg_down = msg->next;
+    msg->next = NULL;
+    return msg;
+}
+
 void connectMessage(af_Message **base, af_Message *msg) {
     while (*base != NULL)
         base = &((*base)->next);
@@ -277,7 +289,7 @@ static void freeEnvVarSpace(af_EnvVarSpace *evs) {
 }
 
 void setEnvVar(char *name, char *data, af_Environment *env) {
-    time33_t index = time33(name);
+    time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
     af_EnvVar **pvar = &env->esv->var[index];
 
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
@@ -292,7 +304,7 @@ void setEnvVar(char *name, char *data, af_Environment *env) {
 }
 
 char *findEnvVar(char *name, af_Environment *env) {
-    time33_t index = time33(name);
+    time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
     af_EnvVar **pvar = &env->esv->var[index];
 
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
@@ -310,11 +322,11 @@ af_Environment *makeEnvironment(void) {
     return env;
 }
 
-bool enableEnvironment(af_Code *bt, af_Environment *env) {
-    if (!enableCore(env->core))
+bool addTopActivity(af_Code *code, af_Environment *env) {
+    if (env->activity != NULL)
         return false;
 
-    env->activity = makeActivity(NULL, bt, false, NULL, NULL, env->core->global, NULL);
+    env->activity = makeActivity(NULL, code, false, NULL, NULL, env->core->global, NULL);
     env->activity->new_vs_count = 2;
     env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
     env->activity->var_list->next = makeVarSpaceList(env->core->protect);
@@ -322,11 +334,19 @@ bool enableEnvironment(af_Code *bt, af_Environment *env) {
     return true;
 }
 
+bool enableEnvironment(af_Environment *env) {
+    return enableCore(env->core);
+}
+
 void freeEnvironment(af_Environment *env) {
     freeCore(env->core);
     freeAllActivity(env->activity);
     freeEnvVarSpace(env->esv);
     free(env);
+}
+
+bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
+    return addVarToVarSpace(var, env->core->protect);
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
@@ -361,9 +381,10 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     gc_delReference(env->activity->belong);
-    gc_delReference(env->activity->func);
+    if (env->activity->func != NULL)
+        gc_delReference(env->activity->func);
     gc_addReference(func);
-    gc_addReference(func->belong);
+    gc_addReference(func->belong);  // TODO-szh 处理belong为NULL的情况 (global的belong)
 
     env->activity->func = func;
     env->activity->belong = func->belong;
@@ -397,14 +418,19 @@ bool setFuncActivityToNormal(af_Code *bt, af_Environment *env) {
 }
 
 void popActivity(af_Message *msg, af_Environment *env) {
-    if (env->activity->prev != NULL && msg != NULL) {
-        af_Message *new_msg = msg;
-        msg->next = env->activity->prev->msg_down;
-        env->activity->prev->msg_down = msg;
-        if (env->activity->msg_down != NULL) {
-            connectMessage(&new_msg, env->activity->msg_down);
-            env->activity->msg_down = NULL;
-        }
+    if (env->activity->prev != NULL) {
+        af_Message *new_msg;
+        if (msg != NULL) {
+            new_msg = msg;
+            msg->next = env->activity->msg_down;
+        } else
+            msg = env->activity->msg_down;
+        env->activity->msg_down = NULL;
+        connectMessage(&new_msg, env->activity->prev->msg_down);
+        env->activity->prev->msg_down = new_msg;
+    } else if (msg != NULL) {  // 到顶 且 msg != NULL
+        gc_delReference(*(af_Object **)msg->msg);
+        freeMessage(msg);
     }
-    env->activity = freeActivity(env->activity);  // TODO-szh activity需要添加gc
+    env->activity = freeActivity(env->activity);
 }

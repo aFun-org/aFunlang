@@ -48,18 +48,23 @@ static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, b
  * 目标: 生成Object和ObjectData, 并且添加到gc链表中
  * 若处于初始化模式, 则belong, inherit等可以设置为NULL, 由后期统一填上
  */
-af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_iherit,
-                      af_Inherit *inherit, af_Environment *env) {
+af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_iherit, af_Object *belong,
+                      af_Inherit *iherit, af_Environment *env) {
     af_Object *obj = makeObject_Pri(id, data_size, inherit_api, allow_iherit);
-    if (!env->core->in_init && env->activity->belong == NULL)
-        obj->belong = env->core->global;
-    else
-        obj->belong = env->activity->belong;
 
-    if (!env->core->in_init && inherit == NULL) {
+    if (env->core->in_init || belong != NULL)
+        obj->belong = belong;
+    else if (env->activity != NULL)
+        obj->belong = env->activity->belong;
+    else
+        return NULL;
+
+    if (env->core->in_init || iherit != NULL)
+        obj->data->iherit = iherit;
+    else if (env->core->object != NULL)
         obj->data->iherit = makeIherit(env->core->object);
-    } else
-        obj->data->iherit = inherit;
+    else
+        return NULL;
 
     if (!env->core->in_init && inherit_api)
         obj->data->api = obj->data->iherit->obj->data->api;
@@ -87,7 +92,6 @@ void freeObjectData(af_ObjectData *od) {
 }
 
 void freeObject(af_Object *obj) {
-    freeObjectData(obj->data);
     GC_FREE_EXCHANGE(obj);
     free(obj);
 }
@@ -153,7 +157,7 @@ static void freeObjectAPI(af_ObjectAPI *api) {
  */
 int addAPIToObjectData(DlcHandle *dlc, char *func_name, char *api_name,
                         af_ObjectData *od) {
-    time33_t index = time33(api_name);
+    time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &od->api->node[index];
 
     for (NULL; *pNode != NULL; pNode = &((*pNode)->next)) {
@@ -166,7 +170,7 @@ int addAPIToObjectData(DlcHandle *dlc, char *func_name, char *api_name,
 }
 
 af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
-    time33_t index = time33(api_name);
+    time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     for (af_ObjectAPINode *node = od->api->node[index]; node != NULL; node = node->next) {
         if (EQ_STR(node->name, api_name))
             return node;

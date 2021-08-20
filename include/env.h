@@ -11,8 +11,10 @@ typedef struct af_Message af_Message;
 af_Object *getBaseObject(char *name, af_Environment *env);
 
 af_Environment *makeEnvironment(void);
-bool enableEnvironment(af_Code *bt, af_Environment *env);
+bool addTopActivity(af_Code *code, af_Environment *env);
+bool enableEnvironment(af_Environment *env);
 void freeEnvironment(af_Environment *env);
+bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
 
 af_Message *makeMessage(char *type, size_t size);
 af_Message *freeMessage(af_Message *msg);
@@ -22,6 +24,7 @@ void pushMessageDown(af_Message *msg, af_Environment *env);
 void *popMessageUp(char *type, af_Environment *env);
 void *getMessageData(af_Message *msg);
 af_Message *popMessageDown(char *type, af_Environment *env);
+af_Message *getFirstMessage(af_Environment *env);
 void connectMessage(af_Message **base, af_Message *msg);
 
 void setEnvVar(char *name, char *data, af_Environment *env);

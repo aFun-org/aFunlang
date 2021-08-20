@@ -27,6 +27,7 @@ ADD_aFunTest(lib test_test_lib.c)
 ADD_aFunTest(dlc test_dlc.c)
 ADD_aFunTest(byte test_byte.c)
 ADD_aFunTest(byte_code test_byte_code.c)
+ADD_aFunTest(env test_env.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 
