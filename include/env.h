@@ -13,17 +13,16 @@ af_Object *getBaseObject(char *name, af_Environment *env);
 af_Environment *makeEnvironment(void);
 bool enableEnvironment(af_Code *bt, af_Environment *env);
 void freeEnvironment(af_Environment *env);
-void pushActivity(af_Code *bt, bool new_vs, af_VarSpaceListNode *vsl, af_Object *belong,
-                  af_Environment *env);
-void popActivity(af_Environment *env);
 
 af_Message *makeMessage(char *type, size_t size);
 af_Message *freeMessage(af_Message *msg);
 void freeAllMessage(af_Message *msg);
 void pushMessageUp(af_Message *msg, af_Environment *env);
 void pushMessageDown(af_Message *msg, af_Environment *env);
-af_Message *popMessageUp(char *type, af_Environment *env);
+void *popMessageUp(char *type, af_Environment *env);
+void *getMessageData(af_Message *msg);
 af_Message *popMessageDown(char *type, af_Environment *env);
+void connectMessage(af_Message **base, af_Message *msg);
 
 void setEnvVar(char *name, char *data, af_Environment *env);
 char *findEnvVar(char *name, af_Environment *env);

@@ -1,12 +1,12 @@
 ﻿/*
- * 文件名: bytecode.c
+ * 文件名: code.c
  * 目标: 管理Code结构体的函数
  */
 
 #include <stdio.h>
 #include "aFun.h"
-#include "__code.h"
 #include "tool.h"
+#include "__code.h"
 
 static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     af_Code *bt = calloc(1, sizeof(af_Code));
@@ -37,12 +37,13 @@ af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path) 
  * 函数名: countElement
  * 目标: 统计元素个数（不包括元素的子元素）
  */
-static bool countElement(af_Code *element, CodeUint *count, af_Code **next) {
+static bool countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next) {
     CodeUint to_next = 0;  // 表示紧接着的元素都不纳入统计(指block的子元素)
 
-    for (*count = 0; element != NULL; *next = element, element = element->next) {
+    for (*elements = 0; element != NULL; *next = element, element = element->next) {
+        (*count)++;
         if (to_next == 0)
-            (*count)++;
+            (*elements)++;
         else
             to_next--;
 
@@ -50,7 +51,7 @@ static bool countElement(af_Code *element, CodeUint *count, af_Code **next) {
             to_next += element->block.elements;
     }
 
-    if (to_next != 0)
+    if (to_next != 0 || *elements == 0)  // elements不允许为0
         return false;
     return true;
 }
@@ -58,18 +59,20 @@ static bool countElement(af_Code *element, CodeUint *count, af_Code **next) {
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
     af_Code *bt = NULL;
     af_Code *tmp = NULL;
+    CodeUint elements = 0;
     CodeUint count = 0;
 
     if (next == NULL)
         next = &tmp;
 
-    if (!countElement(element, &count, next))
+    if (!countElement(element, &elements, &count, next))
         return NULL;
 
     bt = makeCode(prefix, line, path);
     bt->type = block;
     bt->block.type = type;
-    bt->block.elements = count;
+    bt->block.elements = elements;
+    bt->block.count = count;
     bt->next = element;
     return bt;
 }
@@ -103,6 +106,7 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
                 break;
 
             case block:
+                (*pdest)->block.count = base->block.count;
                 (*pdest)->block.elements = base->block.elements;
                 (*pdest)->block.type = base->block.type;
                 break;
@@ -143,15 +147,12 @@ af_Code *freeCode(af_Code *bt) {
 }
 
 bool freeCodeWithElement(af_Code *bt, af_Code **next) {
-    CodeUint count = 1;  // 要释放的元素个数
+    CodeUint count = 1 + bt->block.count;  // 要释放的元素个数
     for (NULL; count != 0; count--) {
         if (bt == NULL)
             return false;
-        if (bt->type == block)
-            count += bt->block.elements;
         bt = freeCode(bt);
     }
-
     *next = bt;
     return true;
 }
@@ -159,6 +160,16 @@ bool freeCodeWithElement(af_Code *bt, af_Code **next) {
 void freeAllCode(af_Code *bt) {
     while (bt != NULL)
         bt = freeCode(bt);
+}
+
+bool getCodeBlockNext(af_Code *bt, af_Code **next) {
+    CodeUint count = 1 + bt->block.count;
+    for (NULL; count != 0; count--, bt = bt->next) {
+        if (bt == NULL)
+            return false;
+    }
+    *next = bt;
+    return true;
 }
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
@@ -186,6 +197,7 @@ static bool writeCode(af_Code *bt, FILE *file) {
         case block:
             Done(byteWriteUint_8(file, bt->block.type));
             Done(byteWriteUint_32(file, bt->block.elements));
+            Done(byteWriteUint_32(file, bt->block.count));
             break;
         default:
             break;
@@ -246,10 +258,13 @@ static bool readCode(af_Code **bt, FILE *file) {
         case block: {
             uint8_t block_type;
             uint32_t elements;
+            uint32_t count;
             Done(byteReadUint_8(file, &block_type));
             Done(byteReadUint_32(file,&elements));
+            Done(byteReadUint_32(file,&count));
             (*bt)->block.type = block_type;
             (*bt)->block.elements = elements;
+            (*bt)->block.elements = count;
             break;
         }
         default:
@@ -258,11 +273,6 @@ static bool readCode(af_Code **bt, FILE *file) {
     return true;
 }
 
-/*
- * 函数名: writeAllCode
- * 目标: 将Code写入字节码文件中
- * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可 【语义检查还未实现】
- */
 bool readAllCode(af_Code **bt, FILE *file) {
     uint32_t count;
     Done(byteReadUint_32(file,&count));

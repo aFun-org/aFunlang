@@ -42,17 +42,29 @@ struct af_Message {
 struct af_Activity {  // 活动记录器
     struct af_Activity *prev;  // 上一个活动记录器
 
+    enum af_ActivityStatus {
+        act_func = 0,
+        act_arg,
+        act_normal,
+    } status;
+
     struct af_Message *msg_down;  // 被调用者向调用者传递信息
     struct af_Message *msg_up;  // 调用者向被调用者传递信息
-
-    struct af_Code *bt_start;  // 代码的起始位置
-    struct af_Code *bt;  // 指示代码运行的地方
+    ActivityCount msg_up_count;  // msg_up 添加的个数
+    char **msg_type;  // 一个包含字符串的列表, 记录了需要处理的`msg`类型的数组
 
     struct af_VarSpaceListNode *var_list;  // 变量空间
     ActivityCount new_vs_count;  // 需要释放的空间数
 
-    struct af_Object *belong;  // 属对象
-    bool is_top;  // 最顶层
+    struct af_Object *belong;  // 属对象 (belong通常为func的belong)
+    struct af_Object *func;  // 函数本身
+
+    struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素)
+    struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
+    struct af_Code *bt_next;  // 指示代码下一步要运行的位置
+
+    bool return_first;  // 顺序执行, 获取第一个返回结果
+    struct af_Message *return_msg;  // 调用者向被调用者传递信息
 };
 
 struct af_EnvVar {  // 环境变量
@@ -72,5 +84,10 @@ struct af_Environment {  // 运行环境
 };
 
 af_Object *getBaseObjectFromCore(char *name, af_Core *core);
-
+bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
+bool pushFuncActivity(af_Code *bt, af_Environment *env);
+void popActivity(af_Message *msg, af_Environment *env);
+bool setFuncActivityToArg(af_Object *func, af_Environment *env);
+bool setFuncActivityAddVar(af_VarSpaceListNode *vsl, bool new_vsl, bool is_protect, char **msg_type, af_Environment *env);
+bool setFuncActivityToNormal(af_Code *bt, af_Environment *env);
 #endif //AFUN__ENV_H

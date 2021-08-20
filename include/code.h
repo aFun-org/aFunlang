@@ -18,6 +18,7 @@ af_Code *copyCode(af_Code *base, FilePath *path);
 af_Code *freeCode(af_Code *bt);
 bool freeCodeWithElement(af_Code *bt, af_Code **next);
 void freeAllCode(af_Code *bt);
+bool getCodeBlockNext(af_Code *bt, af_Code **next);
 bool writeAllCode(af_Code *bt, FILE *file);
 bool readAllCode(af_Code **bt, FILE *file);
 void printCode(af_Code *bt);

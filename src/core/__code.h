@@ -1,5 +1,5 @@
 ﻿/*
- * 文件名: __bytecode.h
+ * 文件名: __code.h
  * 目标: 定义Code结构体
  */
 
@@ -32,6 +32,7 @@ struct af_Code {  // 一个 Code 的结构体
 
         struct {
             CodeUint elements;  // 元素个数
+            CodeUint count;  // 总元素个数
             enum af_BlockType type;  // 括号类型
         } block;
     };

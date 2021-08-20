@@ -151,6 +151,9 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
     time33_t index = time33(var->name);
     af_VarCup **pCup = &vs->var[index];
 
+    if (vs->is_protect == true)
+        return false;
+
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
         if (EQ_STR((*pCup)->var->name, var->name))
             return false;
