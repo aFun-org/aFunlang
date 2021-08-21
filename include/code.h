@@ -10,7 +10,7 @@ enum af_BlockType {
     curly,  // 大括号
 };
 
-af_Code *makeLiteralCode(char *literal_data, char *func, char prefix, FileLine line, FilePath path);
+af_Code *makeLiteralCode(char *literal_data, char *func, bool in_protect, char prefix, FileLine line, FilePath path);
 af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path);
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next);
 af_Code *connectCode(af_Code **base, af_Code *next);

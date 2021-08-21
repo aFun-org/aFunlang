@@ -17,11 +17,12 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     return bt;
 }
 
-af_Code *makeLiteralCode(char *literal_data, char *func, char prefix, FileLine line, FilePath path) {
+af_Code *makeLiteralCode(char *literal_data, char *func, bool in_protect, char prefix, FileLine line, FilePath path) {
     af_Code *bt = makeCode(prefix, line, path);
     bt->type = literal;
     bt->literal.literal_data = strCopy(literal_data);
     bt->literal.func = strCopy(func);
+    bt->literal.in_protect = in_protect;
     return bt;
 }
 
@@ -99,6 +100,7 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
             case literal:
                 (*pdest)->literal.literal_data = strCopy(base->literal.literal_data);
                 (*pdest)->literal.func = strCopy(base->literal.func);
+                (*pdest)->literal.in_protect = base->literal.in_protect;
                 break;
 
             case variable:
@@ -190,6 +192,7 @@ static bool writeCode(af_Code *bt, FILE *file) {
         case literal:
             Done(byteWriteStr(file, bt->literal.literal_data));
             Done(byteWriteStr(file, bt->literal.func));
+            Done(byteWriteUint_8(file, bt->literal.in_protect));
             break;
         case variable:
             Done(byteWriteStr(file, bt->variable.name));
@@ -248,10 +251,14 @@ static bool readCode(af_Code **bt, FILE *file) {
     (*bt)->type = type;
 
     switch (type) {
-        case literal:
+        case literal: {
+            uint8_t in_protect;
             Done(byteReadStr(file, &((*bt)->literal.literal_data)));
             Done(byteReadStr(file, &((*bt)->literal.func)));
+            Done(byteReadUint_8(file, &in_protect));
+            (*bt)->literal.in_protect = in_protect;
             break;
+        }
         case variable:
             Done(byteReadStr(file, &((*bt)->variable.name)));
             break;

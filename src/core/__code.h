@@ -24,6 +24,7 @@ struct af_Code {  // 一个 Code 的结构体
         struct {
             char *literal_data;
             char *func;  // 函数名称
+            bool in_protect;  // 是否在保护区域
         } literal;
 
         struct {
