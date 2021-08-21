@@ -151,7 +151,7 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
     time33_t index = time33(var->name);
     af_VarCup **pCup = &vs->var[index];
 
-    if (vs->is_protect == true)
+    if (vs->is_protect)
         return false;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
@@ -172,6 +172,19 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                        af_VarSpace *vs) {
     return addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj), vs);
+}
+
+bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
+    for (NULL; vsl != NULL; vsl = vsl->next) {
+        if (!vsl->vs->is_protect)
+            return addVarToVarSpace(var, vsl->vs);
+    }
+    return false;
+}
+
+bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+                           af_VarSpaceListNode *vsl) {
+    return addVarToVarSpaceList(makeVar(name, p_self, p_posterity, p_external, obj), vsl);
 }
 
 /*

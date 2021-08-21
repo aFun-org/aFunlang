@@ -26,6 +26,10 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs);
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                        af_VarSpace *vs);
 
+bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl);
+bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+                           af_VarSpaceListNode *vsl);
+
 af_Var *findVarFromVarSpace(char *name, af_VarSpace *vs);
 af_Var *findVarFromVarList(char *name, af_VarSpaceListNode *vsl);
 
