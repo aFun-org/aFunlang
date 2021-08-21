@@ -2,6 +2,7 @@
 #define AFUN__ENV_H_PUBLIC
 #include "macro.h"
 #include "tool.h"
+#include "prefix_macro.h"
 
 typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
@@ -12,6 +13,8 @@ DEFINE_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 #include "object.h"
 #include "var.h"
 
+char getPrefix(size_t name, af_Environment *env);
+char setPrefix(size_t name, char prefix, af_Environment *env);
 af_Object *getBaseObject(char *name, af_Environment *env);
 
 af_Environment *makeEnvironment(void);

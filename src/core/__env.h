@@ -35,6 +35,8 @@ struct af_Core {  // 解释器核心
     // 保护空间
     bool in_init;  // 是否在初始化模式
     struct af_VarSpace *protect;  // 顶级保护变量空间
+
+    char prefix[PREFIX_SIZE];  // 前缀
 };
 
 struct af_Message {

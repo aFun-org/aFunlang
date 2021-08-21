@@ -28,6 +28,18 @@ static af_Core *makeCore(void) {
     core->protect = makeVarSpace();
     addVarSpaceGCByCore(core->protect, core);
     gc_addReference(core->protect);  // protect被外部引用, 由gc管理, 此处标记一个Reference
+
+    core->prefix[L_NOT_REPEAT] = '\'';
+    core->prefix[V_QUOTE] = '\'';
+
+    core->prefix[B_EXEC] = '\'';
+    core->prefix[B_EXEC_FIRST] = ',';
+    core->prefix[B_MUST_COMMON_ARG] = '<';
+    core->prefix[B_NOT_STRICT] = ',';
+
+    core->prefix[B_ARG_CUL] = '\'';
+    core->prefix[B_ARG_EXEC] = '\'';
+
     return core;
 }
 
@@ -39,6 +51,18 @@ static void freeCore(af_Core *core) {
     gc_delReference(core->protect);
     gc_freeAllValue(core);
     free(core);
+}
+
+char setPrefix(size_t name, char prefix, af_Environment *env) {
+    char old = env->core->prefix[name];
+    if (name >= PREFIX_SIZE || prefix == NUL)
+        return NUL;
+    env->core->prefix[name] = prefix;
+    return old;
+}
+
+char getPrefix(size_t name, af_Environment *env) {
+    return env->core->prefix[name];
 }
 
 /*

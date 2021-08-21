@@ -71,15 +71,15 @@ static void popLastActivity(af_Message *msg, af_Environment *env){
 }
 
 static void codeBlock(af_Code *bt, af_Environment *env) {
-    if (bt->prefix == '\'' && bt->block.type == parentheses)  // 顺序执行, 返回尾项
+    if (bt->prefix == env->core->prefix[B_EXEC] && bt->block.type == parentheses)  // 顺序执行, 返回尾项
         pushExecutionActivity(bt, false, env);
-    else if (bt->prefix == ',' && bt->block.type == brackets)  // 顺序执行, 返回首项
+    else if (bt->prefix == env->core->prefix[B_EXEC_FIRST] && bt->block.type == brackets)  // 顺序执行, 返回首项
         pushExecutionActivity(bt, true, env);
     else {
         pushFuncActivity(env->activity->bt_next, env);
-        if (bt->prefix == '<')
+        if (bt->prefix == env->core->prefix[B_MUST_COMMON_ARG])
             env->activity->must_common_arg = true;
-        else if (bt->prefix == ',')
+        else if (bt->prefix == env->core->prefix[B_NOT_STRICT])
             env->activity->not_strict = true;
     }
 }
