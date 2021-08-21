@@ -3,8 +3,8 @@
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
-static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
-static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
+static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit);
+static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit);
 
 /* ObjectData API 创建与释放 */
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name);
@@ -20,7 +20,7 @@ static af_ObjectAPI *makeObjectAPI(void);
 static void freeObjectAPI(af_ObjectAPI *api);
 
 
-static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit) {
+static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit) {
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
     od->id = strCopy(id == NULL ? "Unknow" : id);
 
@@ -33,20 +33,20 @@ static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inheri
     else
         od->api = makeObjectAPI();
 
-    od->allow_inherit = allow_iherit;
+    od->allow_inherit = allow_inherit;
     od->inherit_api = inherit_api;
 
     od->var_space = makeVarSpace();
-    od->iherit = NULL;
+    od->inherit = NULL;
 
     od->base = NULL;
     return od;
 }
 
-static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit) {
+static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit) {
     af_Object *obj = calloc(sizeof(af_Object), 1);
     obj->belong = NULL;
-    obj->data = makeObjectData_Pri(id, data_size, inherit_api, allow_iherit);
+    obj->data = makeObjectData_Pri(id, data_size, inherit_api, allow_inherit);
     obj->data->base = obj;
     return obj;
 }
@@ -56,9 +56,9 @@ static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, b
  * 目标: 生成Object和ObjectData, 并且添加到gc链表中
  * 若处于初始化模式, 则belong, inherit等可以设置为NULL, 由后期统一填上
  */
-af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_iherit, af_Object *belong,
-                      af_Inherit *iherit, af_Environment *env) {
-    af_Object *obj = makeObject_Pri(id, data_size, inherit_api, allow_iherit);
+af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_inherit, af_Object *belong,
+                      af_Inherit *inherit, af_Environment *env) {
+    af_Object *obj = makeObject_Pri(id, data_size, inherit_api, allow_inherit);
 
     if (env->core->in_init || belong != NULL)
         obj->belong = belong;
@@ -67,15 +67,15 @@ af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_i
     else
         return NULL;
 
-    if (env->core->in_init || iherit != NULL)
-        obj->data->iherit = iherit;
+    if (env->core->in_init || inherit != NULL)
+        obj->data->inherit = inherit;
     else if (env->core->object != NULL)
-        obj->data->iherit = makeIherit(env->core->object);
+        obj->data->inherit = makeInherit(env->core->object);
     else
         return NULL;
 
     if (!env->core->in_init && inherit_api)
-        obj->data->api = obj->data->iherit->obj->data->api;
+        obj->data->api = obj->data->inherit->obj->data->api;
 
     gc_addObjectData(obj->data, env);
     gc_addObject(obj, env);
@@ -94,7 +94,7 @@ void freeObjectData(af_ObjectData *od) {
         freeObjectAPI(od->api);
     if (!od->var_space->gc.info.start_gc)
         freeVarSpace(od->var_space);
-    freeAllIherit(od->iherit);
+    freeAllInherit(od->inherit);
     GC_FREE_EXCHANGE(od);
     free(od);
 }
@@ -114,21 +114,21 @@ af_Object *getBelongObject(af_Object *object, af_Environment *env) {
     return belong;
 }
 
-af_Inherit *makeIherit(af_Object *obj) {
+af_Inherit *makeInherit(af_Object *obj) {
     af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
     ih->obj = obj;
     return ih;
 }
 
-af_Inherit *freeIherit(af_Inherit *ih) {
+af_Inherit *freeInherit(af_Inherit *ih) {
     af_Inherit *next = ih->next;
     free(ih);
     return next;
 }
 
-void freeAllIherit(af_Inherit *ih) {
+void freeAllInherit(af_Inherit *ih) {
     while (ih != NULL)
-        ih = freeIherit(ih);
+        ih = freeInherit(ih);
 }
 
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name) {

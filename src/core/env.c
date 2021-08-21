@@ -98,11 +98,11 @@ static void checkInherit(af_Inherit **ih, af_Object *obj) {
         if ((*ih)->obj->data == obj->data) {
             if ((*ih)->next == NULL && (*ih)->obj == obj)  // 最后一个就是obj
                 return;  // 不需要任何更改
-            *ih = freeIherit(*ih);  // 释放该ih
+            *ih = freeInherit(*ih);  // 释放该ih
         } else
             ih = &((*ih)->next);
     }
-    *ih = makeIherit(obj);
+    *ih = makeInherit(obj);
 }
 
 static bool checkInheritAPI(af_ObjectData *od) {
@@ -112,10 +112,10 @@ static bool checkInheritAPI(af_ObjectData *od) {
     if (!od->inherit_api)
         return false;
 
-    if (od->iherit->obj->data->api == NULL && !checkInheritAPI(od->iherit->obj->data))
+    if (od->inherit->obj->data->api == NULL && !checkInheritAPI(od->inherit->obj->data))
         return false;
 
-    od->api = od->iherit->obj->data->api;
+    od->api = od->inherit->obj->data->api;
     return true;
 }
 
@@ -126,7 +126,7 @@ static bool enableCore(af_Core *core) {
     if (global == NULL || global->belong != NULL)
         return false;  // global未找到 或其有属对象
 
-    if (object == NULL || object->data->iherit != NULL || object->data->inherit_api || !object->data->allow_inherit)
+    if (object == NULL || object->data->inherit != NULL || object->data->inherit_api || !object->data->allow_inherit)
         return false;  // object未找到 或其继承自其他对象 或其使用继承api 或其不可被继承
 
     core->global = global;
@@ -145,7 +145,7 @@ static bool enableCore(af_Core *core) {
         last = od;
         if (od == object->data)
             continue;
-        checkInherit(&od->iherit, object);
+        checkInherit(&od->inherit, object);
     }
 
     // 先创造的obj在后面, 因此倒着遍历, 先遍历到的obj依赖少, 可以减少checkInheritAPI递归的深度

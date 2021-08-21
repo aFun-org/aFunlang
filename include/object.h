@@ -12,17 +12,17 @@ DEFINE_DLC_SYMBOL(pValueAPI, pAPIFUNC);
 #include "tool.h"
 
 /* 对象创建与释放函数 */
-af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_iherit, af_Object *belong,
-                      af_Inherit *iherit, af_Environment *env);
+af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_inherit, af_Object *belong,
+                      af_Inherit *inherit, af_Environment *env);
 void freeObject(af_Object *obj);
 
 /* 对象属性获取函数 */
 af_Object *getBelongObject(af_Object *object, af_Environment *env);
 
 /* 对象继承关系函数 */
-af_Inherit *makeIherit(af_Object *obj);
-af_Inherit *freeIherit(af_Inherit *ih);
-void freeAllIherit(af_Inherit *ih);
+af_Inherit *makeInherit(af_Object *obj);
+af_Inherit *freeInherit(af_Inherit *ih);
+void freeAllInherit(af_Inherit *ih);
 
 /* 对象API函数 */
 void *findObjectAPI(char *api_name, af_Object *obj);

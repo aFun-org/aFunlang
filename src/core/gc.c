@@ -118,7 +118,7 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
     if (!od->base->gc.info.reachable)
         plist = newObjectAnalyzed(od->base, plist);
 
-    for (af_Inherit *ih = od->iherit; ih != NULL; ih = ih->next) {
+    for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
         if (!ih->obj->gc.info.reachable)
             plist = newObjectAnalyzed(ih->obj, plist);
     }
