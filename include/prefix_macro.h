@@ -14,10 +14,6 @@
 #define B_MUST_COMMON_ARG (4)  /* 括号前缀: 强制普通参数调用 */
 #define B_NOT_STRICT      (5)  /* 括号前缀: 非严格参数匹配调用 */
 
-// 作为函数实参
-#define B_ARG_CUL         (6)  /* 括号前缀: 表示实际计算 */
-#define B_ARG_EXEC        (7)  /* 括号前缀: 表示顺序执行 */
-
-#define PREFIX_SIZE       (8)  /* 前缀总数 */
+#define PREFIX_SIZE       (6)  /* 前缀总数 */
 
 #endif //AFUN__PREFIX_MACRO_H

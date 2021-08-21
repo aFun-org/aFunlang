@@ -14,6 +14,7 @@ typedef struct af_TopMsgProcess af_TopMsgProcess;
 #include "__var.h"
 #include "__code.h"
 #include "__gc.h"
+#include "__arg.h"
 
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
@@ -60,7 +61,10 @@ struct af_Activity {  // 活动记录器
     ActivityCount msg_up_count;  // msg_up 添加的个数
     char **msg_type;  // 一个包含字符串的列表, 记录了需要处理的`msg`类型的数组
 
-    struct af_VarSpaceListNode *var_list;  // 变量空间
+    bool run_in_func;  // 在函数变量空间内运行 (act_arg用)
+    struct af_VarSpaceListNode *vsl;  // 变量空间
+    struct af_VarSpaceListNode *func_var_list;  // 函数内部变量空间 (运行函数体时会设置为 主变量空间)
+    struct af_VarSpaceListNode *var_list;  // 主变量空间
     ActivityCount new_vs_count;  // 需要释放的空间数
 
     struct af_Object *belong;  // 属对象 (belong通常为func的belong)
@@ -74,8 +78,13 @@ struct af_Activity {  // 活动记录器
     struct af_Object *return_obj;  // 调用者向被调用者传递信息
 
     // 函数调用专项
+    enum af_BlockType call_type;  // 函数调用类型
     bool must_common_arg;  // 强制普通参数
     bool not_strict;  // 非严格调用
+    af_Object *parentheses_call;  // 类前缀调用
+    ArgCodeList *acl_start;
+    ArgCodeList *acl_next;
+    bool is_last;  // 最后一个函数体 (允许尾调递归优化)
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器
@@ -114,6 +123,6 @@ void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
-bool setFuncActivityAddVar(af_VarSpaceListNode *vsl, bool new_vsl, bool is_protect, char **msg_type, af_Environment *env);
-bool setFuncActivityToNormal(af_Code *bt, af_Environment *env);
+bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_Environment *env);
+bool setFuncActivityToNormal(bool is_first, af_Environment *env);
 #endif //AFUN__ENV_H

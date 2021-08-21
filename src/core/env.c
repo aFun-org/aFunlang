@@ -45,9 +45,6 @@ static af_Core *makeCore(void) {
     core->prefix[B_MUST_COMMON_ARG] = '<';
     core->prefix[B_NOT_STRICT] = ',';
 
-    core->prefix[B_ARG_CUL] = '\'';
-    core->prefix[B_ARG_EXEC] = '\'';
-
     return core;
 }
 
@@ -207,12 +204,15 @@ static af_Activity *freeActivity(af_Activity *activity) {
         msg_up = freeMessage(msg_up);
     }
 
+    // vsl 是引用自 var_list和func_var_list的 故不释放
+    // func_var_list 是引用自函数的 故不释放
     for (int i = activity->new_vs_count; i > 0; i--) {
         if (vs == NULL)  // 发生了错误
             break;
         vs = popLastVarList(vs);
     }
 
+    freeAllArgCodeList(activity->acl_start);
     free(activity);
     return prev;
 }
@@ -393,6 +393,7 @@ bool addTopActivity(af_Code *code, af_Environment *env) {
     env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
     env->activity->var_list->next = makeVarSpaceList(env->core->protect);
     env->activity->status = act_normal;
+    env->activity->is_last = true;
     return true;
 }
 
@@ -484,7 +485,16 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->bt_next = next;
     activity->prev = env->activity;
     env->activity = activity;
-    env->activity->status = act_func;
+    env->activity->call_type = env->activity->bt_top->block.type;
+    env->activity->func_var_list = env->activity->var_list;  // 设置为函数变量空间 [桩]
+
+    if (env->activity->call_type == parentheses) {  // 对于类前缀调用, 已经获得func的实际值了
+        setFuncActivityToArg(env->activity->prev->parentheses_call, env);
+        gc_delReference(env->activity->prev->parentheses_call);
+        env->activity->prev->parentheses_call = NULL;
+    } else
+        env->activity->status = act_func;
+
     return true;
 }
 
@@ -499,31 +509,48 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     env->activity->func = func;
     env->activity->belong = belong;
     env->activity->status = act_arg;
-    // TODO-szh 参数处理(计算)
+
+    env->activity->acl_start = NULL;  // 设置acl [桩]
+    env->activity->acl_next = env->activity->acl_start;
+    env->activity->bt_next = NULL;
     return true;
 }
 
-bool setFuncActivityAddVar(af_VarSpaceListNode *vsl, bool new_vsl, bool is_protect, char **msg_type, af_Environment *env) {
-    if (env->activity->new_vs_count != 0 || !new_vsl && is_protect)
+bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_Environment *env) {
+    if (!new_vsl && is_protect)
         return false;
 
-    if (vsl != NULL)
-        env->activity->var_list = vsl;
+    // 桩函数: 目前func_var_list引用自var_list, 故var_list不释放
+    //af_VarSpaceListNode *vs = env->activity->var_list;
+    //for (int i = env->activity->new_vs_count; i > 0; i--) {
+    //    if (vs == NULL)  // 发生了错误
+    //        return false;
+    //    vs = popLastVarList(vs);
+    //}
+
+    env->activity->var_list = env->activity->func_var_list;
+    env->activity->func_var_list = NULL;
+    env->activity->new_vs_count = 0;
     if (new_vsl) {
         env->activity->var_list = pushNewVarList(env->activity->var_list);
         env->activity->new_vs_count = 1;
     }
 
     env->activity->msg_type = msg_type;
-    // TODO-szh 参数处理(赋值)
+    runArgList(NULL, env->activity->var_list);
     env->activity->var_list->vs->is_protect = is_protect;
     return true;
 }
 
-bool setFuncActivityToNormal(af_Code *bt, af_Environment *env) {
-    env->activity->bt_start = bt;
-    env->activity->bt_next = bt;
+bool setFuncActivityToNormal(bool is_first, af_Environment *env) {  // 获取函数的函数体
     env->activity->status = act_normal;
+    env->activity->bt_next = NULL;
+    if (env->activity->is_last)
+        return false;
+
+    env->activity->bt_start = env->activity->bt_start;
+    env->activity->bt_next = env->activity->bt_start;
+    env->activity->is_last = true;
     return true;
 }
 
