@@ -16,6 +16,12 @@ static af_EnvVar *freeEnvVar(af_EnvVar *var);
 static void freeAllEnvVar(af_EnvVar *var);
 static void freeEnvVarSpace(af_EnvVarSpace *evs);
 
+static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func);
+static af_TopMsgProcess *freeTopMsgProcess(af_TopMsgProcess *mp);
+static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
+static void *findTopMsgProcessFunc(char *type, af_Environment *env);
+static void runTopMessageProcess(af_Environment *env);
+
 static af_Core *makeCore(void) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
@@ -216,12 +222,23 @@ void pushMessageDown(af_Message *msg, af_Environment *env) {
     env->activity->msg_down = msg;
 }
 
-void *popMessageUp(char *type, af_Environment *env) {
+void *popMessageUpData(char *type, af_Environment *env) {
     for (af_Message **pmsg = &env->activity->msg_up; *pmsg != NULL; pmsg = &((*pmsg)->next)) {
         if (EQ_STR((*pmsg)->type, type))
             return (*pmsg)->msg;  // msg_up是只读的
     }
     return NULL;
+}
+
+af_Message *popMessageUp(af_Environment *env) {
+    if (env->activity->new_vs_count == 0 || env->activity->msg_up == NULL)
+        return NULL;
+
+    af_Message *msg = env->activity->msg_up;
+    env->activity->msg_up = msg->next;
+    msg->next = NULL;
+    env->activity->new_vs_count--;
+    return msg;
 }
 
 /*
@@ -315,10 +332,22 @@ char *findEnvVar(char *name, af_Environment *env) {
     return NULL;
 }
 
+void mp_NORMAL(af_Message *msg, af_Environment *env) {
+    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
+        printf("msg: %p error\n", msg->msg);
+        return;
+    }
+    gc_delReference(*(af_Object **)msg->msg);
+    printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
+}
+
 af_Environment *makeEnvironment(void) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
+    DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
     env->core = makeCore();
     env->esv = makeEnvVarSpace();
+    addTopMsgProcess("NORMAL", func, env);
+    FREE_SYMBOL(func);
     return env;
 }
 
@@ -342,11 +371,58 @@ void freeEnvironment(af_Environment *env) {
     freeCore(env->core);
     freeAllActivity(env->activity);
     freeEnvVarSpace(env->esv);
+    freeAllTopMsgProcess(env->process);
     free(env);
 }
 
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
     return addVarToVarSpace(var, env->core->protect);
+}
+
+static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func) {
+    af_TopMsgProcess *mp = calloc(sizeof(af_TopMsgProcess), 1);
+    mp->type = strCopy(type);
+    mp->func = COPY_SYMBOL(func, TopMsgProcessFunc);
+    return mp;
+}
+
+static af_TopMsgProcess *freeTopMsgProcess(af_TopMsgProcess *mp) {
+    af_TopMsgProcess *next = mp->next;
+    free(mp->type);
+    FREE_SYMBOL(mp->func);
+    free(mp);
+    return next;
+}
+
+static void freeAllTopMsgProcess(af_TopMsgProcess *mp) {
+    while (mp != NULL)
+        mp = freeTopMsgProcess(mp);
+}
+
+static void *findTopMsgProcessFunc(char *type, af_Environment *env) {
+    af_TopMsgProcess *mp = env->process;
+    for (NULL; mp != NULL; mp = mp->next) {
+        if (EQ_STR(type, mp->type))
+            return mp;
+    }
+    return NULL;
+}
+
+void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
+                      af_Environment *env) {
+    af_TopMsgProcess *mp = makeTopMsgProcess(type, func);
+    mp->next = env->process;
+    env->process = mp;
+}
+
+bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
+                         af_Environment *env) {
+    af_TopMsgProcess *mp = findTopMsgProcessFunc(type, env);
+    if (mp == NULL)
+        return false;
+    FREE_SYMBOL(mp->func);
+    mp->func = COPY_SYMBOL(func, TopMsgProcessFunc);
+    return true;
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
@@ -418,6 +494,18 @@ bool setFuncActivityToNormal(af_Code *bt, af_Environment *env) {
     return true;
 }
 
+static void runTopMessageProcess(af_Environment *env) {
+    af_Message **pmsg = &env->activity->msg_down;
+    while (*pmsg != NULL) {
+        af_TopMsgProcess *mp = findTopMsgProcessFunc((*pmsg)->type, env);
+        if (mp != NULL) {
+            GET_SYMBOL(mp->func)(*pmsg, env);
+            *pmsg = freeMessage(*pmsg);
+        } else
+            pmsg = &((*pmsg)->next);
+    }
+}
+
 void popActivity(af_Message *msg, af_Environment *env) {
     if (env->activity->prev != NULL) {
         af_Message *new_msg;
@@ -429,9 +517,12 @@ void popActivity(af_Message *msg, af_Environment *env) {
         env->activity->msg_down = NULL;
         connectMessage(&new_msg, env->activity->prev->msg_down);
         env->activity->prev->msg_down = new_msg;
-    } else if (msg != NULL) {  // 到顶 且 msg != NULL
-        gc_delReference(*(af_Object **)msg->msg);
-        freeMessage(msg);
+    } else {  // 到顶
+        if (msg != NULL) {
+            msg->next = env->activity->msg_down;
+            env->activity->msg_down = msg;
+        }
+        runTopMessageProcess(env);
     }
     env->activity = freeActivity(env->activity);
 }

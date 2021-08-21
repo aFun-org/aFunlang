@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "tool.h"
 
+int test_func(void) {
+    return 100;
+}
+
 int main() {
     atexit(dlcExit);
 
@@ -12,16 +16,22 @@ int main() {
     }
 
     typedef int func(int a);
+    typedef int test(void);
     NEW_DLC_SYMBOL(int, INT);
     NEW_DLC_SYMBOL(func, FUNC);
+    NEW_DLC_SYMBOL(test, TEST);
 
     DLC_SYMBOL(INT) a;
     DLC_SYMBOL(FUNC) fun;
+    DLC_SYMBOL(TEST) test_fun;
 
     a = READ_SYMBOL(dlc, "num", INT);
     fun = READ_SYMBOL(dlc, "test", FUNC);
+    test_fun = MAKE_SYMBOL(test_func, TEST);
 
-    printf("a = %d, test = %d\n", GET_SYMBOL(a), GET_SYMBOL(fun)(GET_SYMBOL(a)));
+    int test_func_result = GET_SYMBOL(test_fun)();
+
+    printf("a = %d, test = %d\n", GET_SYMBOL(a), GET_SYMBOL(fun)(test_func_result));
 
     FREE_SYMBOL(a);
     FREE_SYMBOL(fun);

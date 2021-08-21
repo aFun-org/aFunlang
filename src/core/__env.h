@@ -1,11 +1,13 @@
 ﻿#ifndef AFUN__ENV_H
 #define AFUN__ENV_H
 #include "macro.h"
+#include "tool.h"
 
 typedef struct af_Core af_Core;
 typedef struct af_Activity af_Activity;
 typedef struct af_EnvVarSpace af_EnvVarSpace;
 typedef struct af_EnvVar af_EnvVar;
+typedef struct af_TopMsgProcess af_TopMsgProcess;
 
 #include "env.h"
 #include "__object.h"
@@ -67,6 +69,12 @@ struct af_Activity {  // 活动记录器
     struct af_Message *return_msg;  // 调用者向被调用者传递信息
 };
 
+struct af_TopMsgProcess {  // 顶层msg处理器
+    char *type;
+    DLC_SYMBOL(TopMsgProcessFunc) func;  // 在 env.h 中定义
+    struct af_TopMsgProcess *next;
+};
+
 struct af_EnvVar {  // 环境变量
     char *name;
     char *data;
@@ -79,8 +87,9 @@ struct af_EnvVarSpace {  // 环境变量
 
 struct af_Environment {  // 运行环境
     struct af_Core *core;
-    struct af_Activity *activity;
     struct af_EnvVarSpace *esv;
+    struct af_Activity *activity;
+    struct af_TopMsgProcess *process;
 };
 
 af_Object *getBaseObjectFromCore(char *name, af_Core *core);
