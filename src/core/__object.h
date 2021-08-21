@@ -11,7 +11,6 @@
 // 这些typedef可能会被下面include的文件使用
 typedef struct af_ObjectData af_ObjectData;
 typedef struct af_ObjectAPINode af_ObjectAPINode;
-typedef struct af_ObjectAPI af_ObjectAPI;
 
 #include "object.h"
 #include "__gc.h"
@@ -40,7 +39,7 @@ struct af_ObjectData {
 
     struct af_ObjectAPI *api;  // 继承的api必须位于Inherit链中
     bool allow_inherit;  // 是否允许被继承
-    bool inherit_api;  // api被继承
+    bool free_api;  // api被继承
 
     struct af_VarSpace *var_space;
     struct af_Inherit *inherit;  // 只有顶级继承对象的inherit属性可为NULL
@@ -57,6 +56,7 @@ struct af_Object {
 
 struct af_Inherit {
     struct af_Object *obj;
+    struct af_VarSpace *vs;  // 共享变量空间
     struct af_Inherit *next;
 };
 

@@ -16,10 +16,10 @@ int main() {
 
     af_Environment *env = makeEnvironment();
     addVarToProtectVarSpace(makeVar("global", 3, 3, 3,
-                                    makeObject("global", 0, false, true, NULL, NULL, env)),
+                                    makeObject("global", true, makeObjectAPI(), true, NULL, NULL, env)),
                             env);
     addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
-                                    makeObject("object", 0, false, true, NULL, NULL, env)),
+                                    makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
                             env);
 
     {

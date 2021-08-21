@@ -6,7 +6,6 @@ static void freeCore(af_Core *core);
 
 /* 核心初始化 */
 static bool enableCore(af_Core *core);
-static bool checkInheritAPI(af_ObjectData *od);
 static void checkInherit(af_Inherit **ih, af_Object *obj);
 
 /* 活动记录器创建和释放 */
@@ -102,19 +101,6 @@ static void checkInherit(af_Inherit **ih, af_Object *obj) {
     *ih = makeInherit(obj);
 }
 
-static bool checkInheritAPI(af_ObjectData *od) {
-    if (od->api != NULL)
-        return true;
-
-    if (!od->inherit_api)
-        return false;
-
-    if (od->inherit->obj->data->api == NULL && !checkInheritAPI(od->inherit->obj->data))
-        return false;
-
-    od->api = od->inherit->obj->data->api;
-    return true;
-}
 
 static bool enableCore(af_Core *core) {
     af_Object *object = getBaseObjectFromCore("object", core);
@@ -123,8 +109,8 @@ static bool enableCore(af_Core *core) {
     if (global == NULL || global->belong != NULL)
         return false;  // global未找到 或其有属对象
 
-    if (object == NULL || object->data->inherit != NULL || object->data->inherit_api || !object->data->allow_inherit)
-        return false;  // object未找到 或其继承自其他对象 或其使用继承api 或其不可被继承
+    if (object == NULL || object->data->inherit != NULL || !object->data->allow_inherit)
+        return false;  // object未找到 或其继承自其他对象 或其不可被继承
 
     core->global = global;
     core->object = object;
@@ -137,20 +123,10 @@ static bool enableCore(af_Core *core) {
             obj->belong = global;
     }
 
-    af_ObjectData *last = NULL;
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
-        last = od;
         if (od == object->data)
             continue;
         checkInherit(&od->inherit, object);
-    }
-
-    // 先创造的obj在后面, 因此倒着遍历, 先遍历到的obj依赖少, 可以减少checkInheritAPI递归的深度
-    for (af_ObjectData *od = last; od != NULL; od = od->gc.prev) {
-        if (od == object->data)
-            continue;
-        if(!checkInheritAPI(od))
-            return false;
     }
 
     gc_addReference(object);

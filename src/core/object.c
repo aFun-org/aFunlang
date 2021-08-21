@@ -3,8 +3,8 @@
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
-static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit);
-static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit);
+static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit);
+static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit);
 
 /* ObjectData API 创建与释放 */
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name);
@@ -15,26 +15,16 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin);
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
 static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectData *od);
 
-/* ObjectData API表 管理函数 */
-static af_ObjectAPI *makeObjectAPI(void);
-static void freeObjectAPI(af_ObjectAPI *api);
-
-
-static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit) {
+static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
     od->id = strCopy(id == NULL ? "Unknow" : id);
 
-    if (data_size != 0)
-        od->data = calloc(data_size, 1);
-    od->size = data_size;
+    // data通过调用api实现
+    od->size = 0;
 
-    if (inherit_api)
-        od->api = NULL;
-    else
-        od->api = makeObjectAPI();
-
+    od->api = api;
+    od->free_api = free_api;
     od->allow_inherit = allow_inherit;
-    od->inherit_api = inherit_api;
 
     od->var_space = makeVarSpace();
     od->inherit = NULL;
@@ -43,10 +33,10 @@ static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inheri
     return od;
 }
 
-static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_inherit) {
+static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
     af_Object *obj = calloc(sizeof(af_Object), 1);
     obj->belong = NULL;
-    obj->data = makeObjectData_Pri(id, data_size, inherit_api, allow_inherit);
+    obj->data = makeObjectData_Pri(id, free_api, api, allow_inherit);
     obj->data->base = obj;
     return obj;
 }
@@ -56,9 +46,21 @@ static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, b
  * 目标: 生成Object和ObjectData, 并且添加到gc链表中
  * 若处于初始化模式, 则belong, inherit等可以设置为NULL, 由后期统一填上
  */
-af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_inherit, af_Object *belong,
+af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
                       af_Inherit *inherit, af_Environment *env) {
-    af_Object *obj = makeObject_Pri(id, data_size, inherit_api, allow_inherit);
+    if (api == NULL)
+        return NULL;
+
+    af_Inherit *ih = NULL;
+    if (env->core->in_init || inherit != NULL)
+        ih = inherit;
+    else if (env->core->object != NULL)
+        ih = makeInherit(env->core->object);
+
+    if (!env->core->in_init && ih == NULL)
+        return NULL;
+
+    af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit);
 
     if (env->core->in_init || belong != NULL)
         obj->belong = belong;
@@ -67,16 +69,7 @@ af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_i
     else
         return NULL;
 
-    if (env->core->in_init || inherit != NULL)
-        obj->data->inherit = inherit;
-    else if (env->core->object != NULL)
-        obj->data->inherit = makeInherit(env->core->object);
-    else
-        return NULL;
-
-    if (!env->core->in_init && inherit_api)
-        obj->data->api = obj->data->inherit->obj->data->api;
-
+    obj->data->inherit = ih;
     gc_addObjectData(obj->data, env);
     gc_addObject(obj, env);
     return obj;
@@ -90,7 +83,7 @@ af_Object *makeObject(char *id, size_t data_size, bool inherit_api, bool allow_i
 void freeObjectData(af_ObjectData *od) {
     free(od->id);
     free(od->data);
-    if (!od->inherit_api)
+    if (od->free_api)
         freeObjectAPI(od->api);
     if (!od->var_space->gc.info.start_gc)
         freeVarSpace(od->var_space);
@@ -105,23 +98,19 @@ void freeObject(af_Object *obj) {
 }
 
 af_Object *getBelongObject(af_Object *object, af_Environment *env) {
-    af_Object *belong = object->belong;
-    if (belong == NULL){
-        if (object != env->core->global)
-            object->belong = env->core->global;
-        return env->core->global;
-    }
-    return belong;
+    if (object->belong == NULL)
+        return object;
+    return object->belong;
 }
 
 af_Inherit *makeInherit(af_Object *obj) {
     af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
-    ih->obj = obj;
+    ih->obj = obj;  // 调用API获取vs
     return ih;
 }
 
 af_Inherit *freeInherit(af_Inherit *ih) {
-    af_Inherit *next = ih->next;
+    af_Inherit *next = ih->next;  // vs一定是被gc托管的
     free(ih);
     return next;
 }
@@ -154,12 +143,12 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin) {
         apin = freeObjectAPINode(apin);
 }
 
-static af_ObjectAPI *makeObjectAPI(void) {
+af_ObjectAPI *makeObjectAPI(void) {
     af_ObjectAPI *api = calloc(sizeof(af_ObjectAPI), 1);
     return api;
 }
 
-static void freeObjectAPI(af_ObjectAPI *api) {
+void freeObjectAPI(af_ObjectAPI *api) {
     for (int i = 0; i < API_HASHTABLE_SIZE; i++)
         freeAllObjectAPINode(api->node[i]);
     free(api);
@@ -172,8 +161,37 @@ static void freeObjectAPI(af_ObjectAPI *api) {
  * 若dlc中不存在指定函数则返回-1且不作修改
  * 操作成功返回1
  */
+int addAPI(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectAPI *api) {
+    time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
+    af_ObjectAPINode **pNode = &api->node[index];
+
+    for (NULL; *pNode != NULL; pNode = &((*pNode)->next)) {
+        if (EQ_STR((*pNode)->name, api_name))
+            return 0;
+    }
+
+    *pNode = makeObjectAPINode(func, api_name);
+    return *pNode == NULL ? -1 : 1;
+}
+
+void *findAPI(char *api_name, af_ObjectAPI *api) {
+    time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
+    for (af_ObjectAPINode *node = api->node[index]; node != NULL; node = node->next) {
+        if (EQ_STR(node->name, api_name))
+            return GET_SYMBOL(node->api);
+    }
+    return NULL;
+}
+
+/*
+ * 函数名: addAPIToObjectData
+ * 目标: 从DLC中获取函数并写入api
+ * 若已存在api则返回0且不作修改
+ * 若dlc中不存在指定函数则返回-1且不作修改
+ * 操作成功返回1
+ */
 static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
-                        af_ObjectData *od) {
+                              af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &od->api->node[index];
 

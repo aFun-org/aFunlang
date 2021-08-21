@@ -36,7 +36,7 @@ static void codeVariable(af_Code *code, af_Environment *env) {
 }
 
 static void codeLiteral(af_Code *code, af_Environment *env) {
-    af_Object *obj = makeObject("Literal", 0, true, true, NULL, NULL, env);
+    af_Object *obj = makeObject("Literal", true, makeObjectAPI(), true, NULL, NULL, env);
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
     *((af_Object **)msg->msg) = obj;
     gc_addReference(obj);
