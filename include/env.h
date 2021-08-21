@@ -6,8 +6,7 @@
 typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
 
-typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
-NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
+DEFINE_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
 #include "code.h"
 #include "object.h"

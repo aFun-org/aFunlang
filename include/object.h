@@ -5,8 +5,7 @@
 typedef struct af_Object af_Object;
 typedef struct af_Inherit af_Inherit;
 
-typedef void pValueAPI();
-NEW_DLC_SYMBOL(pValueAPI, pAPIFUNC);  // TODO-szh 移动到_object.h
+DEFINE_DLC_SYMBOL(pValueAPI, pAPIFUNC);
 
 #include "env.h"
 #include "tool.h"

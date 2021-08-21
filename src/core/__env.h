@@ -18,6 +18,9 @@ typedef struct af_TopMsgProcess af_TopMsgProcess;
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
 
+typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
+NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
+
 struct af_Core {  // 解释器核心
     // GC基本信息
     struct af_ObjectData *gc_ObjectData;

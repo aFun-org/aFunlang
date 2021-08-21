@@ -92,7 +92,7 @@ void safeSleep(double ms);
 /*
  * NEW_DLC_SYMBOL: 用于定义指定类型的symbol结构体
  * DLC_SYMBOL: 指定类型的symbol结构体名
- * GET_SYMBOL: 访问symbol成员
+ * GET_SYMBOL: 访问symbol成员的值
  * MAKE_SYMBOL: 生成一个symbol
  * COPY_SYMBOL: 拷贝一个symbol(拷贝其引用)
  * READ_SYMBOL: 在dlc中获取一个symbol
@@ -102,6 +102,8 @@ void safeSleep(double ms);
  * freeLibary: 释放动态库
  * dlcExit: 释放所有动态库
  */
+
+#define DEFINE_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL *pDLC##NAME##SYMBOL
 #define NEW_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL { \
 TYPE *symbol; \
 struct DlcHandle *dlc; \
@@ -109,9 +111,9 @@ struct DlcHandle *dlc; \
 
 #define DLC_SYMBOL(NAME) pDLC##NAME##SYMBOL
 #define GET_SYMBOL(SYMBOL) (*((SYMBOL)->symbol))
-#define MAKE_SYMBOL(symbol, TYPE) ((struct DLC##TYPE##SYMBOL *) (makeSymbol_(symbol)))
-#define COPY_SYMBOL(ds, TYPE) ((struct DLC##TYPE##SYMBOL *) (copySymbol_((DlcSymbol_ *)(ds))))
-#define READ_SYMBOL(dlc, name, TYPE) ((struct DLC##TYPE##SYMBOL *) (getSymbol_((dlc), (name))))
+#define MAKE_SYMBOL(symbol, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_(symbol)))
+#define COPY_SYMBOL(ds, TYPE) ((pDLC##TYPE##SYMBOL) (copySymbol_((DlcSymbol_ *)(ds))))
+#define READ_SYMBOL(dlc, name, TYPE) ((pDLC##TYPE##SYMBOL) (getSymbol_((dlc), (name))))
 #define FREE_SYMBOL(symbol) ((symbol) != NULL ? (freeSymbol_((DlcSymbol_ *)(symbol)), NULL) : NULL)
 
 typedef struct DlcSymbol_ DlcSymbol_;
