@@ -16,9 +16,10 @@ static af_Code *codeVariable(af_Code *code, af_Environment *env) {
         msg = makeMessage("NORMAL", sizeof(af_Object *));
         *((af_Object **)msg->msg) = obj;
         gc_addReference(obj);
+        printf("Get Variable %s : %p\n", code->variable.name, obj);
     } else {
         msg = makeMessage("ERROR-STR", 0);
-        printf("Var not found: %s\n", code->variable.name);
+        printf("Variable not found: %s\n", code->variable.name);
     }
 
     pushMessageDown(msg, env);
@@ -28,7 +29,7 @@ static af_Code *codeVariable(af_Code *code, af_Environment *env) {
 static af_Code *codeLiteral(af_Code *code, af_Environment *env) {
     af_Message *msg;
     af_Object *obj = makeObject("Literal", 0, true, true, NULL, NULL, env);
-    printf("Literal %s : %s\n", code->literal.func, code->literal.literal_data);
+    printf("Literal %s(%s) : %p\n", code->literal.func, code->literal.literal_data, obj);
     msg = makeMessage("NORMAL", sizeof(af_Object *));
     *((af_Object **)msg->msg) = obj;
     gc_addReference(obj);
@@ -50,9 +51,37 @@ static void popLastActivity(af_Message *msg, af_Environment *env){
     do {  // 如果返回一级后仍是执行完成则继续返回
         if (env->activity->prev == NULL)
             printf("top finished\n");
+        if (env->activity->return_first) {
+            if (msg != NULL) {
+                gc_delReference(*(af_Object **)msg->msg);
+                freeMessage(msg);
+            }
+
+            if (env->activity->return_obj == NULL)
+                msg = makeMessage("ERROR-STR", 0);
+            else {
+                msg = makeMessage("NORMAL", sizeof(af_Object *));
+                *(af_Object **)msg->msg = env->activity->return_obj;  // env->activity->return_obj本来就有一个gc_Reference
+                env->activity->return_obj = NULL;
+            }
+        }
         popActivity(msg, env);
         msg = NULL;  // 随后几次执行popActivity时不需要压入新的msg
     } while (env->activity != NULL && env->activity->bt_next == NULL);
+}
+
+static void codeBlock(af_Code *bt, af_Environment *env) {
+    if (bt->prefix == '\'' && bt->block.type == parentheses)  // 顺序执行, 返回尾项
+        pushExecutionActivity(bt, false, env);
+    else if (bt->prefix == ',' && bt->block.type == brackets)  // 顺序执行, 返回首项
+        pushExecutionActivity(bt, true, env);
+    else {
+        pushFuncActivity(env->activity->bt_next, env);
+        if (bt->prefix == '<')
+            env->activity->must_common_arg = true;
+        else if (bt->prefix == ',')
+            env->activity->not_strict = true;
+    }
 }
 
 bool iterCode(af_Code *code, af_Environment *env) {
@@ -68,8 +97,8 @@ bool iterCode(af_Code *code, af_Environment *env) {
             case variable:
                 env->activity->bt_next = codeVariable(env->activity->bt_next, env);
                 break;
-            case block:  // TODO-szh 考虑前缀
-                pushFuncActivity(env->activity->bt_next, env);
+            case block:
+                codeBlock(env->activity->bt_next, env);
                 continue;  // 该步骤没有任何实质性运算
             default:
                 break;  // 错误
@@ -83,12 +112,18 @@ bool iterCode(af_Code *code, af_Environment *env) {
         if (!EQ_STR(msg->type, "NORMAL")) {
             pushMessageDown(msg, env);
             if (env->activity->status != act_normal || !checkInMsgType(msg->type, env)) {
+                if (env->activity->return_obj != NULL)
+                    gc_delReference(env->activity->return_obj);
+                env->activity->return_obj = NULL;
                 popLastActivity(NULL, env);  // msg 已经 push进去了
                 continue;
             } else {
                 env->activity->bt_next = NULL;
                 // TODO-szh 切换函数
             }
+        } else if (env->activity->return_first && env->activity->return_obj == NULL) {
+            env->activity->return_obj = *(af_Object **)msg->msg;
+            gc_addReference(env->activity->return_obj);
         }
 
         switch (env->activity->status) {

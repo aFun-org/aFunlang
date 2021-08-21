@@ -165,8 +165,9 @@ static af_Activity *freeActivity(af_Activity *activity) {
     if (activity->func != NULL)
         gc_delReference(activity->func);
 
-    if (activity->return_msg != NULL)
-        freeMessage(activity->return_msg);
+    if (activity->return_obj != NULL)
+        gc_delReference(activity->return_obj);
+
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
     for (int i = activity->msg_up_count; i > 0; i--) {
         if (msg_up == NULL)  // 发生了错误

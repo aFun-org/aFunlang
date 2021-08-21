@@ -69,7 +69,11 @@ struct af_Activity {  // 活动记录器
     struct af_Code *bt_next;  // 指示代码下一步要运行的位置
 
     bool return_first;  // 顺序执行, 获取第一个返回结果
-    struct af_Message *return_msg;  // 调用者向被调用者传递信息
+    struct af_Object *return_obj;  // 调用者向被调用者传递信息
+
+    // 函数调用专项
+    bool must_common_arg;  // 强制普通参数
+    bool not_strict;  // 非严格调用
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器

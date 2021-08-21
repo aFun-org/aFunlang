@@ -71,6 +71,30 @@ int main() {
         freeAllCode(bt1);
     }
 
+    {  // 测试顺序执行 '(xxx)
+        af_Code *bt3 = makeLiteralCode("data2", "func", 0, 0, NULL);
+        af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt3, bt4);
+
+        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, NULL, NULL);
+
+        iterCode(bt5, env);
+        freeAllCode(bt5);
+    }
+
+    {  // 测试顺序执行 ,[xxx]
+        af_Code *bt3 = makeLiteralCode("data2", "func", 0, 0, NULL);
+        af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt3, bt4);
+
+        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
+
+        iterCode(bt5, env);
+        freeAllCode(bt5);
+    }
+
     freeEnvironment(env);
     return 0;
 }
