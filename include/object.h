@@ -1,8 +1,12 @@
 ﻿#ifndef AFUN__OBJECT_H_PUBLIC
 #define AFUN__OBJECT_H_PUBLIC
+#include "tool.h"
 
 typedef struct af_Object af_Object;
 typedef struct af_Inherit af_Inherit;
+
+typedef void pValueAPI();
+NEW_DLC_SYMBOL(pValueAPI, pAPIFUNC);  // TODO-szh 移动到_object.h
 
 #include "env.h"
 #include "tool.h"
@@ -17,6 +21,6 @@ af_Inherit *freeIherit(af_Inherit *ih);
 void freeAllIherit(af_Inherit *ih);
 
 void *findObjectAPI(char *api_name, af_Object *obj);
-int addAPIToObject(DlcHandle *dlc, char *func_name, char *api_name,
+int addAPIToObject(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
                    af_Object *obj);
 #endif //AFUN__OBJECT_H_PUBLIC

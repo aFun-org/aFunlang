@@ -5,7 +5,7 @@
 static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
 static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
 
-static af_ObjectAPINode *makeObjectAPINode(DlcHandle *dlc, char *func_name, char *api_name);
+static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name);
 static af_ObjectAPINode *freeObjectAPINode(af_ObjectAPINode *apin);
 static void freeAllObjectAPINode(af_ObjectAPINode *apin);
 static af_ObjectAPI *makeObjectAPI(void);
@@ -123,13 +123,12 @@ void freeAllIherit(af_Inherit *ih) {
         ih = freeIherit(ih);
 }
 
-static af_ObjectAPINode *makeObjectAPINode(DlcHandle *dlc, char *func_name, char *api_name) {
-    DLC_SYMBOL(pAPIFUNC) func = READ_SYMBOL(dlc, func_name, pAPIFUNC);
+static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name) {
     if (func == NULL)
         return NULL;
 
     af_ObjectAPINode *apin = calloc(sizeof(af_ObjectAPINode), 1);
-    apin->api = func;
+    apin->api = COPY_SYMBOL(func, pAPIFUNC);
     apin->name = strCopy(api_name);
     return apin;
 }
@@ -165,7 +164,7 @@ static void freeObjectAPI(af_ObjectAPI *api) {
  * 若dlc中不存在指定函数则返回-1且不作修改
  * 操作成功返回1
  */
-int addAPIToObjectData(DlcHandle *dlc, char *func_name, char *api_name,
+int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
                         af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &od->api->node[index];
@@ -175,7 +174,7 @@ int addAPIToObjectData(DlcHandle *dlc, char *func_name, char *api_name,
             return 0;
     }
 
-    *pNode = makeObjectAPINode(dlc, func_name, api_name);
+    *pNode = makeObjectAPINode(func, api_name);
     return *pNode == NULL ? -1 : 1;
 }
 
@@ -192,9 +191,9 @@ af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
  * 函数名: findObjectDataAPINode
  * 目标: 从DLC中获取函数并写入Object的API
  */
-int addAPIToObject(DlcHandle *dlc, char *func_name, char *api_name,
+int addAPIToObject(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
                    af_Object *obj) {
-    return addAPIToObjectData(dlc, func_name, api_name, obj->data);
+    return addAPIToObjectData(func, api_name, obj->data);
 }
 
 /*
