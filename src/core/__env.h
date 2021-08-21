@@ -85,6 +85,7 @@ struct af_Activity {  // 活动记录器
     ArgCodeList *acl_start;
     ArgCodeList *acl_next;
     bool is_last;  // 最后一个函数体 (允许尾调递归优化)
+    bool in_call;  // 当重新执行该活动记录器时先不执行代码, 而是处理msg
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器

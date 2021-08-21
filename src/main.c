@@ -39,11 +39,29 @@ int main() {
 
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("object", 0, 1, NULL);
-        af_Code *bt6 = makeVariableCode("object", 0, 1, NULL);
 
         connectCode(&bt1, bt2);
         connectCode(&bt3, bt4);
-        connectCode(&bt4, bt6);
+
+        af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
+        connectCode(&bt2, bt5);
+
+        af_Code *bt6 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt5, bt6);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+    }
+
+    {  // 尾调递归优化
+        af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
+        af_Code *bt2 = makeVariableCode("object", 0, 1, NULL);
+
+        af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
+        af_Code *bt4 = makeVariableCode("object", 0, 1, NULL);
+
+        connectCode(&bt1, bt2);
+        connectCode(&bt3, bt4);
 
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         connectCode(&bt2, bt5);
@@ -96,11 +114,41 @@ int main() {
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, NULL, NULL);
 
+        af_Code *bt6 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt5, bt6);
+
         iterCode(bt5, env);
         freeAllCode(bt5);
     }
 
     {  // 测试顺序执行 ,[xxx]
+        af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
+        af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt3, bt4);
+
+        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
+
+        af_Code *bt6 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt5, bt6);
+
+        iterCode(bt5, env);
+        freeAllCode(bt5);
+    }
+
+    {  // 测试顺序执行 '(xxx) 【尾调递归优化】
+        af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
+        af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt3, bt4);
+
+        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, NULL, NULL);
+
+        iterCode(bt5, env);
+        freeAllCode(bt5);
+    }
+
+    {  // 测试顺序执行 ,[xxx] 【尾调递归优化】
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
 

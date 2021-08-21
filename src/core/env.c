@@ -185,6 +185,15 @@ static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return
     return activity;
 }
 
+static void freeMsgType(char **msg_type) {
+    if (msg_type == NULL)
+        return;
+
+    for (char *tmp = *msg_type; tmp != NULL; tmp++)
+        free(tmp);
+    free(msg_type);
+}
+
 static af_Activity *freeActivity(af_Activity *activity) {
     af_Activity *prev = activity->prev;
     af_VarSpaceListNode *vs = activity->var_list;
@@ -193,9 +202,6 @@ static af_Activity *freeActivity(af_Activity *activity) {
     gc_delReference(activity->belong);
     if (activity->func != NULL)
         gc_delReference(activity->func);
-
-    if (activity->return_obj != NULL)
-        gc_delReference(activity->return_obj);
 
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
     for (int i = activity->msg_up_count; i > 0; i--) {
@@ -212,7 +218,14 @@ static af_Activity *freeActivity(af_Activity *activity) {
         vs = popLastVarList(vs);
     }
 
+    if (activity->return_obj != NULL)
+        gc_delReference(activity->return_obj);
+
+    if (activity->parentheses_call != NULL)
+        gc_delReference(activity->parentheses_call);
+
     freeAllArgCodeList(activity->acl_start);
+    freeMsgType(activity->msg_type);
     free(activity);
     return prev;
 }
@@ -464,34 +477,58 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
     if (!getCodeBlockNext(bt, &next))
         return false;
 
-    af_Activity *activity = makeActivity(bt, bt->next, return_first, env->activity->msg_up,
-                                         env->activity->var_list, env->activity->belong,
-                                         env->activity->func);
     env->activity->bt_next = next;
-    activity->prev = env->activity;
-    env->activity = activity;
+    if (next != NULL || !env->activity->is_last) {
+        env->activity->in_call = true;
+        af_Activity *activity = makeActivity(bt, bt->next, return_first, env->activity->msg_up,
+                                             env->activity->var_list, env->activity->belong,
+                                             env->activity->func);
+        activity->prev = env->activity;
+        env->activity = activity;
+    } else {
+        printf("Tail tone recursive optimization\n");
+        env->activity->bt_top = bt;
+        env->activity->bt_start = bt->next;
+        env->activity->bt_next = bt->next;
+        env->activity->is_last = false;
+        if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
+            env->activity->return_first = return_first;
+    }
+
     env->activity->status = act_normal;
     return true;
 }
 
 bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *next;
+    af_Object **parentheses_call = &env->activity->parentheses_call;
     if (!getCodeBlockNext(bt, &next))
         return false;
 
-    af_Activity *activity = makeActivity(bt, bt->next, false, env->activity->msg_up,
-                                         env->activity->var_list, env->activity->belong,
-                                         env->activity->func);
     env->activity->bt_next = next;
-    activity->prev = env->activity;
-    env->activity = activity;
+
+    if (next != NULL || !env->activity->is_last) {
+        af_Activity *activity;
+        env->activity->in_call = true;
+        activity = makeActivity(bt, bt->next, false, env->activity->msg_up,
+                                env->activity->var_list, env->activity->belong, env->activity->func);
+        activity->prev = env->activity;
+        env->activity = activity;
+    } else {  // 尾调递归优化
+        printf("Tail tone recursive optimization\n");
+        env->activity->bt_top = bt;
+        env->activity->bt_start = bt->next;
+        env->activity->bt_next = bt->next;
+        env->activity->is_last = false;
+    }
+
     env->activity->call_type = env->activity->bt_top->block.type;
     env->activity->func_var_list = env->activity->var_list;  // 设置为函数变量空间 [桩]
 
     if (env->activity->call_type == parentheses) {  // 对于类前缀调用, 已经获得func的实际值了
-        setFuncActivityToArg(env->activity->prev->parentheses_call, env);
-        gc_delReference(env->activity->prev->parentheses_call);
-        env->activity->prev->parentheses_call = NULL;
+        setFuncActivityToArg(*parentheses_call, env);
+        gc_delReference(*parentheses_call);
+        *parentheses_call = NULL;
     } else
         env->activity->status = act_func;
 
@@ -530,10 +567,10 @@ bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_En
 
     env->activity->var_list = env->activity->func_var_list;
     env->activity->func_var_list = NULL;
-    env->activity->new_vs_count = 0;
+    // env->activity->new_vs_count = 0; // 目前func_var_list引用自var_list, 故不设置此值
     if (new_vsl) {
         env->activity->var_list = pushNewVarList(env->activity->var_list);
-        env->activity->new_vs_count = 1;
+        env->activity->new_vs_count++;
     }
 
     env->activity->msg_type = msg_type;

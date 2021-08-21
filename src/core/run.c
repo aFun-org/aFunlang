@@ -110,19 +110,22 @@ bool iterCode(af_Code *code, af_Environment *env) {
 
         if (env->activity->bt_next != NULL) {
             run_code = true;
-            switch (env->activity->bt_next->type) {
-                case literal:
-                    codeLiteral(env->activity->bt_next, env);
-                    break;
-                case variable:
-                    codeVariable(env->activity->bt_next, env);
-                    break;
-                case block:
-                    codeBlock(env->activity->bt_next, env);
-                    continue;  // 该步骤没有任何实质性运算
-                default:
-                    break;  // 错误
-            }
+            if (!env->activity->in_call) {
+                switch (env->activity->bt_next->type) {
+                    case literal:
+                        codeLiteral(env->activity->bt_next, env);
+                        break;
+                    case variable:
+                        codeVariable(env->activity->bt_next, env);
+                        break;
+                    case block:
+                        codeBlock(env->activity->bt_next, env);
+                        continue;  // 该步骤没有任何实质性运算
+                    default:
+                        break;  // 错误
+                }
+            } else
+                env->activity->in_call = false;
 
             if (env->activity->msg_down == NULL)  // 若未获得 msg
                 msg = makeMessage("ERROR-STR", 0);
