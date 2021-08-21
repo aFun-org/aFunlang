@@ -11,6 +11,7 @@
 
 #if BUILD_MEM
 
+/* 取代calloc函数 */
 static void *safeCalloc(size_t n, size_t size);
 static void *safeCalloc(size_t n, size_t size) {
     void *re = calloc(n, size);

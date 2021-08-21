@@ -48,12 +48,16 @@ struct GC_VarSpace {
 #include "__env.h"  // 这部分内容依赖上面的定义
 #include "gc.h"
 
-void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);  // af_ObjectData 不对外公开
+/* gc 对象新增函数 : 涉及af_ObjectData 不对外公开 */
+void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);
+
+/* gc 对象新增函数 : 涉及af_Core不对外公开 */
 void gc_addObjectDataByCore(struct af_ObjectData *obj, af_Core *core);
 void gc_addObjectByCore(struct af_Object *obj, af_Core *core);
 void gc_addVarByCore(struct af_Var *obj, af_Core *core);
 void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
+/* gc启动函数 : gc的启动由解释器完全管理 */
 bool gc_RunGC(af_Environment *env);
 void gc_freeAllValue(af_Core *core);
 

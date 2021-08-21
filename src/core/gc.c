@@ -4,8 +4,7 @@
 #include "__gc.h"
 #include "__env.h"
 
-typedef struct gc_Analyzed gc_Analyzed;
-typedef struct gc_Analyzed **pgc_Analyzed;
+typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
 struct gc_Analyzed {
     enum gc_AnalyzedType {
         gc_ObjectData,
@@ -25,24 +24,27 @@ struct gc_Analyzed {
     struct gc_Analyzed *next;
 };
 
+/* 分析记录器创建与释放函数 */
 static gc_Analyzed *makeAnalyzed(enum gc_AnalyzedType type, void *data);
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base);
 
+/* 指定都西昂的分析记录器创建与释放函数 : 调用分析记录器创建与释放函数 */
 static pgc_Analyzed newObjectDataAnalyzed(struct af_ObjectData *od, pgc_Analyzed plist);
 static pgc_Analyzed newObjectAnalyzed(struct af_Object *obj, pgc_Analyzed plist);
 static pgc_Analyzed newVarAnalyzed(struct af_Var *var, pgc_Analyzed plist);
 static pgc_Analyzed newVarSpaceAnalyzed(struct af_VarSpace *vs, pgc_Analyzed plist);
 
+/* 可达性分析函数 */
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
 static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
 
+/* gc运行函数 */
 static void freeValue(af_Core *core);
 static pgc_Analyzed reachable(af_Activity *active, pgc_Analyzed plist);
 static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
 static void freeAllAnalyzed(gc_Analyzed *base);
-
 
 static gc_Analyzed *makeAnalyzed(enum gc_AnalyzedType type, void *data) {
     gc_Analyzed *analyzed = calloc(sizeof(gc_Analyzed), 1);

@@ -7,6 +7,15 @@
 #include "__gc.h"
 #include "__code.h"
 
+/* Code 执行函数 */
+static af_Code *codeVariable(af_Code *code, af_Environment *env);
+static af_Code *codeLiteral(af_Code *code, af_Environment *env);
+static void codeBlock(af_Code *bt, af_Environment *env);
+
+/* 工具函数 */
+static bool checkInMsgType(char *type, af_Environment *env);
+static void popLastActivity(af_Message *msg, af_Environment *env) ;
+
 static af_Code *codeVariable(af_Code *code, af_Environment *env) {
     af_Var *var = findVarFromVarList(code->variable.name, env->activity->var_list);
     af_Message *msg;
@@ -37,6 +46,20 @@ static af_Code *codeLiteral(af_Code *code, af_Environment *env) {
     return code->next;
 }
 
+static void codeBlock(af_Code *bt, af_Environment *env) {
+    if (bt->prefix == env->core->prefix[B_EXEC] && bt->block.type == parentheses)  // 顺序执行, 返回尾项
+        pushExecutionActivity(bt, false, env);
+    else if (bt->prefix == env->core->prefix[B_EXEC_FIRST] && bt->block.type == brackets)  // 顺序执行, 返回首项
+        pushExecutionActivity(bt, true, env);
+    else {
+        pushFuncActivity(env->activity->bt_next, env);
+        if (bt->prefix == env->core->prefix[B_MUST_COMMON_ARG])
+            env->activity->must_common_arg = true;
+        else if (bt->prefix == env->core->prefix[B_NOT_STRICT])
+            env->activity->not_strict = true;
+    }
+}
+
 static bool checkInMsgType(char *type, af_Environment *env) {
     if (env->activity->msg_type == NULL)
         return false;
@@ -47,7 +70,7 @@ static bool checkInMsgType(char *type, af_Environment *env) {
     return false;
 }
 
-static void popLastActivity(af_Message *msg, af_Environment *env){
+static void popLastActivity(af_Message *msg, af_Environment *env) {
     do {  // 如果返回一级后仍是执行完成则继续返回
         if (env->activity->prev == NULL)
             printf("top finished\n");
@@ -68,20 +91,6 @@ static void popLastActivity(af_Message *msg, af_Environment *env){
         popActivity(msg, env);
         msg = NULL;  // 随后几次执行popActivity时不需要压入新的msg
     } while (env->activity != NULL && env->activity->bt_next == NULL);
-}
-
-static void codeBlock(af_Code *bt, af_Environment *env) {
-    if (bt->prefix == env->core->prefix[B_EXEC] && bt->block.type == parentheses)  // 顺序执行, 返回尾项
-        pushExecutionActivity(bt, false, env);
-    else if (bt->prefix == env->core->prefix[B_EXEC_FIRST] && bt->block.type == brackets)  // 顺序执行, 返回首项
-        pushExecutionActivity(bt, true, env);
-    else {
-        pushFuncActivity(env->activity->bt_next, env);
-        if (bt->prefix == env->core->prefix[B_MUST_COMMON_ARG])
-            env->activity->must_common_arg = true;
-        else if (bt->prefix == env->core->prefix[B_NOT_STRICT])
-            env->activity->not_strict = true;
-    }
 }
 
 bool iterCode(af_Code *code, af_Environment *env) {

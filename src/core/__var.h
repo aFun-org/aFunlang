@@ -40,6 +40,7 @@ struct af_VarSpaceListNode {  // 变量链
     struct af_VarSpaceListNode *next;
 };
 
+/* 变量(变量空间)托管gc函数 :  内部使用 gc 对象新增函数 （涉及af_Core不对外公开) */
 void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core);
 void addVarGCByCore(af_Var *var, af_Core *core);
 

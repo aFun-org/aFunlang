@@ -60,9 +60,7 @@ struct af_Inherit {
     struct af_Inherit *next;
 };
 
+/* ObjectData的释放函数 */
 void freeObjectData(af_ObjectData *od);  // gc使用
-int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
-                       af_ObjectData *od);
-af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
 
 #endif //AFUN__OBJECT_H

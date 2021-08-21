@@ -3,7 +3,7 @@
 #include "aFun.h"
 
 int main() {
-    af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
+    af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknown");
     af_Code *bt2 = makeVariableCode("var1", 0, 1, NULL);
 
     af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);

@@ -6,6 +6,10 @@
 enum af_EndianType endian = little_endian;
 enum af_EndianType save_as = little_endian;  // 默认以小端序存储
 
+/*
+ * 函数名: getEndian
+ * 目标: 获取机器字节序
+ */
 void getEndian() {
     union {
         int16_t a;//元素a，占2个字节

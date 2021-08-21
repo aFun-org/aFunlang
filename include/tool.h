@@ -12,20 +12,20 @@
 #include <dlfcn.h>
 #include "macro.h"
 
-// md5 工具
+/* md5计算工具 */
 #define READ_DATA_SIZE	(1024)
 #define MD5_SIZE (16)
 #define MD5_STR_LEN (MD5_SIZE * 2)
 #define MD5_STRING (MD5_STR_LEN + 1)
 int getFileMd5(const char *path, char *md5str);
 
-// hash 工具
+/* 哈希工具 */
 typedef long int time33_t;
 
 time33_t time33(char *str);
 time33_t w_time33(wchar_t *str);
 
-// string 工具
+/* 字符串工具 */
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
 #define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
 
@@ -50,7 +50,7 @@ wchar_t *wstrReverse(wchar_t *str);
 wchar_t *convertToWstr(char *str, bool free_old);
 char *convertToStr(wchar_t *wstr, bool free_old);
 
-// file 工具
+/* 路径工具 */
 #ifdef __linux__
 
 #define SEP "/"
@@ -65,12 +65,13 @@ char *convertToStr(wchar_t *wstr, bool free_old);
 
 #endif
 
+/* 文件处理工具 */
 int checkFile(char *path);
 char *getFileName(char *path_1);
 char *fileNameToVar(char *name, bool need_free);
 char *findPath(char *path, char *env, bool need_free);
 
-// signal 工具
+/* 信号处理工具 */
 typedef int vsignal;
 typedef struct SignalTag SignalTag;
 struct SignalTag{
@@ -84,10 +85,10 @@ struct SignalTag{
 extern volatile struct SignalTag signal_tag;  // 在tool.c中定义
 void afSignalHandler(int signum);
 
-// time 工具
+/* 时间工具 */
 void safeSleep(double ms);
 
-// dlc 工具
+/* 动态库工具(dlc): 处理动态库的使用 */
 
 /*
  * NEW_DLC_SYMBOL: 用于定义指定类型的symbol结构体

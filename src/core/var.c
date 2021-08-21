@@ -2,13 +2,17 @@
 #include "__env.h"
 #include "tool.h"
 
+/* VarNode 创建与释放 */
 static af_VarNode *makeVarNode(af_Object *obj, char *id);
 static af_VarNode *freeVarNode(af_VarNode *vn);
 static void freeAllVarNode(af_VarNode *vn);
 
+/* VarCup 创建与释放 */
 static af_VarCup *makeVarCup(af_Var *var);
 static af_VarCup *freeVarCup(af_VarCup *vp);
 static void freeAllVarCup(af_VarCup *vp);
+
+/* VarSpace 寻值函数 */
 static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpace *vs);
 
 static af_VarNode *makeVarNode(af_Object *obj, char *id) {

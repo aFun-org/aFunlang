@@ -1,24 +1,32 @@
 ﻿#include "__env.h"
 
+/* 核心创建和释放 */
 static af_Core *makeCore(void);
 static void freeCore(af_Core *core);
+
+/* 核心初始化 */
+static bool enableCore(af_Core *core);
 static bool checkInheritAPI(af_ObjectData *od);
 static void checkInherit(af_Inherit **ih, af_Object *obj);
-static bool enableCore(af_Core *core);
 
+/* 活动记录器创建和释放 */
 static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
                                  af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 
+/* 环境变量创建与释放 */
 static af_EnvVar *makeEnvVar(char *name, char *data);
 static af_EnvVar *freeEnvVar(af_EnvVar *var);
 static void freeAllEnvVar(af_EnvVar *var);
 static void freeEnvVarSpace(af_EnvVarSpace *evs);
 
+/* 顶层消息处理器创建与释放 */
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func);
 static af_TopMsgProcess *freeTopMsgProcess(af_TopMsgProcess *mp);
 static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
+
+/* 顶层消息处理器 处理函数 */
 static void *findTopMsgProcessFunc(char *type, af_Environment *env);
 static void runTopMessageProcess(af_Environment *env);
 

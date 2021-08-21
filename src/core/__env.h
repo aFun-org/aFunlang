@@ -101,10 +101,18 @@ struct af_Environment {  // 运行环境
     struct af_TopMsgProcess *process;
 };
 
+/* Core管理寒素 */
 af_Object *getBaseObjectFromCore(char *name, af_Core *core);
+
+/* Activity运行初始化函数 */
+bool addTopActivity(af_Code *code, af_Environment *env);
+
+/* 运行时Activity设置函数 (新增Activity) */
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
 bool pushFuncActivity(af_Code *bt, af_Environment *env);
 void popActivity(af_Message *msg, af_Environment *env);
+
+/* 运行时Activity设置函数 (设置Activity) */
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(af_VarSpaceListNode *vsl, bool new_vsl, bool is_protect, char **msg_type, af_Environment *env);
 bool setFuncActivityToNormal(af_Code *bt, af_Environment *env);

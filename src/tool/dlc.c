@@ -5,6 +5,8 @@
 #define GC_SZIE (0)
 #endif
 
+static bool freeLibary_(struct DlcHandle *dlc, bool f);
+
 struct DlcSymbol_ {
     void *symbol;
     struct DlcHandle *dlc;

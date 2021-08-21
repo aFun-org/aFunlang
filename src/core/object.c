@@ -2,12 +2,20 @@
 #include "__env.h"
 #include "tool.h"
 
+/* ObjectData 创建与释放 */
 static af_ObjectData *makeObjectData_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
 static af_Object *makeObject_Pri(char *id, size_t data_size, bool inherit_api, bool allow_iherit);
 
+/* ObjectData API 创建与释放 */
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name);
 static af_ObjectAPINode *freeObjectAPINode(af_ObjectAPINode *apin);
 static void freeAllObjectAPINode(af_ObjectAPINode *apin);
+
+/* ObjectData API 管理函数 */
+static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
+static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectData *od);
+
+/* ObjectData API表 管理函数 */
 static af_ObjectAPI *makeObjectAPI(void);
 static void freeObjectAPI(af_ObjectAPI *api);
 
@@ -164,7 +172,7 @@ static void freeObjectAPI(af_ObjectAPI *api) {
  * 若dlc中不存在指定函数则返回-1且不作修改
  * 操作成功返回1
  */
-int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
+static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
                         af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &od->api->node[index];
@@ -178,7 +186,7 @@ int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
     return *pNode == NULL ? -1 : 1;
 }
 
-af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
+static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     for (af_ObjectAPINode *node = od->api->node[index]; node != NULL; node = node->next) {
         if (EQ_STR(node->name, api_name))
