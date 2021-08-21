@@ -380,14 +380,15 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 }
 
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
+    af_Object *belong = getBelongObject(func, env);
     gc_delReference(env->activity->belong);
     if (env->activity->func != NULL)
         gc_delReference(env->activity->func);
     gc_addReference(func);
-    gc_addReference(func->belong);  // TODO-szh 处理belong为NULL的情况 (global的belong)
+    gc_addReference(belong);
 
     env->activity->func = func;
-    env->activity->belong = func->belong;
+    env->activity->belong = belong;
     env->activity->status = act_arg;
     // TODO-szh 参数处理(计算)
     return true;
@@ -424,7 +425,7 @@ void popActivity(af_Message *msg, af_Environment *env) {
             new_msg = msg;
             msg->next = env->activity->msg_down;
         } else
-            msg = env->activity->msg_down;
+            new_msg = env->activity->msg_down;
         env->activity->msg_down = NULL;
         connectMessage(&new_msg, env->activity->prev->msg_down);
         env->activity->prev->msg_down = new_msg;

@@ -96,6 +96,16 @@ void freeObject(af_Object *obj) {
     free(obj);
 }
 
+af_Object *getBelongObject(af_Object *object, af_Environment *env) {
+    af_Object *belong = object->belong;
+    if (belong == NULL){
+        if (object != env->core->global)
+            object->belong = env->core->global;
+        return env->core->global;
+    }
+    return belong;
+}
+
 af_Inherit *makeIherit(af_Object *obj) {
     af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
     ih->obj = obj;

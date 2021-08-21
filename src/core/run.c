@@ -36,8 +36,27 @@ static af_Code *codeLiteral(af_Code *code, af_Environment *env) {
     return code->next;
 }
 
+static bool checkInMsgType(char *type, af_Environment *env) {
+    if (env->activity->msg_type == NULL)
+        return false;
+    for (char *msg_type_node = *env->activity->msg_type; msg_type_node != NULL; msg_type_node++) {
+        if (EQ_STR(type, msg_type_node))
+            return true;
+    }
+    return false;
+}
+
+static void popLastActivity(af_Message *msg, af_Environment *env){
+    do {  // 如果返回一级后仍是执行完成则继续返回
+        if (env->activity->prev == NULL)
+            printf("top finished\n");
+        popActivity(msg, env);
+        msg = NULL;  // 随后几次执行popActivity时不需要压入新的msg
+    } while (env->activity != NULL && env->activity->bt_next == NULL);
+}
+
 bool iterCode(af_Code *code, af_Environment *env) {
-   if (!addTopActivity(code, env))
+    if (!addTopActivity(code, env))
        return false;
 
     while (env->activity != NULL) {
@@ -56,17 +75,26 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 break;  // 错误
         }
 
-        msg = getFirstMessage(env);  // TODO-szh 检查是否为 NORMAL
+        if (env->activity->msg_down == NULL) {
+            msg = makeMessage("ERROR-STR", 0);
+        } else
+            msg = getFirstMessage(env);
+
+        if (!EQ_STR(msg->type, "NORMAL")) {
+            pushMessageDown(msg, env);
+            if (env->activity->status != act_normal || !checkInMsgType(msg->type, env)) {
+                popLastActivity(NULL, env);  // msg 已经 push进去了
+                continue;
+            } else {
+                env->activity->bt_next = NULL;
+                // TODO-szh 切换函数
+            }
+        }
 
         switch (env->activity->status) {
             case act_normal:
                 if (env->activity->bt_next == NULL) { // 执行完成
-                    do {  // 如果返回一级后仍是执行完成则继续返回
-                        if (env->activity->prev == NULL)
-                            printf("top finished\n");
-                        popActivity(msg, env);
-                        msg = NULL;  // 随后几次执行popActivity时不需要压入新的msg
-                    } while (env->activity != NULL && env->activity->bt_next == NULL);
+                    popLastActivity(msg, env);
                 } else {
                     gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
                     freeMessage(msg);
