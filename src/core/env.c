@@ -161,15 +161,6 @@ static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return
     return activity;
 }
 
-static void freeMsgType(char **msg_type) {
-    if (msg_type == NULL)
-        return;
-
-    for (char *tmp = *msg_type; tmp != NULL; tmp++)
-        free(tmp);
-    free(msg_type);
-}
-
 static af_Activity *freeActivity(af_Activity *activity) {
     af_Activity *prev = activity->prev;
     af_VarSpaceListNode *vs = activity->var_list;
@@ -201,7 +192,8 @@ static af_Activity *freeActivity(af_Activity *activity) {
         gc_delReference(activity->parentheses_call);
 
     freeAllArgCodeList(activity->acl_start);
-    freeMsgType(activity->msg_type);
+    if (activity->fi != NULL)
+        freeFuncInfo(activity->fi);
     free(activity);
     return prev;
 }
@@ -382,7 +374,6 @@ bool addTopActivity(af_Code *code, af_Environment *env) {
     env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
     env->activity->var_list->next = makeVarSpaceList(env->core->protect);
     env->activity->status = act_normal;
-    env->activity->is_last = true;
     return true;
 }
 
@@ -454,21 +445,19 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
         return false;
 
     env->activity->bt_next = next;
-    if (next != NULL || !env->activity->is_last) {
-        env->activity->in_call = true;
+    if (next == NULL && env->activity->body == NULL) {
+        printf("Tail tone recursive optimization\n");
+        env->activity->bt_top = bt;
+        env->activity->bt_start = bt->next;
+        env->activity->bt_next = bt->next;
+        if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
+            env->activity->return_first = return_first;
+    } else {
         af_Activity *activity = makeActivity(bt, bt->next, return_first, env->activity->msg_up,
                                              env->activity->var_list, env->activity->belong,
                                              env->activity->func);
         activity->prev = env->activity;
         env->activity = activity;
-    } else {
-        printf("Tail tone recursive optimization\n");
-        env->activity->bt_top = bt;
-        env->activity->bt_start = bt->next;
-        env->activity->bt_next = bt->next;
-        env->activity->is_last = false;
-        if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
-            env->activity->return_first = return_first;
     }
 
     env->activity->status = act_normal;
@@ -482,25 +471,20 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
         return false;
 
     env->activity->bt_next = next;
-
-    if (next != NULL || !env->activity->is_last) {
-        af_Activity *activity;
-        env->activity->in_call = true;
-        activity = makeActivity(bt, bt->next, false, env->activity->msg_up,
-                                env->activity->var_list, env->activity->belong, env->activity->func);
-        activity->prev = env->activity;
-        env->activity = activity;
-    } else {  // 尾调递归优化
+    if (next == NULL && env->activity->body == NULL) {
         printf("Tail tone recursive optimization\n");
         env->activity->bt_top = bt;
         env->activity->bt_start = bt->next;
         env->activity->bt_next = bt->next;
-        env->activity->is_last = false;
+        // 保持原有的return_false
+    } else {
+        af_Activity *activity = makeActivity(bt, bt->next, false, env->activity->msg_up,
+                                             env->activity->var_list, env->activity->belong, env->activity->func);
+        activity->prev = env->activity;
+        env->activity = activity;
     }
 
     env->activity->call_type = env->activity->bt_top->block.type;
-    env->activity->func_var_list = env->activity->var_list;  // 设置为函数变量空间 [桩]
-
     if (env->activity->call_type == parentheses) {  // 对于类前缀调用, 已经获得func的实际值了
         setFuncActivityToArg(*parentheses_call, env);
         gc_delReference(*parentheses_call);
@@ -523,17 +507,33 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     env->activity->belong = belong;
     env->activity->status = act_arg;
 
+    env->activity->func_var_list = env->activity->var_list;  // 设置vsl [桩]
     env->activity->acl_start = NULL;  // 设置acl [桩]
     env->activity->acl_next = env->activity->acl_start;
     env->activity->bt_next = NULL;
     return true;
 }
 
+void testFunc(af_Environment *env) {  // 测试用函数
+    printf("I am testFunc\n");
+}
+
 bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_Environment *env) {
     if (!new_vsl && is_protect)
         return false;
 
-    // 桩函数: 目前func_var_list引用自var_list, 故var_list不释放
+    {  // 获取FuncInfo [桩]
+        env->activity->fi = makeFuncInfo(normal_scope, not_embedded, false, false);  // 获取FuncInfo [桩]
+        makeCodeFuncBodyToFuncInfo(env->activity->bt_start, false, NULL, env->activity->fi);
+
+        DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc, callFuncBody);
+        makeCFuncBodyToFuncInfo(func, NULL, env->activity->fi);
+        FREE_SYMBOL(func);
+
+    }
+    env->activity->body = env->activity->fi->body;
+
+    // 桩函数: 目前func_var_list引用自var_list, 故var_list不释放 [桩]
     //af_VarSpaceListNode *vs = env->activity->var_list;
     //for (int i = env->activity->new_vs_count; i > 0; i--) {
     //    if (vs == NULL)  // 发生了错误
@@ -543,13 +543,12 @@ bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_En
 
     env->activity->var_list = env->activity->func_var_list;
     env->activity->func_var_list = NULL;
-    // env->activity->new_vs_count = 0; // 目前func_var_list引用自var_list, 故不设置此值
+    // env->activity->new_vs_count = 0; // 目前func_var_list引用自var_list, 故不设置此值 [桩]
     if (new_vsl) {
         env->activity->var_list = pushNewVarList(env->activity->var_list);
         env->activity->new_vs_count++;
     }
 
-    env->activity->msg_type = msg_type;
     runArgList(NULL, env->activity->var_list);
     env->activity->var_list->vs->is_protect = is_protect;
     return true;
@@ -558,15 +557,26 @@ bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_En
 bool setFuncActivityToNormal(bool is_first, af_Environment *env) {  // 获取函数的函数体
     env->activity->status = act_normal;
     env->activity->bt_next = NULL;
-    if (env->activity->is_last)
-        return false;
 
-    env->activity->bt_start = env->activity->bt_start;
-    env->activity->bt_next = env->activity->bt_start;
-    env->activity->is_last = true;
-    return true;
+    while (env->activity->body != NULL) {
+        if (env->activity->body->type == func_body_c) {
+            GET_SYMBOL(env->activity->body->c_func)(env);
+            env->activity->body = env->activity->body->next;
+        } else {
+            env->activity->bt_start = env->activity->body->code;
+            env->activity->bt_next = env->activity->body->code;
+            env->activity->body = env->activity->body->next;
+            return true;
+        }
+    }
+
+    return false;
 }
 
+/*
+ * 函数名: runTopMessageProcess
+ * 目标: 运行顶层信息处理器
+ */
 static void runTopMessageProcess(af_Environment *env) {
     af_Message **pmsg = &env->activity->msg_down;
     while (*pmsg != NULL) {

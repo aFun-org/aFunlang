@@ -41,13 +41,12 @@ ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj);
 bool runArgList(ArgList *al, af_VarSpaceListNode *vsl);
 
 /* FuncInfo 创建与释放 */
-af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro,
-                          bool is_object, af_VarSpaceListNode *vsl);
+af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro, bool is_object);
 
 void freeFuncInfo(af_FuncInfo *fi);
 
 /* FuncInfo 操作函数 */
-void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, af_FuncInfo *fi);
-void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, af_FuncInfo *fi);
+void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
+void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
 
 #endif //AFUN__FUNC_H_PUBLIC

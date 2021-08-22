@@ -42,6 +42,7 @@ struct af_FuncBody {
         };
     };
 
+    char **msg_type;  // 表示对应函数可以处理的msg类型
     struct af_FuncBody *next;
 };
 
@@ -54,7 +55,6 @@ struct af_FuncInfo {
     bool is_object;  // 对象函数
 
     // 函数信息
-    struct af_VarSpaceListNode *vsl;
     struct af_FuncBody *body;
 };
 

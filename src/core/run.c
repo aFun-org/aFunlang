@@ -63,9 +63,9 @@ static void codeBlock(af_Code *code, af_Environment *env) {
 }
 
 static bool checkInMsgType(char *type, af_Environment *env) {
-    if (env->activity->msg_type == NULL)
+    if (env->activity->body == NULL || env->activity->body->msg_type == NULL)
         return false;
-    for (char *msg_type_node = *env->activity->msg_type; msg_type_node != NULL; msg_type_node++) {
+    for (char *msg_type_node = *env->activity->body->msg_type; msg_type_node != NULL; msg_type_node++) {
         if (EQ_STR(type, msg_type_node))
             return true;
     }
@@ -96,6 +96,7 @@ static void popLastActivity(af_Message *msg, af_Environment *env) {
 }
 
 bool iterCode(af_Code *code, af_Environment *env) {
+    bool process_mgs_first = false;  // 优先处理msg而不是运行代码
     if (!addTopActivity(code, env))
         return false;
 
@@ -110,7 +111,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
 
         if (env->activity->bt_next != NULL) {
             run_code = true;
-            if (!env->activity->in_call) {
+            if (!process_mgs_first) {
                 switch (env->activity->bt_next->type) {
                     case literal:
                         codeLiteral(env->activity->bt_next, env);
@@ -125,7 +126,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                         break;  // 错误
                 }
             } else
-                env->activity->in_call = false;
+                process_mgs_first = false;
 
             if (env->activity->msg_down == NULL)  // 若未获得 msg
                 msg = makeMessage("ERROR-STR", 0);
@@ -139,6 +140,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                         gc_delReference(env->activity->return_obj);
                     env->activity->return_obj = NULL;
                     popLastActivity(NULL, env);  // msg 已经 push进去了
+                    process_mgs_first = true;
                     continue;
                 }
             } else if (env->activity->return_first && env->activity->return_obj == NULL) {  // 设置return_first
@@ -152,11 +154,14 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 if (!run_code) {
                     msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
                     popLastActivity(msg, env);
+                    process_mgs_first = true;
                 } else if (env->activity->bt_next == NULL) { // 执行完成
-                    if (setFuncActivityToNormal(true, env))
+                    if (setFuncActivityToNormal(true, env)) {
                         goto run_continue;  // 继续运行
-                    else
+                    } else {
                         popLastActivity(msg, env);
+                        process_mgs_first = true;
+                    }
                 } else if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses
                            && env->activity->bt_next->prefix == NUL) {  // 类前缀调用
                     env->activity->parentheses_call = *(af_Object **)(msg->msg);
@@ -171,6 +176,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 if (!run_code) {
                     msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
                     popLastActivity(msg, env);
+                    process_mgs_first = true;
                 } else {
                     af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
                     freeMessage(msg);
@@ -186,6 +192,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                     if (!setFuncActivityToNormal(true, env)) {
                         msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
                         popLastActivity(msg, env);
+                        process_mgs_first = true;
                     }
                 } else {
                     env->activity->acl_next->result = *(af_Object **)(msg->msg);

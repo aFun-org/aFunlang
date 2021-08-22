@@ -59,7 +59,6 @@ struct af_Activity {  // 活动记录器
     struct af_Message *msg_down;  // 被调用者向调用者传递信息
     struct af_Message *msg_up;  // 调用者向被调用者传递信息
     ActivityCount msg_up_count;  // msg_up 添加的个数
-    char **msg_type;  // 一个包含字符串的列表, 记录了需要处理的`msg`类型的数组
 
     bool run_in_func;  // 在函数变量空间内运行 (act_arg用)
     struct af_VarSpaceListNode *vsl;  // 变量空间
@@ -81,11 +80,11 @@ struct af_Activity {  // 活动记录器
     enum af_BlockType call_type;  // 函数调用类型
     bool must_common_arg;  // 强制普通参数
     bool not_strict;  // 非严格调用
-    af_Object *parentheses_call;  // 类前缀调用
-    ArgCodeList *acl_start;
-    ArgCodeList *acl_next;
-    bool is_last;  // 最后一个函数体 (允许尾调递归优化)
-    bool in_call;  // 当重新执行该活动记录器时先不执行代码, 而是处理msg
+    struct af_Object *parentheses_call;  // 类前缀调用
+    struct ArgCodeList *acl_start;
+    struct ArgCodeList *acl_next;
+    struct af_FuncInfo *fi;
+    struct af_FuncBody *body;
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器
