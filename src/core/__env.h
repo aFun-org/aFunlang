@@ -78,8 +78,6 @@ struct af_Activity {  // 活动记录器
 
     // 函数调用专项
     enum af_BlockType call_type;  // 函数调用类型
-    bool must_common_arg;  // 强制普通参数
-    bool not_strict;  // 非严格调用
     struct af_Object *parentheses_call;  // 类前缀调用
     struct ArgCodeList *acl_start;
     struct ArgCodeList *acl_next;

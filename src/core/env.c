@@ -41,8 +41,6 @@ static af_Core *makeCore(void) {
 
     core->prefix[B_EXEC] = '\'';
     core->prefix[B_EXEC_FIRST] = ',';
-    core->prefix[B_MUST_COMMON_ARG] = '<';
-    core->prefix[B_NOT_STRICT] = ',';
 
     return core;
 }

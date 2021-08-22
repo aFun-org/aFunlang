@@ -2,10 +2,6 @@
 
 #include "run.h"
 #include "__env.h"
-#include "__object.h"
-#include "__var.h"
-#include "__gc.h"
-#include "__code.h"
 
 /* Code 执行函数 */
 static void codeVariable(af_Code *code, af_Environment *env);
@@ -53,10 +49,6 @@ static void codeBlock(af_Code *code, af_Environment *env) {
         pushExecutionActivity(code, true, env);
     else if (code->prefix == NUL) {
         pushFuncActivity(env->activity->bt_next, env);
-        if (code->prefix == env->core->prefix[B_MUST_COMMON_ARG])
-            env->activity->must_common_arg = true;
-        else if (code->prefix == env->core->prefix[B_NOT_STRICT])
-            env->activity->not_strict = true;
     } else
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
 
@@ -163,7 +155,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                         process_mgs_first = true;
                     }
                 } else if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses
-                           && env->activity->bt_next->prefix == NUL) {  // 类前缀调用
+                           && env->activity->bt_next->prefix != env->core->prefix[B_EXEC]) {  // 类前缀调用
                     env->activity->parentheses_call = *(af_Object **)(msg->msg);
                     freeMessage(msg);
                 } else {
