@@ -7,7 +7,7 @@ typedef struct af_Inherit af_Inherit;
 typedef struct af_ObjectAPI af_ObjectAPI;
 
 /* 对象API函数 DLC */
-DEFINE_DLC_SYMBOL(objectAPIFunc, objectAPIFunc);
+DEFINE_DLC_SYMBOL(objectAPIFunc);
 
 #include "env.h"
 

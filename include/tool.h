@@ -104,7 +104,7 @@ void safeSleep(double ms);
  * dlcExit: 释放所有动态库
  */
 
-#define DEFINE_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL *pDLC##NAME##SYMBOL
+#define DEFINE_DLC_SYMBOL(NAME) typedef struct DLC##NAME##SYMBOL *pDLC##NAME##SYMBOL
 #define NEW_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL { \
 TYPE *symbol; \
 struct DlcHandle *dlc; \

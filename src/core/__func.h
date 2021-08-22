@@ -5,6 +5,8 @@
 #include "__object.h"
 #include "__code.h"
 
+typedef struct af_FuncBody af_FuncBody;
+
 struct ArgCodeList {
     void *info;  // info信息
     size_t size;
@@ -21,6 +23,39 @@ struct ArgList {
     char *name;
     struct af_Object *obj;  // 有gc引用计数
     struct ArgList *next;
+};
+
+typedef void callFuncBody(af_Environment *env);
+NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
+
+struct af_FuncBody {
+    enum af_FuncBodyType {
+        func_body_c,  // 回调C函数
+        func_body_code,  // 执行af_Code
+    } type;
+
+    union {
+        DLC_SYMBOL(callFuncBody) c_func;
+        struct {
+            af_Code *code;
+            bool free_code;
+        };
+    };
+
+    struct af_FuncBody *next;
+};
+
+struct af_FuncInfo {
+    // 函数属性
+    enum af_FuncInfoScope scope;  // 定义在 func.h
+    enum af_FuncInfoEmbedded embedded;  // 定义在 func.h
+
+    bool is_macro;  // 宏函数
+    bool is_object;  // 对象函数
+
+    // 函数信息
+    struct af_VarSpaceListNode *vsl;
+    struct af_FuncBody *body;
 };
 
 #endif //AFUN__FUNC_H
