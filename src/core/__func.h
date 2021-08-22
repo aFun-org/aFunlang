@@ -1,7 +1,7 @@
-﻿#ifndef AFUN__ARG_H
-#define AFUN__ARG_H
+﻿#ifndef AFUN__FUNC_H
+#define AFUN__FUNC_H
 #include "macro.h"
-#include "arg.h"
+#include "func.h"
 #include "__object.h"
 #include "__code.h"
 
@@ -23,4 +23,4 @@ struct ArgList {
     struct ArgList *next;
 };
 
-#endif //AFUN__ARG_H
+#endif //AFUN__FUNC_H

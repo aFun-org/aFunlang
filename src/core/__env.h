@@ -14,7 +14,7 @@ typedef struct af_TopMsgProcess af_TopMsgProcess;
 #include "__var.h"
 #include "__code.h"
 #include "__gc.h"
-#include "__arg.h"
+#include "__func.h"
 
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;

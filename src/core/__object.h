@@ -17,12 +17,12 @@ typedef struct af_ObjectAPINode af_ObjectAPINode;
 
 #define API_HASHTABLE_SIZE (8)
 
-typedef void pValueAPI();
-NEW_DLC_SYMBOL(pValueAPI, pAPIFUNC);
+typedef void objectAPIFunc();
+NEW_DLC_SYMBOL(objectAPIFunc, objectAPIFunc);
 
 struct af_ObjectAPINode {
     char *name;  // api名字
-    DLC_SYMBOL(pAPIFUNC) api;  // api函数
+    DLC_SYMBOL(objectAPIFunc) api;  // api函数
     struct af_ObjectAPINode *next;
 };
 

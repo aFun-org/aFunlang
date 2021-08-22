@@ -7,13 +7,13 @@ static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *
 static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit);
 
 /* ObjectData API 创建与释放 */
-static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name);
+static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char *api_name);
 static af_ObjectAPINode *freeObjectAPINode(af_ObjectAPINode *apin);
 static void freeAllObjectAPINode(af_ObjectAPINode *apin);
 
 /* ObjectData API 管理函数 */
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
-static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectData *od);
+static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectData *od);
 
 static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
@@ -120,12 +120,12 @@ void freeAllInherit(af_Inherit *ih) {
         ih = freeInherit(ih);
 }
 
-static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(pAPIFUNC) func, char *api_name) {
+static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char *api_name) {
     if (func == NULL)
         return NULL;
 
     af_ObjectAPINode *apin = calloc(sizeof(af_ObjectAPINode), 1);
-    apin->api = COPY_SYMBOL(func, pAPIFUNC);
+    apin->api = COPY_SYMBOL(func, objectAPIFunc);
     apin->name = strCopy(api_name);
     return apin;
 }
@@ -161,7 +161,7 @@ void freeObjectAPI(af_ObjectAPI *api) {
  * 若dlc中不存在指定函数则返回-1且不作修改
  * 操作成功返回1
  */
-int addAPI(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectAPI *api) {
+int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectAPI *api) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &api->node[index];
 
@@ -190,7 +190,7 @@ void *findAPI(char *api_name, af_ObjectAPI *api) {
  * 若dlc中不存在指定函数则返回-1且不作修改
  * 操作成功返回1
  */
-static int addAPIToObjectData(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
+static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name,
                               af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
     af_ObjectAPINode **pNode = &od->api->node[index];
@@ -217,7 +217,7 @@ static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od
  * 函数名: findObjectDataAPINode
  * 目标: 从DLC中获取函数并写入Object的API
  */
-int addAPIToObject(DLC_SYMBOL(pAPIFUNC) func, char *api_name,
+int addAPIToObject(DLC_SYMBOL(objectAPIFunc) func, char *api_name,
                    af_Object *obj) {
     return addAPIToObjectData(func, api_name, obj->data);
 }

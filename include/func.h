@@ -1,5 +1,5 @@
-﻿#ifndef AFUN__ARG_H_PUBLIC
-#define AFUN__ARG_H_PUBLIC
+﻿#ifndef AFUN__FUNC_H_PUBLIC
+#define AFUN__FUNC_H_PUBLIC
 #include "code.h"
 #include "object.h"
 
@@ -25,4 +25,4 @@ ArgList **pushArgList(ArgList **base, ArgList *new);
 ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj);
 bool runArgList(ArgList *al, af_VarSpaceListNode *vsl);
 
-#endif //AFUN__ARG_H_PUBLIC
+#endif //AFUN__FUNC_H_PUBLIC

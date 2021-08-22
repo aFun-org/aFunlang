@@ -7,7 +7,7 @@ typedef struct af_Inherit af_Inherit;
 typedef struct af_ObjectAPI af_ObjectAPI;
 
 /* 对象API函数 DLC */
-DEFINE_DLC_SYMBOL(pValueAPI, pAPIFUNC);
+DEFINE_DLC_SYMBOL(objectAPIFunc, objectAPIFunc);
 
 #include "env.h"
 
@@ -29,10 +29,10 @@ af_ObjectAPI *makeObjectAPI(void);
 void freeObjectAPI(af_ObjectAPI *api);
 
 /* API表 管理函数 */
-int addAPI(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_ObjectAPI *api);
+int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectAPI *api);
 void *findAPI(char *api_name, af_ObjectAPI *api);
 
 /* 对象API函数 */
 void *findObjectAPI(char *api_name, af_Object *obj);
-int addAPIToObject(DLC_SYMBOL(pAPIFUNC) func, char *api_name, af_Object *obj);
+int addAPIToObject(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_Object *obj);
 #endif //AFUN__OBJECT_H_PUBLIC
