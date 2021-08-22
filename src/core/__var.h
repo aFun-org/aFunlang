@@ -20,7 +20,7 @@ struct af_VarNode {
 struct af_Var {
     char *name;
     struct af_VarNode *vn;
-    char permissions[3];  // 读-1 写-2 读且写-3 不读不写-0 [自己权限 后代权限 外部权限]
+    char permissions[2];  // 读-1 写-2 读且写-3 不读不写-0 [自身权限 外部权限]
     GC_Var gc;
 };
 

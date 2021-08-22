@@ -9,7 +9,7 @@ typedef struct af_VarSpaceListNode af_VarSpaceListNode;
 #include "object.h"
 
 /* 变量创建与释放 */
-af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_Object *obj);
+af_Var *makeVar(char *name, char p_self, char p_external, af_Object *obj);
 void freeVar(af_Var *var);
 
 /* 变量值管理 */
@@ -27,11 +27,11 @@ void addVarGC(af_Var *var, af_Environment *env);
 
 /* 变量赋值类函数 */
 bool addVarToVarSpace(af_Var *var, af_VarSpace *vs);
-bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+bool makeVarToVarSpace(char *name, char p_self, char p_external, af_Object *obj,
                        af_VarSpace *vs);
 
 bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl);
-bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj,
                            af_VarSpaceListNode *vsl);
 
 /* 变量寻值类函数 */

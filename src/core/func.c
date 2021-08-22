@@ -97,7 +97,7 @@ ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj) {
 
 bool runArgList(ArgList *al, af_VarSpaceListNode *vsl) {
     for (NULL; al != NULL; al = al->next) {
-        if (!makeVarToVarSpaceList(al->name, 3, 3, 3, al->obj, vsl))
+        if (!makeVarToVarSpaceList(al->name, 3, 3, al->obj, vsl))
             return false;
     }
     return true;

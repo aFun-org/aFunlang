@@ -35,14 +35,13 @@ static void freeAllVarNode(af_VarNode *vn) {
         vn = freeVarNode(vn);
 }
 
-af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_Object *obj) {
+af_Var *makeVar(char *name, char p_self, char p_external, af_Object *obj) {
     af_VarNode *vn = makeVarNode(obj, NULL);
     af_Var *var = calloc(sizeof(af_Var), 1);
     var->name = strCopy(name);
     var->vn = vn;
     var->permissions[0] = p_self;
-    var->permissions[1] = p_posterity;
-    var->permissions[2] = p_external;
+    var->permissions[1] = p_external;
     return var;
 }
 
@@ -173,9 +172,9 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
  */
-bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+bool makeVarToVarSpace(char *name, char p_self, char p_external, af_Object *obj,
                        af_VarSpace *vs) {
-    return addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj), vs);
+    return addVarToVarSpace(makeVar(name, p_self, p_external, obj), vs);
 }
 
 bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
@@ -186,9 +185,9 @@ bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
     return false;
 }
 
-bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj,
                            af_VarSpaceListNode *vsl) {
-    return addVarToVarSpaceList(makeVar(name, p_self, p_posterity, p_external, obj), vsl);
+    return addVarToVarSpaceList(makeVar(name, p_self, p_external, obj), vsl);
 }
 
 /*
