@@ -48,8 +48,27 @@ struct GC_VarSpace {
 #include "__env.h"  // 这部分内容依赖上面的定义
 #include "gc.h"
 
+/* 重新定义包括af_ObjectData的 gc Reference 函数 */
+#undef gc_addReference
+#undef gc_delReference
+#define gc_addReference(obj) ((_Generic((obj), \
+                               af_ObjectData *: gc_addObjectDataReference, \
+                               af_Object *: gc_addObjectReference, \
+                               af_Var *: gc_addVarReference, \
+                               af_VarSpace *: gc_addVarSpaceReference))(obj))
+
+#define gc_delReference(obj) ((_Generic((obj), \
+                               af_ObjectData *: gc_delObjectDataReference, \
+                               af_Object *: gc_delObjectReference, \
+                               af_Var *: gc_delVarReference, \
+                               af_VarSpace *: gc_delVarSpaceReference))(obj))
+
 /* gc 对象新增函数 : 涉及af_ObjectData 不对外公开 */
 void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);
+
+/* gc Reference 管理函数 : 涉及af_ObjectData 不对外公开 */
+void gc_addObjectDataReference(af_ObjectData *obj);
+void gc_delObjectDataReference(af_ObjectData *obj);
 
 /* gc 对象新增函数 : 涉及af_Core不对外公开 */
 void gc_addObjectDataByCore(struct af_ObjectData *obj, af_Core *core);

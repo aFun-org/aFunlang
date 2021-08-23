@@ -237,7 +237,7 @@ static void freeValue(af_Core *core) {
     }
 }
 
-#define GC_ADD_FUNC_DEFINED(type) \
+#define GC_FUNC_DEFINED(type) \
 void gc_add##type(af_##type *obj, af_Environment *env) { \
     obj->gc.prev = NULL; \
     if (env->core->gc_##type != NULL) { \
@@ -250,14 +250,20 @@ void gc_add##type##ByCore(af_##type *obj, af_Core *core) { \
 obj->gc.prev = NULL; \
 obj->gc.next = core->gc_##type; \
 core->gc_##type = obj; \
+} \
+void gc_add##type##Reference(af_##type *obj) { \
+    obj->gc.info.reference++; \
+} \
+void gc_del##type##Reference(af_##type *obj) { \
+    obj->gc.info.reference--; \
 }
 
-GC_ADD_FUNC_DEFINED(ObjectData)
-GC_ADD_FUNC_DEFINED(Object)
-GC_ADD_FUNC_DEFINED(Var)
-GC_ADD_FUNC_DEFINED(VarSpace)
+GC_FUNC_DEFINED(ObjectData)
+GC_FUNC_DEFINED(Object)
+GC_FUNC_DEFINED(Var)
+GC_FUNC_DEFINED(VarSpace)
 
-#undef GC_ADD_FUNC_DEFINED
+#undef GC_FUNC_DEFINED
 
 bool gc_RunGC(af_Environment *env) {
     gc_Analyzed *analyzed;

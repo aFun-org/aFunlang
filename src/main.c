@@ -46,7 +46,8 @@ void testFunc(int *mark, af_Environment *env) {  // 测试用函数
 
     af_Object *obj = makeObject("Literal", true, makeObjectAPI(), true, NULL, NULL, env);
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *((af_Object **)(getMessageData(msg))) = obj;  // TODO-szh 没有gc
+    *((af_Object **)(getMessageData(msg))) = obj;
+    gc_addReference(obj);
     pushMessageDown(msg, env);
 }
 
@@ -170,7 +171,6 @@ int main() {
         af_Code *bt2 = makeVariableCode("func", 0, 1, NULL);
         connectCode(&bt1, bt2);
 
-        af_Code *bt3 = makeVariableCode("global", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(parentheses, NULL, 0, 1, NULL, NULL);
         connectCode(&bt2, bt5);
 
