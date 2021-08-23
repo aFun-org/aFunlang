@@ -107,6 +107,9 @@ struct af_Environment {  // 运行环境
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
+
+    /* 运行时信息 */
+    bool process_msg_first;  // 优先处理msg而不是运行代码
 };
 
 /* Core管理寒素 */

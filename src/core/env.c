@@ -470,37 +470,48 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 
 bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *next;
-    af_Object **parentheses_call = &env->activity->parentheses_call;
+    af_Code *func;
+    af_Object *parentheses_call = env->activity->parentheses_call;
+
+    env->activity->parentheses_call = false;
+    if (parentheses_call != NULL)
+        gc_delReference(parentheses_call);
+
     if (!getCodeBlockNext(bt, &next)) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
         return false;
     }
 
+    if (bt->block.type == curly) {  // 大括号
+        if (bt->block.elements == 0) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            return false;
+        } else
+            func = bt->next;
+    } else if (bt->block.type == brackets) {  // 暂时不考虑中括号
+        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        return false;
+    } else
+        func = NULL;  // 小括号则不在需要匹配
+
     env->activity->bt_next = next;
     if (next == NULL && env->activity->body_next == NULL) {
-        printf("Tail tone recursive optimization\n");
         env->activity->bt_top = bt;
-        env->activity->bt_start = bt->next;
-        env->activity->bt_next = bt->next;
+        env->activity->bt_start = func;
+        env->activity->bt_next = func;
         freeMark(env);
         /* 保持原有的 return_first */
     } else {
-        af_Activity *activity = makeActivity(bt, bt->next, false, env->activity->msg_up,
-                                             env->activity->var_list, env->activity->belong, env->activity->func);
+        af_Activity *activity = makeActivity(bt, func, false, env->activity->msg_up, env->activity->var_list,
+                                             env->activity->belong, env->activity->func);
         activity->prev = env->activity;
         env->activity = activity;
     }
 
     env->activity->call_type = env->activity->bt_top->block.type;
-
-    if (env->activity->call_type == parentheses) {  // 对于类前缀调用, 已经获得func的实际值了
-        bool re = setFuncActivityToArg(*parentheses_call, env);
-        gc_delReference(*parentheses_call);
-        *parentheses_call = NULL;
-        return re;
-    }
-
     env->activity->status = act_func;
+    if (env->activity->call_type == parentheses)  // 对于类前缀调用, 已经获得func的实际值了
+        return setFuncActivityToArg(parentheses_call, env);
     return true;
 }
 

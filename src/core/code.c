@@ -52,8 +52,6 @@ static bool countElement(af_Code *element, CodeUint *elements, CodeUint *count, 
             to_next += element->block.elements;
     }
 
-    if (to_next != 0 || *elements == 0)  // elements不允许为0
-        return false;
     return true;
 }
 
