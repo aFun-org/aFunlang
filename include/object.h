@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN__OBJECT_H_PUBLIC
 #define AFUN__OBJECT_H_PUBLIC
 #include "tool.h"
+#include "obj_api.h"
 
 typedef struct af_Object af_Object;
 typedef struct af_Inherit af_Inherit;

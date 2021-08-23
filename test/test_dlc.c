@@ -35,6 +35,7 @@ int main() {
 
     FREE_SYMBOL(a);
     FREE_SYMBOL(fun);
+    FREE_SYMBOL(test_fun);
 
     if (!freeLibary(dlc))
         exit(EXIT_FAILURE);

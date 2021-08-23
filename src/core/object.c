@@ -15,12 +15,28 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin);
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
 static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectData *od);
 
+/*
+ * 函数名: makeObjectData_Pri
+ * 目标: 创建ObjectData
+ * 注意: af_ObjectData不是对外开放的结构体
+ * 注意: api不能为NULL
+ */
 static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
     od->id = strCopy(id == NULL ? "Unknow" : id);
 
-    // data通过调用api实现
-    od->size = 0;
+    obj_getDataSize *func = findAPI("obj_getDataSize", api);
+    obj_initData *init = findAPI("obj_initData", api);
+    if (func != NULL)
+        od->size = func();
+    else
+        od->size = 0;
+
+    if (od->size != 0) {
+        od->data = calloc(od->size, 1);
+        if (init != NULL)
+            init(od->data);
+    }
 
     od->api = api;
     od->free_api = free_api;
@@ -81,6 +97,12 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
  */
 void freeObjectData(af_ObjectData *od) {
+    if (od->size != 0) {
+        obj_freeData *func = findAPI("obj_freeData", od->api);
+        if (func != NULL)
+            func(od->data);
+    }
+
     free(od->id);
     free(od->data);
     if (od->free_api)

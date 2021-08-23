@@ -66,8 +66,6 @@ static bool checkInMsgType(char *type, af_Environment *env) {
 
 static void popLastActivity(af_Message *msg, af_Environment *env) {
     do {  // 如果返回一级后仍是执行完成则继续返回
-        if (env->activity->prev == NULL)
-            printf("top finished\n");
         if (env->activity->return_first) {
             if (msg != NULL) {
                 gc_delReference(*(af_Object **)msg->msg);
