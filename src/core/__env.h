@@ -82,7 +82,8 @@ struct af_Activity {  // 活动记录器
     struct ArgCodeList *acl_start;
     struct ArgCodeList *acl_next;
     struct af_FuncInfo *fi;
-    struct af_FuncBody *body;
+    struct af_FuncBody *body_next;
+    void *mark;  // 标记 [完全由API管理, 不随activity释放]
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器
@@ -121,6 +122,7 @@ void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
-bool setFuncActivityAddVar(bool new_vsl, bool is_protect, char **msg_type, af_Environment *env);
-bool setFuncActivityToNormal(bool is_first, af_Environment *env);
+bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);
+
+int setFuncActivityToNormal(af_Environment *env);
 #endif //AFUN__ENV_H

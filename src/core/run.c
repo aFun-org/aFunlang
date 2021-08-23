@@ -55,9 +55,9 @@ static void codeBlock(af_Code *code, af_Environment *env) {
 }
 
 static bool checkInMsgType(char *type, af_Environment *env) {
-    if (env->activity->body == NULL || env->activity->body->msg_type == NULL)
+    if (env->activity->body_next == NULL || env->activity->body_next->msg_type == NULL)
         return false;
-    for (char *msg_type_node = *env->activity->body->msg_type; msg_type_node != NULL; msg_type_node++) {
+    for (char *msg_type_node = *env->activity->body_next->msg_type; msg_type_node != NULL; msg_type_node++) {
         if (EQ_STR(type, msg_type_node))
             return true;
     }
@@ -86,7 +86,7 @@ static void popLastActivity(af_Message *msg, af_Environment *env) {
 }
 
 bool iterCode(af_Code *code, af_Environment *env) {
-    bool process_mgs_first = false;  // 优先处理msg而不是运行代码
+    bool process_msg_first = false;  // 优先处理msg而不是运行代码
     if (!addTopActivity(code, env))
         return false;
 
@@ -101,7 +101,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
 
         if (env->activity->bt_next != NULL) {
             run_code = true;
-            if (!process_mgs_first) {
+            if (!process_msg_first) {
                 switch (env->activity->bt_next->type) {
                     case literal:
                         codeLiteral(env->activity->bt_next, env);
@@ -116,7 +116,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                         break;  // 错误
                 }
             } else
-                process_mgs_first = false;
+                process_msg_first = false;
 
             if (env->activity->msg_down == NULL)  // 若未获得 msg
                 msg = makeMessage("ERROR-STR", 0);
@@ -130,7 +130,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                         gc_delReference(env->activity->return_obj);
                     env->activity->return_obj = NULL;
                     popLastActivity(NULL, env);  // msg 已经 push进去了
-                    process_mgs_first = true;
+                    process_msg_first = true;
                     continue;
                 }
             } else if (env->activity->return_first && env->activity->return_obj == NULL) {  // 设置return_first
@@ -142,47 +142,56 @@ bool iterCode(af_Code *code, af_Environment *env) {
         switch (env->activity->status) {
             case act_normal:
                 if (!run_code) {
-                    msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
-                    popLastActivity(msg, env);
-                    process_mgs_first = true;
+                    popLastActivity(makeMessage("ERROR-STR", 0), env);
+                    process_msg_first = true;
                 } else if (env->activity->bt_next == NULL) { // 执行完成
-                    if (setFuncActivityToNormal(true, env)) {
-                        goto run_continue;  // 继续运行
-                    } else {
-                        popLastActivity(msg, env);
-                        process_mgs_first = true;
+                    switch (setFuncActivityToNormal(env)) {
+                        case -1:  // 已经没有下一步了 (原msg不释放)
+                            popLastActivity(msg, env);
+                            process_msg_first = true;
+                            break;
+                        case 0:  // 已经没有下一步了 (但原msg释放)
+                            gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+                            freeMessage(msg);
+                            popLastActivity(NULL, env);
+                            process_msg_first = true;
+                            break;
+                        default:
+                        case 1:  // 继续运行
+                            gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+                            freeMessage(msg);
+                            break;
                     }
                 } else if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses
                            && env->activity->bt_next->prefix != env->core->prefix[B_EXEC]) {  // 类前缀调用
                     env->activity->parentheses_call = *(af_Object **)(msg->msg);
                     freeMessage(msg);
-                } else {
-                    run_continue:
+                } else {  // 继续运行
                     gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
                     freeMessage(msg);
                 }
                 break;
             case act_func: {
                 if (!run_code) {
-                    msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
-                    popLastActivity(msg, env);
-                    process_mgs_first = true;
+                    popLastActivity(makeMessage("ERROR-STR", 0), env);
+                    process_msg_first = true;
                 } else {
                     af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
-                    freeMessage(msg);
-                    setFuncActivityToArg(func, env);  // 该函数会设定bt_next到arg计算的bt上
                     gc_delReference(func);  // 释放计数
+                    freeMessage(msg);
+                    if (!setFuncActivityToArg(func, env)) {  // 该函数会设定bt_next到arg计算的bt上
+                        popLastActivity(NULL, env);  // setFuncActivityToArg中已设置msg
+                        process_msg_first = true;
+                    }
                 }
                 break;
             }
             case act_arg: {
                 if (!run_code) {
                     act_arg_end:
-                    setFuncActivityAddVar(true, false, NULL, env);
-                    if (!setFuncActivityToNormal(true, env)) {
-                        msg = makeMessage("ERROR-STR", 0);  // 无代码可运行
-                        popLastActivity(msg, env);
-                        process_mgs_first = true;
+                    if (!setFuncActivityAddVar(true, false, env) || !setFuncActivityToNormal(env)) {
+                        popLastActivity(NULL, env);
+                        process_msg_first = true;
                     }
                 } else {
                     env->activity->acl_next->result = *(af_Object **)(msg->msg);

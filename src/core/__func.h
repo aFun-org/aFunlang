@@ -1,11 +1,12 @@
 ﻿#ifndef AFUN__FUNC_H
 #define AFUN__FUNC_H
 #include "macro.h"
+
+typedef struct af_FuncBody af_FuncBody;
+
 #include "func.h"
 #include "__object.h"
 #include "__code.h"
-
-typedef struct af_FuncBody af_FuncBody;
 
 struct ArgCodeList {
     void *info;  // info信息
@@ -25,7 +26,7 @@ struct ArgList {
     struct ArgList *next;
 };
 
-typedef void callFuncBody(af_Environment *env);
+typedef void callFuncBody(void *mark, af_Environment *env);
 NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 
 struct af_FuncBody {

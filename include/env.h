@@ -8,6 +8,7 @@ typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
 
 /* 顶层消息处理器的处理函数 DLC */
+typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
 #include "code.h"

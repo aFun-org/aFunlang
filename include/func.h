@@ -1,5 +1,9 @@
 ﻿#ifndef AFUN__FUNC_H_PUBLIC
 #define AFUN__FUNC_H_PUBLIC
+typedef struct ArgCodeList ArgCodeList;
+typedef struct ArgList ArgList;
+typedef struct af_FuncInfo af_FuncInfo;
+
 #include "code.h"
 #include "object.h"
 
@@ -16,9 +20,7 @@ enum af_FuncInfoEmbedded {
     super_embedded,  // 超内嵌函数
 };
 
-typedef struct ArgCodeList ArgCodeList;
-typedef struct ArgList ArgList;
-typedef struct af_FuncInfo af_FuncInfo;
+typedef void callFuncBody(void *make, af_Environment *env);
 DEFINE_DLC_SYMBOL(callFuncBody);
 
 /* ArgCodeList 创建与释放 */
@@ -29,6 +31,8 @@ void freeAllArgCodeList(ArgCodeList *acl);
 /* ArgCodeList 操作函数 */
 ArgCodeList **pushArgCodeList(ArgCodeList **base, ArgCodeList *new);
 ArgCodeList **pushNewArgCodeList(ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func);
+void *getArgCodeListData(ArgCodeList *acl);
+af_Object *getArgCodeListResult(ArgCodeList *acl);
 
 /* ArgList 创建与释放 */
 ArgList *makeArgList(char *name, af_Object *obj);

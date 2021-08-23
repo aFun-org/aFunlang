@@ -1,15 +1,16 @@
 ﻿#ifndef AFUN__OBJECT_H_PUBLIC
 #define AFUN__OBJECT_H_PUBLIC
 #include "tool.h"
-#include "obj_api.h"
 
 typedef struct af_Object af_Object;
 typedef struct af_Inherit af_Inherit;
 typedef struct af_ObjectAPI af_ObjectAPI;
 
 /* 对象API函数 DLC */
+typedef void objectAPIFunc();
 DEFINE_DLC_SYMBOL(objectAPIFunc);
 
+#include "obj_api.h"
 #include "env.h"
 
 /* 对象创建与释放函数 */

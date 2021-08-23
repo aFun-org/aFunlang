@@ -56,6 +56,14 @@ ArgCodeList **pushNewArgCodeList(ArgCodeList **base, af_Code *code, size_t size,
     return &((*base)->next);
 }
 
+void *getArgCodeListData(ArgCodeList *acl) {
+    return acl->info;
+}
+
+af_Object *getArgCodeListResult(ArgCodeList *acl) {
+    return acl->result;
+}
+
 ArgList *makeArgList(char *name, af_Object *obj) {
     ArgList *arg_list = calloc(sizeof(ArgList), 1);
     arg_list->name = strCopy(name);
