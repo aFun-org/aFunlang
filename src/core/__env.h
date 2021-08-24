@@ -84,6 +84,8 @@ struct af_Activity {  // 活动记录器
     struct af_FuncInfo *fi;
     struct af_FuncBody *body_next;
     void *mark;  // 标记 [完全由API管理, 不随activity释放]
+    struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
+    ActivityCount macro_vs_count;
 
     /* 字面量专项 */
     bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
@@ -127,6 +129,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env);
 void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
+bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);

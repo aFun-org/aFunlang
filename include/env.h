@@ -32,13 +32,14 @@ af_Object *getBaseObject(char *name, af_Environment *env);
 af_Message *makeMessage(char *type, size_t size);
 af_Message *freeMessage(af_Message *msg);
 void freeAllMessage(af_Message *msg);
-void *getMessageData(af_Message *msg);
-void connectMessage(af_Message **base, af_Message *msg);
+bool freeMessageCount(size_t count, af_Message *msg);
 
 /* 消息管理函数 */
 void pushMessageUp(af_Message *msg, af_Environment *env);
 void *popMessageUpData(char *type, af_Environment *env);
 af_Message *popMessageUp(af_Environment *env);
+void *getMessageData(af_Message *msg);
+void connectMessage(af_Message **base, af_Message *msg);
 
 /* 下行消息表管理函数 */
 void pushMessageDown(af_Message *msg, af_Environment *env);

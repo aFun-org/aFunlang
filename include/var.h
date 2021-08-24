@@ -42,6 +42,7 @@ af_Var *findVarFromVarList(char *name, af_VarSpaceListNode *vsl);
 af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs);
 af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl);
 void freeAllVarSpaceList(af_VarSpaceListNode *vsl);
+bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl);
 
 /* 变量空间链管理 */
 af_VarSpaceListNode *pushNewVarList(af_VarSpaceListNode *base);

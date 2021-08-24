@@ -79,6 +79,50 @@ void freeMark(int *mark) {
     free(mark);
 }
 
+void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
+    printf("testFunc2(): I am testFunc2\n");
+    af_Object *obj;
+
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            return;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            return;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            return;
+        if (addAPI(get_info, "obj_funcGetInfo", api) != 1)
+            return;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            return;
+
+        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info);
+        FREE_SYMBOL(free_mark);
+    }
+
+    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
+    *((af_Object **)(getMessageData(msg))) = obj;
+    gc_addReference(obj);
+    pushMessageDown(msg, env);
+}
+
+bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+    *fi = makeFuncInfo(normal_scope, not_embedded, true, false);  // 获取FuncInfo [桩]
+    makeCodeFuncBodyToFuncInfo(makeVariableCode("test", NUL, 0, "Unknow"), true, NULL, *fi);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc2, callFuncBody);
+    makeCFuncBodyToFuncInfo(func, NULL, *fi);
+    FREE_SYMBOL(func);
+    return true;
+}
 
 int main() {
     aFunInit();
@@ -133,6 +177,34 @@ int main() {
         FREE_SYMBOL(free_mark);
     }
 
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info2 = MAKE_SYMBOL(getInfo2, objectAPIFunc);  // 宏函数
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            return 2;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            return 2;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            return 2;
+        if (addAPI(get_info2, "obj_funcGetInfo", api) != 1)
+            return 2;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            return 2;
+
+        addVarToProtectVarSpace(makeVar("func2", 3, 3,
+                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info2);
+        FREE_SYMBOL(free_mark);
+    }
+
     addVarToProtectVarSpace(makeVar("object", 3, 3,
                                     makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
                             env);
@@ -165,6 +237,23 @@ int main() {
         freeAllCode(bt1);
         printf("\n");
     }
+
+    {  // 宏函数
+        printf("TAG L:\n");
+        af_Code *bt1 = makeVariableCode("object", 0, 1, NULL);
+
+        af_Code *bt3 = makeVariableCode("func2", 0, 1, NULL);
+        af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
+        connectCode(&bt1, bt5);
+
+        af_Code *bt6 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt5, bt6);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
 
     {  // 尾调递归优化
         printf("TAG B:\n");

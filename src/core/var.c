@@ -112,6 +112,15 @@ void freeAllVarSpaceList(af_VarSpaceListNode *vsl) {
         vsl = freeVarSpaceList(vsl);
 }
 
+bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
+    for (size_t i = count; i > 0; i--) {
+        if (vsl == NULL)  // 发生了错误
+            return false;
+        vsl = popLastVarList(vsl);
+    }
+    return true;
+}
+
 void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core) {
     if (vs->gc.info.start_gc)
         return;

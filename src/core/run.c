@@ -106,6 +106,17 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     return true;
 }
 
+static bool checkMacro(af_Message *msg, af_Environment *env) {
+    if (env->activity->fi == NULL || !env->activity->fi->is_macro)  // 非宏函数
+        return false;
+
+    af_Object *obj = *(af_Object **)(msg->msg);
+    pushMacroFuncActivity(obj, env);
+    gc_delReference(obj);
+    freeMessage(msg);
+    return true;
+}
+
 bool iterCode(af_Code *code, af_Environment *env) {
     env->process_msg_first = false;  // 优先处理msg而不是运行代码
     if (!addTopActivity(code, env))
@@ -167,6 +178,8 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 else if (env->activity->bt_next == NULL) { // 执行完成
                     switch (setFuncActivityToNormal(env)) {
                         case -1:  // 已经没有下一步了 (原msg不释放)
+                            if (checkMacro(msg, env))  // 检查是否宏函数
+                                break;  // 继续执行
                             checkLiteral(&msg, env);  // 检查是否字面量
                             popLastActivity(msg, env);
                             break;
@@ -178,6 +191,8 @@ bool iterCode(af_Code *code, af_Environment *env) {
                                 msg = makeMessage("ERROR-STR", 0);
                             else {
                                 msg = getFirstMessage(env);
+                                if (checkMacro(msg, env))  // 检查是否宏函数
+                                    break;  // 继续执行
                                 checkLiteral(&msg, env);  // 检查是否字面量
                             }
 
