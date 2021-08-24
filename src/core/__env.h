@@ -76,7 +76,7 @@ struct af_Activity {  // 活动记录器
     bool return_first;  // 顺序执行, 获取第一个返回结果
     struct af_Object *return_obj;  // 调用者向被调用者传递信息
 
-    // 函数调用专项
+    /* 函数调用专项 */
     enum af_BlockType call_type;  // 函数调用类型
     struct af_Object *parentheses_call;  // 类前缀调用
     struct ArgCodeList *acl_start;
@@ -84,6 +84,9 @@ struct af_Activity {  // 活动记录器
     struct af_FuncInfo *fi;
     struct af_FuncBody *body_next;
     void *mark;  // 标记 [完全由API管理, 不随activity释放]
+
+    /* 字面量专项 */
+    bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器
@@ -124,6 +127,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env);
 void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
+bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);
 

@@ -5,7 +5,7 @@
 
 /* Code 执行函数 */
 static void codeVariable(af_Code *code, af_Environment *env);
-static void codeLiteral(af_Code *code, af_Environment *env);
+static bool codeLiteral(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
 
 /* 工具函数 */
@@ -31,15 +31,21 @@ static void codeVariable(af_Code *code, af_Environment *env) {
     env->activity->bt_next = env->activity->bt_next->next;
 }
 
-static void codeLiteral(af_Code *code, af_Environment *env) {
-    af_Object *obj = makeObject("Literal", true, makeObjectAPI(), true, NULL, NULL, env);
-    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *((af_Object **)msg->msg) = obj;
-    gc_addReference(obj);
-    pushMessageDown(msg, env);
+static bool codeLiteral(af_Code *code, af_Environment *env) {
+    af_Var *var;
 
-    printf("Literal %s(%s) : %p\n", code->literal.func, code->literal.literal_data, obj);
-    env->activity->bt_next = env->activity->bt_next->next;
+    if (code->literal.in_protect)
+        var = findVarFromVarSpace(code->literal.func, env->core->protect);
+    else
+        var = findVarFromVarList(code->literal.func, env->activity->vsl);
+
+    if (var == NULL) {
+        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        printf("Literal not found: %s\n", code->variable.name);
+        return false;
+    }
+
+    return pushLiteralActivity(code, var->vn->obj, env);
 }
 
 static bool codeBlock(af_Code *code, af_Environment *env) {
@@ -84,6 +90,22 @@ static void popLastActivity(af_Message *msg, af_Environment *env) {
     } while (env->activity != NULL && env->activity->bt_next == NULL);
 }
 
+static bool checkLiteral(af_Message **msg, af_Environment *env) {
+    if (!env->activity->is_literal)
+        return true;
+
+    af_Object *obj = *(af_Object **)((*msg)->msg);
+    obj_literalSetting *func = findAPI("obj_literalSetting", obj->data->api);
+    if (func == NULL) {
+        gc_delReference(obj);
+        freeMessage(*msg);
+        *msg = makeMessage("ERROR-STR", 0);
+        return false;
+    }
+    func(env->activity->bt_top->literal.literal_data, obj->data->data, obj, env);
+    return true;
+}
+
 bool iterCode(af_Code *code, af_Environment *env) {
     env->process_msg_first = false;  // 优先处理msg而不是运行代码
     if (!addTopActivity(code, env))
@@ -103,14 +125,15 @@ bool iterCode(af_Code *code, af_Environment *env) {
             if (!env->process_msg_first) {
                 switch (env->activity->bt_next->type) {
                     case literal:
-                        codeLiteral(env->activity->bt_next, env);
+                        if (codeLiteral(env->activity->bt_next, env))
+                            continue;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
                         break;
                     case variable:
                         codeVariable(env->activity->bt_next, env);
                         break;
                     case block:
                         if (codeBlock(env->activity->bt_next, env))
-                            continue;  // 若运行成功则跳转到下一次运行, 该步骤没有任何实质性运算
+                            continue;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
                     default:
                         break;  // 错误
                 }
@@ -144,12 +167,21 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 else if (env->activity->bt_next == NULL) { // 执行完成
                     switch (setFuncActivityToNormal(env)) {
                         case -1:  // 已经没有下一步了 (原msg不释放)
+                            checkLiteral(&msg, env);  // 检查是否字面量
                             popLastActivity(msg, env);
                             break;
                         case 0:  // 已经没有下一步了 (但原msg释放)
                             gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
                             freeMessage(msg);
-                            popLastActivity(NULL, env);
+
+                            if (env->activity->msg_down == NULL)  // 检查是否有msg
+                                msg = makeMessage("ERROR-STR", 0);
+                            else {
+                                msg = getFirstMessage(env);
+                                checkLiteral(&msg, env);  // 检查是否字面量
+                            }
+
+                            popLastActivity(msg, env);
                             break;
                         default:
                         case 1:  // 继续运行

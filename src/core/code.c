@@ -8,6 +8,16 @@
 #include "tool.h"
 #include "__code.h"
 
+/* Code 创建函数 */
+static af_Code *makeCode(char prefix, FileLine line, FilePath path);
+
+/* Code 操作函数 */
+static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next);
+
+/* Code IO函数 */
+static bool readCode(af_Code **bt, FILE *file);
+static bool writeCode(af_Code *bt, FILE *file);
+
 static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     af_Code *bt = calloc(1, sizeof(af_Code));
     bt->line = line;
@@ -38,7 +48,7 @@ af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path) 
  * 函数名: countElement
  * 目标: 统计元素个数（不包括元素的子元素）
  */
-static bool countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next) {
+static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next) {
     CodeUint to_next = 0;  // 表示紧接着的元素都不纳入统计(指block的子元素)
 
     for (*elements = 0; element != NULL; *next = element, element = element->next) {
@@ -51,8 +61,6 @@ static bool countElement(af_Code *element, CodeUint *elements, CodeUint *count, 
         if (element->type == block)
             to_next += element->block.elements;
     }
-
-    return true;
 }
 
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
@@ -64,9 +72,7 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
     if (next == NULL)
         next = &tmp;
 
-    if (!countElement(element, &elements, &count, next))
-        return NULL;
-
+    countElement(element, &elements, &count, next);
     bt = makeCode(prefix, line, path);
     bt->type = block;
     bt->block.type = type;
@@ -173,7 +179,6 @@ bool getCodeBlockNext(af_Code *bt, af_Code **next) {
 }
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
-
 static bool writeCode(af_Code *bt, FILE *file) {
     Done(byteWriteUint_8(file, bt->type));
     Done(byteWriteUint_8(file, bt->prefix));

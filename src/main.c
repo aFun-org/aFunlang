@@ -41,10 +41,23 @@ bool getAl(ArgList **al, af_Object *obj, ArgCodeList *acl, void *mark, af_Enviro
     return true;
 }
 
+void literalSet(char *str, void *data, af_Object *obj, af_Environment *env) {
+    printf("literalSet(): str = %s\n", str);
+}
+
 void testFunc(int *mark, af_Environment *env) {  // 测试用函数
     printf("testFunc(): I am testFunc\n");
+    af_Object *obj;
 
-    af_Object *obj = makeObject("Literal", true, makeObjectAPI(), true, NULL, NULL, env);
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
+        if (addAPI(literal_set, "obj_literalSetting", api) != 1)
+            return;
+        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        FREE_SYMBOL(literal_set);
+    }
+
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
     *((af_Object **)(getMessageData(msg))) = obj;
     gc_addReference(obj);
@@ -136,6 +149,7 @@ int main() {
     }
 
     {  // 正常程序
+        printf("TAG A:\n");
         af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
         af_Code *bt2 = makeVariableCode("object", 0, 1, NULL);
         connectCode(&bt1, bt2);
@@ -153,6 +167,7 @@ int main() {
     }
 
     {  // 尾调递归优化
+        printf("TAG B:\n");
         af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
         af_Code *bt2 = makeVariableCode("object", 0, 1, NULL);
         connectCode(&bt1, bt2);
@@ -166,7 +181,17 @@ int main() {
         printf("\n");
     }
 
+    {  // 尾调递归优化2
+        printf("TAG C:\n");
+        af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
     {  // 测试类前缀调用
+        printf("TAG D:\n");
         af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
         af_Code *bt2 = makeVariableCode("func", 0, 1, NULL);
         connectCode(&bt1, bt2);
@@ -184,6 +209,7 @@ int main() {
     }
 
     {  // 测试错误 (无函数指定)
+        printf("TAG F: ERROR\n");
         af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
 
         af_Code *bt5 = makeBlockCode(curly, NULL, 0, 1, NULL, NULL);
@@ -198,6 +224,7 @@ int main() {
     }
 
     {  // 测试错误 (object2 Var not found)
+        printf("TAG G: ERROR\n");
         af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
         af_Code *bt2 = makeVariableCode("object2", 0, 1, NULL);
 
@@ -209,6 +236,7 @@ int main() {
     }
 
     {  // 测试顺序执行 '(xxx)
+        printf("TAG H:\n");
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
 
@@ -225,6 +253,7 @@ int main() {
     }
 
     {  // 测试顺序执行 ,[xxx]
+        printf("TAG I:\n");
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
 
@@ -241,6 +270,7 @@ int main() {
     }
 
     {  // 测试顺序执行 '(xxx) 【尾调递归优化】
+        printf("TAG J:\n");
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
 
@@ -254,6 +284,7 @@ int main() {
     }
 
     {  // 测试顺序执行 ,[xxx] 【尾调递归优化】
+        printf("TAG K:\n");
         af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
         af_Code *bt4 = makeVariableCode("global", 0, 1, NULL);
 

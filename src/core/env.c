@@ -515,6 +515,26 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     return true;
 }
 
+bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
+    env->activity->bt_next = bt->next;
+    if (bt->next == NULL && env->activity->body_next == NULL) {
+        env->activity->bt_top = bt;
+        env->activity->bt_start = NULL;
+        env->activity->bt_next = NULL;
+        freeMark(env);
+        /* 保持原有的 return_first */
+    } else {
+        af_Activity *activity = makeActivity(bt, NULL, false, env->activity->msg_up, env->activity->var_list,
+                                             env->activity->belong, env->activity->func);
+        activity->prev = env->activity;
+        env->activity = activity;
+    }
+
+    env->activity->is_literal = true;
+    env->activity->call_type = env->activity->bt_top->block.type;
+    return setFuncActivityToArg(func, env);
+}
+
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", func->data->api);
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", func->data->api);

@@ -35,4 +35,7 @@ typedef bool obj_funcGetArgList(ArgList **al, af_Object *obj, ArgCodeList *acl, 
 typedef bool obj_funcGetInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env);  // 获取函数信息
 typedef void obj_funcFreeMask(void *mark);  // 释放mask的函数
 
+/* Object 字面量设定 */
+typedef void obj_literalSetting(char *str, void *data, af_Object *obj, af_Environment *env);
+
 #endif //AFUN__OBJ_API_H
