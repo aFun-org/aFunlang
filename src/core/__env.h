@@ -85,8 +85,8 @@ struct af_Activity {  // 活动记录器
     /* 函数调用专项 */
     enum af_BlockType call_type;  // 函数调用类型
     struct af_Object *parentheses_call;  // 类前缀调用
-    struct ArgCodeList *acl_start;
-    struct ArgCodeList *acl_next;
+    struct af_ArgCodeList *acl_start;
+    struct af_ArgCodeList *acl_next;
     struct af_FuncInfo *fi;
     struct af_FuncBody *body_next;
     void *mark;  // 标记 [完全由API管理, 不随activity释放]

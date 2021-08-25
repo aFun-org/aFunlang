@@ -1,7 +1,7 @@
 ﻿#ifndef AFUN__FUNC_H_PUBLIC
 #define AFUN__FUNC_H_PUBLIC
-typedef struct ArgCodeList ArgCodeList;
-typedef struct ArgList ArgList;
+typedef struct af_ArgCodeList af_ArgCodeList;
+typedef struct af_ArgList af_ArgList;
 typedef struct af_FuncInfo af_FuncInfo;
 
 #include "code.h"
@@ -23,26 +23,26 @@ enum af_FuncInfoEmbedded {
 typedef void callFuncBody(void *make, af_Environment *env);
 DEFINE_DLC_SYMBOL(callFuncBody);
 
-/* ArgCodeList 创建与释放 */
-ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func);
-ArgCodeList *freeArgCodeList(ArgCodeList *acl);
-void freeAllArgCodeList(ArgCodeList *acl);
+/* af_ArgCodeList 创建与释放 */
+af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func);
+af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl);
+void freeAllArgCodeList(af_ArgCodeList *acl);
 
-/* ArgCodeList 操作函数 */
-ArgCodeList **pushArgCodeList(ArgCodeList **base, ArgCodeList *new);
-ArgCodeList **pushNewArgCodeList(ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func);
-void *getArgCodeListData(ArgCodeList *acl);
-af_Object *getArgCodeListResult(ArgCodeList *acl);
+/* af_ArgCodeList 操作函数 */
+af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new);
+af_ArgCodeList **pushNewArgCodeList(af_ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func);
+void *getArgCodeListData(af_ArgCodeList *acl);
+af_Object *getArgCodeListResult(af_ArgCodeList *acl);
 
-/* ArgList 创建与释放 */
-ArgList *makeArgList(char *name, af_Object *obj);
-ArgList *freeArgList(ArgList *al);
-void freeAllArgList(ArgList *al);
+/* af_ArgList 创建与释放 */
+af_ArgList *makeArgList(char *name, af_Object *obj);
+af_ArgList *freeArgList(af_ArgList *al);
+void freeAllArgList(af_ArgList *al);
 
-/* ArgList 操作函数 */
-ArgList **pushArgList(ArgList **base, ArgList *new);
-ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj);
-bool runArgList(ArgList *al, af_VarSpaceListNode *vsl);
+/* af_ArgList 操作函数 */
+af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new);
+af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj);
+bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl);
 
 /* FuncInfo 创建与释放 */
 af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro);

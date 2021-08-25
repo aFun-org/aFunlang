@@ -29,9 +29,9 @@ typedef void obj_initData(void *data);  // 初始化data
 typedef void obj_freeData(void *data);  // 释放data的内容 (但不释放void *data)指针
 
 /* Object 函数调用 */
-typedef bool obj_funcGetArgCodeList(ArgCodeList **acl, af_Object *obj, af_Code *code, void **mark, af_Environment *env);  // 获取参数计算表
+typedef bool obj_funcGetArgCodeList(af_ArgCodeList **acl, af_Object *obj, af_Code *code, void **mark, af_Environment *env);  // 获取参数计算表
 typedef bool obj_funcGetVarList(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env);  // 获取函数变量空间
-typedef bool obj_funcGetArgList(ArgList **al, af_Object *obj, ArgCodeList *acl, void *mark, af_Environment *env);  // 获取参数赋值表
+typedef bool obj_funcGetArgList(af_ArgList **al, af_Object *obj, af_ArgCodeList *acl, void *mark, af_Environment *env);  // 获取参数赋值表
 typedef bool obj_funcGetInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env);  // 获取函数信息
 typedef void obj_funcFreeMask(void *mark);  // 释放mask的函数
 

@@ -13,8 +13,8 @@ static void freeMsgType(char **msg_type);
 /* FuncBody 操作函数 */
 static void pushFuncBody(af_FuncBody **base, af_FuncBody *body);
 
-ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func) {
-    ArgCodeList *acl = calloc(sizeof(ArgCodeList), 1);
+af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func) {
+    af_ArgCodeList *acl = calloc(sizeof(af_ArgCodeList), 1);
     acl->info = calloc(size, 1);
     acl->size = size;
     acl->code = code;
@@ -23,8 +23,8 @@ ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool ru
     return acl;
 }
 
-ArgCodeList *freeArgCodeList(ArgCodeList *acl) {
-    ArgCodeList *next = acl->next;
+af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl) {
+    af_ArgCodeList *next = acl->next;
     free(acl->info);
     if (acl->free_code)
         freeAllCode(acl->code);
@@ -34,12 +34,12 @@ ArgCodeList *freeArgCodeList(ArgCodeList *acl) {
     return next;
 }
 
-void freeAllArgCodeList(ArgCodeList *acl) {
+void freeAllArgCodeList(af_ArgCodeList *acl) {
     while (acl != NULL)
         acl = freeArgCodeList(acl);
 }
 
-ArgCodeList **pushArgCodeList(ArgCodeList **base, ArgCodeList *new) {
+af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new) {
     while (*base != NULL)
         base = &((*base)->next);
     *base = new;
@@ -49,31 +49,31 @@ ArgCodeList **pushArgCodeList(ArgCodeList **base, ArgCodeList *new) {
     return base;
 }
 
-ArgCodeList **pushNewArgCodeList(ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func) {
+af_ArgCodeList **pushNewArgCodeList(af_ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func) {
     while (*base != NULL)
         base = &((*base)->next);
     *base = makeArgCodeList(code, size, free_code, run_in_func);
     return &((*base)->next);
 }
 
-void *getArgCodeListData(ArgCodeList *acl) {
+void *getArgCodeListData(af_ArgCodeList *acl) {
     return acl->info;
 }
 
-af_Object *getArgCodeListResult(ArgCodeList *acl) {
+af_Object *getArgCodeListResult(af_ArgCodeList *acl) {
     return acl->result;
 }
 
-ArgList *makeArgList(char *name, af_Object *obj) {
-    ArgList *arg_list = calloc(sizeof(ArgList), 1);
+af_ArgList *makeArgList(char *name, af_Object *obj) {
+    af_ArgList *arg_list = calloc(sizeof(af_ArgList), 1);
     arg_list->name = strCopy(name);
     arg_list->obj = obj;
     gc_addReference(obj);
     return arg_list;
 }
 
-ArgList *freeArgList(ArgList *al) {
-    ArgList *next = al->next;
+af_ArgList *freeArgList(af_ArgList *al) {
+    af_ArgList *next = al->next;
     free(al->name);
     if (al->obj != NULL)
         gc_addReference(al->obj);
@@ -81,12 +81,12 @@ ArgList *freeArgList(ArgList *al) {
     return next;
 }
 
-void freeAllArgList(ArgList *al) {
+void freeAllArgList(af_ArgList *al) {
     while (al != NULL)
         al = freeArgList(al);
 }
 
-ArgList **pushArgList(ArgList **base, ArgList *new) {
+af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new) {
     while (*base != NULL)
         base = &((*base)->next);
     *base = new;
@@ -96,14 +96,14 @@ ArgList **pushArgList(ArgList **base, ArgList *new) {
     return base;
 }
 
-ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj) {
+af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj) {
     while (*base != NULL)
         base = &((*base)->next);
     *base = makeArgList(name, obj);
     return &((*base)->next);
 }
 
-bool runArgList(ArgList *al, af_VarSpaceListNode *vsl) {
+bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl) {
     for (NULL; al != NULL; al = al->next) {
         if (!makeVarToVarSpaceList(al->name, 3, 3, al->obj, vsl))
             return false;

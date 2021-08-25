@@ -24,7 +24,7 @@ void freeData(int **data) {
     free(*data);
 }
 
-bool getAcl(ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
+bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
     *acl = makeArgCodeList(makeVariableCode("object", NUL, 0, "Unknown"), 0, true, false);
     *mark = calloc(sizeof(int), 1);
     **mark = 100;
@@ -37,7 +37,7 @@ bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environmen
     return true;
 }
 
-bool getAl(ArgList **al, af_Object *obj, ArgCodeList *acl, void *mark, af_Environment *env) {
+bool getAl(af_ArgList **al, af_Object *obj, af_ArgCodeList *acl, void *mark, af_Environment *env) {
     *al = makeArgList("test", getArgCodeListResult(acl));
     return true;
 }

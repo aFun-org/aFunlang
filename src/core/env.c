@@ -681,7 +681,7 @@ bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env){
         env->activity->new_vs_count++;
     }
 
-    ArgList *al;
+    af_ArgList *al;
     if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
         return false;
     runArgList(al, env->activity->var_list);
