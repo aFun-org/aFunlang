@@ -2,7 +2,7 @@
 
 /* Core 创建和释放 */
 static af_Core *makeCore(enum GcRunTime grt);
-static void freeCore(af_Core *core);
+static void freeCore(af_Environment *env);
 
 /* Core 初始化 */
 static bool enableCore(af_Core *core);
@@ -52,10 +52,15 @@ static af_Core *makeCore(enum GcRunTime grt) {
     return core;
 }
 
-static void freeCore(af_Core *core) {
-    printGCByCode(core);
-    gc_freeAllValue(core);
-    free(core);
+/*
+ * 函数名: freeCore
+ * 目标: 释放Core
+ * 因为gc_freeAllValue需要env作为参数, 故使用env作为freeCore的参数
+ */
+static void freeCore(af_Environment *env) {
+    printGCByCode(env->core);
+    gc_freeAllValue(env);
+    free(env->core);
 }
 
 char setPrefix(size_t name, char prefix, af_Environment *env) {
@@ -425,7 +430,7 @@ bool enableEnvironment(af_Environment *env) {
 }
 
 void freeEnvironment(af_Environment *env) {
-    freeCore(env->core);
+    freeCore(env);
     freeAllActivity(env->activity);
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);

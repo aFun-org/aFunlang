@@ -21,9 +21,9 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
     }
 
     af_Object *obj = var->vn->obj;
-    is_obj_func *func;
+    obj_isObjFunc *func;
     if (code->prefix == env->core->prefix[V_QUOTE] ||
-        (func = findAPI("is_obj_func", obj->data->api)) == NULL || !func(obj)) {  // 非对象函数 或 引用调用
+        (func = findAPI("obj_isObjFunc", obj->data->api)) == NULL || !func(obj)) {  // 非对象函数 或 引用调用
         pushMessageDown(makeNORMALMessage(obj), env);
         env->activity->bt_next = env->activity->bt_next->next;
         printf("Get Variable %s : %p\n", code->variable.name, obj);

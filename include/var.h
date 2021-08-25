@@ -39,6 +39,9 @@ af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl);
 void freeAllVarSpaceList(af_VarSpaceListNode *vsl);
 bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl);
 
+/* 变量空间链属性获取 */
+af_VarSpace *getVarSpaceFromList(af_VarSpaceListNode *vsl);
+
 /* 变量空间链管理 */
 af_VarSpaceListNode *pushNewVarList(af_VarSpaceListNode *base, af_Environment *env);
 af_VarSpaceListNode *popLastVarList(af_VarSpaceListNode *base);

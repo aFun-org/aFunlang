@@ -37,7 +37,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     if (od->size != 0) {
         od->data = calloc(od->size, 1);
         if (init != NULL)
-            init(od->data);
+            init(od->data, env);
     }
 
     od->api = api;
@@ -97,13 +97,12 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
  * 函数名: freeObjectDataByCore
  * 目标: 释放ObjectData, 仅GC函数可用
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
- * af_ObjectData对外不可见, 因此无使用env的freeObjectData函数
  */
-void freeObjectDataByCore(af_ObjectData *od, af_Core *core) {
+void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->size != 0) {
         obj_freeData *func = findAPI("obj_freeData", od->api);
         if (func != NULL)
-            func(od->data);
+            func(od->data, env);
     }
 
     free(od->id);
@@ -111,7 +110,7 @@ void freeObjectDataByCore(af_ObjectData *od, af_Core *core) {
     if (od->free_api)
         freeObjectAPI(od->api);
     freeAllInherit(od->inherit);
-    GC_FREE_EXCHANGE(od, ObjectData, core);
+    GC_FREE_EXCHANGE(od, ObjectData, env->core);
     free(od);
 }
 
@@ -123,6 +122,10 @@ void freeObject(af_Object *obj, af_Environment *env) {
 void freeObjectByCore(af_Object *obj, af_Core *core) {
     GC_FREE_EXCHANGE(obj, Object, core);
     free(obj);
+}
+
+void *getObjectData(af_Object *obj) {
+    return obj->data->data;
 }
 
 af_Object *getBelongObject(af_Object *object, af_Environment *env) {

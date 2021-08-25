@@ -14,14 +14,27 @@ size_t getSize(void) {
     return sizeof(int *);
 }
 
-void initData(int **data) {
+void initData(int **data, af_Environment *env) {
     *data = calloc(sizeof(int), 1);
     **data = 100;
 }
 
-void freeData(int **data) {
+void freeData(int **data, af_Environment *env) {
     printf("freeData(): **data = %d\n", **data);
     free(*data);
+}
+
+size_t getSize2(void) {
+    return sizeof(af_VarSpaceListNode *);
+}
+
+void initData2(af_VarSpaceListNode **data, af_Environment *env) {
+    *data = makeVarSpaceList(getProtectVarSpace(env));
+}
+
+void freeData2(af_VarSpaceListNode **data, af_Environment *env) {
+    printf("freeData2(): vsl = %p\n", *data);
+    freeAllVarSpaceList(*data);
 }
 
 bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
@@ -31,10 +44,14 @@ bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_
     return true;
 }
 
-bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {  // [桩]
-    *vsl = makeVarSpaceList(getProtectVarSpace(env));
-    pushNewVarList(*vsl, env);
+bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {
+    *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
     return true;
+}
+
+af_GcList *getGcList(void *data) {
+    af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
+    return gl;
 }
 
 bool getAl(af_ArgList **al, af_Object *obj, af_ArgCodeList *acl, void *mark, af_Environment *env) {
@@ -88,6 +105,16 @@ void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return;
+        if (addAPI(freeData_2, "obj_freeData", api) != 1)
+            return;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
             return;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
@@ -98,13 +125,19 @@ void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
             return;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             return;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return;
 
         obj = makeObject("func", true, api, true, NULL, NULL, env);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info);
         FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
     }
 
     pushMessageDown(makeNORMALMessage(obj), env);
@@ -188,6 +221,16 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_2, "obj_freeData", api) != 1)
+            return 2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
             return 2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
@@ -198,6 +241,8 @@ int main() {
             return 2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             return 2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return 2;
 
         addVarToProtectVarSpace(makeVar("func", 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -207,6 +252,10 @@ int main() {
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info);
         FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
         printf("func(%p)\n", obj);
     }
 
@@ -218,6 +267,18 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_info2 = MAKE_SYMBOL(getInfo2, objectAPIFunc);  // 宏函数
         DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_2, "obj_freeData", api) != 1)
+            return 2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return 2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
             return 2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
@@ -237,6 +298,10 @@ int main() {
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info2);
         FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
         printf("func2(%p)\n", obj);
     }
 
@@ -248,6 +313,18 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_info3 = MAKE_SYMBOL(getInfo3, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_2, "obj_freeData", api) != 1)
+            return 2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return 2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
             return 2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
@@ -267,6 +344,10 @@ int main() {
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info3);
         FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
         printf("func3(%p)\n", obj);
     }
 
@@ -279,6 +360,18 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) get_info4 = MAKE_SYMBOL(getInfo4, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) obj_func = MAKE_SYMBOL(objFunc, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_2, "obj_freeData", api) != 1)
+            return 2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return 2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
             return 2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
@@ -289,7 +382,7 @@ int main() {
             return 2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             return 2;
-        if (addAPI(obj_func, "is_obj_func", api) != 1)
+        if (addAPI(obj_func, "obj_isObjFunc", api) != 1)
             return 2;
 
         addVarToProtectVarSpace(makeVar("func4", 3, 3,
@@ -301,6 +394,10 @@ int main() {
         FREE_SYMBOL(get_info4);
         FREE_SYMBOL(free_mark);
         FREE_SYMBOL(obj_func);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
         printf("func4(%p)\n", obj);
     }
 

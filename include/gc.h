@@ -3,6 +3,14 @@
 #include "object.h"
 #include "var.h"
 
+typedef struct af_GcList af_GcList;
+enum af_GcListType {
+    glt_obj = 1,
+    glt_vs,
+    glt_var,
+    glt_vsl,
+};
+
 /* gc 引用计数管理函数 */
 #define gc_addReference(obj) ((_Generic((obj), \
                                af_Object *:gc_addObjectReference, \
@@ -13,6 +21,9 @@
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
                                af_VarSpace *: gc_delVarSpaceReference))(obj))
+
+/* GcList 操作函数 */
+af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base);
 
 /* gc 对象新增函数 */
 void gc_addObject(af_Object *obj, af_Environment *env);

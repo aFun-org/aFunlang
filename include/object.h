@@ -19,6 +19,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
 void freeObject(af_Object *obj, af_Environment *env);
 
 /* 对象属性获取函数 */
+void *getObjectData(af_Object *obj);
 af_Object *getBelongObject(af_Object *object, af_Environment *env);
 
 /* 对象继承关系函数 */

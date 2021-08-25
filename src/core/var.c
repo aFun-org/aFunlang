@@ -137,6 +137,12 @@ void freeAllVarSpaceList(af_VarSpaceListNode *vsl){
         vsl = freeVarSpaceList(vsl);
 }
 
+af_VarSpace *getVarSpaceFromList(af_VarSpaceListNode *vsl) {
+    if (vsl != NULL)
+        return vsl->vs;
+    return NULL;
+}
+
 bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
     for (size_t i = count; i > 0; i--) {
         if (vsl == NULL)  // 发生了错误

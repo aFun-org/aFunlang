@@ -4,6 +4,36 @@
 #include "__gc.h"
 #include "__env.h"
 
+/* gcList 函数 */
+static af_GcList *makeGcList(enum af_GcListType type, void *data);
+static af_GcList *freeGcList(af_GcList *gl);
+static void freeAllGcList(af_GcList *gl);
+
+static af_GcList *makeGcList(enum af_GcListType type, void *data) {
+    af_GcList *gl = calloc(sizeof(af_GcList), 1);
+    gl->type = type;
+    gl->data = data;
+    return gl;
+}
+
+static af_GcList *freeGcList(af_GcList *gl) {
+    af_GcList *next = gl->next;
+    free(gl);
+    return next;
+}
+
+static void freeAllGcList(af_GcList *gl) {
+    while (gl != NULL)
+        gl = freeGcList(gl);
+}
+
+af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base) {
+    af_GcList *next = makeGcList(type, data);
+    next->next = base;
+    return next;
+}
+
+/* gc 运行时函数 */
 typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
 struct gc_Analyzed {
     enum gc_AnalyzedType {
@@ -37,11 +67,12 @@ static pgc_Analyzed newVarSpaceAnalyzed(struct af_VarSpace *vs, pgc_Analyzed pli
 /* 可达性分析函数 */
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
+static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist);
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
 static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
 
 /* gc运行函数 */
-static void freeValue(af_Core *core);
+static void freeValue(af_Environment *env);
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
 static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
 static void freeAllAnalyzed(gc_Analyzed *base);
@@ -122,6 +153,30 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
             plist = newObjectAnalyzed(ih->obj, plist);
     }
 
+    obj_getGcList *func = findAPI("obj_getGcList", od->api);
+    if (func != NULL) {
+        af_GcList *gl = func(od->data);
+        for (af_GcList *tmp = gl; tmp != NULL; tmp = tmp->next) {
+            switch (tmp->type) {
+                case glt_obj:
+                    if (!tmp->obj->gc.info.reachable)
+                        plist = newObjectAnalyzed(od->base, plist);
+                    break;
+                case glt_var:
+                    plist = reachableVar(tmp->var, plist);
+                    break;
+                case glt_vs:
+                    plist = reachableVarSpace(tmp->vs, plist);
+                    break;
+                case glt_vsl:
+                    plist = reachableVarSpaceList(tmp->vsl, plist);
+                    break;
+                default:
+                    break;
+            }
+        }
+        freeAllGcList(gl);
+    }
     return plist;
 }
 
@@ -148,6 +203,14 @@ static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
             plist = newObjectAnalyzed(vn->obj, plist);
     }
 
+    return plist;
+}
+
+static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist) {
+    for (NULL; vsl != NULL; vsl = vsl->next) {
+        if (!vsl->vs->gc.info.reachable)
+            plist = reachableVarSpace(vsl->vs, plist);
+    }
     return plist;
 }
 
@@ -194,21 +257,9 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
         if (activity->parentheses_call != NULL)
             plist = reachableObject(activity->parentheses_call, plist);
 
-        for (af_VarSpaceListNode *vsn = activity->var_list; vsn != NULL; vsn = vsn->next) {
-            if (!vsn->vs->gc.info.reachable)
-                plist = reachableVarSpace(vsn->vs, plist);
-        }
-
-        for (af_VarSpaceListNode *vsn = activity->func_var_list; vsn != NULL; vsn = vsn->next) {
-            if (!vsn->vs->gc.info.reachable)
-                plist = reachableVarSpace(vsn->vs, plist);
-        }
-
-        for (af_VarSpaceListNode *vsn = activity->macro_vsl; vsn != NULL; vsn = vsn->next) {
-            if (!vsn->vs->gc.info.reachable)
-                plist = reachableVarSpace(vsn->vs, plist);
-        }
-
+        plist = reachableVarSpaceList(activity->var_list, plist);
+        plist = reachableVarSpaceList(activity->func_var_list, plist);
+        plist = reachableVarSpaceList(activity->macro_vsl, plist);
     }
     return plist;
 }
@@ -227,36 +278,36 @@ void resetGC(af_Environment *env) {
         var->gc.info.reachable = false;
 }
 
-static void freeValue(af_Core *core) {
-    for (af_ObjectData *od = core->gc_ObjectData, *next; od != NULL; od = next) {
+static void freeValue(af_Environment *env) {
+    for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
         if (!od->gc.info.reachable) { // 暂时不考虑析构函数
             printf("- gc free ObjectData: %p\n", od);
-            freeObjectDataByCore(od, core);
+            freeObjectData(od, env);
         }
     }
 
-    for (af_Object *obj = core->gc_Object, *next; obj != NULL; obj = next) {
+    for (af_Object *obj = env->core->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
         if (!obj->gc.info.reachable) {
             printf("- gc free Object: %p\n", obj);
-            freeObjectByCore(obj, core);
+            freeObjectByCore(obj, env->core);
         }
     }
 
-    for (af_VarSpace *vs = core->gc_VarSpace, *next; vs != NULL; vs = next) {
+    for (af_VarSpace *vs = env->core->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
         if (!vs->gc.info.reachable) {
             printf("- gc free VarSpace: %p\n", vs);
-            freeVarSpaceByCore(vs, core);
+            freeVarSpaceByCore(vs, env->core);
         }
     }
 
-    for (af_Var *var = core->gc_Var, *next; var != NULL; var = next) {
+    for (af_Var *var = env->core->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
         if (!var->gc.info.reachable) {
             printf("- gc free Var: %p\n", var);
-            freeVarByCore(var, core);
+            freeVarByCore(var, env->core);
         }
     }
 }
@@ -317,29 +368,29 @@ void gc_RunGC(af_Environment *env) {
         }
     }
 
-    freeValue(env->core);
+    freeValue(env);
     freeAllAnalyzed(analyzed);
 }
 
-void gc_freeAllValue(af_Core *core) {
-    for (af_ObjectData *od = core->gc_ObjectData, *next; od != NULL; od = next) {
+void gc_freeAllValue(af_Environment *env) {
+    for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
-        freeObjectDataByCore(od, core);  // 暂时不考虑析构函数
+        freeObjectData(od, env);  // 暂时不考虑析构函数
     }
 
-    for (af_Object *obj = core->gc_Object, *next; obj != NULL; obj = next) {
+    for (af_Object *obj = env->core->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
-        freeObjectByCore(obj, core);
+        freeObjectByCore(obj, env->core);
     }
 
-    for (af_VarSpace *vs = core->gc_VarSpace, *next; vs != NULL; vs = next) {
+    for (af_VarSpace *vs = env->core->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
-        freeVarSpaceByCore(vs, core);
+        freeVarSpaceByCore(vs, env->core);
     }
 
-    for (af_Var *var = core->gc_Var, *next; var != NULL; var = next) {
+    for (af_Var *var = env->core->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
-        freeVarByCore(var, core);
+        freeVarByCore(var, env->core);
     }
 }
 

@@ -48,6 +48,20 @@ struct GC_VarSpace {
 #include "__env.h"  // 这部分内容依赖上面的定义
 #include "gc.h"
 
+struct af_GcList {
+    enum af_GcListType type;
+
+    union {
+        void *data;
+        struct af_Object *obj;
+        struct af_VarSpace *vs;
+        struct af_Var *var;
+        struct af_VarSpaceListNode *vsl;
+    };
+
+    struct af_GcList *next;
+};
+
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
 #undef gc_addReference
 #undef gc_delReference
@@ -78,7 +92,7 @@ void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
 /* gc 操控函数 : gc的启动由解释器完全管理 */
 void gc_RunGC(af_Environment *env);
-void gc_freeAllValue(af_Core *core);
+void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */
 void printGCByCode(af_Core *core);
