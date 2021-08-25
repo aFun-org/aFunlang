@@ -320,3 +320,22 @@ void gc_freeAllValue(af_Core *core) {
         freeVar(var);
     }
 }
+
+void printGCByCode(af_Core *core) {
+    printf("GC ObjectData:\n");
+    for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next)
+        printf("af_ObjectData(%p) Reference: %d\n", od, od->gc.info.reference);
+
+    printf("GC Object:\n");
+    for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next)
+        printf("af_Object(%p->%p) Reference: %d\n", obj, obj->data, obj->gc.info.reference);
+
+    printf("GC VarSpace:\n");
+    for (af_VarSpace *vs = core->gc_VarSpace; vs != NULL; vs = vs->gc.next)
+        printf("af_VarSpace(%p) Reference: %d\n", vs, vs->gc.info.reference);
+
+    printf("GC Var:\n");
+    for (af_Var *var = core->gc_Var; var != NULL; var = var->gc.next)
+        printf("af_Var(%p) Reference: %d\n", var, var->gc.info.reference);
+
+}

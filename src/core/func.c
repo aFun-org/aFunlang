@@ -76,7 +76,7 @@ af_ArgList *freeArgList(af_ArgList *al) {
     af_ArgList *next = al->next;
     free(al->name);
     if (al->obj != NULL)
-        gc_addReference(al->obj);
+        gc_delReference(al->obj);
     free(al);
     return next;
 }

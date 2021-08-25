@@ -76,8 +76,11 @@ void gc_addObjectByCore(struct af_Object *obj, af_Core *core);
 void gc_addVarByCore(struct af_Var *obj, af_Core *core);
 void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
-/* gc启动函数 : gc的启动由解释器完全管理 */
+/* gc 启动函数 : gc的启动由解释器完全管理 */
 bool gc_RunGC(af_Environment *env);
 void gc_freeAllValue(af_Core *core);
+
+/* gc 信息函数 */
+void printGCByCode(af_Core *core);
 
 #endif //AFUN_GC_H

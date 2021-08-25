@@ -169,6 +169,7 @@ int main() {
     af_Environment *env = makeEnvironment();
     {
         af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) getSize_ = MAKE_SYMBOL(getSize, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) initData_ = MAKE_SYMBOL(initData, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_ = MAKE_SYMBOL(freeData, objectAPIFunc);
@@ -180,15 +181,17 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("global", 3, 3,
-                                        makeObject("global", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("global", true, api, true, NULL, NULL, env))),
                                 env);
         FREE_SYMBOL(getSize_);
         FREE_SYMBOL(initData_);
         FREE_SYMBOL(freeData_);
+        printf("global(%p)\n", obj);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
@@ -206,17 +209,19 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func", 3, 3,
-                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info);
         FREE_SYMBOL(free_mark);
+        printf("func(%p)\n", obj);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
@@ -234,17 +239,19 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func2", 3, 3,
-                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info2);
         FREE_SYMBOL(free_mark);
+        printf("func2(%p)\n", obj);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
@@ -262,17 +269,19 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func3", 3, 3,
-                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info3);
         FREE_SYMBOL(free_mark);
+        printf("func3(%p)\n", obj);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
@@ -293,7 +302,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func4", 3, 3,
-                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -301,11 +310,18 @@ int main() {
         FREE_SYMBOL(get_info4);
         FREE_SYMBOL(free_mark);
         FREE_SYMBOL(obj_func);
+        printf("func4(%p)\n", obj);
     }
 
-    addVarToProtectVarSpace(makeVar("object", 3, 3,
-                                    makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
-                            env);
+    {
+        af_Object *obj;
+        addVarToProtectVarSpace(makeVar("object", 3, 3,
+                                        (obj = makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env))),
+                                env);
+        printf("object(%p)\n", obj);
+    }
+
+    printf("\n");
 
     {
         DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_ERROR_STR, TopMsgProcessFunc);
@@ -526,6 +542,17 @@ int main() {
     {  // 对象函数的调用 (尾调递归优化)
         printf("TAG P:\n");
         af_Code *bt1 = makeVariableCode("func4", 0, 1, NULL);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 函数调用
+        printf("TAG P:\n");
+
+        af_Code *bt2 = makeVariableCode("func", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, NULL, NULL);
 
         iterCode(bt1, env);
         freeAllCode(bt1);

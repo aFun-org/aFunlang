@@ -59,6 +59,7 @@ static void freeCore(af_Core *core) {
     if (core->global != NULL)
         gc_delReference(core->global);
     gc_delReference(core->protect);
+    printGCByCode(core);
     gc_freeAllValue(core);
     free(core);
 }
