@@ -17,7 +17,7 @@ static void clearActivity(af_Activity *activity);
 
 /* 活动记录器相关处理函数 */
 static void freeMark(af_Environment *env);
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
+static void newActivity(af_Code *bt, const af_Code *next, bool return_first, bool tail, af_Environment *env);
 static void freeMarkByActivity(af_Activity *activity);
 
 /* 环境变量创建与释放 */
@@ -42,9 +42,7 @@ static af_Core *makeCore(void) {
     addVarSpaceGCByCore(core->protect, core);
     gc_addReference(core->protect);  // protect被外部引用, 由gc管理, 此处标记一个Reference
 
-    core->prefix[L_NOT_REPEAT] = '\'';
     core->prefix[V_QUOTE] = '\'';
-
     core->prefix[B_EXEC] = '\'';
     core->prefix[B_EXEC_FIRST] = ',';
 
@@ -71,6 +69,10 @@ char setPrefix(size_t name, char prefix, af_Environment *env) {
 
 char getPrefix(size_t name, af_Environment *env) {
     return env->core->prefix[name];
+}
+
+af_VarSpace *getProtectVarSpace(af_Environment *env) {
+    return env->core->protect;
 }
 
 /*
@@ -104,7 +106,6 @@ static void checkInherit(af_Inherit **ih, af_Object *obj) {
     }
     *ih = makeInherit(obj);
 }
-
 
 static bool enableCore(af_Core *core) {
     af_Object *object = getBaseObjectFromCore("object", core);
@@ -189,6 +190,7 @@ static af_Activity *freeActivity(af_Activity *activity) {
     freeAllArgCodeList(activity->acl_start);
     if (activity->fi != NULL)
         freeFuncInfo(activity->fi);
+    free(activity->literal_data);
     free(activity);
     return prev;
 }
@@ -465,8 +467,8 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
     return true;
 }
 
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
-    if (next == NULL && env->activity->body_next == NULL) {
+static void newActivity(af_Code *bt, const af_Code *next, bool return_first, bool tail, af_Environment *env){
+    if (tail && next == NULL && env->activity->body_next == NULL) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
         env->activity->bt_top = bt;
@@ -490,7 +492,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 
     env->activity->bt_next = next;
 
-    newActivity(bt, next, return_first, env);
+    newActivity(bt, next, return_first, true, env);
     env->activity->bt_start = bt->next;
     env->activity->bt_next = bt->next;
 
@@ -526,7 +528,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 
     env->activity->bt_next = next;
 
-    newActivity(bt, next, false, env);
+    newActivity(bt, next, false, true, env);
     env->activity->bt_start = func;
     env->activity->bt_next = func;
 
@@ -538,10 +540,13 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 }
 
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
+    char *literal_data = strCopy(bt->literal.literal_data);  // newActivity可能会导致code和literal_data释放
     env->activity->bt_next = bt->next;
 
-    newActivity(bt, bt->next, false, env);
+    /* 隐式调用不设置 bt_top */
+    newActivity(NULL, bt->next, false, !env->activity->is_literal, env);  // 如果原activity也是字面量, 则不进行尾调递归优化
     env->activity->is_literal = true;
+    env->activity->literal_data = literal_data;
     return setFuncActivityToArg(func, env);
 }
 
@@ -560,7 +565,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     env->activity->new_vs_count = env->activity->macro_vs_count;
     env->activity->macro_vs_count = 0;
 
-    clearActivity(env->activity);
+    clearActivity(env->activity); /* 隐式调用不设置 bt_top */
     return setFuncActivityToArg(func, env);
 }
 

@@ -27,6 +27,7 @@ void freeEnvironment(af_Environment *env);
 /* 保护空间管理函数 */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
 af_Object *getBaseObject(char *name, af_Environment *env);
+af_VarSpace *getProtectVarSpace(af_Environment *env);
 
 /* 消息创建与释放函数 */
 af_Message *makeMessage(char *type, size_t size);

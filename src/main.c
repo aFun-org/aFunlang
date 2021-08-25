@@ -31,8 +31,9 @@ bool getAcl(ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Env
     return true;
 }
 
-bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {
-    *vsl = makeVarSpaceList(makeVarSpace());
+bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {  // [桩]
+    *vsl = makeVarSpaceList(getProtectVarSpace(env));
+    pushNewVarList(*vsl);
     return true;
 }
 
@@ -124,6 +125,12 @@ bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_En
     return true;
 }
 
+bool getInfo3(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+    *fi = makeFuncInfo(normal_scope, not_embedded, false, false);  // 获取FuncInfo [桩]
+    makeCodeFuncBodyToFuncInfo(makeLiteralCode("data3", "func", true, NUL, 0, "Unknow"), true, NULL, *fi);
+    return true;
+}
+
 int main() {
     aFunInit();
     printf("Hello World\n");
@@ -202,6 +209,34 @@ int main() {
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
         FREE_SYMBOL(get_info2);
+        FREE_SYMBOL(free_mark);
+    }
+
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info3 = MAKE_SYMBOL(getInfo3, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            return 2;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            return 2;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            return 2;
+        if (addAPI(get_info3, "obj_funcGetInfo", api) != 1)
+            return 2;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            return 2;
+
+        addVarToProtectVarSpace(makeVar("func3", 3, 3,
+                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info3);
         FREE_SYMBOL(free_mark);
     }
 
@@ -383,6 +418,23 @@ int main() {
 
         iterCode(bt5, env);
         freeAllCode(bt5);
+        printf("\n");
+    }
+
+    {  // 双层尾调递归优化 （函数内调用函数）
+        printf("TAG M:\n");
+        af_Code *bt2 = makeVariableCode("func3", 0, 1, NULL);
+        af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, NULL, NULL);
+
+        af_Code *bt4 = makeVariableCode("func3", 0, 1, NULL);
+        af_Code *bt5 = makeBlockCode(curly, bt4, 0, 1, NULL, NULL);
+        connectCode(&bt3, bt5);
+
+        af_Code *bt6 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt5, bt6);
+
+        iterCode(bt3, env);
+        freeAllCode(bt3);
         printf("\n");
     }
 

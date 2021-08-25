@@ -159,7 +159,8 @@ bool freeCodeWithElement(af_Code *bt, af_Code **next) {
             return false;
         bt = freeCode(bt);
     }
-    *next = bt;
+    if (next != NULL)
+        *next = bt;
     return true;
 }
 

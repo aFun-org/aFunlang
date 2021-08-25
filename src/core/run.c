@@ -33,7 +33,6 @@ static void codeVariable(af_Code *code, af_Environment *env) {
 
 static bool codeLiteral(af_Code *code, af_Environment *env) {
     af_Var *var;
-
     if (code->literal.in_protect)
         var = findVarFromVarSpace(code->literal.func, env->core->protect);
     else
@@ -102,7 +101,10 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
         *msg = makeMessage("ERROR-STR", 0);
         return false;
     }
-    func(env->activity->bt_top->literal.literal_data, obj->data->data, obj, env);
+
+    func(env->activity->literal_data, obj->data->data, obj, env);
+    free(env->activity->literal_data);
+    env->activity->is_literal = false;
     return true;
 }
 

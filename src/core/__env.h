@@ -89,6 +89,7 @@ struct af_Activity {  // 活动记录器
 
     /* 字面量专项 */
     bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
+    char *literal_data;  // bt->literal.literal_data
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器

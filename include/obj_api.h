@@ -38,4 +38,7 @@ typedef void obj_funcFreeMask(void *mark);  // 释放mask的函数
 /* Object 字面量设定 */
 typedef void obj_literalSetting(char *str, void *data, af_Object *obj, af_Environment *env);
 
+/* Object 变量专项 */
+typedef bool is_obj_func(af_Object *obj);  // 是否对象函数
+
 #endif //AFUN__OBJ_API_H
