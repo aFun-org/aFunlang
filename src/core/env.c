@@ -678,8 +678,25 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     env->activity->func_var_list = NULL;
-    if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
+
+    if (env->activity->fi->var_this && env->activity->belong != NULL) {
+        if (!makeVarToVarSpaceList("this", 3, 3, env->activity->belong, env->activity->var_list, env)) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            return false;
+        }
+    }
+
+    if (env->activity->fi->var_func && env->activity->func != NULL) {
+        if (!makeVarToVarSpaceList("func", 3, 3, env->activity->func, env->activity->var_list, env)) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            return false;
+        }
+    }
+
+    if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env)) {
+        pushMessageDown(makeMessage("ERROR-STR", 0), env);
         return false;
+    }
     runArgList(al, env->activity->var_list, env);
     freeAllArgList(al);
 

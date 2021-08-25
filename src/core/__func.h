@@ -51,8 +51,10 @@ struct af_FuncInfo {
     // 函数属性
     enum af_FuncInfoScope scope;  // 定义在 func.h
     enum af_FuncInfoEmbedded embedded;  // 定义在 func.h
-
     bool is_macro;  // 宏函数
+
+    bool var_this;  // 是否写入self参数
+    bool var_func;  // 是否写入func参数
 
     // 函数信息
     struct af_FuncBody *body;

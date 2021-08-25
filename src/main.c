@@ -80,7 +80,7 @@ void testFunc(int *mark, af_Environment *env) {  // 测试用函数
 }
 
 bool getInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeVariableCode("test", NUL, 0, "Unknow"), true, NULL, *fi);
 
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc, callFuncBody);
@@ -144,7 +144,7 @@ void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
 }
 
 bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, true);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeVariableCode("test", NUL, 0, "Unknow"), true, NULL, *fi);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc2, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
@@ -153,7 +153,7 @@ bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_En
 }
 
 bool getInfo3(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeLiteralCode("data3", "func", true, NUL, 0, "Unknow"), true, NULL, *fi);
     return true;
 }
@@ -175,7 +175,7 @@ void testFunc4(int *mark, af_Environment *env) {  // 测试用函数
 }
 
 bool getInfo4(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc4, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
