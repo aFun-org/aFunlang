@@ -8,6 +8,7 @@ typedef struct af_Activity af_Activity;
 typedef struct af_EnvVarSpace af_EnvVarSpace;
 typedef struct af_EnvVar af_EnvVar;
 typedef struct af_TopMsgProcess af_TopMsgProcess;
+typedef struct af_LiteralDataList af_LiteralDataList;
 
 #include "env.h"
 #include "__object.h"
@@ -45,6 +46,11 @@ struct af_Message {
     void *msg;  // 信息内容
     size_t size;
     struct af_Message *next;
+};
+
+struct af_LiteralDataList {
+    char *literal_data;
+    struct af_LiteralDataList *next;
 };
 
 struct af_Activity {  // 活动记录器
@@ -89,7 +95,7 @@ struct af_Activity {  // 活动记录器
 
     /* 字面量专项 */
     bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
-    char *literal_data;  // bt->literal.literal_data
+    struct af_LiteralDataList *ld;
 };
 
 struct af_TopMsgProcess {  // 顶层msg处理器
@@ -118,10 +124,10 @@ struct af_Environment {  // 运行环境
     bool process_msg_first;  // 优先处理msg而不是运行代码
 };
 
-/* Core管理寒素 */
+/* Core 管理函数 */
 af_Object *getBaseObjectFromCore(char *name, af_Core *core);
 
-/* Activity运行初始化函数 */
+/* Activity 运行初始化函数 */
 bool addTopActivity(af_Code *code, af_Environment *env);
 
 /* 运行时Activity设置函数 (新增Activity) */
@@ -135,6 +141,12 @@ bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);
-
 int setFuncActivityToNormal(af_Environment *env);
+
+/* LiteralData 释放函数 */
+void freeAllLiteralData(af_LiteralDataList *ld);
+
+/* LiteralData 操作函数 */
+void pushLiteralData(char *data, af_Environment *env);
+
 #endif //AFUN__ENV_H

@@ -110,8 +110,11 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
         return false;
     }
 
-    func(env->activity->literal_data, obj->data->data, obj, env);
-    free(env->activity->literal_data);
+    for (af_LiteralDataList *ld = env->activity->ld; ld != NULL; ld = ld->next)
+        func(ld->literal_data, obj->data->data, obj, env);
+
+    freeAllLiteralData(env->activity->ld);
+    env->activity->ld = NULL;
     env->activity->is_literal = false;
     return true;
 }

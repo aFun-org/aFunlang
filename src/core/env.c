@@ -1,32 +1,32 @@
 ﻿#include "__env.h"
 
-/* 核心创建和释放 */
+/* Core 创建和释放 */
 static af_Core *makeCore(void);
 static void freeCore(af_Core *core);
 
-/* 核心初始化 */
+/* Core 初始化 */
 static bool enableCore(af_Core *core);
 static void checkInherit(af_Inherit **ih, af_Object *obj);
 
-/* 活动记录器创建和释放 */
+/* Activity 创建和释放 */
 static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
                                  af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 static void clearActivity(af_Activity *activity);
 
-/* 活动记录器相关处理函数 */
+/* Activity 相关处理函数 */
 static void freeMark(af_Environment *env);
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, bool tail, af_Environment *env);
+static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
 static void freeMarkByActivity(af_Activity *activity);
 
-/* 环境变量创建与释放 */
+/* 环境变量 创建与释放 */
 static af_EnvVar *makeEnvVar(char *name, char *data);
 static af_EnvVar *freeEnvVar(af_EnvVar *var);
 static void freeAllEnvVar(af_EnvVar *var);
 static void freeEnvVarSpace(af_EnvVarSpace *evs);
 
-/* 顶层消息处理器创建与释放 */
+/* 顶层消息处理器 创建与释放 */
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func);
 static af_TopMsgProcess *freeTopMsgProcess(af_TopMsgProcess *mp);
 static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
@@ -34,6 +34,10 @@ static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
 /* 顶层消息处理器 处理函数 */
 static void *findTopMsgProcessFunc(char *type, af_Environment *env);
 static void runTopMessageProcess(af_Environment *env);
+
+/* LiteralData 创建与释放 */
+static af_LiteralDataList *makeLiteralDataList(char *data);
+static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
 
 static af_Core *makeCore(void) {
     af_Core *core = calloc(sizeof(af_Core), 1);
@@ -190,7 +194,7 @@ static af_Activity *freeActivity(af_Activity *activity) {
     freeAllArgCodeList(activity->acl_start);
     if (activity->fi != NULL)
         freeFuncInfo(activity->fi);
-    free(activity->literal_data);
+    freeAllLiteralData(activity->ld);
     free(activity);
     return prev;
 }
@@ -220,6 +224,36 @@ static void clearActivity(af_Activity *activity) {
     activity->acl_next = NULL;
     activity->fi = NULL;
     activity->body_next = NULL;
+}
+
+/*
+ * 函数名: makeLiteralDataList
+ * 目标: 生成一个 af_LiteralDataList
+ * 注意: char *data 要求传入一个已经被复制的data值
+ * makeLiteralDataList是内部函数, 属于可控函数, 因此data在函数内部不再复制
+ */
+static af_LiteralDataList *makeLiteralDataList(char *data) {
+    af_LiteralDataList *ld = calloc(sizeof(af_LiteralDataList), 1);
+    ld->literal_data = data;
+    return ld;
+}
+
+static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld) {
+    af_LiteralDataList *next = ld->next;
+    free(ld->literal_data);
+    free(ld);
+    return next;
+}
+
+void freeAllLiteralData(af_LiteralDataList *ld) {
+    while (ld != NULL)
+        ld = freeLiteralData_Pri(ld);
+}
+
+void pushLiteralData(char *data, af_Environment *env) {
+    af_LiteralDataList *ld = makeLiteralDataList(data);
+    ld->next = env->activity->ld;
+    env->activity->ld = ld;
 }
 
 af_Message *makeMessage(char *type, size_t size) {
@@ -467,8 +501,8 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
     return true;
 }
 
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, bool tail, af_Environment *env){
-    if (tail && next == NULL && env->activity->body_next == NULL) {
+static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
+    if (next == NULL && env->activity->body_next == NULL) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
         env->activity->bt_top = bt;
@@ -492,7 +526,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 
     env->activity->bt_next = next;
 
-    newActivity(bt, next, return_first, true, env);
+    newActivity(bt, next, return_first, env);
     env->activity->bt_start = bt->next;
     env->activity->bt_next = bt->next;
 
@@ -528,7 +562,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 
     env->activity->bt_next = next;
 
-    newActivity(bt, next, false, true, env);
+    newActivity(bt, next, false, env);
     env->activity->bt_start = func;
     env->activity->bt_next = func;
 
@@ -544,9 +578,9 @@ bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     env->activity->bt_next = bt->next;
 
     /* 隐式调用不设置 bt_top */
-    newActivity(NULL, bt->next, false, !env->activity->is_literal, env);  // 如果原activity也是字面量, 则不进行尾调递归优化
+    newActivity(NULL, bt->next, false, env);  // 如果原activity也是字面量, 则不进行尾调递归优化
     env->activity->is_literal = true;
-    env->activity->literal_data = literal_data;
+    pushLiteralData(literal_data, env);
     return setFuncActivityToArg(func, env);
 }
 
@@ -554,7 +588,7 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     env->activity->bt_next = bt->next;
 
     /* 隐式调用不设置 bt_top */
-    newActivity(bt, bt->next, false, true, env);
+    newActivity(bt, bt->next, false, env);
     return setFuncActivityToArg(func, env);
 }
 

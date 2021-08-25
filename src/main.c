@@ -523,7 +523,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 对象函数的调用 (尾调递归有啊)
+    {  // 对象函数的调用 (尾调递归优化)
         printf("TAG P:\n");
         af_Code *bt1 = makeVariableCode("func4", 0, 1, NULL);
 
