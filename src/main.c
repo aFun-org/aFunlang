@@ -66,7 +66,7 @@ void testFunc(int *mark, af_Environment *env) {  // 测试用函数
 }
 
 bool getInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, false, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
     makeCodeFuncBodyToFuncInfo(makeVariableCode("test", NUL, 0, "Unknow"), true, NULL, *fi);
 
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc, callFuncBody);
@@ -117,7 +117,7 @@ void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
 }
 
 bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, true, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, true);  // 获取FuncInfo [桩]
     makeCodeFuncBodyToFuncInfo(makeVariableCode("test", NUL, 0, "Unknow"), true, NULL, *fi);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc2, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
@@ -126,8 +126,39 @@ bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_En
 }
 
 bool getInfo3(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
-    *fi = makeFuncInfo(normal_scope, not_embedded, false, false);  // 获取FuncInfo [桩]
+    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
     makeCodeFuncBodyToFuncInfo(makeLiteralCode("data3", "func", true, NUL, 0, "Unknow"), true, NULL, *fi);
+    return true;
+}
+
+void testFunc4(int *mark, af_Environment *env) {  // 测试用函数
+    printf("testFunc4(): I am testFunc4\n");
+    af_Object *obj;
+
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
+        if (addAPI(literal_set, "obj_literalSetting", api) != 1)
+            return;
+        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        FREE_SYMBOL(literal_set);
+    }
+
+    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
+    *((af_Object **)(getMessageData(msg))) = obj;
+    gc_addReference(obj);
+    pushMessageDown(msg, env);
+}
+
+bool getInfo4(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+    *fi = makeFuncInfo(normal_scope, not_embedded, false);  // 获取FuncInfo [桩]
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc4, callFuncBody);
+    makeCFuncBodyToFuncInfo(func, NULL, *fi);
+    FREE_SYMBOL(func);
+    return true;
+}
+
+bool objFunc(af_Object *obj) {
     return true;
 }
 
@@ -240,6 +271,38 @@ int main() {
         FREE_SYMBOL(free_mark);
     }
 
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info4 = MAKE_SYMBOL(getInfo4, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) obj_func = MAKE_SYMBOL(objFunc, objectAPIFunc);
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            return 2;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            return 2;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            return 2;
+        if (addAPI(get_info4, "obj_funcGetInfo", api) != 1)
+            return 2;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            return 2;
+        if (addAPI(obj_func, "is_obj_func", api) != 1)
+            return 2;
+
+        addVarToProtectVarSpace(makeVar("func4", 3, 3,
+                                        makeObject("func", true, api, true, NULL, NULL, env)),
+                                env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info4);
+        FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(obj_func);
+    }
+
     addVarToProtectVarSpace(makeVar("object", 3, 3,
                                     makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
                             env);
@@ -257,8 +320,8 @@ int main() {
 
     {  // 正常程序
         printf("TAG A:\n");
-        af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
-        af_Code *bt2 = makeVariableCode("object", 0, 1, NULL);
+        af_Code *bt1 = makeVariableCode("object", 0, 1, NULL);
+        af_Code *bt2 = makeLiteralCode("data", "func", false, ',', 0, "Unknow");
         connectCode(&bt1, bt2);
 
         af_Code *bt3 = makeVariableCode("func", 0, 1, NULL);
@@ -435,6 +498,37 @@ int main() {
 
         iterCode(bt3, env);
         freeAllCode(bt3);
+        printf("\n");
+    }
+
+    {  // 对象函数的调用
+        printf("TAG N:\n");
+        af_Code *bt1 = makeVariableCode("func4", 0, 1, NULL);
+        af_Code *bt2 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt1, bt2);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 变量引用调用
+        printf("TAG O:\n");
+        af_Code *bt1 = makeVariableCode("func4", '\'', 1, NULL);
+        af_Code *bt2 = makeVariableCode("global", 0, 1, NULL);
+        connectCode(&bt1, bt2);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 对象函数的调用 (尾调递归有啊)
+        printf("TAG P:\n");
+        af_Code *bt1 = makeVariableCode("func4", 0, 1, NULL);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
         printf("\n");
     }
 

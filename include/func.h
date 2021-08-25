@@ -45,7 +45,7 @@ ArgList **pushNewArgList(ArgList **base, char *name, af_Object *obj);
 bool runArgList(ArgList *al, af_VarSpaceListNode *vsl);
 
 /* FuncInfo 创建与释放 */
-af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro, bool is_object);
+af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro);
 
 void freeFuncInfo(af_FuncInfo *fi);
 

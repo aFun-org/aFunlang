@@ -550,6 +550,14 @@ bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     return setFuncActivityToArg(func, env);
 }
 
+bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
+    env->activity->bt_next = bt->next;
+
+    /* 隐式调用不设置 bt_top */
+    newActivity(bt, bt->next, false, true, env);
+    return setFuncActivityToArg(func, env);
+}
+
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* Macro是隐式调用, bt不移动 */
     /* 沿用activity */

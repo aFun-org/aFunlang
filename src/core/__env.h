@@ -130,8 +130,9 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env);
 void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
-bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
+bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
+bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);
 

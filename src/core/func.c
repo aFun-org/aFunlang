@@ -161,12 +161,11 @@ static void pushFuncBody(af_FuncBody **base, af_FuncBody *body) {
     *base = body;
 }
 
-af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro, bool is_object) {
+af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro){
     af_FuncInfo *fi = calloc(sizeof(af_FuncInfo), 1);
     fi->scope = scope;
     fi->embedded = embedded;
     fi->is_macro = is_macro;
-    fi->is_object = is_object;
     return fi;
 }
 

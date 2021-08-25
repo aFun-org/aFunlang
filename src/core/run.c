@@ -4,7 +4,7 @@
 #include "__env.h"
 
 /* Code 执行函数 */
-static void codeVariable(af_Code *code, af_Environment *env);
+static bool codeVariable(af_Code *code, af_Environment *env);
 static bool codeLiteral(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
 
@@ -12,23 +12,31 @@ static bool codeBlock(af_Code *code, af_Environment *env);
 static bool checkInMsgType(char *type, af_Environment *env);
 static void popLastActivity(af_Message *msg, af_Environment *env) ;
 
-static void codeVariable(af_Code *code, af_Environment *env) {
+static bool codeVariable(af_Code *code, af_Environment *env) {
     af_Var *var = findVarFromVarList(code->variable.name, env->activity->vsl);
     af_Message *msg;
 
-    if (var != NULL) {
-        af_Object *obj = var->vn->obj;
+    if (var == NULL) {
+        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        printf("Variable not found: %s\n", code->variable.name);
+        return false;
+    }
+
+    af_Object *obj = var->vn->obj;
+    is_obj_func *func;
+    if (code->prefix == env->core->prefix[V_QUOTE] ||
+        (func = findAPI("is_obj_func", obj->data->api)) == NULL ||
+        !func(obj)) {  // 非对象函数 或 引用调用
         msg = makeMessage("NORMAL", sizeof(af_Object *));
         *((af_Object **)msg->msg) = obj;
         gc_addReference(obj);
+        env->activity->bt_next = env->activity->bt_next->next;
+        pushMessageDown(msg, env);
         printf("Get Variable %s : %p\n", code->variable.name, obj);
-    } else {
-        msg = makeMessage("ERROR-STR", 0);
-        printf("Variable not found: %s\n", code->variable.name);
+        return false;
     }
 
-    pushMessageDown(msg, env);
-    env->activity->bt_next = env->activity->bt_next->next;
+    return pushVariableActivity(code, var->vn->obj, env);
 }
 
 static bool codeLiteral(af_Code *code, af_Environment *env) {
@@ -142,7 +150,8 @@ bool iterCode(af_Code *code, af_Environment *env) {
                             continue;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
                         break;
                     case variable:
-                        codeVariable(env->activity->bt_next, env);
+                        if (codeVariable(env->activity->bt_next, env))
+                            continue;
                         break;
                     case block:
                         if (codeBlock(env->activity->bt_next, env))

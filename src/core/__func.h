@@ -53,7 +53,6 @@ struct af_FuncInfo {
     enum af_FuncInfoEmbedded embedded;  // 定义在 func.h
 
     bool is_macro;  // 宏函数
-    bool is_object;  // 对象函数
 
     // 函数信息
     struct af_FuncBody *body;
