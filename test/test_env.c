@@ -18,7 +18,7 @@ void freeData(int **data) {
 int main() {
     aFunInit();
 
-    af_Environment *env = makeEnvironment();
+    af_Environment *env = makeEnvironment(grt_always);
     {
         af_ObjectAPI *api = makeObjectAPI();
         DLC_SYMBOL(objectAPIFunc) getSize_ = MAKE_SYMBOL(getSize, objectAPIFunc);
@@ -32,14 +32,14 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("global", 3, 3,
-                                        makeObject("global", true, api, true, NULL, NULL, env)),
+                                        makeObject("global", true, api, true, NULL, NULL, env), env),
                                 env);
         FREE_SYMBOL(getSize_);
         FREE_SYMBOL(initData_);
         FREE_SYMBOL(freeData_);
     }
     addVarToProtectVarSpace(makeVar("object", 3, 3,
-                                    makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
+                                    makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env), env),
                             env);
     if (!enableEnvironment(env)) {
         fprintf(stderr, "Enable Error.\n");

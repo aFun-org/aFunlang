@@ -33,7 +33,7 @@ bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_
 
 bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {  // [桩]
     *vsl = makeVarSpaceList(getProtectVarSpace(env));
-    pushNewVarList(*vsl);
+    pushNewVarList(*vsl, env);
     return true;
 }
 
@@ -59,10 +59,7 @@ void testFunc(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(literal_set);
     }
 
-    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *((af_Object **)(getMessageData(msg))) = obj;
-    gc_addReference(obj);
-    pushMessageDown(msg, env);
+    pushMessageDown(makeNORMALMessage(obj), env);
 }
 
 bool getInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
@@ -110,10 +107,7 @@ void testFunc2(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(free_mark);
     }
 
-    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *((af_Object **)(getMessageData(msg))) = obj;
-    gc_addReference(obj);
-    pushMessageDown(msg, env);
+    pushMessageDown(makeNORMALMessage(obj), env);
 }
 
 bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
@@ -144,10 +138,7 @@ void testFunc4(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(literal_set);
     }
 
-    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *((af_Object **)(getMessageData(msg))) = obj;
-    gc_addReference(obj);
-    pushMessageDown(msg, env);
+    pushMessageDown(makeNORMALMessage(obj), env);
 }
 
 bool getInfo4(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
@@ -166,7 +157,7 @@ int main() {
     aFunInit();
     printf("Hello World\n");
 
-    af_Environment *env = makeEnvironment();
+    af_Environment *env = makeEnvironment(grt_always);
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
@@ -181,7 +172,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("global", 3, 3,
-                                        (obj = makeObject("global", true, api, true, NULL, NULL, env))),
+                                        (obj = makeObject("global", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(getSize_);
         FREE_SYMBOL(initData_);
@@ -209,7 +200,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func", 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -239,7 +230,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func2", 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -269,7 +260,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func3", 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -302,7 +293,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("func4", 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env))),
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -316,7 +307,8 @@ int main() {
     {
         af_Object *obj;
         addVarToProtectVarSpace(makeVar("object", 3, 3,
-                                        (obj = makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env))),
+                                        (obj = makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
+                                        env),
                                 env);
         printf("object(%p)\n", obj);
     }

@@ -42,7 +42,8 @@ void freeAllArgList(af_ArgList *al);
 /* af_ArgList 操作函数 */
 af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new);
 af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj);
-bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl);
+
+bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env);
 
 /* FuncInfo 创建与释放 */
 af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro);

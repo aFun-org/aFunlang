@@ -103,9 +103,9 @@ af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj) {
     return &((*base)->next);
 }
 
-bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl) {
+bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env){
     for (NULL; al != NULL; al = al->next) {
-        if (!makeVarToVarSpaceList(al->name, 3, 3, al->obj, vsl))
+        if (!makeVarToVarSpaceList(al->name, 3, 3, al->obj, vsl, env))
             return false;
     }
     return true;

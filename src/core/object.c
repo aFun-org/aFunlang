@@ -3,8 +3,9 @@
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
-static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit);
-static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit);
+static af_ObjectData *
+makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
+static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
 
 /* ObjectData API 创建与释放 */
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char *api_name);
@@ -21,7 +22,8 @@ static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af
  * 注意: af_ObjectData不是对外开放的结构体
  * 注意: api不能为NULL
  */
-static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
+static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit,
+                                          af_Environment *env){
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
     od->id = strCopy(id == NULL ? "Unknow" : id);
 
@@ -42,18 +44,20 @@ static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *
     od->free_api = free_api;
     od->allow_inherit = allow_inherit;
 
-    od->var_space = makeVarSpace();
+    od->var_space = makeVarSpace(env);
     od->inherit = NULL;
 
     od->base = NULL;
+    gc_addObjectData(od, env);
     return od;
 }
 
-static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit) {
+static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env){
     af_Object *obj = calloc(sizeof(af_Object), 1);
     obj->belong = NULL;
-    obj->data = makeObjectData_Pri(id, free_api, api, allow_inherit);
+    obj->data = makeObjectData_Pri(id, free_api, api, allow_inherit, env);
     obj->data->base = obj;
+    gc_addObject(obj, env);
     return obj;
 }
 
@@ -76,7 +80,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
     if (!env->core->in_init && ih == NULL)
         return NULL;
 
-    af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit);
+    af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit, env);
 
     if (env->core->in_init || belong != NULL)
         obj->belong = belong;
@@ -86,17 +90,16 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
         return NULL;
 
     obj->data->inherit = ih;
-    gc_addObjectData(obj->data, env);
-    gc_addObject(obj, env);
     return obj;
 }
 
 /*
- * 函数名: freeObjectData
- * 目标: 释放ObjectData, 仅GC和freeObject函数可用
+ * 函数名: freeObjectDataByCore
+ * 目标: 释放ObjectData, 仅GC函数可用
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
+ * af_ObjectData对外不可见, 因此无使用env的freeObjectData函数
  */
-void freeObjectData(af_ObjectData *od) {
+void freeObjectDataByCore(af_ObjectData *od, af_Core *core) {
     if (od->size != 0) {
         obj_freeData *func = findAPI("obj_freeData", od->api);
         if (func != NULL)
@@ -107,15 +110,18 @@ void freeObjectData(af_ObjectData *od) {
     free(od->data);
     if (od->free_api)
         freeObjectAPI(od->api);
-    if (!od->var_space->gc.info.start_gc)
-        freeVarSpace(od->var_space);
     freeAllInherit(od->inherit);
-    GC_FREE_EXCHANGE(od);
+    GC_FREE_EXCHANGE(od, ObjectData, core);
     free(od);
 }
 
-void freeObject(af_Object *obj) {
-    GC_FREE_EXCHANGE(obj);
+void freeObject(af_Object *obj, af_Environment *env) {
+    GC_FREE_EXCHANGE(obj, Object, env->core);
+    free(obj);
+}
+
+void freeObjectByCore(af_Object *obj, af_Core *core) {
+    GC_FREE_EXCHANGE(obj, Object, core);
     free(obj);
 }
 

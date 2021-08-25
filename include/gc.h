@@ -28,6 +28,6 @@ void gc_delVarReference(af_Var *obj);
 void gc_delVarSpaceReference(af_VarSpace *obj);
 
 /* gc 运行时函数 */
-bool resetGC(af_Environment *env);
+void resetGC(af_Environment *env);
 
 #endif //AFUN__GC_H_PUBLIC

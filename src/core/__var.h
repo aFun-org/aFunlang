@@ -40,8 +40,12 @@ struct af_VarSpaceListNode {  // 变量链
     struct af_VarSpaceListNode *next;
 };
 
-/* 变量(变量空间)托管gc函数 :  内部使用 gc 对象新增函数 （涉及af_Core不对外公开) */
-void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core);
-void addVarGCByCore(af_Var *var, af_Core *core);
+/* 变量空间创建与释放 */
+af_VarSpace *makeVarSpaceByCore(af_Core *core);
+void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
+
+/* 变量创建与释放 */
+af_Var *makeVarByCore(char *name, char p_self, char p_external, af_Object *obj, af_Core *core);
+void freeVarByCore(af_Var *var, af_Core *core);
 
 #endif //AFUN__VAR_H

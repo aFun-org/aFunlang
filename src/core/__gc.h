@@ -7,15 +7,15 @@ typedef struct GC_VarSpace GC_VarSpace;
 typedef struct GC_Object GC_Object;
 typedef struct GC_ObjectData GC_ObjectData;
 
-#define GC_FREE_EXCHANGE(obj) do { \
-if ((obj)->gc.prev != NULL) (obj)->gc.prev->gc.next = (obj)->gc.next; \
-if ((obj)->gc.next != NULL) (obj)->gc.next->gc.prev = (obj)->gc.prev; } while(0)
+#define GC_FREE_EXCHANGE(obj, Type, Core) do { \
+{if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
+ else {(Core)->gc_##Type = (obj)->gc.next;}} \
+{if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}}} while(0)
 
 #define GC_CHAIN(type) struct type *next, *prev
 typedef uint32_t GcCount;
 
 struct gc_info {
-    bool start_gc;  // 启用gc
     bool not_clear;  // 不清除
     GcCount reference;  // 引用计数
     bool reachable;  // 可达标记 [同时标识已迭代]
@@ -76,8 +76,8 @@ void gc_addObjectByCore(struct af_Object *obj, af_Core *core);
 void gc_addVarByCore(struct af_Var *obj, af_Core *core);
 void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
-/* gc 启动函数 : gc的启动由解释器完全管理 */
-bool gc_RunGC(af_Environment *env);
+/* gc 操控函数 : gc的启动由解释器完全管理 */
+void gc_RunGC(af_Environment *env);
 void gc_freeAllValue(af_Core *core);
 
 /* gc 信息函数 */

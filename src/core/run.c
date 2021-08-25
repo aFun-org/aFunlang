@@ -13,7 +13,6 @@ static bool checkInMsgType(char *type, af_Environment *env);
 
 static bool codeVariable(af_Code *code, af_Environment *env) {
     af_Var *var = findVarFromVarList(code->variable.name, env->activity->vsl);
-    af_Message *msg;
 
     if (var == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
@@ -24,13 +23,9 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
     af_Object *obj = var->vn->obj;
     is_obj_func *func;
     if (code->prefix == env->core->prefix[V_QUOTE] ||
-        (func = findAPI("is_obj_func", obj->data->api)) == NULL ||
-        !func(obj)) {  // 非对象函数 或 引用调用
-        msg = makeMessage("NORMAL", sizeof(af_Object *));
-        *((af_Object **)msg->msg) = obj;
-        gc_addReference(obj);
+        (func = findAPI("is_obj_func", obj->data->api)) == NULL || !func(obj)) {  // 非对象函数 或 引用调用
+        pushMessageDown(makeNORMALMessage(obj), env);
         env->activity->bt_next = env->activity->bt_next->next;
-        pushMessageDown(msg, env);
         printf("Get Variable %s : %p\n", code->variable.name, obj);
         return false;
     }
@@ -92,6 +87,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     freeAllLiteralData(env->activity->ld);
     env->activity->ld = NULL;
     env->activity->is_literal = false;
+    printf("Literal %p\n", obj);
     return true;
 }
 
@@ -111,7 +107,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
     if (!addTopActivity(code, env))
         return false;
 
-    while (env->activity != NULL) {
+    for (NULL; env->activity != NULL; checkRunGC(env)) {
         af_Message *msg = NULL;
         bool run_code = false;
 
@@ -149,16 +145,13 @@ bool iterCode(af_Code *code, af_Environment *env) {
             if (!EQ_STR(msg->type, "NORMAL")) {  // 若msg为非正常值
                 pushMessageDown(msg, env);  // msg不弹出
                 if (env->activity->status != act_normal || !checkInMsgType(msg->type, env)) {  // 非normal模式, 或normal模式不匹配该msg
-                    if (env->activity->return_obj != NULL)
-                        gc_delReference(env->activity->return_obj);
+                    env->activity->return_first = false;
                     env->activity->return_obj = NULL;
                     popActivity(NULL, env);  // msg 已经 push进去了
                     continue;
                 }
-            } else if (env->activity->return_first && env->activity->return_obj == NULL) {  // 设置return_first
+            } else if (env->activity->return_first && env->activity->return_obj == NULL)  // 设置return_first
                 env->activity->return_obj = *(af_Object **)msg->msg;
-                gc_addReference(env->activity->return_obj);
-            }
         }
 
         switch (env->activity->status) {
@@ -194,11 +187,10 @@ bool iterCode(af_Code *code, af_Environment *env) {
                             freeMessage(msg);
                             break;
                     }
-                } else if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses &&
-                           env->activity->bt_next->prefix != env->core->prefix[B_EXEC]) {  // 类前缀调用
-                    env->activity->parentheses_call = *(af_Object **)(msg->msg);
-                    freeMessage(msg);
                 } else {  // 继续运行
+                    if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses &&
+                           env->activity->bt_next->prefix != env->core->prefix[B_EXEC])
+                        env->activity->parentheses_call = *(af_Object **)(msg->msg);  // 类前缀调用
                     gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
                     freeMessage(msg);
                 }

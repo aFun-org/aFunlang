@@ -61,6 +61,9 @@ struct af_Inherit {
 };
 
 /* ObjectData的释放函数 */
-void freeObjectData(af_ObjectData *od);  // gc使用
+void freeObjectDataByCore(af_ObjectData *od, af_Core *core);
+
+/* Object释放函数 */
+void freeObjectByCore(af_Object *obj, af_Core *core);
 
 #endif //AFUN__OBJECT_H

@@ -16,7 +16,7 @@ DEFINE_DLC_SYMBOL(objectAPIFunc);
 /* 对象创建与释放函数 */
 af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
                       af_Inherit *inherit, af_Environment *env);
-void freeObject(af_Object *obj);
+void freeObject(af_Object *obj, af_Environment *env);
 
 /* 对象属性获取函数 */
 af_Object *getBelongObject(af_Object *object, af_Environment *env);

@@ -17,6 +17,7 @@ typedef struct af_LiteralDataList af_LiteralDataList;
 #include "__gc.h"
 #include "__func.h"
 
+#define DEFAULT_GC_COUNT_MAX (10)
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
 
@@ -29,6 +30,9 @@ struct af_Core {  // 解释器核心
     struct af_Object *gc_Object;
     struct af_Var *gc_Var;
     struct af_VarSpace *gc_VarSpace;
+    size_t gc_count;  // gc量计数
+    size_t gc_count_max;  // gc计数最大值
+    enum GcRunTime gc_run;
 
     // 基本对象信息
     struct af_Object *global;  // 顶级属对象

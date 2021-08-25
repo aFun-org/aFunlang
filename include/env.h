@@ -11,6 +11,11 @@ typedef struct af_Message af_Message;
 typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
+enum GcRunTime {
+    grt_always = 0,  // 总是运行
+    grt_count,  // 累计式运行
+};
+
 #include "code.h"
 #include "object.h"
 #include "var.h"
@@ -20,9 +25,10 @@ char getPrefix(size_t name, af_Environment *env);
 char setPrefix(size_t name, char prefix, af_Environment *env);
 
 /* 运行环境函数 */
-af_Environment *makeEnvironment(void);
+af_Environment *makeEnvironment(enum GcRunTime grt);
 bool enableEnvironment(af_Environment *env);
 void freeEnvironment(af_Environment *env);
+void checkRunGC(af_Environment *env);
 
 /* 保护空间管理函数 */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
@@ -41,6 +47,9 @@ void *popMessageUpData(char *type, af_Environment *env);
 af_Message *popMessageUp(af_Environment *env);
 void *getMessageData(af_Message *msg);
 void connectMessage(af_Message **base, af_Message *msg);
+
+/* 消息工具函数 */
+af_Message *makeNORMALMessage(af_Object *obj);
 
 /* 下行消息表管理函数 */
 void pushMessageDown(af_Message *msg, af_Environment *env);

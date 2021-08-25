@@ -35,22 +35,39 @@ static void freeAllVarNode(af_VarNode *vn) {
         vn = freeVarNode(vn);
 }
 
-af_Var *makeVar(char *name, char p_self, char p_external, af_Object *obj) {
+af_Var *makeVar(char *name, char p_self, char p_external, af_Object *obj, af_Environment *env) {
     af_VarNode *vn = makeVarNode(obj, NULL);
     af_Var *var = calloc(sizeof(af_Var), 1);
     var->name = strCopy(name);
     var->vn = vn;
     var->permissions[0] = p_self;
     var->permissions[1] = p_external;
+    gc_addVar(var, env);
     return var;
 }
 
-void freeVar(af_Var *var) {
+af_Var *makeVarByCore(char *name, char p_self, char p_external, af_Object *obj, af_Core *core) {
+    af_VarNode *vn = makeVarNode(obj, NULL);
+    af_Var *var = calloc(sizeof(af_Var), 1);
+    var->name = strCopy(name);
+    var->vn = vn;
+    var->permissions[0] = p_self;
+    var->permissions[1] = p_external;
+    gc_addVarByCore(var, core);
+    return var;
+}
+
+void freeVar(af_Var *var, af_Environment *env){
     freeAllVarNode(var->vn);
     free(var->name);
-    if (var->gc.info.start_gc) {
-        GC_FREE_EXCHANGE(var);
-    }
+    GC_FREE_EXCHANGE(var, Var, env->core);
+    free(var);
+}
+
+void freeVarByCore(af_Var *var, af_Core *core) {
+    freeAllVarNode(var->vn);
+    free(var->name);
+    GC_FREE_EXCHANGE(var, Var, core);
     free(var);
 }
 
@@ -68,8 +85,6 @@ static af_VarCup *makeVarCup(af_Var *var) {
 
 static af_VarCup *freeVarCup(af_VarCup *vp) {
     af_VarCup *next = vp->next;
-    if (!vp->var->gc.info.start_gc)
-        freeVar(vp->var);
     free(vp);
     return next;
 }
@@ -79,17 +94,29 @@ static void freeAllVarCup(af_VarCup *vp) {
         vp = freeVarCup(vp);
 }
 
-af_VarSpace *makeVarSpace(void) {
+af_VarSpace *makeVarSpace(af_Environment *env) {
     af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);
+    gc_addVarSpace(vs, env);
     return vs;
 }
 
-void freeVarSpace(af_VarSpace *vs) {
+af_VarSpace *makeVarSpaceByCore(af_Core *core) {
+    af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);
+    gc_addVarSpaceByCore(vs, core);
+    return vs;
+}
+
+void freeVarSpace(af_VarSpace *vs, af_Environment *env) {
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++)
         freeAllVarCup(vs->var[i]);
-    if (vs->gc.info.start_gc) {
-        GC_FREE_EXCHANGE(vs);
-    }
+    GC_FREE_EXCHANGE(vs, VarSpace, env->core);
+    free(vs);
+}
+
+void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core) {
+    for (int i = 0; i < VAR_HASHTABLE_SIZE; i++)
+        freeAllVarCup(vs->var[i]);
+    GC_FREE_EXCHANGE(vs, VarSpace, core);
     free(vs);
 }
 
@@ -99,15 +126,13 @@ af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs) {
     return vsl;
 }
 
-af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl) {
+af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl){
     af_VarSpaceListNode *next = vsl->next;
-    if (!vsl->vs->gc.info.start_gc)
-        freeVarSpace(vsl->vs);
     free(vsl);
     return next;
 }
 
-void freeAllVarSpaceList(af_VarSpaceListNode *vsl) {
+void freeAllVarSpaceList(af_VarSpaceListNode *vsl){
     while (vsl != NULL)
         vsl = freeVarSpaceList(vsl);
 }
@@ -116,41 +141,9 @@ bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
     for (size_t i = count; i > 0; i--) {
         if (vsl == NULL)  // 发生了错误
             return false;
-        vsl = popLastVarList(vsl);
+        vsl = freeVarSpaceList(vsl);
     }
     return true;
-}
-
-void addVarSpaceGCByCore(af_VarSpace *vs, af_Core *core) {
-    if (vs->gc.info.start_gc)
-        return;
-
-    vs->gc.info.start_gc = true;
-    gc_addVarSpaceByCore(vs, core);
-}
-
-void addVarSpaceGC(af_VarSpace *vs, af_Environment *env) {
-    if (vs->gc.info.start_gc)
-        return;
-
-    vs->gc.info.start_gc = true;
-    gc_addVarSpace(vs, env);
-}
-
-void addVarGCByCore(af_Var *var, af_Core *core) {
-    if (var->gc.info.start_gc)
-        return;
-
-    var->gc.info.start_gc = true;
-    gc_addVarByCore(var, core);
-}
-
-void addVarGC(af_Var *var, af_Environment *env) {
-    if (var->gc.info.start_gc)
-        return;
-
-    var->gc.info.start_gc = true;
-    gc_addVar(var, env);
 }
 
 /*
@@ -181,9 +174,8 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
  */
-bool makeVarToVarSpace(char *name, char p_self, char p_external, af_Object *obj,
-                       af_VarSpace *vs) {
-    return addVarToVarSpace(makeVar(name, p_self, p_external, obj), vs);
+bool makeVarToVarSpace(char *name, char p_self, char p_external, af_Object *obj, af_VarSpace *vs, af_Environment *env){
+    return addVarToVarSpace(makeVar(name, p_self, p_external, obj, env), vs);
 }
 
 bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
@@ -194,9 +186,8 @@ bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
     return false;
 }
 
-bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj,
-                           af_VarSpaceListNode *vsl) {
-    return addVarToVarSpaceList(makeVar(name, p_self, p_external, obj), vsl);
+bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj, af_VarSpaceListNode *vsl, af_Environment *env){
+    return addVarToVarSpaceList(makeVar(name, p_self, p_external, obj, env), vsl);
 }
 
 /*
@@ -236,8 +227,8 @@ af_Var *findVarFromVarList(char *name, af_VarSpaceListNode *vsl) {
     return NULL;
 }
 
-af_VarSpaceListNode *pushNewVarList(af_VarSpaceListNode *base) {
-    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace());
+af_VarSpaceListNode *pushNewVarList(af_VarSpaceListNode *base, af_Environment *env){
+    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(env));
     new->next = base;
     return new;
 }

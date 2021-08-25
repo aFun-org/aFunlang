@@ -1,7 +1,7 @@
 ﻿#include "__env.h"
 
 /* Core 创建和释放 */
-static af_Core *makeCore(void);
+static af_Core *makeCore(enum GcRunTime grt);
 static void freeCore(af_Core *core);
 
 /* Core 初始化 */
@@ -39,26 +39,20 @@ static void runTopMessageProcess(af_Environment *env);
 static af_LiteralDataList *makeLiteralDataList(char *data);
 static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
 
-static af_Core *makeCore(void) {
+static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
-    core->protect = makeVarSpace();
-    addVarSpaceGCByCore(core->protect, core);
-    gc_addReference(core->protect);  // protect被外部引用, 由gc管理, 此处标记一个Reference
+    core->protect = makeVarSpaceByCore(core);
 
     core->prefix[V_QUOTE] = '\'';
     core->prefix[B_EXEC] = '\'';
     core->prefix[B_EXEC_FIRST] = ',';
-
+    core->gc_run = grt;
+    core->gc_count_max = DEFAULT_GC_COUNT_MAX;
     return core;
 }
 
 static void freeCore(af_Core *core) {
-    if (core->object != NULL)
-        gc_delReference(core->object);
-    if (core->global != NULL)
-        gc_delReference(core->global);
-    gc_delReference(core->protect);
     printGCByCode(core);
     gc_freeAllValue(core);
     free(core);
@@ -122,11 +116,7 @@ static bool enableCore(af_Core *core) {
     if (object == NULL || object->data->inherit != NULL || !object->data->allow_inherit)
         return false;  // object未找到 或其继承自其他对象 或其不可被继承
 
-    core->global = global;
-    core->object = object;
-    addVarSpaceGCByCore(global->data->var_space, core);
-
-    for (af_Object *obj = core->object; obj != NULL; obj = obj->gc.next) {
+    for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (obj == global)
             continue;
         if (obj->belong == NULL)
@@ -139,9 +129,9 @@ static bool enableCore(af_Core *core) {
         checkInherit(&od->inherit, object);
     }
 
-    gc_addReference(object);
-    gc_addReference(global);
-    addVarSpaceGCByCore(global->data->var_space, core);  // global的vs是全局作用空间, 被外部引用, 所以由gc管理 (不需要要标记Reference, global已经标记了)
+    core->global = global;
+    core->object = object;
+    core->protect->is_protect = true;
     core->in_init = false;
     return true;
 }
@@ -159,9 +149,6 @@ static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return
 
     activity->belong = belong;
     activity->func = func;
-    gc_addReference(belong);
-    if (func != NULL)
-        gc_addReference(func);
 
     activity->bt_top = bt_top;
     activity->bt_start = bt_start;
@@ -174,10 +161,6 @@ static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return
 static af_Activity *freeActivity(af_Activity *activity) {
     af_Activity *prev = activity->prev;
 
-    gc_delReference(activity->belong);
-    if (activity->func != NULL)
-        gc_delReference(activity->func);
-
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
     freeMessageCount(activity->msg_up_count, activity->msg_up);
 
@@ -185,12 +168,6 @@ static af_Activity *freeActivity(af_Activity *activity) {
     // func_var_list 是引用自函数的 故不释放
     freeVarSpaceListCount(activity->new_vs_count, activity->var_list);
     freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
-
-    if (activity->return_obj != NULL)
-        gc_delReference(activity->return_obj);
-
-    if (activity->parentheses_call != NULL)
-        gc_delReference(activity->parentheses_call);
 
     freeAllArgCodeList(activity->acl_start);
     if (activity->fi != NULL)
@@ -211,10 +188,6 @@ static void clearActivity(af_Activity *activity) {
     freeAllArgCodeList(activity->acl_start);
     if (activity->fi != NULL)
         freeFuncInfo(activity->fi);
-    if (activity->parentheses_call != NULL) {
-        gc_delReference(activity->parentheses_call);
-        activity->parentheses_call = NULL;
-    }
 
     activity->func_var_list = NULL;
     activity->bt_top = NULL;
@@ -351,6 +324,22 @@ void connectMessage(af_Message **base, af_Message *msg) {
     *base = msg;
 }
 
+void mp_NORMAL(af_Message *msg, af_Environment *env) {
+    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
+        printf("msg: %p error\n", msg->msg);
+        return;
+    }
+    gc_delReference(*(af_Object **)msg->msg);
+    printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
+}
+
+af_Message *makeNORMALMessage(af_Object *obj) {
+    af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
+    *(af_Object **)msg->msg = obj;  // env->activity->return_obj本来就有一个gc_Reference
+    gc_addReference(obj);
+    return msg;
+}
+
 static af_EnvVar *makeEnvVar(char *name, char *data) {
     af_EnvVar *var = calloc(sizeof(af_EnvVar), 1);
     var->name = strCopy(name);
@@ -409,19 +398,10 @@ char *findEnvVar(char *name, af_Environment *env) {
     return NULL;
 }
 
-void mp_NORMAL(af_Message *msg, af_Environment *env) {
-    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        printf("msg: %p error\n", msg->msg);
-        return;
-    }
-    gc_delReference(*(af_Object **)msg->msg);
-    printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
-}
-
-af_Environment *makeEnvironment(void) {
+af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
     DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
-    env->core = makeCore();
+    env->core = makeCore(grt);
     env->esv = makeEnvVarSpace();
     addTopMsgProcess("NORMAL", func, env);
     FREE_SYMBOL(func);
@@ -450,6 +430,13 @@ void freeEnvironment(af_Environment *env) {
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
     free(env);
+}
+
+void checkRunGC(af_Environment *env) {
+    if (env->core->gc_run == grt_always ||
+        env->core->gc_run == grt_count && env->core->gc_count >= env->core->gc_count_max) {
+        gc_RunGC(env);
+    }
 }
 
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
@@ -539,9 +526,6 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *next;
     af_Code *func;
     af_Object *parentheses_call = env->activity->parentheses_call;
-
-    if (parentheses_call != NULL)
-        gc_delReference(parentheses_call);
     env->activity->parentheses_call = NULL;
 
     if (!getCodeBlockNext(bt, &next)) {
@@ -621,15 +605,8 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
         return false;
     }
 
-    af_Object *belong = getBelongObject(func, env);
-    gc_delReference(env->activity->belong);
-    if (env->activity->func != NULL)
-        gc_delReference(env->activity->func);
-    gc_addReference(func);
-    gc_addReference(belong);
-
     env->activity->func = func;
-    env->activity->belong = belong;
+    env->activity->belong = getBelongObject(func, env);
     env->activity->status = act_arg;
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
@@ -691,14 +668,14 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     if (env->activity->fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
-        env->activity->var_list = pushNewVarList(env->activity->var_list);
+        env->activity->var_list = pushNewVarList(env->activity->var_list, env);
         env->activity->new_vs_count++;
     }
 
     env->activity->func_var_list = NULL;
     if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
         return false;
-    runArgList(al, env->activity->var_list);
+    runArgList(al, env->activity->var_list, env);
     freeAllArgList(al);
 
     if (env->activity->fi->embedded == protect_embedded)
@@ -781,8 +758,7 @@ void popActivity(af_Message *msg, af_Environment *env) {
         if (env->activity->return_obj == NULL)
             msg = makeMessage("ERROR-STR", 0);
         else {
-            msg = makeMessage("NORMAL", sizeof(af_Object *));
-            *(af_Object **)msg->msg = env->activity->return_obj;  // env->activity->return_obj本来就有一个gc_Reference
+            msg = makeNORMALMessage(env->activity->return_obj);
             env->activity->return_obj = NULL;
         }
     }
