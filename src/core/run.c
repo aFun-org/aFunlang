@@ -10,7 +10,6 @@ static bool codeBlock(af_Code *code, af_Environment *env);
 
 /* 工具函数 */
 static bool checkInMsgType(char *type, af_Environment *env);
-static void popLastActivity(af_Message *msg, af_Environment *env) ;
 
 static bool codeVariable(af_Code *code, af_Environment *env) {
     af_Var *var = findVarFromVarList(code->variable.name, env->activity->vsl);
@@ -74,29 +73,6 @@ static bool checkInMsgType(char *type, af_Environment *env) {
     return false;
 }
 
-static void popLastActivity(af_Message *msg, af_Environment *env) {
-    env->process_msg_first = true;
-
-    do {  // 如果返回一级后仍是执行完成则继续返回
-        if (env->activity->return_first) {
-            if (msg != NULL) {
-                gc_delReference(*(af_Object **)msg->msg);
-                freeMessage(msg);
-            }
-
-            if (env->activity->return_obj == NULL)
-                msg = makeMessage("ERROR-STR", 0);
-            else {
-                msg = makeMessage("NORMAL", sizeof(af_Object *));
-                *(af_Object **)msg->msg = env->activity->return_obj;  // env->activity->return_obj本来就有一个gc_Reference
-                env->activity->return_obj = NULL;
-            }
-        }
-        popActivity(msg, env);
-        msg = NULL;  // 随后几次执行popActivity时不需要压入新的msg
-    } while (env->activity != NULL && env->activity->bt_next == NULL);
-}
-
 static bool checkLiteral(af_Message **msg, af_Environment *env) {
     if (!env->activity->is_literal)
         return true;
@@ -144,7 +120,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
         else
             env->activity->vsl = env->activity->var_list;
 
-        if (env->activity->bt_next != NULL) {
+        if (env->activity->bt_next != NULL || env->process_msg_first) {
             run_code = true;
             if (!env->process_msg_first) {
                 switch (env->activity->bt_next->type) {
@@ -176,7 +152,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                     if (env->activity->return_obj != NULL)
                         gc_delReference(env->activity->return_obj);
                     env->activity->return_obj = NULL;
-                    popLastActivity(NULL, env);  // msg 已经 push进去了
+                    popActivity(NULL, env);  // msg 已经 push进去了
                     continue;
                 }
             } else if (env->activity->return_first && env->activity->return_obj == NULL) {  // 设置return_first
@@ -188,14 +164,14 @@ bool iterCode(af_Code *code, af_Environment *env) {
         switch (env->activity->status) {
             case act_normal:
                 if (!run_code)
-                    popLastActivity(makeMessage("ERROR-STR", 0), env);
+                    popActivity(makeMessage("ERROR-STR", 0), env);
                 else if (env->activity->bt_next == NULL) { // 执行完成
                     switch (setFuncActivityToNormal(env)) {
                         case -1:  // 已经没有下一步了 (原msg不释放)
                             if (checkMacro(msg, env))  // 检查是否宏函数
                                 break;  // 继续执行
                             checkLiteral(&msg, env);  // 检查是否字面量
-                            popLastActivity(msg, env);
+                            popActivity(msg, env);
                             break;
                         case 0:  // 已经没有下一步了 (但原msg释放)
                             gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
@@ -210,7 +186,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
                                 checkLiteral(&msg, env);  // 检查是否字面量
                             }
 
-                            popLastActivity(msg, env);
+                            popActivity(msg, env);
                             break;
                         default:
                         case 1:  // 继续运行
@@ -229,29 +205,29 @@ bool iterCode(af_Code *code, af_Environment *env) {
                 break;
             case act_func: {
                 if (!run_code)
-                    popLastActivity(makeMessage("ERROR-STR", 0), env);
+                    popActivity(makeMessage("ERROR-STR", 0), env);
                 else {
                     af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
                     gc_delReference(func);  // 释放计数
                     freeMessage(msg);
                     if (!setFuncActivityToArg(func, env))  // 该函数会设定bt_next到arg计算的bt上
-                        popLastActivity(NULL, env);  // setFuncActivityToArg中已设置msg
+                        popActivity(NULL, env);  // setFuncActivityToArg中已设置msg
                 }
                 break;
             }
             case act_arg: {
                 if (!run_code) {  // 无参数设定
-                    if (!setFuncActivityAddVar(true, false, env) || !setFuncActivityToNormal(env))
-                        popLastActivity(NULL, env);
+                    if (!setFuncActivityAddVar(env))
+                        popActivity(NULL, env);
                 } else {
-                    env->activity->acl_next->result = *(af_Object **)(msg->msg);
+                    env->activity->acl_done->result = *(af_Object **)(msg->msg);
                     freeMessage(msg);
-                    if (env->activity->acl_next->next == NULL) { // 参数设定结束
-                        if (!setFuncActivityAddVar(true, false, env) || !setFuncActivityToNormal(env))
-                            popLastActivity(NULL, env);
+                    if (env->activity->acl_done->next == NULL) { // 参数设定结束
+                        if (!setFuncActivityAddVar(env))
+                            popActivity(NULL, env);
                     } else {
-                        env->activity->acl_next = env->activity->acl_next->next;
-                        env->activity->bt_next = env->activity->acl_next->code;
+                        env->activity->acl_done = env->activity->acl_done->next;
+                        env->activity->bt_next = env->activity->acl_done->code;
                     }
                 }
                 break;

@@ -221,7 +221,7 @@ static void clearActivity(af_Activity *activity) {
     activity->bt_next = NULL;
 
     activity->acl_start = NULL;
-    activity->acl_next = NULL;
+    activity->acl_done = NULL;
     activity->fi = NULL;
     activity->body_next = NULL;
 }
@@ -637,20 +637,18 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     if (!get_var_list(&env->activity->func_var_list, func, env->activity->mark, env))  // 设置 func_var_list
         return false;
 
-    env->activity->acl_next = env->activity->acl_start;
-    if (env->activity->acl_next != NULL)
-        env->activity->bt_next = env->activity->acl_next->code;
+    env->activity->acl_done = env->activity->acl_start;
+    if (env->activity->acl_done != NULL)
+        env->activity->bt_next = env->activity->acl_done->code;
     else
         env->activity->bt_next = NULL;
     return true;
 }
 
-bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env){
-    if (!new_vsl && is_protect)
-        return false;
-
+bool setFuncActivityAddVar(af_Environment *env){
     obj_funcGetInfo *get_info = findAPI("obj_funcGetInfo", env->activity->func->data->api);
     obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", env->activity->func->data->api);
+    af_ArgList *al;
 
     if (get_info == NULL || get_arg_list == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
@@ -663,32 +661,54 @@ bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env){
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
         return false;
     }
+    if (env->activity->fi->scope == super_pure_scope && env->activity->fi->scope == super_embedded) {
+        /* 超纯函数和超内嵌函数不得搭配使用 */
+        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        return false;
+    }
     env->activity->body_next = env->activity->fi->body;
 
     if (env->activity->fi->is_macro) {  // 是宏函数则保存变量空间
         env->activity->macro_vsl = env->activity->var_list;
         env->activity->macro_vs_count = env->activity->new_vs_count;
-    } else if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) { // 不是宏函数则释放外部变量空间
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        return false;
+    } else if (env->activity->fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
+        if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);  // 释放失败
+            return false;
+        }
     }
 
-    env->activity->var_list = env->activity->func_var_list;
-    env->activity->func_var_list = NULL;
-    env->activity->new_vs_count = 0; // 目前func_var_list引用自var_list, 故不设置此值 [桩]
-    if (new_vsl) {
+    if (env->activity->fi->scope == normal_scope) {  // 使用函数变量空间
+        env->activity->var_list = env->activity->func_var_list;
+        env->activity->new_vs_count = 0;
+    } else if (env->activity->fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
+        env->activity->var_list = makeVarSpaceList(env->core->protect);
+        env->activity->new_vs_count = 0;
+    } else if (env->activity->fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
+        env->activity->var_list = NULL;
+        env->activity->new_vs_count = 0;
+    }
+
+    if (env->activity->fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
         env->activity->var_list = pushNewVarList(env->activity->var_list);
         env->activity->new_vs_count++;
     }
 
-    af_ArgList *al;
+    env->activity->func_var_list = NULL;
     if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
         return false;
     runArgList(al, env->activity->var_list);
     freeAllArgList(al);
 
-    if (new_vsl && is_protect)
+    if (env->activity->fi->embedded == protect_embedded)
         env->activity->var_list->vs->is_protect = true;
+
+    int status = setFuncActivityToNormal(env);
+    if (status == -1) {
+        popActivity(makeMessage("ERROR-STR", 0), env);
+        return false;
+    } else if (status == 0)
+        env->process_msg_first = true;  // 先不弹出activity, 通过act_normal处理msg
     return true;
 }
 
@@ -749,7 +769,25 @@ static void freeMark(af_Environment *env) {
 }
 
 void popActivity(af_Message *msg, af_Environment *env) {
+    env->process_msg_first = true;
+
+    if (env->activity->return_first) {
+        if (msg != NULL) {
+            gc_delReference(*(af_Object **)msg->msg);
+            freeMessage(msg);
+        }
+
+        if (env->activity->return_obj == NULL)
+            msg = makeMessage("ERROR-STR", 0);
+        else {
+            msg = makeMessage("NORMAL", sizeof(af_Object *));
+            *(af_Object **)msg->msg = env->activity->return_obj;  // env->activity->return_obj本来就有一个gc_Reference
+            env->activity->return_obj = NULL;
+        }
+    }
+
     freeMark(env);
+
     if (env->activity->prev != NULL) {
         af_Message *new_msg;
         if (msg != NULL) {
@@ -767,5 +805,6 @@ void popActivity(af_Message *msg, af_Environment *env) {
         }
         runTopMessageProcess(env);
     }
+
     env->activity = freeActivity(env->activity);
 }

@@ -86,7 +86,7 @@ struct af_Activity {  // 活动记录器
     enum af_BlockType call_type;  // 函数调用类型
     struct af_Object *parentheses_call;  // 类前缀调用
     struct af_ArgCodeList *acl_start;
-    struct af_ArgCodeList *acl_next;
+    struct af_ArgCodeList *acl_done;
     struct af_FuncInfo *fi;
     struct af_FuncBody *body_next;
     void *mark;  // 标记 [完全由API管理, 不随activity释放]
@@ -140,7 +140,7 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
-bool setFuncActivityAddVar(bool new_vsl, bool is_protect, af_Environment *env);
+bool setFuncActivityAddVar(af_Environment *env);
 int setFuncActivityToNormal(af_Environment *env);
 
 /* LiteralData 释放函数 */
