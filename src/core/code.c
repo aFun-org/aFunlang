@@ -10,6 +10,7 @@
 
 /* Code 创建函数 */
 static af_Code *makeCode(char prefix, FileLine line, FilePath path);
+static af_Code *freeCode(af_Code *bt);
 
 /* Code 操作函数 */
 static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next);
@@ -130,7 +131,7 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
     return dest;
 }
 
-af_Code *freeCode(af_Code *bt) {
+static af_Code *freeCode(af_Code *bt) {
     if (bt == NULL)
         return NULL;
 

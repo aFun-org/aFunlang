@@ -17,7 +17,6 @@ af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path);
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next);
 
 /* 代码块释放函数 */
-af_Code *freeCode(af_Code *bt);
 bool freeCodeWithElement(af_Code *bt, af_Code **next);
 void freeAllCode(af_Code *bt);
 
