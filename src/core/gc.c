@@ -155,7 +155,7 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 
     obj_getGcList *func = findAPI("obj_getGcList", od->api);
     if (func != NULL) {
-        af_GcList *gl = func(od->data);
+        af_GcList *gl = func(od->id, od->data);
         for (af_GcList *tmp = gl; tmp != NULL; tmp = tmp->next) {
             switch (tmp->type) {
                 case glt_obj:

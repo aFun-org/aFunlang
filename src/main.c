@@ -10,29 +10,29 @@ void mp_ERROR_STR(af_Message *msg, af_Environment *env) {
     free(*pinfo);
 }
 
-size_t getSize(void) {
+size_t getSize(char *id) {
     return sizeof(int *);
 }
 
-void initData(int **data, af_Environment *env) {
+void initData(char *id, int **data, af_Environment *env) {
     *data = calloc(sizeof(int), 1);
     **data = 100;
 }
 
-void freeData(int **data, af_Environment *env) {
+void freeData(char *id, int **data, af_Environment *env) {
     printf("freeData(): **data = %d\n", **data);
     free(*data);
 }
 
-size_t getSize2(void) {
+size_t getSize2(char *id) {
     return sizeof(af_VarSpaceListNode *);
 }
 
-void initData2(af_VarSpaceListNode **data, af_Environment *env) {
+void initData2(char *id, af_VarSpaceListNode **data, af_Environment *env) {
     *data = makeVarSpaceList(getProtectVarSpace(env));
 }
 
-void freeData2(af_VarSpaceListNode **data, af_Environment *env) {
+void freeData2(char *id, af_VarSpaceListNode **data, af_Environment *env) {
     printf("freeData2(): vsl = %p\n", *data);
     freeAllVarSpaceList(*data);
 }
@@ -49,7 +49,7 @@ bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environmen
     return true;
 }
 
-af_GcList *getGcList(void *data) {
+af_GcList *getGcList(char *id, void *data) {
     af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
     return gl;
 }

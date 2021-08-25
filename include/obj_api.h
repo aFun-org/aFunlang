@@ -25,9 +25,9 @@ typedef void callFuncBody(void *mark, af_Environment *env);  // 位于env.h
 
 /* 定义Object的函数签名 */
 /* Object void *data 管理 */
-typedef size_t obj_getDataSize(void);  // 获取data的大小
-typedef void obj_initData(void *data, af_Environment *env);  // 初始化data
-typedef void obj_freeData(void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
+typedef size_t obj_getDataSize(char *id);  // 获取data的大小
+typedef void obj_initData(char *id, void *data, af_Environment *env);  // 初始化data
+typedef void obj_freeData(char *id, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
 
 /* Object 函数调用 */
 typedef bool obj_funcGetArgCodeList(af_ArgCodeList **acl, af_Object *obj, af_Code *code, void **mark, af_Environment *env);  // 获取参数计算表
@@ -43,6 +43,6 @@ typedef void obj_literalSetting(char *str, void *data, af_Object *obj, af_Enviro
 typedef bool obj_isObjFunc(af_Object *obj);  // 是否对象函数
 
 /* Object gc管理 */
-typedef af_GcList *obj_getGcList(void *data);  // 是否对象函数
+typedef af_GcList *obj_getGcList(char *id, void *data);  // 是否对象函数
 
 #endif //AFUN__OBJ_API_H

@@ -30,14 +30,14 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);
     obj_initData *init = findAPI("obj_initData", api);
     if (func != NULL)
-        od->size = func();
+        od->size = func(od->id);
     else
         od->size = 0;
 
     if (od->size != 0) {
         od->data = calloc(od->size, 1);
         if (init != NULL)
-            init(od->data, env);
+            init(od->id, od->data, env);
     }
 
     od->api = api;
@@ -102,7 +102,7 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->size != 0) {
         obj_freeData *func = findAPI("obj_freeData", od->api);
         if (func != NULL)
-            func(od->data, env);
+            func(od->id, od->data, env);
     }
 
     free(od->id);
