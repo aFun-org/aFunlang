@@ -6,7 +6,7 @@ static void freeCore(af_Environment *env);
 
 /* Core 初始化 */
 static bool enableCore(af_Core *core);
-static void checkInherit(af_Inherit **ih, af_Object *obj);
+static bool checkInherit(af_Inherit **ih, af_Object *obj);
 
 /* Activity 创建和释放 */
 static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
@@ -99,16 +99,17 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
     return getBaseObjectFromCore(name, env->core);
 }
 
-static void checkInherit(af_Inherit **ih, af_Object *obj) {
+static bool checkInherit(af_Inherit **ih, af_Object *obj) {
     while (*ih != NULL) {
         if ((*ih)->obj->data == obj->data) {
             if ((*ih)->next == NULL && (*ih)->obj == obj)  // 最后一个就是obj
-                return;  // 不需要任何更改
+                return true;  // 不需要任何更改
             *ih = freeInherit(*ih);  // 释放该ih
         } else
             ih = &((*ih)->next);
     }
     *ih = makeInherit(obj);
+    return (*ih == NULL) ? false : true;
 }
 
 static bool enableCore(af_Core *core) {
@@ -131,7 +132,8 @@ static bool enableCore(af_Core *core) {
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od == object->data)
             continue;
-        checkInherit(&od->inherit, object);
+        if (!checkInherit(&od->inherit, object))
+            return false;
     }
 
     core->global = global;

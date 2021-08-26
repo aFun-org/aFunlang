@@ -37,6 +37,29 @@ void freeData2(char *id, af_VarSpaceListNode **data, af_Environment *env) {
     freeAllVarSpaceList(*data);
 }
 
+size_t getSize3(char *id) {
+    return sizeof(af_VarSpace *);
+}
+
+void initData3(char *id, af_VarSpace **data, af_Environment *env) {
+    *data = makeVarSpace(env);
+}
+
+void freeData3(char *id, af_VarSpace **data, af_Environment *env) {
+    printf("freeData(): *data = %p\n", *data);
+    freeVarSpace(*data, env);
+}
+
+af_GcList *getGcList3(char *id, void *data) {
+    af_GcList *gl = pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
+    return gl;
+}
+
+
+af_VarSpace *getShareVS(af_Object *obj) {
+    return *(af_VarSpace **)getObjectData(obj);
+}
+
 bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
     *acl = makeArgCodeList(makeVariableCode("object", NUL, 0, "Unknown"), 0, true, false);
     *mark = calloc(sizeof(int), 1);
@@ -211,6 +234,37 @@ int main() {
         FREE_SYMBOL(initData_);
         FREE_SYMBOL(freeData_);
         printf("global(%p)\n", obj);
+    }
+
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
+        DLC_SYMBOL(objectAPIFunc) getSize_3 = MAKE_SYMBOL(getSize3, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_3 = MAKE_SYMBOL(initData3, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_3 = MAKE_SYMBOL(freeData3, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getShareVS_ = MAKE_SYMBOL(getShareVS, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl3 = MAKE_SYMBOL(getGcList3, objectAPIFunc);
+        if (addAPI(getSize_3, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_3, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_3, "obj_freeData", api) != 1)
+            return 2;
+        if (addAPI(getShareVS_, "obj_getShareVarSpace", api) != 1)
+            return 2;
+        if (addAPI(get_gl3, "obj_getGcList", api) != 1)
+            return 2;
+
+        addVarToProtectVarSpace(makeVar("object", 3, 3,
+                                        (obj = makeObject("object", true, api, true, NULL, NULL, env)),
+                                        env),
+                                env);
+        FREE_SYMBOL(getSize_3);
+        FREE_SYMBOL(initData_3);
+        FREE_SYMBOL(freeData_3);
+        FREE_SYMBOL(getShareVS_);
+        FREE_SYMBOL(get_gl3);
+        printf("object(%p)\n", obj);
     }
 
     {
@@ -399,15 +453,6 @@ int main() {
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func4(%p)\n", obj);
-    }
-
-    {
-        af_Object *obj;
-        addVarToProtectVarSpace(makeVar("object", 3, 3,
-                                        (obj = makeObject("object", true, makeObjectAPI(), true, NULL, NULL, env)),
-                                        env),
-                                env);
-        printf("object(%p)\n", obj);
     }
 
     printf("\n");

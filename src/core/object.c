@@ -135,7 +135,13 @@ af_Object *getBelongObject(af_Object *object, af_Environment *env) {
 }
 
 af_Inherit *makeInherit(af_Object *obj) {
+    obj_getShareVarSpace *func = findAPI("obj_getShareVarSpace", obj->data->api);
+    af_VarSpace *vs = NULL;
+    if (func == NULL || (vs = func(obj)) == NULL)
+        return NULL;
+
     af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
+    ih->vs = vs;
     ih->obj = obj;  // 调用API获取vs
     return ih;
 }
@@ -262,4 +268,19 @@ void *findObjectAPI(char *api_name, af_Object *obj) {
     if (node == NULL)
         return NULL;
     return GET_SYMBOL(node->api);
+}
+
+af_Object *findObjectAttributes(char *name, af_Object *obj) {
+    af_Var *var = findVarFromVarSpace(name, obj->data->var_space);
+
+    if (var != NULL)
+        return var->vn->obj;
+
+    for (af_Inherit *ih = obj->data->inherit; ih != NULL; ih = ih->next) {
+        var = findVarFromVarSpace(name, ih->vs);  // 搜索共享变量空间
+        if (var != NULL)
+            return var->vn->obj;
+    }
+
+    return NULL;
 }

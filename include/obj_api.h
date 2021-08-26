@@ -29,6 +29,9 @@ typedef size_t obj_getDataSize(char *id);  // 获取data的大小
 typedef void obj_initData(char *id, void *data, af_Environment *env);  // 初始化data
 typedef void obj_freeData(char *id, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
 
+/* Object 面向对象管理 */
+typedef af_VarSpace *obj_getShareVarSpace(af_Object *obj);
+
 /* Object 函数调用 */
 typedef bool obj_funcGetArgCodeList(af_ArgCodeList **acl, af_Object *obj, af_Code *code, void **mark, af_Environment *env);  // 获取参数计算表
 typedef bool obj_funcGetVarList(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env);  // 获取函数变量空间
