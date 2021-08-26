@@ -639,6 +639,18 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
     return setFuncActivityToArg(dl->func, env);
 }
 
+void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env) {
+    if (acl != NULL) {
+        env->activity->bt_start = acl->code;
+        env->activity->bt_next = acl->code;
+        env->activity->run_in_func = acl->run_in_func;
+    } else {
+        env->activity->bt_start = NULL;
+        env->activity->bt_next = NULL;
+        env->activity->run_in_func = false;
+    }
+}
+
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", func->data->api);
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", func->data->api);
@@ -663,10 +675,7 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
         return false;
 
     env->activity->acl_done = env->activity->acl_start;
-    if (env->activity->acl_done != NULL)
-        env->activity->bt_next = env->activity->acl_done->code;
-    else
-        env->activity->bt_next = NULL;
+    setArgCodeListToActivity(env->activity->acl_start, env);
     return true;
 }
 

@@ -152,6 +152,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(af_Environment *env);
 int setFuncActivityToNormal(af_Environment *env);
+void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env);
 
 /* LiteralData 释放函数 */
 void freeAllLiteralData(af_LiteralDataList *ld);

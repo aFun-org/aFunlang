@@ -902,8 +902,8 @@ int main() {
         printf("\n");
     }
 
-    {  // 函数调用
-        printf("TAG P:\n");
+    {  // gc测试
+        printf("TAG Q:\n");
 
         af_Code *bt2 = makeVariableCode("func5", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, NULL, NULL);

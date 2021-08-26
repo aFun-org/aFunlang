@@ -332,10 +332,12 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
 static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
     env->activity->acl_done->result = *(af_Object **)(msg->msg);
     freeMessage(msg);
-    if (env->activity->acl_done->next == NULL) // 参数设定结束
+    if (env->activity->acl_done->next == NULL) { // 参数设定结束
+        setArgCodeListToActivity(NULL, env);
         return true;
+    }
     env->activity->acl_done = env->activity->acl_done->next;
-    env->activity->bt_next = env->activity->acl_done->code;
+    setArgCodeListToActivity(env->activity->acl_done, env);
     return false;
 }
 
