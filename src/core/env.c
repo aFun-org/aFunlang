@@ -439,13 +439,6 @@ void freeEnvironment(af_Environment *env) {
     free(env);
 }
 
-void checkRunGC(af_Environment *env) {
-    if (env->core->gc_run == grt_always ||
-        env->core->gc_run == grt_count && env->core->gc_count >= env->core->gc_count_max) {
-        gc_RunGC(env);
-    }
-}
-
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
     return addVarToVarSpace(var, env->core->protect);
 }

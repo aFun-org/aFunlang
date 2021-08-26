@@ -28,7 +28,6 @@ char setPrefix(size_t name, char prefix, af_Environment *env);
 af_Environment *makeEnvironment(enum GcRunTime grt);
 bool enableEnvironment(af_Environment *env);
 void freeEnvironment(af_Environment *env);
-void checkRunGC(af_Environment *env);
 
 /* 保护空间管理函数 */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
