@@ -10,6 +10,7 @@
 #include "env.h"
 #include "run.h"
 #include "gc.h"
+#include "magic_func.h"
 
 // Init系列函数
 void aFunInit(void);

@@ -265,7 +265,7 @@ void testFunc6(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes("magic-gc:destruct", 3, 3, des, obj, env);
+    setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc6[des](%p, %p): I am testFunc6\n", obj, des);
 }
@@ -316,7 +316,7 @@ void testFunc5(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes("magic-gc:destruct", 3, 3, des, obj, env);
+    setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc5(%p, %p): I am testFunc5\n", obj, des);
 }
@@ -659,7 +659,7 @@ int main() {
             FREE_SYMBOL(freeData_2);
         }
 
-        setObjectAttributes("magic-gc:destruct", 3, 3, des, obj, env);
+        setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
         addVarToProtectVarSpace(makeVar("func6", 3, 3, obj, env), env);
         printf("func6(%p)\n", obj);
     }
