@@ -1,4 +1,5 @@
 ﻿#include "__env.h"
+#include "run.h"
 
 /* Core 创建和释放 */
 static af_Core *makeCore(enum GcRunTime grt);
@@ -32,8 +33,7 @@ static af_TopMsgProcess *freeTopMsgProcess(af_TopMsgProcess *mp);
 static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
 
 /* 顶层消息处理器 处理函数 */
-static void *findTopMsgProcessFunc(char *type, af_Environment *env);
-static void runTopMessageProcess(af_Environment *env);
+static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env);
 
 /* LiteralData 创建与释放 */
 static af_LiteralDataList *makeLiteralDataList(char *data);
@@ -180,6 +180,8 @@ static af_Activity *freeActivity(af_Activity *activity) {
     if (activity->fi != NULL)
         freeFuncInfo(activity->fi);
     freeAllLiteralData(activity->ld);
+    if (activity->dl != NULL)
+        freeAllDestructList(activity->dl);
     free(activity);
     return prev;
 }
@@ -331,13 +333,14 @@ void connectMessage(af_Message **base, af_Message *msg) {
     *base = msg;
 }
 
-void mp_NORMAL(af_Message *msg, af_Environment *env) {
+void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
         printf("msg: %p error\n", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
-    printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
+    if (!is_gc)
+        printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
 }
 
 af_Message *makeNORMALMessage(af_Object *obj) {
@@ -432,6 +435,8 @@ bool enableEnvironment(af_Environment *env) {
 }
 
 void freeEnvironment(af_Environment *env) {
+    if (!env->core->in_init)
+        iterDestruct(10, env);
     freeCore(env);
     freeAllActivity(env->activity);
     freeEnvVarSpace(env->esv);
@@ -463,7 +468,7 @@ static void freeAllTopMsgProcess(af_TopMsgProcess *mp) {
         mp = freeTopMsgProcess(mp);
 }
 
-static void *findTopMsgProcessFunc(char *type, af_Environment *env) {
+static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env) {
     af_TopMsgProcess *mp = env->process;
     for (NULL; mp != NULL; mp = mp->next) {
         if (EQ_STR(type, mp->type))
@@ -490,7 +495,7 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 }
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
-    if (next == NULL && env->activity->body_next == NULL) {
+    if (next == NULL && env->activity->body_next == NULL && !env->activity->is_gc) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
         env->activity->bt_top = bt;
@@ -573,7 +578,7 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     env->activity->bt_next = bt->next;
 
     /* 隐式调用不设置 bt_top */
-    newActivity(bt, bt->next, false, env);
+    newActivity(NULL, bt->next, false, env);
     return setFuncActivityToArg(func, env);
 }
 
@@ -596,22 +601,64 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     return setFuncActivityToArg(func, env);
 }
 
+void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env) {
+    for (af_Activity *tmp = env->activity; tmp != NULL; tmp = tmp->prev) {
+        if (tmp->is_gc) {
+            *(tmp->pdl) = dl;
+            tmp->pdl = pdl;
+            if (tmp->dl_next == NULL)  // 原dl_next已经运行到末端
+                tmp->dl_next = dl;
+            return;
+        }
+    }
+
+    /* gc Activity 可能创建为顶层 activity, 故信息不能继承上一级(可能没有上一级) */
+    af_Activity *activity = makeActivity(NULL, NULL, false, NULL, NULL, env->core->global, NULL);
+
+    activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
+    activity->vsl = activity->var_list;
+    activity->new_vs_count = 1;
+
+    activity->is_gc = true;
+    activity->dl = dl;
+    activity->pdl = pdl;
+    activity->dl_next = dl;
+
+    activity->prev = env->activity;
+    env->activity = activity;
+}
+
+bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
+    env->activity->dl_next = dl->next;
+
+    /* 隐式调用不设置 bt_top */
+    af_Activity *activity = makeActivity(NULL, NULL, false, env->activity->msg_up,
+                                         env->activity->var_list, env->activity->belong, NULL);
+    activity->prev = env->activity;
+    env->activity = activity;
+    return setFuncActivityToArg(dl->func, env);
+}
+
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", func->data->api);
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", func->data->api);
 
-    if (get_var_list == NULL || get_acl == NULL) {
+    if (get_var_list == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
         return false;
     }
 
     env->activity->func = func;
-    env->activity->belong = getBelongObject(func, env);
+    env->activity->belong = getBelongObject(func);
     env->activity->status = act_arg;
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
-    if (!get_acl(&env->activity->acl_start, func, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
-        return false;
+    if (get_acl != NULL) {
+        if (!get_acl(&env->activity->acl_start, func, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
+            return false;
+    } else
+        env->activity->acl_start = NULL;
+
     if (!get_var_list(&env->activity->func_var_list, func, env->activity->mark, env))  // 设置 func_var_list
         return false;
 
@@ -626,9 +673,8 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 bool setFuncActivityAddVar(af_Environment *env){
     obj_funcGetInfo *get_info = findAPI("obj_funcGetInfo", env->activity->func->data->api);
     obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", env->activity->func->data->api);
-    af_ArgList *al;
 
-    if (get_info == NULL || get_arg_list == NULL) {
+    if (get_info == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
         return false;
     }
@@ -688,57 +734,62 @@ bool setFuncActivityAddVar(af_Environment *env){
         }
     }
 
-    if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env)) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        return false;
+    if (get_arg_list != NULL) {
+        af_ArgList *al;
+        if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env)) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            return false;
+        }
+        runArgList(al, env->activity->var_list, env);
+        freeAllArgList(al);
     }
-    runArgList(al, env->activity->var_list, env);
-    freeAllArgList(al);
 
     if (env->activity->fi->embedded == protect_embedded)
         env->activity->var_list->vs->is_protect = true;
 
-    int status = setFuncActivityToNormal(env);
-    if (status == -1) {
-        popActivity(makeMessage("ERROR-STR", 0), env);
+    if (setFuncActivityToNormal(env) == 0)
         return false;
-    } else if (status == 0)
-        env->process_msg_first = true;  // 先不弹出activity, 通过act_normal处理msg
     return true;
 }
 
+/*
+ * 函数名: setFuncActivityToNormal
+ * 目标: 获取下一步需要运行的结果
+ * 返回  (0) 表示无下一步
+ * 返回 (-1) 表示运行C函数, 并且设置了 process_msg_first
+ * 返回  (1) 表示下一步运动Code
+ */
 int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
+    af_FuncBody *body = env->activity->body_next;
     env->activity->status = act_normal;
     env->activity->bt_next = NULL;
 
-    if (env->activity->body_next == NULL)  // 已经没有下一步了 (原msg不释放)
+    if (body == NULL)  // 已经没有下一步了 (原msg不释放)
+        return 0;
+
+    env->activity->body_next = body->next;
+
+    if (body->type == func_body_c) { /* 运行C函数 */
+        GET_SYMBOL(body->c_func)(env->activity->mark, env);
+        env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
         return -1;
-
-    while (env->activity->body_next != NULL) {
-        if (env->activity->body_next->type == func_body_c) {
-            GET_SYMBOL(env->activity->body_next->c_func)(env->activity->mark, env);
-            env->activity->body_next = env->activity->body_next->next;
-        } else {
-            env->activity->bt_start = env->activity->body_next->code;
-            env->activity->bt_next = env->activity->body_next->code;
-            env->activity->body_next = env->activity->body_next->next;
-            return 1;  // 仍有下一步
-        }
+    } else {
+        env->activity->bt_start = body->code;
+        env->activity->bt_next = body->code;
+        return 1;
     }
-
-    return 0;  // 没有下一步, 但运行了C函数 (原msg释放)
 }
 
 /*
  * 函数名: runTopMessageProcess
  * 目标: 运行顶层信息处理器
  */
-static void runTopMessageProcess(af_Environment *env) {
+void runTopMessageProcess(bool is_gc, af_Environment *env) {
     af_Message **pmsg = &env->activity->msg_down;
     while (*pmsg != NULL) {
         af_TopMsgProcess *mp = findTopMsgProcessFunc((*pmsg)->type, env);
         if (mp != NULL) {
-            GET_SYMBOL(mp->func)(*pmsg, env);
+            GET_SYMBOL(mp->func)(*pmsg, is_gc, env);
             *pmsg = freeMessage(*pmsg);
         } else
             pmsg = &((*pmsg)->next);
@@ -764,8 +815,6 @@ static void freeMark(af_Environment *env) {
 }
 
 void popActivity(af_Message *msg, af_Environment *env) {
-    env->process_msg_first = true;
-
     if (msg != NULL && env->activity->return_first) {
         if (EQ_STR(msg->type, "NORMAL")) {
             gc_delReference(*(af_Object **) msg->msg);
@@ -792,12 +841,14 @@ void popActivity(af_Message *msg, af_Environment *env) {
 
     freeMark(env);
 
-    if (env->activity->prev != NULL) {
+    if (env->activity->prev == NULL || env->activity->is_gc)  // 顶层或gc层
+        runTopMessageProcess(env->activity->is_gc, env);
+    else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
         env->activity->prev->msg_down = env->activity->msg_down;
         env->activity->msg_down = NULL;
-    } else  // 到顶
-        runTopMessageProcess(env);
+        env->activity->prev->process_msg_first++;  // 优先处理通过msg_down返回的结果
+    }
 
     env->activity = freeActivity(env->activity);
 }

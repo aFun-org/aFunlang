@@ -20,8 +20,11 @@ void freeObject(af_Object *obj, af_Environment *env);
 
 /* 对象属性获取函数 */
 void *getObjectData(af_Object *obj);
-af_Object *getBelongObject(af_Object *object, af_Environment *env);
+af_Object *getBelongObject(af_Object *object);
 af_Object *findObjectAttributes(char *name, af_Object *obj);
+
+/* 对象属性设置 */
+bool setObjectAttributes(char *name, char p_self, char p_external, af_Object *attributes, af_Object *obj, af_Environment *env);
 
 /* 对象继承关系函数 */
 af_Inherit *makeInherit(af_Object *obj);

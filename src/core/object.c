@@ -3,8 +3,7 @@
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
-static af_ObjectData *
-makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
+static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
 static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
 
 /* ObjectData API 创建与释放 */
@@ -100,7 +99,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
  */
 void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->size != 0) {
-        obj_freeData *func = findAPI("obj_freeData", od->api);
+        obj_destructData *func = findAPI("obj_destructData", od->api);
         if (func != NULL)
             func(od->id, od->data, env);
     }
@@ -128,7 +127,7 @@ void *getObjectData(af_Object *obj) {
     return obj->data->data;
 }
 
-af_Object *getBelongObject(af_Object *object, af_Environment *env) {
+af_Object *getBelongObject(af_Object *object){
     if (object->belong == NULL)
         return object;
     return object->belong;
@@ -277,6 +276,25 @@ af_Object *findObjectAttributes(char *name, af_Object *obj) {
         return var->vn->obj;
 
     for (af_Inherit *ih = obj->data->inherit; ih != NULL; ih = ih->next) {
+        var = findVarFromVarSpace(name, ih->vs);  // 搜索共享变量空间
+        if (var != NULL)
+            return var->vn->obj;
+    }
+
+    return NULL;
+}
+
+bool setObjectAttributes(char *name, char p_self, char p_external, af_Object *attributes, af_Object *obj, af_Environment *env) {
+    return makeVarToVarSpace(name, p_self, p_external, attributes, obj->data->var_space, env);
+}
+
+af_Object *findObjectAttributesByObjectData(char *name, af_ObjectData *od) {
+    af_Var *var = findVarFromVarSpace(name, od->var_space);
+
+    if (var != NULL)
+        return var->vn->obj;
+
+    for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
         var = findVarFromVarSpace(name, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
             return var->vn->obj;

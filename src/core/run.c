@@ -107,7 +107,6 @@ static bool checkRunGC(af_Environment *env) {
  * 目标: 初始化activity和environment (若environment中未存在activity则通过code新增一个TopActivity, 否则沿用原activity)
  */
 static bool iterCodeInit(af_Code *code, af_Environment *env) {
-    env->process_msg_first = false;  // 优先处理msg而不是运行代码
     if (env->activity == NULL && code == NULL || env->activity != NULL && code != NULL)
         return false;
     if (code != NULL && !addTopActivity(code, env))  // 初始化环境
@@ -258,21 +257,26 @@ static int checkMsg(af_Message *msg, af_Environment *env) {
  * 返回-false 表示获得msg  (进行实质性运算)
  */
 static bool runCode(af_Message **msg, bool *run_code, af_Environment *env) {
-    bool process_msg_first = env->process_msg_first;
-    env->process_msg_first = false;
-
-    if (env->activity->bt_next == NULL && !process_msg_first) {
+    if (env->activity->bt_next == NULL && env->activity->process_msg_first == 0) {  // 无代码运行, 并且非msg_first
         *run_code = false;
         *msg = NULL;
         return false;
     }
 
-    *run_code = true;
-    if (env->activity->bt_next != NULL && !process_msg_first && runCodeBase(env)) { // runCode返回true, 则代表需要 continue
-        *msg = NULL;
-        return true;  // (该步骤仅为设置Activity, 无实际运算)
+    if (env->activity->process_msg_first == 0) {
+        if (env->activity->bt_next == NULL) {
+            *run_code = false;
+            *msg = NULL;
+            return false;
+        } else if (runCodeBase(env)) {
+            *msg = NULL;
+            return true;  // (该步骤仅为设置Activity, 无实际运算)
+        }
     } else
-        (*msg) = getTopMsg(env);
+        env->activity->process_msg_first--;
+
+    *run_code = true;
+    (*msg) = getTopMsg(env);
 
     switch (checkMsg((*msg), env)) {
         case 0:
@@ -299,24 +303,13 @@ static bool runCode(af_Message **msg, bool *run_code, af_Environment *env) {
 bool checkNormalEnd(af_Message *msg, af_Environment *env) {
     if (env->activity->bt_next == NULL) {
         switch (setFuncActivityToNormal(env)) {
-            case -1:  // 已经没有下一步了 (原msg不释放)
-                if (checkMacro(msg, env))  // 检查是否宏函数
-                    break;  // 继续执行
-                checkLiteral(&msg, env);  // 检查是否字面量
-                pushMessageDown(msg, env);
-                return true;
-            case 0:  // 已经没有下一步了 (但原msg释放)
-                gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
-                freeMessage(msg);
-
-                msg = getTopMsg(env);
+            case 0:  // 已经没有下一步了 (原msg不释放)
                 if (checkMacro(msg, env))  // 检查是否宏函数
                     break;  // 继续执行
                 checkLiteral(&msg, env);  // 检查是否字面量
                 pushMessageDown(msg, env);
                 return true;
             default:
-            case 1:  // 继续运行
                 gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
                 freeMessage(msg);
                 break;
@@ -389,15 +382,45 @@ bool iterCode(af_Code *code, af_Environment *env) {
     if (!iterCodeInit(code, env))
         return false;
 
-    for (NULL; env->activity != NULL; checkRunGC(env)) {
+    for (NULL; env->activity != NULL; ) {
         af_Message *msg = NULL;
         bool run_code = false;
+        checkRunGC(env);
 
-        setRunVarSpaceList(env);
-        if (runCode(&msg, &run_code, env))
-            continue;  // 若未获得msg (未进行实质性运算) 则再次运算
-
-        processMsg(msg, run_code, env);
+        if (env->activity->is_gc) {  // gc 模式
+            if (env->activity->dl_next == NULL)
+                popActivity(NULL, env);  // 结束运行
+            else {
+                printf("env->activity->dl_next.obj = %p, %d\n", env->activity->dl_next->obj->data, env->activity->dl_next->obj->data->gc.done_destruct);
+                pushDestructActivity(env->activity->dl_next, env);
+            }
+        } else {
+            setRunVarSpaceList(env);
+            if (runCode(&msg, &run_code, env))
+                continue;  // 若未获得msg (未进行实质性运算) 则再次运算
+            processMsg(msg, run_code, env);
+        }
     }
     return true;
+}
+
+/*
+ * 函数名: iterDestruct
+ * 目标: 对所有ObjectData执行析构函数
+ * 会循环不断检测是否有新增ObjectData并且需要析构
+ * deep - 表示最大迭代深度 (设置为0表示不限制)
+ */
+bool iterDestruct(int deep, af_Environment *env) {
+    for (int count = 0; deep == 0 || deep > count; count++) {
+        gc_DestructList *dl = NULL;
+        pgc_DestructList pdl = &dl;
+
+        pdl = checkAllDestruct(env, pdl);
+        if (dl == NULL)
+            return true;
+        pushGCActivity(dl, pdl, env);
+        if (!iterCode(NULL, env))
+            return false;
+    }
+    return false;
 }

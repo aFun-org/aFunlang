@@ -6,6 +6,9 @@ typedef struct GC_Var GC_Var;
 typedef struct GC_VarSpace GC_VarSpace;
 typedef struct GC_Object GC_Object;
 typedef struct GC_ObjectData GC_ObjectData;
+typedef struct af_GcList af_GcList;
+typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
+typedef struct gc_DestructList gc_DestructList, **pgc_DestructList;
 
 #define GC_FREE_EXCHANGE(obj, Type, Core) do { \
 {if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
@@ -24,7 +27,7 @@ struct gc_info {
 struct GC_ObjectData {
     struct gc_info info;
     GC_CHAIN(af_ObjectData);
-    bool done_del;  // 是否已析构
+    bool done_destruct;  // 是否已析构
 };
 
 struct GC_Object {
@@ -62,6 +65,17 @@ struct af_GcList {
     struct af_GcList *next;
 };
 
+struct gc_Analyzed {
+    struct af_Object *obj;
+    struct gc_Analyzed *next;
+};
+
+struct gc_DestructList {
+    struct af_Object *obj;
+    struct af_Object *func;
+    struct gc_DestructList *next;
+};
+
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
 #undef gc_addReference
 #undef gc_delReference
@@ -92,6 +106,7 @@ void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
 /* gc 操控函数 : gc的启动由解释器完全管理 */
 void gc_RunGC(af_Environment *env);
+pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl);
 void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */

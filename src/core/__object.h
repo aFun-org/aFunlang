@@ -39,7 +39,7 @@ struct af_ObjectData {
 
     struct af_ObjectAPI *api;  // 继承的api必须位于Inherit链中
     bool allow_inherit;  // 是否允许被继承
-    bool free_api;  // api被继承
+    bool free_api;  // 是否释放api
 
     struct af_VarSpace *var_space;
     struct af_Inherit *inherit;  // 只有顶级继承对象的inherit属性可为NULL
@@ -60,10 +60,13 @@ struct af_Inherit {
     struct af_Inherit *next;
 };
 
-/* ObjectData的释放函数 */
+/* ObjectData 属性获取函数 */
+af_Object *findObjectAttributesByObjectData(char *name, af_ObjectData *od);
+
+/* ObjectData 释放函数 */
 void freeObjectData(af_ObjectData *od, af_Environment *env);
 
-/* Object释放函数 */
+/* Object 释放函数 */
 void freeObjectByCore(af_Object *obj, af_Core *core);
 
 #endif //AFUN__OBJECT_H

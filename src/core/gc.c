@@ -4,7 +4,73 @@
 #include "__gc.h"
 #include "__env.h"
 
+/* gc 操控函数 */
+#define GC_FUNC_DEFINED(type) \
+void gc_add##type(af_##type *obj, af_Environment *env) { \
+    obj->gc.prev = NULL; \
+    if (env->core->gc_##type != NULL) { \
+        env->core->gc_##type->gc.prev = obj; \
+    }                             \
+    obj->gc.next = env->core->gc_##type; \
+    env->core->gc_##type = obj; \
+} \
+void gc_add##type##ByCore(af_##type *obj, af_Core *core) { \
+if (obj->gc.next != NULL || obj->gc.prev != NULL) {return;} \
+obj->gc.prev = NULL; \
+obj->gc.next = core->gc_##type; \
+core->gc_##type = obj; \
+} \
+void gc_add##type##Reference(af_##type *obj) { \
+    obj->gc.info.reference++; \
+} \
+void gc_del##type##Reference(af_##type *obj) { \
+    obj->gc.info.reference--; \
+}
+
+GC_FUNC_DEFINED(ObjectData)
+GC_FUNC_DEFINED(Object)
+GC_FUNC_DEFINED(Var)
+GC_FUNC_DEFINED(VarSpace)
+
+#undef GC_FUNC_DEFINED
+
+/* gc_DestructList 函数 */
+/* gc_DestructList 创建与释放函数 */
+static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func);
+static gc_DestructList *freeDestructList(gc_DestructList *dl);
+
+/* gc_DestructList 操作函数 */
+static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl);
+
+static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func) {
+    gc_DestructList *dl = calloc(sizeof(gc_DestructList), 1);
+    dl->obj = od->base;
+    dl->func = func;
+    gc_addReference(dl->obj);
+    gc_addReference(dl->func);
+    return dl;
+}
+
+static gc_DestructList *freeDestructList(gc_DestructList *dl) {
+    gc_DestructList *next = dl->next;
+    gc_delReference(dl->obj);
+    gc_delReference(dl->func);
+    free(dl);
+    return next;
+}
+
+void freeAllDestructList(gc_DestructList *dl) {
+    while (dl != NULL)
+        dl = freeDestructList(dl);
+}
+
+static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl) {
+    *pdl = makeDestructList(od, func);
+    return &((*pdl)->next);
+}
+
 /* gcList 函数 */
+/* gcList 创建与释放函数 */
 static af_GcList *makeGcList(enum af_GcListType type, void *data);
 static af_GcList *freeGcList(af_GcList *gl);
 static void freeAllGcList(af_GcList *gl);
@@ -33,55 +99,20 @@ af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base) {
     return next;
 }
 
-/* gc 运行时函数 */
-typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
-struct gc_Analyzed {
-    enum gc_AnalyzedType {
-        gc_ObjectData,
-        gc_Object,
-        gc_Var,
-        gc_VarSpace,
-    } type;
-
-    union {
-        void *data;  // 统一操控指针
-        struct af_ObjectData *od;
-        struct af_Object *obj;
-        struct af_Var *var;
-        struct af_VarSpace *vs;
-    };
-
-    struct gc_Analyzed *next;
-};
-
+/* 分析记录器函数 */
 /* 分析记录器创建与释放函数 */
-static gc_Analyzed *makeAnalyzed(enum gc_AnalyzedType type, void *data);
+static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist);
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base);
-
-/* 指定都西昂的分析记录器创建与释放函数 : 调用分析记录器创建与释放函数 */
-static pgc_Analyzed newObjectDataAnalyzed(struct af_ObjectData *od, pgc_Analyzed plist);
-static pgc_Analyzed newObjectAnalyzed(struct af_Object *obj, pgc_Analyzed plist);
-static pgc_Analyzed newVarAnalyzed(struct af_Var *var, pgc_Analyzed plist);
-static pgc_Analyzed newVarSpaceAnalyzed(struct af_VarSpace *vs, pgc_Analyzed plist);
-
-/* 可达性分析函数 */
-static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
-static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
-static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist);
-static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
-static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
-
-/* gc运行函数 */
-static void freeValue(af_Environment *env);
-static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
-static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
 static void freeAllAnalyzed(gc_Analyzed *base);
 
-static gc_Analyzed *makeAnalyzed(enum gc_AnalyzedType type, void *data) {
-    gc_Analyzed *analyzed = calloc(sizeof(gc_Analyzed), 1);
-    analyzed->type = type;
-    analyzed->data = data;
-    return analyzed;
+// 关于gc_Analyzed为什么只需要记录Object的解释参见下文 (reachableObject)
+static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist) {
+    if (obj->gc.info.reachable)
+        return plist;
+
+    *plist = calloc(sizeof(gc_Analyzed), 1);
+    (*plist)->obj = obj;
+    return &((*plist)->next);
 }
 
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base) {
@@ -95,40 +126,27 @@ static void freeAllAnalyzed(gc_Analyzed *base) {
         base = freeAnalyzed(base);
 }
 
-static pgc_Analyzed newObjectDataAnalyzed(struct af_ObjectData *od, pgc_Analyzed plist) {
-    if (od->gc.info.reachable)
-        return plist;
+/* gc 运行时函数 */
+/* 可达性分析函数 */
+static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
+static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
+static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist);
+static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
+static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
 
-    *plist = makeAnalyzed(gc_ObjectData, od);
-    return &((*plist)->next);
-}
-
-static pgc_Analyzed newObjectAnalyzed(struct af_Object *obj, pgc_Analyzed plist) {
-    if (obj->gc.info.reachable)
-        return plist;
-
-    *plist = makeAnalyzed(gc_Object, obj);
-    return &((*plist)->next);
-}
-
-static pgc_Analyzed newVarAnalyzed(struct af_Var *var, pgc_Analyzed plist) {
-    if (var->gc.info.reachable)
-        return plist;
-
-    *plist = makeAnalyzed(gc_Var, var);
-    return &((*plist)->next);
-}
-
-static pgc_Analyzed newVarSpaceAnalyzed(struct af_VarSpace *vs, pgc_Analyzed plist) {
-    if (vs->gc.info.reachable)
-        return plist;
-
-    *plist = makeAnalyzed(gc_VarSpace, vs);
-    return &((*plist)->next);
-}
+/* gc运行函数 */
+static void freeValue(af_Environment *env);
+static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
+static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
+static pgc_Analyzed checkDestruct(af_Environment *env, pgc_DestructList *pdl, pgc_Analyzed plist);
+static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 
 // 使用 gc_Analyzed 目的是令可达性分析程序不需要使用递归
 // Object->OvjectData->VarSpace->Var; 仅允许单项调用, 不发生递归
+// 当VarSpace, Var和ObjectData需要调用Object时, 则使用gc_Analyzed, 创建需要调用的链
+// ObjectData可能要调用API, 因此其需要调用的对象是不确定的, 但只有Object需要gc_Analyzed
+// VarSpace和Var的调用是确定的, 他们不会往回调用除Object外的其他量
+// 所以gc_Analyzed记录Object就足够了
 static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist) {
     for (NULL; od != NULL && !od->gc.info.reachable; od = od->belong) {
         od->gc.info.reachable = true;
@@ -146,11 +164,11 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
     plist = reachableVarSpace(od->var_space, plist);
 
     if (!od->base->gc.info.reachable)
-        plist = newObjectAnalyzed(od->base, plist);
+        plist = makeAnalyzed(od->base, plist);
 
     for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
         if (!ih->obj->gc.info.reachable)
-            plist = newObjectAnalyzed(ih->obj, plist);
+            plist = makeAnalyzed(ih->obj, plist);
         if (!ih->vs->gc.info.reachable)
             plist = reachableVarSpace(ih->vs, plist);
     }
@@ -162,7 +180,7 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
             switch (tmp->type) {
                 case glt_obj:
                     if (!tmp->obj->gc.info.reachable)
-                        plist = newObjectAnalyzed(od->base, plist);
+                        plist = makeAnalyzed(od->base, plist);
                     break;
                 case glt_var:
                     plist = reachableVar(tmp->var, plist);
@@ -202,7 +220,7 @@ static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
     var->gc.info.reachable = true;
     for (af_VarNode *vn = var->vn; vn != NULL; vn = vn->next) {
         if (!vn->obj->gc.info.reachable)
-            plist = newObjectAnalyzed(vn->obj, plist);
+            plist = makeAnalyzed(vn->obj, plist);
     }
 
     return plist;
@@ -266,6 +284,12 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
     return plist;
 }
 
+static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist) {
+    for (gc_Analyzed *done = analyzed; done != NULL; done = done->next)
+        plist = reachableObject(done->obj, plist);
+    return plist;
+}
+
 void resetGC(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next)
         od->gc.info.reachable = false;
@@ -283,7 +307,7 @@ void resetGC(af_Environment *env) {
 static void freeValue(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
-        if (!od->gc.info.reachable) { // 暂时不考虑析构函数
+        if (!od->gc.info.reachable) {
             printf("- gc free ObjectData: %p\n", od);
             freeObjectData(od, env);
         }
@@ -314,70 +338,56 @@ static void freeValue(af_Environment *env) {
     }
 }
 
-#define GC_FUNC_DEFINED(type) \
-void gc_add##type(af_##type *obj, af_Environment *env) { \
-    obj->gc.prev = NULL; \
-    if (env->core->gc_##type != NULL) { \
-        env->core->gc_##type->gc.prev = obj; \
-    }                             \
-    obj->gc.next = env->core->gc_##type; \
-    env->core->gc_##type = obj; \
-} \
-void gc_add##type##ByCore(af_##type *obj, af_Core *core) { \
-if (obj->gc.next != NULL || obj->gc.prev != NULL) {return;} \
-obj->gc.prev = NULL; \
-obj->gc.next = core->gc_##type; \
-core->gc_##type = obj; \
-} \
-void gc_add##type##Reference(af_##type *obj) { \
-    obj->gc.info.reference++; \
-} \
-void gc_del##type##Reference(af_##type *obj) { \
-    obj->gc.info.reference--; \
+static pgc_Analyzed checkDestruct(af_Environment *env, pgc_DestructList *pdl, pgc_Analyzed plist) {
+    for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
+        if (!od->gc.info.reachable && !od->gc.done_destruct) {
+            af_Object *func = findObjectAttributesByObjectData("magic-gc:destruct", od);
+            if (func == NULL)
+                continue;
+            od->gc.done_destruct = true;
+            *pdl = pushDestructList(od, func, *pdl);
+            plist = reachableObjectData(od, plist);
+        }
+    }
+    return plist;
 }
-
-GC_FUNC_DEFINED(ObjectData)
-GC_FUNC_DEFINED(Object)
-GC_FUNC_DEFINED(Var)
-GC_FUNC_DEFINED(VarSpace)
-
-#undef GC_FUNC_DEFINED
 
 void gc_RunGC(af_Environment *env) {
     gc_Analyzed *analyzed = NULL;
+    gc_DestructList *dl = NULL;
     pgc_Analyzed plist = &analyzed;
+    pgc_DestructList pdl = &dl;
     resetGC(env);
 
     plist = iterLinker(env->core, plist);  // 临时量分析 (临时量都是通过reference标记的)
     plist = reachable(env->activity, plist);
-
-    for (gc_Analyzed *done = analyzed; done != NULL; done = done->next) {
-        switch (done->type) {
-            case gc_ObjectData:
-                plist = reachableObjectData(done->od, plist);
-                break;
-            case gc_Object:
-                plist = reachableObject(done->obj, plist);
-                break;
-            case gc_VarSpace:
-                plist = reachableVarSpace(done->vs, plist);
-                break;
-            case gc_Var:
-                plist = reachableVar(done->var, plist);
-                break;
-            default:
-                break;
-        }
-    }
+    plist = checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
+    plist = checkDestruct(env, &pdl, plist);  // 在检查析构
+    checkAnalyzed(analyzed, plist);  // 在处理 checkDestruct 时产生的新引用
 
     freeValue(env);
     freeAllAnalyzed(analyzed);
+    if (dl != NULL)
+        pushGCActivity(dl, pdl, env);
+}
+
+pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl) {
+    for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
+        if (!od->gc.done_destruct) {
+            af_Object *func = findObjectAttributesByObjectData("magic-gc:destruct", od);
+            if (func == NULL)
+                continue;
+            od->gc.done_destruct = true;
+            pdl = pushDestructList(od, func, pdl);
+        }
+    }
+    return pdl;
 }
 
 void gc_freeAllValue(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
-        freeObjectData(od, env);  // 暂时不考虑析构函数
+        freeObjectData(od, env);
     }
 
     for (af_Object *obj = env->core->gc_Object, *next; obj != NULL; obj = next) {

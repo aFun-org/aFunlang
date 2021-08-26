@@ -8,7 +8,7 @@ typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
 
 /* 顶层消息处理器的处理函数 DLC */
-typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
 enum GcRunTime {
@@ -60,8 +60,6 @@ void setEnvVar(char *name, char *data, af_Environment *env);
 char *findEnvVar(char *name, af_Environment *env);
 
 /* 顶层消息处理器管理函数 */
-void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
-                      af_Environment *env);
-bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
-                         af_Environment *env);
+void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
+bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
 #endif //AFUN__ENV_H_PUBLIC

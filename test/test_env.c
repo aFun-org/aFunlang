@@ -28,7 +28,7 @@ int main() {
             return 2;
         if (addAPI(initData_, "obj_initData", api) != 1)
             return 2;
-        if (addAPI(freeData_, "obj_freeData", api) != 1)
+        if (addAPI(freeData_, "obj_destructData", api) != 1)
             return 2;
 
         addVarToProtectVarSpace(makeVar("global", 3, 3,

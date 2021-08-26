@@ -18,7 +18,7 @@
 typedef void objectAPIFunc();  // 位于object.h (所有Object API函数指针都转换为该类型存储, 注: 具体调用类型参见下文)
 
 /* 顶层信号处理器函数 */
-typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);  // 位于env.h
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);  // 位于env.h
 
 /* 回调C函数 */
 typedef void callFuncBody(void *mark, af_Environment *env);  // 位于env.h
@@ -27,7 +27,7 @@ typedef void callFuncBody(void *mark, af_Environment *env);  // 位于env.h
 /* Object void *data 管理 */
 typedef size_t obj_getDataSize(char *id);  // 获取data的大小
 typedef void obj_initData(char *id, void *data, af_Environment *env);  // 初始化data
-typedef void obj_freeData(char *id, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
+typedef void obj_destructData(char *id, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
 
 /* Object 面向对象管理 */
 typedef af_VarSpace *obj_getShareVarSpace(af_Object *obj);

@@ -21,13 +21,9 @@ void freeVarSpace(af_VarSpace *vs, af_Environment *env);
 
 /* 变量赋值类函数 */
 bool addVarToVarSpace(af_Var *var, af_VarSpace *vs);
-
 bool makeVarToVarSpace(char *name, char p_self, char p_external, af_Object *obj, af_VarSpace *vs, af_Environment *env);
-
 bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl);
-
-bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj, af_VarSpaceListNode *vsl,
-                           af_Environment *env);
+bool makeVarToVarSpaceList(char *name, char p_self, char p_external, af_Object *obj, af_VarSpaceListNode *vsl, af_Environment *env);
 
 /* 变量寻值类函数 */
 af_Var *findVarFromVarSpace(char *name, af_VarSpace *vs);

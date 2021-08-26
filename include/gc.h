@@ -4,6 +4,7 @@
 #include "var.h"
 
 typedef struct af_GcList af_GcList;
+typedef struct gc_DestructList gc_DestructList;
 enum af_GcListType {
     glt_obj = 1,
     glt_vs,
@@ -21,6 +22,9 @@ enum af_GcListType {
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
                                af_VarSpace *: gc_delVarSpaceReference))(obj))
+
+/* gc_DestructList 释放函数*/
+void freeAllDestructList(gc_DestructList *dl);
 
 /* GcList 操作函数 */
 af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base);

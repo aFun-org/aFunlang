@@ -21,9 +21,6 @@ typedef struct af_LiteralDataList af_LiteralDataList;
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
 
-typedef void TopMsgProcessFunc(af_Message *msg, af_Environment *env);
-NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
-
 struct af_Core {  // 解释器核心
     // GC基本信息
     struct af_ObjectData *gc_ObjectData;
@@ -81,18 +78,19 @@ struct af_Activity {  // 活动记录器
 
     struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素)
     struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
-    struct af_Code *bt_next;  // 指示代码下一步要运行的位置
+    struct af_Code *bt_next;  // 指示代码下一步要运行的位置 [总是超前当前执行的code]
 
     bool return_first;  // 顺序执行, 获取第一个返回结果
     struct af_Object *return_obj;  // 调用者向被调用者传递信息
+    size_t process_msg_first;  // 优先处理msg而不是code
 
     /* 函数调用专项 */
     enum af_BlockType call_type;  // 函数调用类型
     struct af_Object *parentheses_call;  // 类前缀调用
     struct af_ArgCodeList *acl_start;
-    struct af_ArgCodeList *acl_done;
+    struct af_ArgCodeList *acl_done;  // 记录当前运行的acl [总是与当前执行的acl同步] [acl代码执行完成后需要把结果写入acl, 故不超前]
     struct af_FuncInfo *fi;
-    struct af_FuncBody *body_next;
+    struct af_FuncBody *body_next;  // 下一个需要执行的body [总是超前当前执行的body]
     void *mark;  // 标记 [完全由API管理, 不随activity释放]
     struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
     ActivityCount macro_vs_count;
@@ -100,11 +98,20 @@ struct af_Activity {  // 活动记录器
     /* 字面量专项 */
     bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
     struct af_LiteralDataList *ld;
+
+    /* gc 机制 */
+    bool is_gc;  // 处于gc的析构函数运行
+    struct gc_DestructList *dl;
+    struct gc_DestructList **pdl;  // 执行dl的最末端
+    struct gc_DestructList *dl_next;  // dl执行的位置
 };
+
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
+NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
 struct af_TopMsgProcess {  // 顶层msg处理器
     char *type;
-    DLC_SYMBOL(TopMsgProcessFunc) func;  // 在 env.h 中定义
+    DLC_SYMBOL(TopMsgProcessFunc) func;
     struct af_TopMsgProcess *next;
 };
 
@@ -123,9 +130,6 @@ struct af_Environment {  // 运行环境
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
-
-    /* 运行时信息 */
-    bool process_msg_first;  // 优先处理msg而不是运行代码
 };
 
 /* Core 管理函数 */
@@ -140,6 +144,8 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env);
 void popActivity(af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
+bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
+void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
@@ -152,5 +158,8 @@ void freeAllLiteralData(af_LiteralDataList *ld);
 
 /* LiteralData 操作函数 */
 void pushLiteralData(char *data, af_Environment *env);
+
+/* 顶层消息处理器 处理函数 */
+void runTopMessageProcess(bool is_gc, af_Environment *env);
 
 #endif //AFUN__ENV_H
