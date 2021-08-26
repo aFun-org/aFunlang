@@ -64,9 +64,22 @@ static void freeCore(af_Environment *env) {
 }
 
 char setPrefix(size_t name, char prefix, af_Environment *env) {
-    char old = env->core->prefix[name];
-    if (name >= PREFIX_SIZE || prefix == NUL)
+    if (name >= PREFIX_SIZE)
         return NUL;
+    switch (name) {
+        case V_QUOTE:
+            if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
+                prefix = NUL;
+            break;
+        case B_EXEC:
+        case B_EXEC_FIRST:
+            if (prefix != NUL && strchr(B_PREFIX, prefix) == NULL)
+                prefix = NUL;
+            break;
+        default:
+            break;
+    }
+    char old = env->core->prefix[name];
     env->core->prefix[name] = prefix;
     return old;
 }
@@ -558,8 +571,13 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 
     env->activity->call_type = env->activity->bt_top->block.type;
     env->activity->status = act_func;
-    if (env->activity->call_type == parentheses)  // 对于类前缀调用, 已经获得func的实际值了
+    if (env->activity->call_type == parentheses) { // 对于类前缀调用, 已经获得func的实际值了
+        if (parentheses_call == NULL) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            return false;
+        }
         return setFuncActivityToArg(parentheses_call, env);
+    }
     return true;
 }
 

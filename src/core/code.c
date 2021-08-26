@@ -29,6 +29,9 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
 }
 
 af_Code *makeLiteralCode(char *literal_data, char *func, bool in_protect, char prefix, FileLine line, FilePath path) {
+    if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
+        prefix = NUL;
+
     af_Code *bt = makeCode(prefix, line, path);
     bt->type = literal;
     bt->literal.literal_data = strCopy(literal_data);
@@ -39,6 +42,9 @@ af_Code *makeLiteralCode(char *literal_data, char *func, bool in_protect, char p
 
 
 af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path) {
+    if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
+        prefix = NUL;
+
     af_Code *bt = makeCode(prefix, line, path);
     bt->type = variable;
     bt->variable.name = strCopy(var);
@@ -72,6 +78,9 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
 
     if (next == NULL)
         next = &tmp;
+
+    if (prefix != NUL && strchr(B_PREFIX, prefix) == NULL)
+        prefix = NUL;
 
     countElement(element, &elements, &count, next);
     bt = makeCode(prefix, line, path);

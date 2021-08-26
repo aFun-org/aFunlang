@@ -5,6 +5,9 @@
 #ifndef AFUN__PREFIX_MACRO_H
 #define AFUN__PREFIX_MACRO_H
 
+#define LV_PREFIX ",`'"  /* 字面量和变量前缀 */
+#define B_PREFIX "%^&'`,<?>"  /* 括号前缀 */
+
 // 作为顶层代码，以及'()运行时
 #define V_QUOTE           (0)  /* 变量前缀: 引用 */
 
