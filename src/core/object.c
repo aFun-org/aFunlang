@@ -207,6 +207,7 @@ int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectAPI *api) {
     }
 
     *pNode = makeObjectAPINode(func, api_name);
+    api->count++;
     return *pNode == NULL ? -1 : 1;
 }
 
@@ -237,6 +238,7 @@ static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name,
     }
 
     *pNode = makeObjectAPINode(func, api_name);
+    od->api->count++;
     return *pNode == NULL ? -1 : 1;
 }
 
