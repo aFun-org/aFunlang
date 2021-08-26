@@ -766,39 +766,38 @@ static void freeMark(af_Environment *env) {
 void popActivity(af_Message *msg, af_Environment *env) {
     env->process_msg_first = true;
 
-    if (env->activity->return_first) {
-        if (msg != NULL) {
-            gc_delReference(*(af_Object **)msg->msg);
+    if (msg != NULL && env->activity->return_first) {
+        if (EQ_STR(msg->type, "NORMAL")) {
+            gc_delReference(*(af_Object **) msg->msg);
             freeMessage(msg);
+            msg = NULL;
         }
-
-        if (env->activity->return_obj == NULL)
-            msg = makeMessage("ERROR-STR", 0);
-        else {
-            msg = makeNORMALMessage(env->activity->return_obj);
-            env->activity->return_obj = NULL;
+    } else if (env->activity->return_first) {  // msg == NULL
+        if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
+            af_Message *tmp = getFirstMessage(env);
+            gc_delReference(*(af_Object **)(tmp->msg));
+            freeMessage(tmp);
         }
     }
+
+    if (msg == NULL && env->activity->return_first) {
+        if (env->activity->return_obj == NULL)
+            msg = makeMessage("ERROR-STR", 0);
+        else
+            msg = makeNORMALMessage(env->activity->return_obj);
+    }
+
+    if (msg != NULL)
+        pushMessageDown(msg, env);
 
     freeMark(env);
 
     if (env->activity->prev != NULL) {
-        af_Message *new_msg;
-        if (msg != NULL) {
-            new_msg = msg;
-            msg->next = env->activity->msg_down;
-        } else
-            new_msg = env->activity->msg_down;
+        connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
+        env->activity->prev->msg_down = env->activity->msg_down;
         env->activity->msg_down = NULL;
-        connectMessage(&new_msg, env->activity->prev->msg_down);
-        env->activity->prev->msg_down = new_msg;
-    } else {  // 到顶
-        if (msg != NULL) {
-            msg->next = env->activity->msg_down;
-            env->activity->msg_down = msg;
-        }
+    } else  // 到顶
         runTopMessageProcess(env);
-    }
 
     env->activity = freeActivity(env->activity);
 }
