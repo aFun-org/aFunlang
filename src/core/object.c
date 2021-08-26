@@ -134,6 +134,9 @@ af_Object *getBelongObject(af_Object *object){
 }
 
 af_Inherit *makeInherit(af_Object *obj) {
+    if (!obj->data->allow_inherit)
+        return NULL;
+
     obj_getShareVarSpace *func = findAPI("obj_getShareVarSpace", obj->data->api);
     af_VarSpace *vs = NULL;
     if (func == NULL || (vs = func(obj)) == NULL)
