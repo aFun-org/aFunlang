@@ -19,7 +19,7 @@ void addVarNode(af_Var var, af_Object *obj, char *id);
 af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env);
 void freeVarSpace(af_VarSpace *vs, af_Environment *env);
 
-/* 变量定义类函数 */
+/* 变量定义函数 */
 bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs);
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_VarSpace *vs,
                        af_Object *visitor, af_Environment *env);
@@ -27,11 +27,15 @@ bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *
 bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                            af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env);
 
-/* 变量寻值类函数 */
+/* 变量删除函数 */
+bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs);
+bool delVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl);
+
+/* 变量访问函数 */
 af_Var *findVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs);
 af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl);
 
-/* 变量设置类函数 */
+/* 变量设置函数 */
 bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpace *vs);
 bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpaceListNode *vsl);
 

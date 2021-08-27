@@ -229,6 +229,43 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
 }
 
 /*
+ * 函数名: delVarFromVarSpace
+ * 目标: 从VarSpace中删除指定的变量
+ * 若空间被保护, 权限错误或已存在同名Var则返回false不作修改
+ * 否则返回true
+ */
+bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs) {
+    time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
+    af_VarCup **pCup = &vs->var[index];
+
+    if (vs->is_protect)
+        return false;
+
+    if (vs->belong != NULL && (visitor == NULL || visitor->data != vs->belong->data))
+        return false;
+
+    for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
+        if (EQ_STR((*pCup)->var->name, name)) {
+            *pCup = freeVarCup(*pCup);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*
+ * 函数名: delVarFromVarList
+ * 目标: 从VarSpaceList中第一层的VarSpace中删除指定的变量
+ * 若空间被保护, 权限错误或已存在同名Var则返回false不作修改
+ * 否则返回true
+ * 调用delVarFromVarSpace
+ */
+bool delVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl) {
+    return delVarFromVarSpace(name, visitor, vsl->vs);
+}
+
+/*
  * 函数名: findVarFromVarSpaceByIndex
  * 目标: 根据指定的index, 在VarSpace中搜索var
  * 权限检查交给 findVarFromVarSpace 和 findVarFromVarList
