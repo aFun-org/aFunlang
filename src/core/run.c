@@ -133,7 +133,7 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
     obj_isObjFunc *is_obj;
     obj_isInfixFunc *is_infix;
 
-    if (code->prefix != env->core->prefix[V_QUOTE]) {
+    if (code->prefix != getPrefix(V_QUOTE, env)) {
         if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
         else if (env->activity->status != act_func && // 在act_func模式时关闭保护
@@ -179,9 +179,9 @@ static bool codeLiteral(af_Code *code, af_Environment *env) {
  * 返回-true  表示执行成功 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
  */
 static bool codeBlock(af_Code *code, af_Environment *env) {
-    if (code->prefix == env->core->prefix[B_EXEC] && code->block.type == parentheses)  // 顺序执行, 返回尾项
+    if (code->prefix == getPrefix(B_EXEC, env) && code->block.type == parentheses)  // 顺序执行, 返回尾项
         return pushExecutionActivity(code, false, env);
-    else if (code->prefix == env->core->prefix[B_EXEC_FIRST] && code->block.type == brackets)  // 顺序执行, 返回首项
+    else if (code->prefix == getPrefix(B_EXEC_FIRST, env) && code->block.type == brackets)  // 顺序执行, 返回首项
         return pushExecutionActivity(code, true, env);
     else
         return pushFuncActivity(env->activity->bt_next, env);
@@ -322,7 +322,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
         }
     } else {
         if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses &&
-            env->activity->bt_next->prefix != env->core->prefix[B_EXEC]) {
+            env->activity->bt_next->prefix != getPrefix(B_EXEC, env)) {
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
         }
         gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *

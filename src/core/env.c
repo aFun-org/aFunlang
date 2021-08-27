@@ -1,4 +1,5 @@
-﻿#include "__env.h"
+﻿#include "aFun.h"
+#include "__env.h"
 #include "run.h"
 
 /* Core 创建和释放 */
@@ -43,10 +44,6 @@ static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
     core->protect = makeVarSpaceByCore(NULL, core);
-
-    core->prefix[V_QUOTE] = '\'';
-    core->prefix[B_EXEC] = '\'';
-    core->prefix[B_EXEC_FIRST] = ',';
     core->gc_run = grt;
     core->gc_count_max = DEFAULT_GC_COUNT_MAX;
     return core;
@@ -65,27 +62,36 @@ static void freeCore(af_Environment *env) {
 
 char setPrefix(size_t name, char prefix, af_Environment *env) {
     if (name >= PREFIX_SIZE)
-        return NUL;
+        return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
+    char *prefix_ = findEnvVar(ev_sys_prefix, env);
+    if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE)
+        return '-';
     switch (name) {
         case V_QUOTE:
-            if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
-                prefix = NUL;
+            if (prefix == NUL && strchr(LV_PREFIX, prefix) == NULL)
+                prefix = '-';
             break;
         case B_EXEC:
         case B_EXEC_FIRST:
-            if (prefix != NUL && strchr(B_PREFIX, prefix) == NULL)
-                prefix = NUL;
+            if (prefix == NUL && strchr(B_PREFIX, prefix) == NULL)
+                prefix = '-';
             break;
         default:
             break;
     }
-    char old = env->core->prefix[name];
-    env->core->prefix[name] = prefix;
+    char old = prefix_[name];
+    prefix_[name] = prefix;
     return old;
 }
 
 char getPrefix(size_t name, af_Environment *env) {
-    return env->core->prefix[name];
+    if (name >= PREFIX_SIZE)
+        return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
+
+    char *prefix = findEnvVar(ev_sys_prefix, env);
+    if (prefix == NULL || strlen(prefix) < PREFIX_SIZE)
+        return '-';
+    return prefix[name];
 }
 
 af_VarSpace *getProtectVarSpace(af_Environment *env) {
@@ -397,7 +403,7 @@ static void freeEnvVarSpace(af_EnvVarSpace *evs) {
 void setEnvVar(char *name, char *data, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
     af_EnvVar **pvar = &env->esv->var[index];
-
+    env->esv->count++;
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
         if (EQ_STR((*pvar)->name, name)) {
             free((*pvar)->data);
@@ -423,9 +429,18 @@ char *findEnvVar(char *name, af_Environment *env) {
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
-    DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
     env->core = makeCore(grt);
     env->esv = makeEnvVarSpace();
+
+    /* 设置默认prefix */
+    char prefix[PREFIX_SIZE + 1] = "";
+    prefix[V_QUOTE] = '\'';
+    prefix[B_EXEC] = '\'';
+    prefix[B_EXEC_FIRST] = ',';
+    setEnvVar(ev_sys_prefix, prefix, env);
+
+    /* 设置NORMAL顶级处理器 */
+    DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
     addTopMsgProcess("NORMAL", func, env);
     FREE_SYMBOL(func);
     return env;
@@ -541,7 +556,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 }
 
 static bool isInfixFunc(af_Code *code, af_Environment *env) {
-    if (code == NULL || code->type != variable || code->prefix == env->core->prefix[V_QUOTE])
+    if (code == NULL || code->type != variable || code->prefix == getPrefix(V_QUOTE, env))
         return false;
 
     af_Var *var = findVarFromVarList(code->variable.name, env->activity->belong, env->activity->var_list);

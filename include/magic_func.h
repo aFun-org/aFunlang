@@ -4,11 +4,18 @@
  */
 #ifndef AFUN__MAGIC_FUNC_H
 #define AFUN__MAGIC_FUNC_H
-
+/* 魔法函数 */
 #define MAGIC_NAME_BASE(type) "magic-" #type ":"
 #define MAGIC_NAME(type, job) (MAGIC_NAME_BASE(type) #job)
 
 /* gc模块 */
-#define gc_destruct MAGIC_NAME(gc, destruct)
+#define mg_gc_destruct MAGIC_NAME(gc, destruct)
+
+
+/* 内置环境变量 */
+#define SYS_NAME(job) ("sys-" #job)
+
+/* gc模块 */
+#define ev_sys_prefix SYS_NAME(prefix)
 
 #endif //AFUN__MAGIC_FUNC_H

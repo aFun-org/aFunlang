@@ -294,7 +294,7 @@ af_FuncBody *testFunc6(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, obj, env);
+    setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc6[des](%p, %p): I am testFunc6\n", obj, des);
     return NULL;
@@ -346,7 +346,7 @@ af_FuncBody *testFunc5(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, obj, env);
+    setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc5(%p, %p): I am testFunc5\n", obj, des);
     return NULL;
@@ -694,7 +694,7 @@ int main() {
             FREE_SYMBOL(freeData_2);
         }
 
-        setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, obj, env);
+        setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
         addVarToProtectVarSpace(makeVar("func6", 3, 3, 3, obj, env), env);
         printf("func6(%p)\n", obj);
     }
