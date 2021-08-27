@@ -130,16 +130,24 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
     }
 
     af_Object *obj = var->vn->obj;
-    obj_isObjFunc *func;
-    if (code->prefix == env->core->prefix[V_QUOTE] ||
-        (func = findAPI("obj_isObjFunc", obj->data->api)) == NULL || !func(obj)) {  // 非对象函数 或 引用调用
-        pushMessageDown(makeNORMALMessage(obj), env);
-        env->activity->bt_next = env->activity->bt_next->next;
-        printf("Get Variable %s : %p\n", code->variable.name, obj);
-        return false;
+    obj_isObjFunc *is_obj;
+    obj_isInfixFunc *is_infix;
+
+    if (code->prefix != env->core->prefix[V_QUOTE]) {
+        if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
+            return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
+        else if (env->activity->status != act_func && // 在act_func模式时关闭保护
+                 (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            printf("Infix protect : %s\n", code->variable.name);
+            return false;
+        }
     }
 
-    return pushVariableActivity(code, var->vn->obj, env);
+    pushMessageDown(makeNORMALMessage(obj), env);
+    env->activity->bt_next = env->activity->bt_next->next;
+    printf("Get Variable %s : %p\n", code->variable.name, obj);
+    return false;
 }
 
 /*

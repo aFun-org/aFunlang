@@ -540,6 +540,20 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
     return true;
 }
 
+static bool isInfixFunc(af_Code *code, af_Environment *env) {
+    if (code == NULL || code->type != variable || code->prefix == env->core->prefix[V_QUOTE])
+        return false;
+
+    af_Var *var = findVarFromVarList(code->variable.name, env->activity->belong, env->activity->var_list);
+    if (var == NULL)
+        return false;
+
+    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", var->vn->obj->data->api);
+    if (func == NULL)
+        return false;
+    return func(var->vn->obj);
+}
+
 bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *next;
     af_Code *func;
@@ -551,17 +565,37 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
         return false;
     }
 
-    if (bt->block.type == curly) {  // 大括号
-        if (bt->block.elements == 0) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
-            return false;
-        } else
+    switch (bt->block.type) {
+        case curly:
+            if (bt->block.elements == 0) {
+                pushMessageDown(makeMessage("ERROR-STR", 0), env);
+                return false;
+            }
             func = bt->next;
-    } else if (bt->block.type == brackets) {  // 暂时不考虑中括号
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        return false;
-    } else
-        func = NULL;  // 小括号则不在需要匹配
+            break;
+        case brackets: {
+            af_Code *code = bt->next;
+            func = NULL;
+            for (int i = 0; i < bt->block.elements; i++) {
+                if (isInfixFunc(code, env)) {
+                    func = code;
+                    break;
+                }
+                if (!getCodeBlockNext(bt, &code))
+                    break;
+            }
+            if (func == NULL) {
+                pushMessageDown(makeMessage("ERROR-STR", 0), env);
+                return false;
+            }
+            break;
+        }
+        case parentheses:
+            func = NULL;  // 小括号则不在需要匹配
+            break;
+        default:
+            break;
+    }
 
     env->activity->bt_next = next;
 

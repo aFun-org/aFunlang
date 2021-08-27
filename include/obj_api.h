@@ -42,8 +42,9 @@ typedef void obj_funcFreeMask(void *mark);  // 释放mask的函数
 /* Object 字面量设定 */
 typedef void obj_literalSetting(char *str, void *data, af_Object *obj, af_Environment *env);
 
-/* Object 变量专项 */
+/* Object 函数管理 */
 typedef bool obj_isObjFunc(af_Object *obj);  // 是否对象函数
+typedef bool obj_isInfixFunc(af_Object *obj);  // 是否中缀函数
 
 /* Object gc管理 */
 typedef af_GcList *obj_getGcList(char *id, void *data);  // 是否对象函数

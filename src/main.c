@@ -365,6 +365,10 @@ bool objFunc(af_Object *obj) {
     return true;
 }
 
+bool infixFunc(af_Object *obj) {
+    return true;
+}
+
 int main() {
     aFunInit();
     printf("Hello World\n");
@@ -741,6 +745,56 @@ int main() {
         printf("func7(%p)\n", obj);
     }
 
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) infix_func = MAKE_SYMBOL(infixFunc, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            return 2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            return 2;
+        if (addAPI(freeData_2, "obj_destructData", api) != 1)
+            return 2;
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            return 2;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            return 2;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            return 2;
+        if (addAPI(get_info, "obj_funcGetInfo", api) != 1)
+            return 2;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            return 2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            return 2;
+        if (addAPI(infix_func, "obj_isInfixFunc", api) != 1)
+            return 2;
+
+        addVarToProtectVarSpace(makeVar("func8", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info);
+        FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
+        FREE_SYMBOL(infix_func);
+        printf("func8(%p)\n", obj);
+    }
+
     printf("\n");
 
     {
@@ -1003,6 +1057,47 @@ int main() {
         af_Code *bt3 = makeVariableCode("global", 0, 1, NULL);
 
         connectCode(&bt1, bt3);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 中缀调用测试
+        printf("TAG S:\n");
+
+        af_Code *bt2 = makeVariableCode("func8", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, NULL, NULL);
+        af_Code *bt3 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt1, bt3);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 中缀调用测试
+        printf("TAG T: ERROR\n");
+
+        af_Code *bt2 = makeVariableCode("func", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, NULL, NULL);
+        af_Code *bt3 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt1, bt3);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 中缀保护测试
+        printf("TAG U: ERROR\n");
+
+        af_Code *bt2 = makeVariableCode("func8", 0, 1, NULL);
+        af_Code *bt1 = makeVariableCode("global", 0, 1, NULL);
+
+        connectCode(&bt1, bt2);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
