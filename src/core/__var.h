@@ -20,7 +20,7 @@ struct af_VarNode {
 struct af_Var {
     char *name;
     struct af_VarNode *vn;
-    char permissions[2];  // 读-1 写-2 读且写-3 不读不写-0 [自身权限 外部权限]
+    char permissions[3];  // 读-1 写-2 读且写-3 不读不写-0 [自身权限 后代权限 外部权限]
     GC_Var gc;
 };
 
@@ -32,6 +32,7 @@ struct af_VarCup {
 struct af_VarSpace {
     bool is_protect;  // 是否为保护变量空间
     struct af_VarCup *(var[VAR_HASHTABLE_SIZE]);
+    struct af_Object *belong;  // 属主
     GC_VarSpace gc;
 };
 
@@ -41,11 +42,11 @@ struct af_VarSpaceListNode {  // 变量链
 };
 
 /* 变量空间创建与释放 */
-af_VarSpace *makeVarSpaceByCore(af_Core *core);
+af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core);
 void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
 
 /* 变量创建与释放 */
-af_Var *makeVarByCore(char *name, char p_self, char p_external, af_Object *obj, af_Core *core);
+af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core);
 void freeVarByCore(af_Var *var, af_Core *core);
 
 #endif //AFUN__VAR_H

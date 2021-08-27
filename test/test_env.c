@@ -1,29 +1,29 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
 
-size_t getSize(void) {
+size_t getSize(af_Object *obj) {
     return sizeof(int *);
 }
 
-void initData(int **data) {
+void initData(af_Object *obj, int **data, af_Environment *env) {
     *data = calloc(sizeof(int), 1);
     **data = 100;
 }
 
-void freeData(int **data) {
-    printf("**data = %d\n", **data);
+void freeData(af_Object *obj, int **data, af_Environment *env) {
+    printf("freeData(): **data = %d\n", **data);
     free(*data);
 }
 
-size_t getSize3(char *id) {
+size_t getSize3(af_Object *obj) {
     return sizeof(af_VarSpace *);
 }
 
-void initData3(char *id, af_VarSpace **data, af_Environment *env) {
-    *data = makeVarSpace(env);
+void initData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+    *data = makeVarSpace(obj, env);
 }
 
-void freeData3(char *id, af_VarSpace **data, af_Environment *env) {
+void freeData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
     freeVarSpace(*data, env);
 }
@@ -54,7 +54,7 @@ int main() {
         if (addAPI(freeData_, "obj_destructData", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("global", 3, 3,
+        addVarToProtectVarSpace(makeVar("global", 3, 3, 3,
                                         makeObject("global", true, api, true, NULL, NULL, env), env),
                                 env);
         FREE_SYMBOL(getSize_);
@@ -80,7 +80,7 @@ int main() {
         if (addAPI(get_gl3, "obj_getGcList", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("object", 3, 3,
+        addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
                                         makeObject("object", true, api, true, NULL, NULL, env),
                                         env),
                                 env);

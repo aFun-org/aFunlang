@@ -42,7 +42,7 @@ static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->in_init = true;
-    core->protect = makeVarSpaceByCore(core);
+    core->protect = makeVarSpaceByCore(NULL, core);
 
     core->prefix[V_QUOTE] = '\'';
     core->prefix[B_EXEC] = '\'';
@@ -98,7 +98,7 @@ af_VarSpace *getProtectVarSpace(af_Environment *env) {
  * 作用: 用于init初始化时在保护空间获得一些初始化对象
  */
 af_Object *getBaseObjectFromCore(char *name, af_Core *core) {
-    af_Var *var = findVarFromVarSpace(name, core->protect);
+    af_Var *var = findVarFromVarSpace(name, NULL, core->protect);
     if (var != NULL)
         return var->vn->obj;
     return NULL;
@@ -741,21 +741,21 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     if (env->activity->fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
-        env->activity->var_list = pushNewVarList(env->activity->var_list, env);
+        env->activity->var_list = pushNewVarList(env->activity->func, env->activity->var_list, env);
         env->activity->new_vs_count++;
     }
 
     env->activity->func_var_list = NULL;
 
     if (env->activity->fi->var_this && env->activity->belong != NULL) {
-        if (!makeVarToVarSpaceList("this", 3, 3, env->activity->belong, env->activity->var_list, env)) {
+        if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong, env->activity->var_list, env)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             return false;
         }
     }
 
     if (env->activity->fi->var_func && env->activity->func != NULL) {
-        if (!makeVarToVarSpaceList("func", 3, 3, env->activity->func, env->activity->var_list, env)) {
+        if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func, env->activity->var_list, env)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             return false;
         }

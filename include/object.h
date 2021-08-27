@@ -21,15 +21,17 @@ void freeObject(af_Object *obj, af_Environment *env);
 /* 对象属性获取函数 */
 void *getObjectData(af_Object *obj);
 af_Object *getBelongObject(af_Object *object);
-af_Object *findObjectAttributes(char *name, af_Object *obj);
+af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj);
 
 /* 对象属性设置 */
-bool setObjectAttributes(char *name, char p_self, char p_external, af_Object *attributes, af_Object *obj, af_Environment *env);
+bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
+                         af_Object *obj, af_Environment *env);
 
 /* 对象继承关系函数 */
 af_Inherit *makeInherit(af_Object *obj);
 af_Inherit *freeInherit(af_Inherit *ih);
 void freeAllInherit(af_Inherit *ih);
+bool checkPosterity(af_Object *base, af_Object *posterity);
 
 /* API表 创建与释放 */
 af_ObjectAPI *makeObjectAPI(void);

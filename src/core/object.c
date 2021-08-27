@@ -3,7 +3,8 @@
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
-static af_ObjectData *makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
+static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
+                                          af_Environment *env);
 static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
 
 /* ObjectData API 创建与释放 */
@@ -21,32 +22,33 @@ static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af
  * 注意: af_ObjectData不是对外开放的结构体
  * 注意: api不能为NULL
  */
-static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit,
+static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
                                           af_Environment *env){
     af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
+    od->base = base_obj;
+    base_obj->data = od;
     od->id = strCopy(id == NULL ? "Unknow" : id);
+
+    od->api = api;
+    od->free_api = free_api;
+    od->allow_inherit = allow_inherit;
+
+    od->var_space = makeVarSpace(base_obj, env);
+    od->inherit = NULL;
 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);
     obj_initData *init = findAPI("obj_initData", api);
     if (func != NULL)
-        od->size = func(od->id);
+        od->size = func(base_obj);
     else
         od->size = 0;
 
     if (od->size != 0) {
         od->data = calloc(od->size, 1);
         if (init != NULL)
-            init(od->id, od->data, env);
+            init(base_obj, od->data, env);
     }
 
-    od->api = api;
-    od->free_api = free_api;
-    od->allow_inherit = allow_inherit;
-
-    od->var_space = makeVarSpace(env);
-    od->inherit = NULL;
-
-    od->base = NULL;
     gc_addObjectData(od, env);
     return od;
 }
@@ -54,8 +56,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
 static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env){
     af_Object *obj = calloc(sizeof(af_Object), 1);
     obj->belong = NULL;
-    obj->data = makeObjectData_Pri(id, free_api, api, allow_inherit, env);
-    obj->data->base = obj;
+    makeObjectData_Pri(id, free_api, api, allow_inherit, obj, env);
     gc_addObject(obj, env);
     return obj;
 }
@@ -101,7 +102,7 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->size != 0) {
         obj_destructData *func = findAPI("obj_destructData", od->api);
         if (func != NULL)
-            func(od->id, od->data, env);
+            func(od->base, od->data, env);
     }
 
     free(od->id);
@@ -157,6 +158,14 @@ af_Inherit *freeInherit(af_Inherit *ih) {
 void freeAllInherit(af_Inherit *ih) {
     while (ih != NULL)
         ih = freeInherit(ih);
+}
+
+bool checkPosterity(af_Object *base, af_Object *posterity) {
+    for (af_Inherit *ih = base->data->inherit; ih != NULL; ih = ih->next) {
+        if (ih->obj->data == posterity->data)
+            return true;
+    }
+    return false;
 }
 
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char *api_name) {
@@ -274,14 +283,14 @@ void *findObjectAPI(char *api_name, af_Object *obj) {
     return GET_SYMBOL(node->api);
 }
 
-af_Object *findObjectAttributes(char *name, af_Object *obj) {
-    af_Var *var = findVarFromVarSpace(name, obj->data->var_space);
+af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) {
+    af_Var *var = findVarFromVarSpace(name, visitor, obj->data->var_space);
 
     if (var != NULL)
         return var->vn->obj;
 
     for (af_Inherit *ih = obj->data->inherit; ih != NULL; ih = ih->next) {
-        var = findVarFromVarSpace(name, ih->vs);  // 搜索共享变量空间
+        var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
             return var->vn->obj;
     }
@@ -289,18 +298,19 @@ af_Object *findObjectAttributes(char *name, af_Object *obj) {
     return NULL;
 }
 
-bool setObjectAttributes(char *name, char p_self, char p_external, af_Object *attributes, af_Object *obj, af_Environment *env) {
-    return makeVarToVarSpace(name, p_self, p_external, attributes, obj->data->var_space, env);
+bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
+                         af_Object *obj, af_Environment *env){
+    return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, obj->data->var_space, env);
 }
 
-af_Object *findObjectAttributesByObjectData(char *name, af_ObjectData *od) {
-    af_Var *var = findVarFromVarSpace(name, od->var_space);
+af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od) {
+    af_Var *var = findVarFromVarSpace(name, visitor, od->var_space);
 
     if (var != NULL)
         return var->vn->obj;
 
     for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
-        var = findVarFromVarSpace(name, ih->vs);  // 搜索共享变量空间
+        var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
             return var->vn->obj;
     }

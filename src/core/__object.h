@@ -61,7 +61,7 @@ struct af_Inherit {
 };
 
 /* ObjectData 属性获取函数 */
-af_Object *findObjectAttributesByObjectData(char *name, af_ObjectData *od);
+af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
 
 /* ObjectData 释放函数 */
 void freeObjectData(af_ObjectData *od, af_Environment *env);

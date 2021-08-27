@@ -12,42 +12,42 @@ void mp_ERROR_STR(af_Message *msg, bool is_gc, af_Environment *env) {
     free(*pinfo);
 }
 
-size_t getSize(char *id) {
+size_t getSize(af_Object *obj) {
     return sizeof(int *);
 }
 
-void initData(char *id, int **data, af_Environment *env) {
+void initData(af_Object *obj, int **data, af_Environment *env) {
     *data = calloc(sizeof(int), 1);
     **data = 100;
 }
 
-void freeData(char *id, int **data, af_Environment *env) {
+void freeData(af_Object *obj, int **data, af_Environment *env) {
     printf("freeData(): **data = %d\n", **data);
     free(*data);
 }
 
-size_t getSize2(char *id) {
+size_t getSize2(af_Object *obj) {
     return sizeof(af_VarSpaceListNode *);
 }
 
-void initData2(char *id, af_VarSpaceListNode **data, af_Environment *env) {
+void initData2(af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
     *data = makeVarSpaceList(getProtectVarSpace(env));
 }
 
-void freeData2(char *id, af_VarSpaceListNode **data, af_Environment *env) {
+void freeData2(af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
     printf("freeData2(): vsl = %p\n", *data);
     freeAllVarSpaceList(*data);
 }
 
-size_t getSize3(char *id) {
+size_t getSize3(af_Object *obj) {
     return sizeof(af_VarSpace *);
 }
 
-void initData3(char *id, af_VarSpace **data, af_Environment *env) {
-    *data = makeVarSpace(env);
+void initData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+    *data = makeVarSpace(obj, env);
 }
 
-void freeData3(char *id, af_VarSpace **data, af_Environment *env) {
+void freeData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
     freeVarSpace(*data, env);
 }
@@ -294,7 +294,7 @@ af_FuncBody *testFunc6(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
+    setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc6[des](%p, %p): I am testFunc6\n", obj, des);
     return NULL;
@@ -346,7 +346,7 @@ af_FuncBody *testFunc5(int *mark, af_Environment *env) {  // 测试用函数
         FREE_SYMBOL(freeData_2);
     }
 
-    setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
+    setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc5(%p, %p): I am testFunc5\n", obj, des);
     return NULL;
@@ -383,7 +383,7 @@ int main() {
         if (addAPI(freeData_, "obj_destructData", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("global", 3, 3,
+        addVarToProtectVarSpace(makeVar("global", 3, 3, 3,
                                         (obj = makeObject("global", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(getSize_);
@@ -411,7 +411,7 @@ int main() {
         if (addAPI(get_gl3, "obj_getGcList", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("object", 3, 3,
+        addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
                                         (obj = makeObject("object", true, api, true, NULL, NULL, env)),
                                         env),
                                 env);
@@ -454,7 +454,7 @@ int main() {
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func", 3, 3,
+        addVarToProtectVarSpace(makeVar("func", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
@@ -500,7 +500,7 @@ int main() {
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func2", 3, 3,
+        addVarToProtectVarSpace(makeVar("func2", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
@@ -546,7 +546,7 @@ int main() {
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func3", 3, 3,
+        addVarToProtectVarSpace(makeVar("func3", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
@@ -595,7 +595,7 @@ int main() {
         if (addAPI(obj_func, "obj_isObjFunc", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func4", 3, 3,
+        addVarToProtectVarSpace(makeVar("func4", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
@@ -642,7 +642,7 @@ int main() {
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func5", 3, 3,
+        addVarToProtectVarSpace(makeVar("func5", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
@@ -690,8 +690,8 @@ int main() {
             FREE_SYMBOL(freeData_2);
         }
 
-        setObjectAttributes(gc_destruct, 3, 3, des, obj, env);
-        addVarToProtectVarSpace(makeVar("func6", 3, 3, obj, env), env);
+        setObjectAttributes(gc_destruct, 3, 3, 3, des, obj, env);
+        addVarToProtectVarSpace(makeVar("func6", 3, 3, 3, obj, env), env);
         printf("func6(%p)\n", obj);
     }
 
@@ -726,7 +726,7 @@ int main() {
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return 2;
 
-        addVarToProtectVarSpace(makeVar("func7", 3, 3,
+        addVarToProtectVarSpace(makeVar("func7", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);

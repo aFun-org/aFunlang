@@ -205,6 +205,8 @@ static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist
         return plist;
 
     vs->gc.info.reachable = true;
+    if (vs->belong != NULL)
+        plist = makeAnalyzed(vs->belong, plist);
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++) {
         for (af_VarCup *var = vs->var[i]; var != NULL; var = var->next)
             plist = reachableVar(var->var, plist);
@@ -341,7 +343,7 @@ static void freeValue(af_Environment *env) {
 static pgc_Analyzed checkDestruct(af_Environment *env, pgc_DestructList *pdl, pgc_Analyzed plist) {
     for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.info.reachable && !od->gc.done_destruct) {
-            af_Object *func = findObjectAttributesByObjectData(gc_destruct, od);
+            af_Object *func = findObjectAttributesByObjectData(gc_destruct, NULL, od);
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;
@@ -374,7 +376,7 @@ void gc_RunGC(af_Environment *env) {
 pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl) {
     for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.done_destruct) {
-            af_Object *func = findObjectAttributesByObjectData(gc_destruct, od);
+            af_Object *func = findObjectAttributesByObjectData(gc_destruct, NULL, od);
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;

@@ -25,9 +25,9 @@ typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);  // �
 
 /* 定义Object的函数签名 */
 /* Object void *data 管理 */
-typedef size_t obj_getDataSize(char *id);  // 获取data的大小
-typedef void obj_initData(char *id, void *data, af_Environment *env);  // 初始化data
-typedef void obj_destructData(char *id, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
+typedef size_t obj_getDataSize(af_Object *obj);  // 获取data的大小
+typedef void obj_initData(af_Object *obj, void *data, af_Environment *env);  // 初始化data
+typedef void obj_destructData(af_Object *obj, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
 
 /* Object 面向对象管理 */
 typedef af_VarSpace *obj_getShareVarSpace(af_Object *obj);

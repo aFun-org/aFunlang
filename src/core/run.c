@@ -121,7 +121,7 @@ static bool iterCodeInit(af_Code *code, af_Environment *env) {
  * 返回-true  表示执行成功, 得到一个对象函数, 并且隐式调用 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
  */
 static bool codeVariable(af_Code *code, af_Environment *env) {
-    af_Var *var = findVarFromVarList(code->variable.name, env->activity->vsl);
+    af_Var *var = findVarFromVarList(code->variable.name, env->activity->belong, env->activity->vsl);
 
     if (var == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
@@ -151,9 +151,9 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
 static bool codeLiteral(af_Code *code, af_Environment *env) {
     af_Var *var;
     if (code->literal.in_protect)
-        var = findVarFromVarSpace(code->literal.func, env->core->protect);
+        var = findVarFromVarSpace(code->literal.func, env->activity->belong, env->core->protect);
     else
-        var = findVarFromVarList(code->literal.func, env->activity->vsl);
+        var = findVarFromVarList(code->literal.func, env->activity->belong, env->activity->vsl);
 
     if (var == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
