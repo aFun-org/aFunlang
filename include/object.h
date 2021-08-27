@@ -25,7 +25,7 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj);
 
 /* 对象属性设置 */
 bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
-                         af_Object *obj, af_Environment *env);
+                         af_Object *obj, af_Object *visitor, af_Environment *env);
 
 /* 对象继承关系函数 */
 af_Inherit *makeInherit(af_Object *obj);

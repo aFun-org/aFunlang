@@ -458,7 +458,7 @@ void freeEnvironment(af_Environment *env) {
 }
 
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
-    return addVarToVarSpace(var, env->core->protect);
+    return addVarToVarSpace(var, NULL, env->core->protect);
 }
 
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func) {
@@ -775,21 +775,24 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     if (env->activity->fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
-        env->activity->var_list = pushNewVarList(env->activity->func, env->activity->var_list, env);
+        /* 新层的变量空间应该属于belong而不是func */
+        env->activity->var_list = pushNewVarList(env->activity->belong, env->activity->var_list, env);
         env->activity->new_vs_count++;
     }
 
     env->activity->func_var_list = NULL;
 
     if (env->activity->fi->var_this && env->activity->belong != NULL) {
-        if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong, env->activity->var_list, env)) {
+        if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong,
+                                   env->activity->var_list, env->activity->belong, env)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             return false;
         }
     }
 
     if (env->activity->fi->var_func && env->activity->func != NULL) {
-        if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func, env->activity->var_list, env)) {
+        if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func,
+                                   env->activity->var_list, env->activity->belong, env)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             return false;
         }

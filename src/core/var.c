@@ -14,7 +14,10 @@ static void freeAllVarCup(af_VarCup *vp);
 
 /* VarSpace 寻值函数 */
 static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpace *vs);
+
+/* 变量权限函数 */
 static bool checkReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
+static bool checkWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
 
 static af_VarNode *makeVarNode(af_Object *obj, char *id) {
     af_VarNode *vn = calloc(sizeof(af_VarNode), 1);
@@ -166,14 +169,17 @@ bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
 /*
  * 函数名: addVarToVarSpace
  * 目标: 把var添加到VarSpace中
- * 若已存在同名Var则返回false不作修改
+ * 若空间被保护, 权限错误或已存在同名Var则返回false不作修改
  * 否则返回true
  */
-bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
+bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs) {
     time33_t index = time33(var->name) % VAR_HASHTABLE_SIZE;
     af_VarCup **pCup = &vs->var[index];
 
     if (vs->is_protect)
+        return false;
+
+    if (vs->belong != NULL && (visitor == NULL || visitor->data != vs->belong->data))
         return false;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
@@ -190,23 +196,36 @@ bool addVarToVarSpace(af_Var *var, af_VarSpace *vs) {
  * 目标: 创建一个新的var添加到VarSpace中
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
+ * 调用 addVarToVarSpace
  */
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_VarSpace *vs,
-                       af_Environment *env){
-    return addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), vs);
+                       af_Object *visitor, af_Environment *env){
+    return addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), visitor, vs);
 }
 
-bool addVarToVarSpaceList(af_Var *var, af_VarSpaceListNode *vsl) {
+/*
+ * 函数名: makeVarToVarSpace
+ * 目标: 添加一个Var到VarSpaceList
+ * 自动跳过保护空间
+ * 调用 addVarToVarSpace
+ */
+bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl) {
     for (NULL; vsl != NULL; vsl = vsl->next) {
         if (!vsl->vs->is_protect)
-            return addVarToVarSpace(var, vsl->vs);
+            return addVarToVarSpace(var, visitor, vsl->vs);
     }
     return false;
 }
 
+/*
+ * 函数名: makeVarToVarSpace
+ * 目标: 创建一个新的var到VarSpaceList
+ * 自动跳过保护空间
+ * 调用 addVarToVarSpaceList -> addVarToVarSpace
+ */
 bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
-                           af_VarSpaceListNode *vsl, af_Environment *env){
-    return addVarToVarSpaceList(makeVar(name, p_self, p_posterity, p_external, obj, env), vsl);
+                           af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env){
+    return addVarToVarSpaceList(makeVar(name, p_self, p_posterity, p_external, obj, env), visitor, vsl);
 }
 
 /*
@@ -245,8 +264,7 @@ af_Var *findVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs){
 
     if (checkReadPermissions(var, visitor, vs))
         return var;
-    else
-        return NULL;
+    return NULL;
 }
 
 /*
@@ -263,12 +281,61 @@ af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *
         if (var != NULL) {
             if (checkReadPermissions(var, visitor, vsl->vs))
                 return var;
-            else
-                return NULL;
+            return NULL;
         }
     }
 
     return NULL;
+}
+
+static bool checkWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
+    char p = var->permissions[2];  // 默认外部权限
+
+    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+        p = var->permissions[0];
+    else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
+        p = var->permissions[1];
+
+    return p == 2 || p == 3;
+}
+
+/*
+ * 函数名: setVarToVarSpace
+ * 目标: 在VarSpace中搜索var并修改其值
+ * 调用: findVarFromVarSpaceByIndex
+ */
+bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpace *vs){
+    af_Var *var = findVarFromVarSpaceByIndex(time33(name) % VAR_HASHTABLE_SIZE, name, vs);
+    if (var == NULL)
+        return false;
+
+    if (checkWritePermissions(var, visitor, vs)) {
+        var->vn->obj = obj;
+        return true;
+    }
+    return false;
+}
+
+/*
+ * 函数名: setVarToVarList
+ * 目标: 在VarSpaceListNode中搜索var并修改其值
+ * 调用: findVarFromVarSpaceByIndex
+ */
+bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpaceListNode *vsl) {
+    time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
+    af_Var *var = NULL;
+
+    for (NULL; vsl != NULL; vsl = vsl->next) {
+        var = findVarFromVarSpaceByIndex(index, name, vsl->vs);
+        if (var != NULL) {
+            if (checkWritePermissions(var, visitor, vsl->vs)) {
+                var->vn->obj = obj;
+                return true;
+            }
+            return false;
+        }
+    }
+    return false;
 }
 
 af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env){

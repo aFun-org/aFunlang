@@ -299,8 +299,8 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) 
 }
 
 bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
-                         af_Object *obj, af_Environment *env){
-    return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, obj->data->var_space, env);
+                         af_Object *obj, af_Object *visitor, af_Environment *env){
+    return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, obj->data->var_space, visitor, env);
 }
 
 af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od) {
