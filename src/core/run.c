@@ -302,17 +302,15 @@ static bool runCode(af_Message **msg, bool *run_code, af_Environment *env) {
  */
 bool checkNormalEnd(af_Message *msg, af_Environment *env) {
     if (env->activity->bt_next == NULL) {
-        switch (setFuncActivityToNormal(env)) {
-            case 0:  // 已经没有下一步了 (原msg不释放)
-                if (checkMacro(msg, env))  // 检查是否宏函数
-                    break;  // 继续执行
-                checkLiteral(&msg, env);  // 检查是否字面量
-                pushMessageDown(msg, env);
-                return true;
-            default:
-                gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
-                freeMessage(msg);
-                break;
+        if (setFuncActivityToNormal(env) == 0) {  // 已经没有下一步了
+            if (checkMacro(msg, env))  // 检查是否宏函数
+                return false;  // 继续执行
+            checkLiteral(&msg, env);  // 检查是否字面量
+            pushMessageDown(msg, env);
+            return true;
+        } else {
+            gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+            freeMessage(msg);
         }
     } else {
         if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses &&

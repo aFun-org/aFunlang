@@ -2,8 +2,6 @@
 #define AFUN__FUNC_H
 #include "macro.h"
 
-typedef struct af_FuncBody af_FuncBody;
-
 #include "func.h"
 #include "__object.h"
 #include "__code.h"
@@ -26,13 +24,14 @@ struct af_ArgList {
     struct af_ArgList *next;
 };
 
-typedef void callFuncBody(void *mark, af_Environment *env);
+typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);
 NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 
 struct af_FuncBody {
     enum af_FuncBodyType {
         func_body_c,  // 回调C函数
         func_body_code,  // 执行af_Code
+        func_body_dynamic,
     } type;
 
     union {
@@ -59,5 +58,8 @@ struct af_FuncInfo {
     // 函数信息
     struct af_FuncBody *body;
 };
+
+/* FuncInfo 操作函数 */
+bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
 
 #endif //AFUN__FUNC_H

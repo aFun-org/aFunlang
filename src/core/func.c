@@ -2,10 +2,6 @@
 
 /* FuncBody 创建与释放 */
 static af_FuncBody *makeFuncBody(enum af_FuncBodyType type, char **msg_type);
-static af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type);
-static af_FuncBody *makeCFuncBody(DLC_SYMBOL(callFuncBody) c_func, char **msg_type);
-static af_FuncBody *freeFuncBody(af_FuncBody *fb);
-static void freeAllFuncBody(af_FuncBody *fb);
 
 /* msg_type 释放 */
 static void freeMsgType(char **msg_type);
@@ -118,14 +114,19 @@ static af_FuncBody *makeFuncBody(enum af_FuncBodyType type, char **msg_type) {
     return fb;
 }
 
-static af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type) {
+af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type) {
     af_FuncBody *fb = makeFuncBody(func_body_code, msg_type);
     fb->code = code;
     fb->free_code = free_code;
     return fb;
 }
 
-static af_FuncBody *makeCFuncBody(DLC_SYMBOL(callFuncBody) c_func, char **msg_type) {
+af_FuncBody *makeDynamicFuncBody(void) {
+    af_FuncBody *fb = makeFuncBody(func_body_dynamic, NULL);
+    return fb;
+}
+
+af_FuncBody *makeCFuncBody(DLC_SYMBOL(callFuncBody) c_func, char **msg_type) {
     af_FuncBody *fb = makeFuncBody(func_body_c, msg_type);
     fb->c_func = COPY_SYMBOL(c_func, callFuncBody);
     return fb;
@@ -137,7 +138,7 @@ static void freeMsgType(char **msg_type) {
     free(msg_type);
 }
 
-static af_FuncBody *freeFuncBody(af_FuncBody *fb) {
+af_FuncBody *freeFuncBody(af_FuncBody *fb) {
     af_FuncBody *next = fb->next;
     if (fb->type == func_body_code && fb->free_code)
         freeAllCode(fb->code);
@@ -150,7 +151,7 @@ static af_FuncBody *freeFuncBody(af_FuncBody *fb) {
     return next;
 }
 
-static void freeAllFuncBody(af_FuncBody *fb) {
+void freeAllFuncBody(af_FuncBody *fb) {
     while (fb != NULL)
         fb = freeFuncBody(fb);
 }
@@ -182,4 +183,27 @@ void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, a
 
 void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
     pushFuncBody(&fi->body, makeCodeFuncBody(code, free_code, msg_type));
+}
+
+void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi) {
+    pushFuncBody(&fi->body, makeDynamicFuncBody());
+}
+
+bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body) {
+    if (body == NULL || body->next == NULL || body->next->type != func_body_dynamic) {
+        freeAllFuncBody(new);
+        return false;
+    }
+
+    if (new == NULL) {
+        body->next = freeFuncBody(body->next);  // 不添加任何新内容, 但释放func_body_dynamic
+    } else {
+        af_FuncBody **next = &new;
+        while ((*next) != NULL)
+            next = &((*next)->next);
+        *next = freeFuncBody(body->next);  // 把func_body_dynamic后的内容添加到new的末尾
+        body->next = new;
+    }
+
+    return true;
 }

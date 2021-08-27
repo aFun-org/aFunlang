@@ -141,9 +141,6 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
 }
 
 static af_Code *freeCode(af_Code *bt) {
-    if (bt == NULL)
-        return NULL;
-
     af_Code *next = bt->next;
     free(bt->path);
     switch (bt->type) {

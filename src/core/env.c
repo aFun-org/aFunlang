@@ -785,6 +785,7 @@ bool setFuncActivityAddVar(af_Environment *env){
  * 返回  (0) 表示无下一步
  * 返回 (-1) 表示运行C函数, 并且设置了 process_msg_first
  * 返回  (1) 表示下一步运动Code
+ * 返回  (2) 表示遇到未被替换的动态代码块
  */
 int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     af_FuncBody *body = env->activity->body_next;
@@ -795,15 +796,24 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
         return 0;
 
     env->activity->body_next = body->next;
-
-    if (body->type == func_body_c) { /* 运行C函数 */
-        GET_SYMBOL(body->c_func)(env->activity->mark, env);
-        env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
-        return -1;
-    } else {
-        env->activity->bt_start = body->code;
-        env->activity->bt_next = body->code;
-        return 1;
+    switch (body->type) {
+        case func_body_c: {
+            af_FuncBody *new;
+            new = GET_SYMBOL(body->c_func)(env->activity->mark, env);
+            env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+            pushDynamicFuncBody(new, body);
+            env->activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置
+            return -1;
+        }
+        case func_body_code:
+            env->activity->bt_start = body->code;
+            env->activity->bt_next = body->code;
+            return 1;
+        default:
+        case func_body_dynamic:
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+            return 2;
     }
 }
 

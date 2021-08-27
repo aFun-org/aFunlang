@@ -3,6 +3,7 @@
 typedef struct af_ArgCodeList af_ArgCodeList;
 typedef struct af_ArgList af_ArgList;
 typedef struct af_FuncInfo af_FuncInfo;
+typedef struct af_FuncBody af_FuncBody;
 
 #include "code.h"
 #include "object.h"
@@ -20,7 +21,7 @@ enum af_FuncInfoEmbedded {
     super_embedded,  // 超内嵌函数
 };
 
-typedef void callFuncBody(void *make, af_Environment *env);
+typedef struct af_FuncBody *callFuncBody(void *make, af_Environment *env);
 DEFINE_DLC_SYMBOL(callFuncBody);
 
 /* af_ArgCodeList 创建与释放 */
@@ -45,6 +46,13 @@ af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj);
 
 bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env);
 
+/* FuncBody 创建与释放 */
+af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type);
+af_FuncBody *makeCFuncBody(DLC_SYMBOL(callFuncBody) c_func, char **msg_type);
+af_FuncBody *makeDynamicFuncBody(void);
+af_FuncBody *freeFuncBody(af_FuncBody *fb);
+void freeAllFuncBody(af_FuncBody *fb);
+
 /* FuncInfo 创建与释放 */
 af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro, bool var_this, bool var_func);
 
@@ -53,5 +61,6 @@ void freeFuncInfo(af_FuncInfo *fi);
 /* FuncInfo 操作函数 */
 void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
 void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
+void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi);
 
 #endif //AFUN__FUNC_H_PUBLIC

@@ -64,7 +64,6 @@ int main() {
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) getSize_3 = MAKE_SYMBOL(getSize3, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) initData_3 = MAKE_SYMBOL(initData3, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_3 = MAKE_SYMBOL(freeData3, objectAPIFunc);
@@ -82,7 +81,7 @@ int main() {
             return 2;
 
         addVarToProtectVarSpace(makeVar("object", 3, 3,
-                                        (obj = makeObject("object", true, api, true, NULL, NULL, env)),
+                                        makeObject("object", true, api, true, NULL, NULL, env),
                                         env),
                                 env);
         FREE_SYMBOL(getSize_3);
