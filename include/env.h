@@ -26,7 +26,7 @@ char setPrefix(size_t name, char prefix, af_Environment *env);
 
 /* 运行环境函数 */
 af_Environment *makeEnvironment(enum GcRunTime grt);
-bool enableEnvironment(af_Environment *env);
+void enableEnvironment(af_Environment *env);
 void freeEnvironment(af_Environment *env);
 
 /* 保护空间管理函数 */

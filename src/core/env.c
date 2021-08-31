@@ -1,14 +1,11 @@
 ﻿#include "aFun.h"
 #include "__env.h"
+#include "__global_obj.h"
 #include "run.h"
 
 /* Core 创建和释放 */
 static af_Core *makeCore(enum GcRunTime grt);
 static void freeCore(af_Environment *env);
-
-/* Core 初始化 */
-static bool enableCore(af_Core *core);
-static bool checkInherit(af_Inherit **ih, af_Object *obj);
 
 /* Activity 创建和释放 */
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong);
@@ -44,7 +41,7 @@ static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
 
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
-    core->in_init = true;
+    core->status = core_creat;
     core->protect = makeVarSpaceByCore(NULL, core);
     core->gc_run = grt;
     core->gc_count_max = DEFAULT_GC_COUNT_MAX;
@@ -118,50 +115,6 @@ af_Object *getBaseObjectFromCore(char *name, af_Core *core) {
  */
 af_Object *getBaseObject(char *name, af_Environment *env) {
     return getBaseObjectFromCore(name, env->core);
-}
-
-static bool checkInherit(af_Inherit **ih, af_Object *obj) {
-    while (*ih != NULL) {
-        if ((*ih)->obj->data == obj->data) {
-            if ((*ih)->next == NULL && (*ih)->obj == obj)  // 最后一个就是obj
-                return true;  // 不需要任何更改
-            *ih = freeInherit(*ih);  // 释放该ih
-        } else
-            ih = &((*ih)->next);
-    }
-    *ih = makeInherit(obj);
-    return (*ih == NULL) ? false : true;
-}
-
-static bool enableCore(af_Core *core) {
-    af_Object *object = getBaseObjectFromCore("object", core);
-    af_Object *global = getBaseObjectFromCore("global", core);
-
-    if (global == NULL || global->belong != NULL)
-        return false;  // global未找到 或其有属对象
-
-    if (object == NULL || object->data->inherit != NULL || !object->data->allow_inherit)
-        return false;  // object未找到 或其继承自其他对象 或其不可被继承
-
-    for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
-        if (obj == global)
-            continue;
-        if (obj->belong == NULL)
-            obj->belong = global;
-    }
-
-    for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
-        if (od == object->data)
-            continue;
-        if (!checkInherit(&od->inherit, object))
-            return false;
-    }
-
-    core->global = global;
-    core->object = object;
-    core->protect->is_protect = true;
-    core->in_init = false;
-    return true;
 }
 
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong) {
@@ -454,6 +407,9 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
     env->core = makeCore(grt);
     env->esv = makeEnvVarSpace();
+    /* 生成global对象 */
+    env->core->global = makeGlobalObject(env);
+    addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->core->global, env), env);
 
     /* 设置默认prefix */
     char prefix[PREFIX_SIZE + 1] = "";
@@ -466,6 +422,8 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
     addTopMsgProcess("NORMAL", func, env);
     FREE_SYMBOL(func);
+
+    env->core->status = core_init;
     return env;
 }
 
@@ -481,12 +439,13 @@ bool addTopActivity(af_Code *code, af_Environment *env) {
     return true;
 }
 
-bool enableEnvironment(af_Environment *env) {
-    return enableCore(env->core);
+void enableEnvironment(af_Environment *env) {
+    env->core->protect->is_protect = true;
+    env->core->status = core_normal;
 }
 
 void freeEnvironment(af_Environment *env) {
-    if (!env->core->in_init)
+    if (env->core->status != core_creat)
         iterDestruct(10, env);
     freeCore(env);
     freeAllActivity(env->activity);

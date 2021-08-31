@@ -92,11 +92,7 @@ int main() {
     }
 
 
-    if (!enableEnvironment(env)) {
-        fprintf(stderr, "Enable Error.\n");
-        exit(EXIT_FAILURE);
-    }
-
+    enableEnvironment(env);
     freeEnvironment(env);
     return 0;
 }

@@ -101,7 +101,7 @@ static void freeAllVarCup(af_VarCup *vp) {
 }
 
 af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env) {
-    if (!env->core->in_init && belong == NULL)
+    if (env->core->status != core_creat && belong == NULL)
         return NULL;
 
     af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);
@@ -111,7 +111,7 @@ af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env) {
 }
 
 af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core) {
-    if (!core->in_init && belong == NULL)
+    if (core->status != core_creat && belong == NULL)
         return NULL;
 
     af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);

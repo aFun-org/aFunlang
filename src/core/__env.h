@@ -22,6 +22,12 @@ typedef struct af_LiteralDataList af_LiteralDataList;
 typedef uint16_t ActivityCount;
 
 struct af_Core {  // 解释器核心
+    enum af_CoreStatus {
+        core_creat = 0,
+        core_init,  // 执行.i.af
+        core_normal,  // 正常执行
+    } status;
+
     // GC基本信息
     struct af_ObjectData *gc_ObjectData;
     struct af_Object *gc_Object;
@@ -33,10 +39,8 @@ struct af_Core {  // 解释器核心
 
     // 基本对象信息
     struct af_Object *global;  // 顶级属对象
-    struct af_Object *object;  // 顶级继承对象
 
     // 保护空间
-    bool in_init;  // 是否在初始化模式
     struct af_VarSpace *protect;  // 顶级保护变量空间
 };
 

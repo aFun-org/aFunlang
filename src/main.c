@@ -377,28 +377,6 @@ int main() {
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) getSize_ = MAKE_SYMBOL(getSize, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_ = MAKE_SYMBOL(initData, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_ = MAKE_SYMBOL(freeData, objectAPIFunc);
-        if (addAPI(getSize_, "obj_getDataSize", api) != 1)
-            return 2;
-        if (addAPI(initData_, "obj_initData", api) != 1)
-            return 2;
-        if (addAPI(freeData_, "obj_destructData", api) != 1)
-            return 2;
-
-        addVarToProtectVarSpace(makeVar("global", 3, 3, 3,
-                                        (obj = makeObject("global", true, api, true, NULL, NULL, env)), env),
-                                env);
-        FREE_SYMBOL(getSize_);
-        FREE_SYMBOL(initData_);
-        FREE_SYMBOL(freeData_);
-        printf("global(%p)\n", obj);
-    }
-
-    {
-        af_ObjectAPI *api = makeObjectAPI();
-        af_Object *obj;
         DLC_SYMBOL(objectAPIFunc) getSize_3 = MAKE_SYMBOL(getSize3, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) initData_3 = MAKE_SYMBOL(initData3, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_3 = MAKE_SYMBOL(freeData3, objectAPIFunc);
@@ -803,10 +781,7 @@ int main() {
         FREE_SYMBOL(func);
     }
 
-    if (!enableEnvironment(env)) {
-        fprintf(stderr, "Enable Error.\n");
-        exit(EXIT_FAILURE);
-    }
+    enableEnvironment(env);
 
     {  // 正常程序
         printf("TAG A:\n");

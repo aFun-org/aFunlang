@@ -238,8 +238,6 @@ static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_A
 
 static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist) {
     plist = reachableVarSpace(core->protect, plist);
-    if (core->object != NULL)
-        plist = reachableObject(core->object, plist);
     if (core->global != NULL)
         plist = reachableObject(core->global, plist);
 

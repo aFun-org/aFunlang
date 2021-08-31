@@ -72,29 +72,31 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
         return NULL;
 
     af_Inherit *ih = NULL;
-    if (env->core->in_init || inherit != NULL)
+    if (inherit != NULL)
         ih = inherit;
-    else if (env->core->object != NULL)
-        ih = makeInherit(env->core->object);
-
-    if (!env->core->in_init && ih == NULL)
+    else if (env->core->global != NULL)  // init模式生成: global
+        ih = makeInherit(env->core->global);
+    else if (env->core->status != core_creat)
         return NULL;
+
+    if (belong == NULL) {
+        if (env->activity != NULL)
+            belong = env->activity->belong;
+        else if (env->core->status == core_init)  // init模式生成: global
+            belong = env->core->global;
+        else if (env->core->status == core_normal)
+            return NULL;
+    }
 
     af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit, env);
 
-    if (env->core->in_init || belong != NULL)
-        obj->belong = belong;
-    else if (env->activity != NULL)
-        obj->belong = env->activity->belong;
-    else
-        return NULL;
-
+    obj->belong = belong;
     obj->data->inherit = ih;
     return obj;
 }
 
 /*
- * 函数名: freeObjectDataByCore
+ * 函数名: freeObjectData
  * 目标: 释放ObjectData, 仅GC函数可用
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
  */
