@@ -187,9 +187,8 @@ static void freeAllActivity(af_Activity *activity) {
 
 static void clearActivity(af_Activity *activity) {
     freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
-    freeAllArgCodeList(activity->acl_start);
-    if (activity->fi != NULL)
-        freeFuncInfo(activity->fi);
+    /* acl在runArgList之后就被释放了 */
+    /* acl在FuncBody暂时不释放 */
 
     activity->func_var_list = NULL;
     activity->bt_top = NULL;
@@ -198,7 +197,6 @@ static void clearActivity(af_Activity *activity) {
 
     activity->acl_start = NULL;
     activity->acl_done = NULL;
-    activity->fi = NULL;
     activity->body_next = NULL;
 }
 
@@ -611,21 +609,18 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 }
 
 bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
-    char *literal_data = strCopy(bt->literal.literal_data);  // newActivity可能会导致code和literal_data释放
     env->activity->bt_next = bt->next;
 
-    /* 隐式调用不设置 bt_top */
-    newActivity(NULL, bt->next, false, env);  // 如果原activity也是字面量, 则不进行尾调递归优化
+    newActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
-    pushLiteralData(literal_data, env);
+    pushLiteralData(strCopy(bt->literal.literal_data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
     return setFuncActivityToArg(func, env);
 }
 
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     env->activity->bt_next = bt->next;
 
-    /* 隐式调用不设置 bt_top */
-    newActivity(NULL, bt->next, false, env);
+    newActivity(bt, bt->next, false, env);
     return setFuncActivityToArg(func, env);
 }
 
@@ -726,6 +721,11 @@ bool setFuncActivityAddVar(af_Environment *env){
         return false;
     }
 
+    if (env->activity->fi != NULL)
+        freeFuncInfo(env->activity->fi);  // 延迟到这里再释放, 主要是FuncBody中的bt可能会被使用
+    env->activity->fi = NULL;
+    env->activity->body_next = NULL;
+
     if (!get_info(&env->activity->fi, env->activity->func, env->activity->bt_top, env->activity->mark, env))
         return false;
     if (env->activity->fi == NULL) {
@@ -796,6 +796,10 @@ bool setFuncActivityAddVar(af_Environment *env){
 
     if (env->activity->fi->embedded == protect_embedded)
         env->activity->var_list->vs->is_protect = true;
+
+    freeAllArgCodeList(env->activity->acl_start);
+    env->activity->acl_start = NULL;
+    env->activity->acl_done = NULL;
 
     if (setFuncActivityToNormal(env) == 0)
         return false;
