@@ -136,7 +136,7 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
     if (code->prefix != getPrefix(V_QUOTE, env)) {
         if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
-        else if (env->activity->status != act_func && // 在act_func模式时关闭保护
+        else if (env->activity->status != act_func_get && // 在act_func模式时关闭保护
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             printf("Infix protect : %s\n", code->variable.name);
@@ -193,7 +193,7 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
  * 仅在act_arg模式下, 允许运行变量空间设置为函数变量空间 (参数计算)
  */
 static void setRunVarSpaceList(af_Environment *env) {
-    if (env->activity->status == act_arg && env->activity->run_in_func && env->activity->func_var_list != NULL)
+    if (env->activity->status == act_func_arg && env->activity->run_in_func && env->activity->func_var_list != NULL)
         env->activity->vsl = env->activity->func_var_list;
     else
         env->activity->vsl = env->activity->var_list;
@@ -247,7 +247,7 @@ static int checkMsg(af_Message *msg, af_Environment *env) {
         return 1;  // 正常
 
     pushMessageDown(msg, env);  // msg不弹出
-    if (env->activity->status != act_normal || !checkInMsgType(msg->type, env)) {  // 非normal模式, 或normal模式下msg_type不匹配该msg
+    if (env->activity->status != act_func_normal || !checkInMsgType(msg->type, env)) {  // 非normal模式, 或normal模式下msg_type不匹配该msg
         env->activity->return_first = false;
         env->activity->return_obj = NULL;
         return 0;
@@ -353,13 +353,13 @@ static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
  */
 static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
     switch (env->activity->status) {
-        case act_normal:
+        case act_func_normal:
             if (!run_code)
                 popActivity(makeMessage("ERROR-STR", 0), env);
             else if (checkNormalEnd(msg, env))
                 popActivity(NULL, env);
             break;
-        case act_func:
+        case act_func_get:
             if (!run_code)
                 popActivity(makeMessage("ERROR-STR", 0), env);
             else {
@@ -370,7 +370,7 @@ static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
                     popActivity(NULL, env);
             }
             break;
-        case act_arg: {
+        case act_func_arg: {
             if (!run_code || checkGetArgEnd(msg, env)) {  // 无参数设定或参数设定完成
                 if (!setFuncActivityAddVar(env))
                     popActivity(NULL, env);
@@ -395,7 +395,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
         bool run_code = false;
         checkRunGC(env);
 
-        if (env->activity->is_gc) {  // gc 模式
+        if (env->activity->type == act_gc) {  // gc 模式
             if (env->activity->dl_next == NULL)
                 popActivity(NULL, env);  // 结束运行
             else {

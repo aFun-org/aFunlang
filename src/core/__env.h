@@ -55,53 +55,64 @@ struct af_LiteralDataList {
 struct af_Activity {  // 活动记录器
     struct af_Activity *prev;  // 上一个活动记录器
 
-    enum af_ActivityStatus {
-        act_func = 0,
-        act_arg,
-        act_normal,
-    } status;
+    enum af_ActivityType {
+        act_func,
+        act_gc,
+    } type;
+
+    struct af_Object *belong;  // 属对象 (belong通常为func的belong)
 
     struct af_Message *msg_down;  // 被调用者向调用者传递信息
     struct af_Message *msg_up;  // 调用者向被调用者传递信息
     ActivityCount msg_up_count;  // msg_up 添加的个数
 
-    bool run_in_func;  // 在函数变量空间内运行 (act_arg用)
-    struct af_VarSpaceListNode *vsl;  // 变量空间
-    struct af_VarSpaceListNode *func_var_list;  // 函数内部变量空间 (运行函数体时会设置为 主变量空间)
     struct af_VarSpaceListNode *var_list;  // 主变量空间
     ActivityCount new_vs_count;  // 需要释放的空间数
 
-    struct af_Object *belong;  // 属对象 (belong通常为func的belong)
-    struct af_Object *func;  // 函数本身
+    union {
+        struct {
+            struct gc_DestructList *dl;
+            struct gc_DestructList **pdl;  // 执行dl的最末端
+            struct gc_DestructList *dl_next;  // dl执行的位置
+        };
 
-    struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素)
-    struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
-    struct af_Code *bt_next;  // 指示代码下一步要运行的位置 [总是超前当前执行的code]
+        struct {
+            enum af_ActivityStatus {
+                act_func_get = 0,
+                act_func_arg,
+                act_func_normal,
+            } status;
 
-    bool return_first;  // 顺序执行, 获取第一个返回结果
-    struct af_Object *return_obj;  // 调用者向被调用者传递信息
-    size_t process_msg_first;  // 优先处理msg而不是code
+            struct af_Object *func;  // 函数本身
 
-    /* 函数调用专项 */
-    enum af_BlockType call_type;  // 函数调用类型
-    struct af_Object *parentheses_call;  // 类前缀调用
-    struct af_ArgCodeList *acl_start;
-    struct af_ArgCodeList *acl_done;  // 记录当前运行的acl [总是与当前执行的acl同步] [acl代码执行完成后需要把结果写入acl, 故不超前]
-    struct af_FuncInfo *fi;
-    struct af_FuncBody *body_next;  // 下一个需要执行的body [总是超前当前执行的body]
-    void *mark;  // 标记 [完全由API管理, 不随activity释放]
-    struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
-    ActivityCount macro_vs_count;
+            bool run_in_func;  // 在函数变量空间内运行 (act_arg用)
+            struct af_VarSpaceListNode *vsl;  // 变量空间
+            struct af_VarSpaceListNode *func_var_list;  // 函数内部变量空间 (运行函数体时会设置为 主变量空间)
 
-    /* 字面量专项 */
-    bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
-    struct af_LiteralDataList *ld;
+            struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素)
+            struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
+            struct af_Code *bt_next;  // 指示代码下一步要运行的位置 [总是超前当前执行的code]
 
-    /* gc 机制 */
-    bool is_gc;  // 处于gc的析构函数运行
-    struct gc_DestructList *dl;
-    struct gc_DestructList **pdl;  // 执行dl的最末端
-    struct gc_DestructList *dl_next;  // dl执行的位置
+            bool return_first;  // 顺序执行, 获取第一个返回结果
+            struct af_Object *return_obj;  // 调用者向被调用者传递信息
+            size_t process_msg_first;  // 优先处理msg而不是code
+
+            /* 函数调用专项 */
+            enum af_BlockType call_type;  // 函数调用类型
+            struct af_Object *parentheses_call;  // 类前缀调用
+            struct af_ArgCodeList *acl_start;
+            struct af_ArgCodeList *acl_done;  // 记录当前运行的acl [总是与当前执行的acl同步] [acl代码执行完成后需要把结果写入acl, 故不超前]
+            struct af_FuncInfo *fi;
+            struct af_FuncBody *body_next;  // 下一个需要执行的body [总是超前当前执行的body]
+            void *mark;  // 标记 [完全由API管理, 不随activity释放]
+            struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
+            ActivityCount macro_vs_count;
+
+            /* 字面量专项 */
+            bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
+            struct af_LiteralDataList *ld;
+        };
+    };
 };
 
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);

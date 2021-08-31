@@ -11,8 +11,10 @@ static bool enableCore(af_Core *core);
 static bool checkInherit(af_Inherit **ih, af_Object *obj);
 
 /* Activity 创建和释放 */
-static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                 af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong);
+static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
+                                     af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
+static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 static void clearActivity(af_Activity *activity);
@@ -162,25 +164,41 @@ static bool enableCore(af_Core *core) {
     return true;
 }
 
-static af_Activity *makeActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                 af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func) {
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong) {
     af_Activity *activity = calloc(sizeof(af_Activity), 1);
-    activity->status = act_func;
-
     activity->msg_up = msg_up;
     activity->msg_up_count = 0;
-
     activity->var_list = vsl;
     activity->new_vs_count = 0;
-
     activity->belong = belong;
-    activity->func = func;
+    return activity;
+}
 
+static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
+                                     af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func) {
+    af_Activity *activity = makeActivity(msg_up, vsl, belong);
+
+    activity->type = act_func;
+    activity->status = act_func_get;
+    activity->func = func;
     activity->bt_top = bt_top;
     activity->bt_start = bt_start;
     activity->bt_next = bt_start;
 
     activity->return_first = return_first;
+    return activity;
+}
+
+static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env) {
+    af_Activity *activity = makeActivity(NULL, NULL, env->core->global);
+    activity->type = act_gc;
+
+    activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
+    activity->new_vs_count = 1;
+
+    activity->dl = dl;
+    activity->pdl = pdl;
+    activity->dl_next = dl;
     return activity;
 }
 
@@ -190,17 +208,22 @@ static af_Activity *freeActivity(af_Activity *activity) {
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
     freeMessageCount(activity->msg_up_count, activity->msg_up);
 
-    // vsl 是引用自 var_list和func_var_list的 故不释放
-    // func_var_list 是引用自函数的 故不释放
     freeVarSpaceListCount(activity->new_vs_count, activity->var_list);
-    freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
 
-    freeAllArgCodeList(activity->acl_start);
-    if (activity->fi != NULL)
-        freeFuncInfo(activity->fi);
-    freeAllLiteralData(activity->ld);
-    if (activity->dl != NULL)
-        freeAllDestructList(activity->dl);
+    if (activity->type == act_gc) {
+        if (activity->dl != NULL)
+            freeAllDestructList(activity->dl);
+    } else {
+        // vsl 是引用自 var_list和func_var_list的 故不释放
+        // func_var_list 是引用自函数的 故不释放
+        freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
+
+        freeAllArgCodeList(activity->acl_start);
+        if (activity->fi != NULL)
+            freeFuncInfo(activity->fi);
+        freeAllLiteralData(activity->ld);
+    }
+
     free(activity);
     return prev;
 }
@@ -450,11 +473,11 @@ bool addTopActivity(af_Code *code, af_Environment *env) {
     if (env->activity != NULL)
         return false;
 
-    env->activity = makeActivity(NULL, code, false, NULL, NULL, env->core->global, NULL);
+    env->activity = makeFuncActivity(NULL, code, false, NULL, NULL, env->core->global, NULL);
     env->activity->new_vs_count = 2;
     env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
     env->activity->var_list->next = makeVarSpaceList(env->core->protect);
-    env->activity->status = act_normal;
+    env->activity->status = act_func_normal;
     return true;
 }
 
@@ -523,16 +546,16 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 }
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
-    if (next == NULL && env->activity->body_next == NULL && !env->activity->is_gc) {
+    if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
         env->activity->bt_top = bt;
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
             env->activity->return_first = return_first;
     } else {
-        af_Activity *activity = makeActivity(bt, NULL, return_first, env->activity->msg_up,
-                                             env->activity->var_list, env->activity->belong,
-                                             env->activity->func);
+        af_Activity *activity = makeFuncActivity(bt, NULL, return_first, env->activity->msg_up,
+                                                 env->activity->var_list, env->activity->belong,
+                                                 env->activity->func);
         activity->prev = env->activity;
         env->activity = activity;
     }
@@ -551,7 +574,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
     env->activity->bt_start = bt->next;
     env->activity->bt_next = bt->next;
 
-    env->activity->status = act_normal;
+    env->activity->status = act_func_normal;
     return true;
 }
 
@@ -619,7 +642,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->bt_next = func;
 
     env->activity->call_type = env->activity->bt_top->block.type;
-    env->activity->status = act_func;
+    env->activity->status = act_func_get;
     if (env->activity->call_type == parentheses) { // 对于类前缀调用, 已经获得func的实际值了
         if (parentheses_call == NULL) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
@@ -670,7 +693,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
 
 void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env) {
     for (af_Activity *tmp = env->activity; tmp != NULL; tmp = tmp->prev) {
-        if (tmp->is_gc) {
+        if (tmp->type == act_gc) {
             *(tmp->pdl) = dl;
             tmp->pdl = pdl;
             if (tmp->dl_next == NULL)  // 原dl_next已经运行到末端
@@ -680,16 +703,7 @@ void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *
     }
 
     /* gc Activity 可能创建为顶层 activity, 故信息不能继承上一级(可能没有上一级) */
-    af_Activity *activity = makeActivity(NULL, NULL, false, NULL, NULL, env->core->global, NULL);
-
-    activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
-    activity->vsl = activity->var_list;
-    activity->new_vs_count = 1;
-
-    activity->is_gc = true;
-    activity->dl = dl;
-    activity->pdl = pdl;
-    activity->dl_next = dl;
+    af_Activity *activity = makeGcActivity(dl, pdl, env);
 
     activity->prev = env->activity;
     env->activity = activity;
@@ -699,8 +713,8 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
     env->activity->dl_next = dl->next;
 
     /* 隐式调用不设置 bt_top */
-    af_Activity *activity = makeActivity(NULL, NULL, false, env->activity->msg_up,
-                                         env->activity->var_list, env->activity->belong, NULL);
+    af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
+                                             env->activity->var_list, env->activity->belong, NULL);
     activity->prev = env->activity;
     env->activity = activity;
     return setFuncActivityToArg(dl->func, env);
@@ -729,7 +743,7 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 
     env->activity->func = func;
     env->activity->belong = getBelongObject(func);
-    env->activity->status = act_arg;
+    env->activity->status = act_func_arg;
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
     if (get_acl != NULL) {
@@ -841,7 +855,7 @@ bool setFuncActivityAddVar(af_Environment *env){
  */
 int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     af_FuncBody *body = env->activity->body_next;
-    env->activity->status = act_normal;
+    env->activity->status = act_func_normal;
     env->activity->bt_next = NULL;
 
     if (body == NULL)  // 已经没有下一步了 (原msg不释放)
@@ -895,7 +909,7 @@ static void freeMarkByActivity(af_Activity *activity) {
 }
 
 static void freeMark(af_Environment *env) {
-    if (env->activity->func != NULL) {
+    if (env->activity->type == act_func && env->activity->func != NULL) {
         obj_funcFreeMask *func = findAPI("obj_funcFreeMask", env->activity->func->data->api);
         if (func != NULL)
             func(env->activity->mark);
@@ -904,25 +918,27 @@ static void freeMark(af_Environment *env) {
 }
 
 void popActivity(af_Message *msg, af_Environment *env) {
-    if (msg != NULL && env->activity->return_first) {
-        if (EQ_STR(msg->type, "NORMAL")) {
-            gc_delReference(*(af_Object **) msg->msg);
-            freeMessage(msg);
-            msg = NULL;
+    if (env->activity->type == act_func) {
+        if (msg != NULL && env->activity->return_first) {
+            if (EQ_STR(msg->type, "NORMAL")) {
+                gc_delReference(*(af_Object **) msg->msg);
+                freeMessage(msg);
+                msg = NULL;
+            }
+        } else if (env->activity->return_first) {  // msg == NULL
+            if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
+                af_Message *tmp = getFirstMessage(env);
+                gc_delReference(*(af_Object **) (tmp->msg));
+                freeMessage(tmp);
+            }
         }
-    } else if (env->activity->return_first) {  // msg == NULL
-        if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
-            af_Message *tmp = getFirstMessage(env);
-            gc_delReference(*(af_Object **)(tmp->msg));
-            freeMessage(tmp);
-        }
-    }
 
-    if (msg == NULL && env->activity->return_first) {
-        if (env->activity->return_obj == NULL)
-            msg = makeMessage("ERROR-STR", 0);
-        else
-            msg = makeNORMALMessage(env->activity->return_obj);
+        if (msg == NULL && env->activity->return_first) {
+            if (env->activity->return_obj == NULL)
+                msg = makeMessage("ERROR-STR", 0);
+            else
+                msg = makeNORMALMessage(env->activity->return_obj);
+        }
     }
 
     if (msg != NULL)
@@ -930,8 +946,8 @@ void popActivity(af_Message *msg, af_Environment *env) {
 
     freeMark(env);
 
-    if (env->activity->prev == NULL || env->activity->is_gc)  // 顶层或gc层
-        runTopMessageProcess(env->activity->is_gc, env);
+    if (env->activity->prev == NULL || env->activity->type == act_gc)  // 顶层或gc层
+        runTopMessageProcess((env->activity->type == act_gc), env);
     else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
         env->activity->prev->msg_down = env->activity->msg_down;
