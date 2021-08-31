@@ -35,15 +35,15 @@ SET_PASS(lib "num = 100 test = 110")
 SET_PASS(dlc "a = 100, test = 110")
 SET_PASS(byte_code
 "out:
-literal: data func prefix: 44
-variable: var1 prefix: 0
-variable: 2 0 prefix: 0
-literal: data2 func prefix: 0
-variable: var2 prefix: 0
+code_element: data prefix: 44
+code_element: var1 prefix: 0
+code_block: 2 0 prefix: 0
+code_element: data2 prefix: 0
+code_element: var2 prefix: 0
 in:
-literal: data func prefix: 44
-variable: var1 prefix: 0
-variable: 2 0 prefix: 0
-literal: data2 func prefix: 0
-variable: var2 prefix: 0"
+code_element: data prefix: 44
+code_element: var1 prefix: 0
+code_block: 2 0 prefix: 0
+code_element: data2 prefix: 0
+code_element: var2 prefix: 0"
         )

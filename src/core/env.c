@@ -534,10 +534,10 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 }
 
 static bool isInfixFunc(af_Code *code, af_Environment *env) {
-    if (code == NULL || code->type != variable || code->prefix == getPrefix(V_QUOTE, env))
+    if (code == NULL || code->type != code_element || code->prefix == getPrefix(V_QUOTE, env))
         return false;
 
-    af_Var *var = findVarFromVarList(code->variable.name, env->activity->belong, env->activity->var_list);
+    af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);
     if (var == NULL)
         return false;
 
@@ -608,12 +608,12 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     return true;
 }
 
-bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env) {
+bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env) {
     env->activity->bt_next = bt->next;
 
     newActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
-    pushLiteralData(strCopy(bt->literal.literal_data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
+    pushLiteralData(strCopy(data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
     return setFuncActivityToArg(func, env);
 }
 
@@ -917,4 +917,13 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     }
 
     env->activity = freeActivity(env->activity);
+}
+
+bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {  // 桩函数
+    if (strncmp(literal, "data", 4) == 0) {
+        *in_protect = true;
+        *func = "func";
+        return true;
+    }
+    return false;
 }

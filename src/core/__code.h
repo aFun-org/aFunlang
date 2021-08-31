@@ -11,9 +11,8 @@
 typedef unsigned int CodeUint;  // Code uint
 
 enum af_CodeType {
-    literal = 0,
-    variable,
-    block,  // 括号
+    code_element = 0,
+    code_block,  // 括号
 };
 
 
@@ -22,14 +21,8 @@ struct af_Code {  // 一个 Code 的结构体
     char prefix;  // 前缀
     union {
         struct {
-            char *literal_data;
-            char *func;  // 函数名称
-            bool in_protect;  // 是否在保护区域
-        } literal;
-
-        struct {
-            char *name;
-        } variable;
+            char *data;
+        } element;
 
         struct {
             CodeUint elements;  // 元素个数

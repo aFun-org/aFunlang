@@ -3,11 +3,11 @@
 #include "aFun.h"
 
 int main() {
-    af_Code *bt1 = makeLiteralCode("data", "func", false, ',', 0, "Unknown");
-    af_Code *bt2 = makeVariableCode("var1", 0, 1, NULL);
+    af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+    af_Code *bt2 = makeElementCode("var1", 0, 1, NULL);
 
-    af_Code *bt3 = makeLiteralCode("data2", "func", false, 0, 0, NULL);
-    af_Code *bt4 = makeVariableCode("var2", 0, 1, NULL);
+    af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
+    af_Code *bt4 = makeElementCode("var2", 0, 1, NULL);
 
     connectCode(&bt1, bt2);
     connectCode(&bt3, bt4);

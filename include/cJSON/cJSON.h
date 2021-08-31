@@ -118,7 +118,7 @@ typedef struct cJSON
     /* The item's number, if type==cJSON_Number */
     double valuedouble;
 
-    /* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
+    /* The item's data string, if this item is the child of, or is in the list of subitems of an object. */
     char *string;
 } cJSON;
 
@@ -144,7 +144,7 @@ CJSON_PUBLIC(const char*) cJSON_Version(void);
 CJSON_PUBLIC(void) cJSON_InitHooks(cJSON_Hooks* hooks);
 
 /* Memory Management: the caller is always responsible to free the results from all variants of cJSON_Parse (with cJSON_Delete) and cJSON_Print (with stdlib free, cJSON_Hooks.free_fn, or cJSON_free as appropriate). The exception is cJSON_PrintPreallocated, where the caller has full responsibility of the buffer. */
-/* Supply a block of JSON, and this returns a cJSON object you can interrogate. */
+/* Supply a code_block of JSON, and this returns a cJSON object you can interrogate. */
 CJSON_PUBLIC(cJSON *) cJSON_Parse(const char *value);
 CJSON_PUBLIC(cJSON *) cJSON_ParseWithLength(const char *value, size_t buffer_length);
 /* ParseWithOpts allows you to require (and check) that the JSON is null terminated, and to retrieve the pointer to the final byte parsed. */

@@ -25,7 +25,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env);
 static bool checkGetArgEnd(af_Message *msg, af_Environment *env);
 
 /* Code 执行函数 */
-static bool codeVariable(af_Code *code, af_Environment *env);
+static bool codeElement(af_Code *code, af_Environment *env);
 static bool codeLiteral(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
 
@@ -115,17 +115,42 @@ static bool iterCodeInit(af_Code *code, af_Environment *env) {
 }
 
 /*
- * 函数名: codeVariable
- * 目标: 执行变量访问代码 (设置bt_next)
- * 返回-false 表示执行失败, 或执行成功得到一个变量值      (msg_down中写入消息)
- * 返回-true  表示执行成功, 得到一个对象函数, 并且隐式调用 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
+ * 函数名: codeElement
+ * 目标: 执行变量访问或字面量生成 (设置bt_next)
+ * (1) 执行字面量生成代码 (设置bt_next)
+ *     返回-false 表示执行错误 (msg_down中写入消息)
+ *     返回-true  表示执行成功 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
+ * (2) 执行变量访问代码:
+ *     返回-false 表示执行失败, 或执行成功得到一个变量值      (msg_down中写入消息)
+ *     返回-true  表示执行成功, 得到一个对象函数, 并且隐式调用 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
  */
-static bool codeVariable(af_Code *code, af_Environment *env) {
-    af_Var *var = findVarFromVarList(code->variable.name, env->activity->belong, env->activity->vsl);
+static bool codeElement(af_Code *code, af_Environment *env) {
+    bool in_protect;
+    char *func;
+    af_Var *var;
+
+    if (checkLiteralCode(code->element.data, &func, &in_protect, env)) {
+        /* 字面量执行 */
+        if (in_protect)
+            var = findVarFromVarSpace(func, env->activity->belong, env->core->protect);
+        else
+            var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
+
+        if (var == NULL) {
+            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            printf("Literal not found: %s\n", code->element.data);
+            return false;
+        }
+
+        return pushLiteralActivity(code, code->element.data, var->vn->obj, env);
+    }
+
+    /* 变量执行 */
+    var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->vsl);
 
     if (var == NULL) {
         pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        printf("Variable not found: %s\n", code->variable.name);
+        printf("Variable not found: %s\n", code->element.data);
         return false;
     }
 
@@ -139,37 +164,15 @@ static bool codeVariable(af_Code *code, af_Environment *env) {
         else if (env->activity->status != act_func_get && // 在act_func模式时关闭保护
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
-            printf("Infix protect : %s\n", code->variable.name);
+            printf("Infix protect : %s\n", code->element.data);
             return false;
         }
     }
 
     pushMessageDown(makeNORMALMessage(obj), env);
     env->activity->bt_next = env->activity->bt_next->next;
-    printf("Get Variable %s : %p\n", code->variable.name, obj);
+    printf("Get Variable %s : %p\n", code->element.data, obj);
     return false;
-}
-
-/*
- * 函数名: codeLiteral
- * 目标: 执行字面量生成代码 (设置bt_next)
- * 返回-false 表示执行错误 (msg_down中写入消息)
- * 返回-true  表示执行成功 (msg_down中无消息写入, 函数仅设置activity无实质性代码执行)
- */
-static bool codeLiteral(af_Code *code, af_Environment *env) {
-    af_Var *var;
-    if (code->literal.in_protect)
-        var = findVarFromVarSpace(code->literal.func, env->activity->belong, env->core->protect);
-    else
-        var = findVarFromVarList(code->literal.func, env->activity->belong, env->activity->vsl);
-
-    if (var == NULL) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        printf("Literal not found: %s\n", code->variable.name);
-        return false;
-    }
-
-    return pushLiteralActivity(code, var->vn->obj, env);
 }
 
 /*
@@ -201,21 +204,17 @@ static void setRunVarSpaceList(af_Environment *env) {
 
 /*
  * 函数名: runCodeBase
- * 目标: 获取代码类型, 调用(codeLiteral, codeVariable, codeBlock)运行代码
+ * 目标: 获取代码类型, 调用(codeLiteral, codeElement, codeBlock)运行代码
  * 返回true- 表示执行无消息写入 msg_down (通常是无实质性代码运算)
  * 返回false-表示有消息写入 msg_down
  */
 static bool runCodeBase(af_Environment *env) {
     switch (env->activity->bt_next->type) {
-        case literal:
-            if (codeLiteral(env->activity->bt_next, env))
-                return true;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
-            break;
-        case variable:
-            if (codeVariable(env->activity->bt_next, env))
+        case code_element:
+            if (codeElement(env->activity->bt_next, env))
                 return true;
             break;
-        case block:
+        case code_block:
             if (codeBlock(env->activity->bt_next, env))
                 return true;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
         default:
@@ -321,7 +320,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
             freeMessage(msg);
         }
     } else {
-        if (env->activity->bt_next->type == block && env->activity->bt_next->block.type == parentheses &&
+        if (env->activity->bt_next->type == code_block && env->activity->bt_next->block.type == parentheses &&
             env->activity->bt_next->prefix != getPrefix(B_EXEC, env)) {
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
         }

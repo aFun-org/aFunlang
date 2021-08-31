@@ -28,26 +28,13 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     return bt;
 }
 
-af_Code *makeLiteralCode(char *literal_data, char *func, bool in_protect, char prefix, FileLine line, FilePath path) {
+af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
     if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
         prefix = NUL;
 
     af_Code *bt = makeCode(prefix, line, path);
-    bt->type = literal;
-    bt->literal.literal_data = strCopy(literal_data);
-    bt->literal.func = strCopy(func);
-    bt->literal.in_protect = in_protect;
-    return bt;
-}
-
-
-af_Code *makeVariableCode(char *var, char prefix, FileLine line, FilePath path) {
-    if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
-        prefix = NUL;
-
-    af_Code *bt = makeCode(prefix, line, path);
-    bt->type = variable;
-    bt->variable.name = strCopy(var);
+    bt->type = code_element;
+    bt->element.data = strCopy(var);
     return bt;
 }
 
@@ -65,7 +52,7 @@ static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, 
         else
             to_next--;
 
-        if (element->type == block)
+        if (element->type == code_block)
             to_next += element->block.elements;
     }
 }
@@ -84,7 +71,7 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
 
     countElement(element, &elements, &count, next);
     bt = makeCode(prefix, line, path);
-    bt->type = block;
+    bt->type = code_block;
     bt->block.type = type;
     bt->block.elements = elements;
     bt->block.count = count;
@@ -111,22 +98,14 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
         *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
         switch (base->type) {
-            case literal:
-                (*pdest)->literal.literal_data = strCopy(base->literal.literal_data);
-                (*pdest)->literal.func = strCopy(base->literal.func);
-                (*pdest)->literal.in_protect = base->literal.in_protect;
+            case code_element:
+                (*pdest)->element.data = strCopy(base->element.data);
                 break;
-
-            case variable:
-                (*pdest)->variable.name = strCopy(base->variable.name);
-                break;
-
-            case block:
+            case code_block:
                 (*pdest)->block.count = base->block.count;
                 (*pdest)->block.elements = base->block.elements;
                 (*pdest)->block.type = base->block.type;
                 break;
-
             default:
                 break;
         }
@@ -144,12 +123,8 @@ static af_Code *freeCode(af_Code *bt) {
     af_Code *next = bt->next;
     free(bt->path);
     switch (bt->type) {
-        case literal:
-            free(bt->literal.literal_data);
-            free(bt->literal.func);
-            break;
-        case variable:
-            free(bt->variable.name);
+        case code_element:
+            free(bt->element.data);
             break;
         default:
             break;
@@ -200,15 +175,10 @@ static bool writeCode(af_Code *bt, FILE *file) {
     }
 
     switch (bt->type) {
-        case literal:
-            Done(byteWriteStr(file, bt->literal.literal_data));
-            Done(byteWriteStr(file, bt->literal.func));
-            Done(byteWriteUint_8(file, bt->literal.in_protect));
+        case code_element:
+            Done(byteWriteStr(file, bt->element.data));
             break;
-        case variable:
-            Done(byteWriteStr(file, bt->variable.name));
-            break;
-        case block:
+        case code_block:
             Done(byteWriteUint_8(file, bt->block.type));
             Done(byteWriteUint_32(file, bt->block.elements));
             Done(byteWriteUint_32(file, bt->block.count));
@@ -262,18 +232,10 @@ static bool readCode(af_Code **bt, FILE *file) {
     (*bt)->type = type;
 
     switch (type) {
-        case literal: {
-            uint8_t in_protect;
-            Done(byteReadStr(file, &((*bt)->literal.literal_data)));
-            Done(byteReadStr(file, &((*bt)->literal.func)));
-            Done(byteReadUint_8(file, &in_protect));
-            (*bt)->literal.in_protect = in_protect;
+        case code_element:
+            Done(byteReadStr(file, &((*bt)->element.data)));
             break;
-        }
-        case variable:
-            Done(byteReadStr(file, &((*bt)->variable.name)));
-            break;
-        case block: {
+        case code_block: {
             uint8_t block_type;
             uint32_t elements;
             uint32_t count;
@@ -305,14 +267,11 @@ bool readAllCode(af_Code **bt, FILE *file) {
 void printCode(af_Code *bt) {
     for (NULL; bt != NULL; bt = bt->next) {
         switch (bt->type) {
-            case literal:
-                printf("literal: %s %s prefix: %d\n", bt->literal.literal_data, bt->literal.func, bt->prefix);
+            case code_element:
+                printf("code_element: %s prefix: %d\n", bt->element.data, bt->prefix);
                 break;
-            case variable:
-                printf("variable: %s prefix: %d\n", bt->variable.name, bt->prefix);
-                break;
-            case block:
-                printf("variable: %d %d prefix: %d\n", bt->block.elements, bt->block.type, bt->prefix);
+            case code_block:
+                printf("code_block: %d %d prefix: %d\n", bt->block.elements, bt->block.type, bt->prefix);
                 break;
             default:
                 printf("Unknow: %d prefix: %d\n", bt->type, bt->prefix);

@@ -60,7 +60,7 @@ extern "C" {
 /* The symbol lookup happens in the normal global scope. */
 #define RTLD_DEFAULT    ((void *)0)
 
-/* Specifies the next object after this one that defines name. */
+/* Specifies the next object after this one that defines data. */
 #define RTLD_NEXT       ((void *)-1)
 
 /* Structure filled in by dladdr() */

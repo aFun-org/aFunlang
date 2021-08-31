@@ -161,7 +161,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env);
 bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
 void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
-bool pushLiteralActivity(af_Code *bt, af_Object *func, af_Environment *env);
+bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
 bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(af_Environment *env);
@@ -173,6 +173,7 @@ void freeAllLiteralData(af_LiteralDataList *ld);
 
 /* LiteralData 操作函数 */
 void pushLiteralData(char *data, af_Environment *env);
+bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env);
 
 /* 顶层消息处理器 处理函数 */
 void runTopMessageProcess(bool is_gc, af_Environment *env);
