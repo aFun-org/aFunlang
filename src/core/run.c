@@ -287,14 +287,14 @@ static bool runCode(af_Message **msg, bool *run_code, af_Environment *env) {
     (*msg) = getTopMsg(env);
 
     switch (checkMsg((*msg), env)) {
-        case 0:
+        case 0:  // 不可处理的信号
             *msg = NULL;
-            popActivity(NULL, env);  // 跳出当前activity
+            popActivity(false, NULL, env);  // 跳出当前activity
             return true;
-        case -1:
+        case -1:  // 非正常但可处理 [已经放回]
             (*msg) = NULL;
             break;
-        case 1:
+        case 1:  // 正常信号
             if (env->activity->return_first && env->activity->return_obj == NULL)  // 设置return_first
                 env->activity->return_obj = *(af_Object **)(*msg)->msg;
             break;
@@ -355,25 +355,25 @@ static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
     switch (env->activity->status) {
         case act_func_normal:
             if (!run_code)
-                popActivity(makeMessage("ERROR-STR", 0), env);
+                popActivity(false, makeMessage("ERROR-STR", 0), env);
             else if (checkNormalEnd(msg, env))
-                popActivity(NULL, env);
+                popActivity(true, NULL, env);  // 正常退出
             break;
         case act_func_get:
             if (!run_code)
-                popActivity(makeMessage("ERROR-STR", 0), env);
+                popActivity(false, makeMessage("ERROR-STR", 0), env);
             else {
                 af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
                 gc_delReference(func);  // 释放计数
                 freeMessage(msg);
                 if (!setFuncActivityToArg(func, env))
-                    popActivity(NULL, env);
+                    popActivity(false, NULL, env);
             }
             break;
         case act_func_arg: {
             if (!run_code || checkGetArgEnd(msg, env)) {  // 无参数设定或参数设定完成
                 if (!setFuncActivityAddVar(env))
-                    popActivity(NULL, env);
+                    popActivity(false, NULL, env);
             }
             break;
         }
@@ -397,7 +397,7 @@ bool iterCode(af_Code *code, af_Environment *env) {
 
         if (env->activity->type == act_gc) {  // gc 模式
             if (env->activity->dl_next == NULL)
-                popActivity(NULL, env);  // 结束运行
+                popActivity(true, NULL, env);  // 结束运行
             else {
                 printf("env->activity->dl_next.obj = %p, %d\n", env->activity->dl_next->obj->data, env->activity->dl_next->obj->data->gc.done_destruct);
                 pushDestructActivity(env->activity->dl_next, env);

@@ -155,7 +155,7 @@ bool addTopActivity(af_Code *code, af_Environment *env);
 /* 运行时Activity设置函数 (新增Activity) */
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
 bool pushFuncActivity(af_Code *bt, af_Environment *env);
-void popActivity(af_Message *msg, af_Environment *env);
+void popActivity(bool is_normal, af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
 bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);

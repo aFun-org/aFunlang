@@ -19,7 +19,6 @@ static void clearActivity(af_Activity *activity);
 /* Activity 相关处理函数 */
 static void freeMark(af_Environment *env);
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
-static void freeMarkByActivity(af_Activity *activity);
 
 /* 环境变量 创建与释放 */
 static af_EnvVar *makeEnvVar(char *name, char *data);
@@ -187,7 +186,6 @@ static void freeAllActivity(af_Activity *activity) {
 }
 
 static void clearActivity(af_Activity *activity) {
-    freeMarkByActivity(activity);
     freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
     freeAllArgCodeList(activity->acl_start);
     if (activity->fi != NULL)
@@ -646,7 +644,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     env->activity->new_vs_count = env->activity->macro_vs_count;
     env->activity->macro_vs_count = 0;
 
-    clearActivity(env->activity); /* 隐式调用不设置 bt_top */
+    clearActivity(env->activity);  /* 隐式调用不设置 bt_top */
     return setFuncActivityToArg(func, env);
 }
 
@@ -813,6 +811,7 @@ bool setFuncActivityAddVar(af_Environment *env){
  * 返回  (2) 表示遇到未被替换的动态代码块
  */
 int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
+    int re;
     af_FuncBody *body = env->activity->body_next;
     env->activity->status = act_func_normal;
     env->activity->bt_next = NULL;
@@ -828,18 +827,25 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
             env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             pushDynamicFuncBody(new, body);
             env->activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置
-            return -1;
+            re = -1;
+            break;
         }
         case func_body_code:
             env->activity->bt_start = body->code;
             env->activity->bt_next = body->code;
-            return 1;
+            re = 1;
+            break;
         default:
         case func_body_dynamic:
             pushMessageDown(makeMessage("ERROR-STR", 0), env);
             env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
-            return 2;
+            re = 2;
+            break;
     }
+
+    if (env->activity->body_next == NULL)  // 最后一个aFunBody
+        freeMark(env);
+    return re;
 }
 
 /*
@@ -858,17 +864,8 @@ void runTopMessageProcess(bool is_gc, af_Environment *env) {
     }
 }
 
-static void freeMarkByActivity(af_Activity *activity) {
-    if (activity->func != NULL) {
-        obj_funcFreeMask *func = findAPI("obj_funcFreeMask", activity->func->data->api);
-        if (func != NULL)
-            func(activity->mark);
-        activity->mark = NULL;
-    }
-}
-
 static void freeMark(af_Environment *env) {
-    if (env->activity->type == act_func && env->activity->func != NULL) {
+    if (env->activity->type == act_func && env->activity->func != NULL && env->activity->mark != NULL) {
         obj_funcFreeMask *func = findAPI("obj_funcFreeMask", env->activity->func->data->api);
         if (func != NULL)
             func(env->activity->mark);
@@ -876,7 +873,7 @@ static void freeMark(af_Environment *env) {
     }
 }
 
-void popActivity(af_Message *msg, af_Environment *env) {
+void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_func) {
         if (msg != NULL && env->activity->return_first) {
             if (EQ_STR(msg->type, "NORMAL")) {
@@ -903,7 +900,8 @@ void popActivity(af_Message *msg, af_Environment *env) {
     if (msg != NULL)
         pushMessageDown(msg, env);
 
-    freeMark(env);
+    if (!is_normal)
+        freeMark(env);  // 遇到非正常退出时, 释放`mark`
 
     if (env->activity->prev == NULL || env->activity->type == act_gc)  // 顶层或gc层
         runTopMessageProcess((env->activity->type == act_gc), env);
