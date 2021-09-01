@@ -1,3 +1,3 @@
 ﻿PROJECT(dl LANGUAGES C)
-ADD_LIBRARY(dl dlfcn.c)
+ADD_LIBRARY(dl dlfcn-win32/src/dlfcn.c)
 INSTALL(TARGETS dl)

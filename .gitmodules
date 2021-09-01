@@ -1,0 +1,9 @@
+[submodule "src/deps/cjson/cJSON"]
+	path = src/deps/cjson/cJSON
+	url = git@github.com:aFun-org/cJSON.git
+[submodule "src/deps/dlfcn/dlfcn-win32"]
+	path = src/deps/dlfcn/dlfcn-win32
+	url = git@github.com:aFun-org/dlfcn-win32.git
+[submodule "src/deps/regex/pcre2"]
+	path = src/deps/regex/pcre2
+	url = git@github.com:aFun-org/pcre2.git

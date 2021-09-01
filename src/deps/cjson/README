@@ -1,0 +1,13 @@
+﻿cjson依赖库
+-------------------------
+
+该库依赖自cJSON库
+提供json文件的处理函数
+./cJSON文件夹是git子模块
+tool.c是用于对该模块的封装
+
+只使用`cJSON`在`cJSON.c`和`cJSON.h`文件
+使用`CMakeLists.txt`再编译该库
+
+项目url: https://github.com/DaveGamble/cJSON
+子模块: https://github.com/aFun-org/cJSON

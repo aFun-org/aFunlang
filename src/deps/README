@@ -1,0 +1,17 @@
+﻿src/deps 文件夹
+-------------------------
+该文件夹用于存在aFunlang的依赖库, 及其`git`子模块
+
+* cjson依赖库
+该库用于处理json文件
+git子模块: cJSON
+url: https://github.com/DaveGamble/cJSON
+
+* dlfcn依赖库
+该库用于msvc平台下的posix动态库函数
+git子模块: dlfcn-win32
+url: https://github.com/dlfcn-win32/dlfcn-win32
+
+* regex依赖库
+该库用于处理正则表达式
+封装自`pcre2`库

@@ -1,0 +1,12 @@
+﻿dlfcn依赖库
+-------------------------
+
+该库依赖自dlfcn-win32库
+提供msvc下posix的dl动态库
+./dlfcn-win32文件夹是git子模块
+
+只使用`dlfcn-win32`在`src/dlfcn.c`和`src/dlfcn.h`文件
+使用`CMakeLists.txt`再编译该库
+
+项目url: https://github.com/dlfcn-win32/dlfcn-win32
+子模块: https://github.com/aFun-org/dlfcn-win32
