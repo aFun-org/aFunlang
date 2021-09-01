@@ -374,6 +374,11 @@ int main() {
     printf("Hello World\n");
 
     af_Environment *env = makeEnvironment(grt_always);
+    if(!pushLiteralRegex("data.*", "func", true, env)) {
+        fprintf(stderr, "pushLiteralRegex Error\n");
+        return 1;
+    }
+
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;

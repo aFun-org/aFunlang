@@ -62,4 +62,7 @@ char *findEnvVar(char *name, af_Environment *env);
 /* 顶层消息处理器管理函数 */
 void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
 bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
+
+/* LiteralRegex操作函数 */
+bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment *env);
 #endif //AFUN__ENV_H_PUBLIC

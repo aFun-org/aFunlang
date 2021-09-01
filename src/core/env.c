@@ -950,15 +950,27 @@ static void freeAllLiteralRegex(af_LiteralRegex *lr) {
         lr = freeLiteralRegex(lr);
 }
 
+bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment *env) {
+    af_LiteralRegex *lr = makeLiteralRegex(pattern, func, in_protect);
+    if (lr == NULL)
+        return false;
+    lr->next = env->core->lr;
+    env->core->lr = lr;
+    return true;
+}
+
 /*
  * 函数名: checkLiteralCode
  * 目标: 检查对象是否为字面量
+ * 注意: func被写入函数名, 但不是复制式写入
  */
-bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {  // 桩函数
-    if (strncmp(literal, "data", 4) == 0) {
-        *in_protect = true;
-        *func = "func";
-        return true;
+bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {
+    for (af_LiteralRegex *lr = env->core->lr; lr != NULL; lr = lr->next) {
+        if (matchRegex(literal, lr->rg) == 1) {
+            *func = lr->func;  // 不使用复制
+            *in_protect = lr->in_protect;
+            return true;
+        }
     }
     return false;
 }
