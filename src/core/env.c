@@ -43,6 +43,11 @@ static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_prot
 static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr);
 static void freeAllLiteralRegex(af_LiteralRegex *lr);
 
+/* af_ErrorBacktracking 创建与释放 */
+static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file);
+static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt);
+static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
+
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->status = core_creat;
@@ -330,21 +335,26 @@ void connectMessage(af_Message **base, af_Message *msg) {
     *base = msg;
 }
 
-void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
-    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        printf("msg: %p error\n", msg->msg);
-        return;
-    }
-    gc_delReference(*(af_Object **)msg->msg);
-    if (!is_gc)
-        printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
-}
-
 af_Message *makeNORMALMessage(af_Object *obj) {
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
     *(af_Object **)msg->msg = obj;  // env->activity->return_obj本来就有一个gc_Reference
     gc_addReference(obj);
     return msg;
+}
+
+af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
+    af_Message *msg = makeMessage("ERROR", sizeof(af_ErrorInfo *));
+    *(af_ErrorInfo **)msg->msg = makeErrorInfo(type, error, 0, "Unknown");
+    return msg;
+}
+
+af_Message *makeERRORMessageFormate(char *type, af_Environment *env, const char *formate, ...) {
+    char buf[1024];
+    va_list ap;
+    va_start(ap, formate);
+    vsnprintf(buf, 1024, formate, ap);
+    va_end(ap);
+    return makeERRORMessage(type, buf, env);;
 }
 
 static af_EnvVar *makeEnvVar(char *name, char *data) {
@@ -405,6 +415,26 @@ char *findEnvVar(char *name, af_Environment *env) {
     return NULL;
 }
 
+void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
+    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
+        fprintf(stderr, "msg: %p error\n", msg->msg);
+        return;
+    }
+    gc_delReference(*(af_Object **)msg->msg);
+    if (!is_gc)
+        printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
+}
+
+void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
+    if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
+        printf("msg: %p error\n", msg->msg);
+        return;
+    }
+    if (!is_gc)
+        fprintfErrorInfo(stdout, *(af_ErrorInfo **)msg->msg);
+    freeErrorInfo(*(af_ErrorInfo **)msg->msg);
+}
+
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(sizeof(af_Environment), 1);
     env->core = makeCore(grt);
@@ -421,9 +451,13 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     setEnvVar(ev_sys_prefix, prefix, env);
 
     /* 设置NORMAL顶级处理器 */
-    DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
-    addTopMsgProcess("NORMAL", func, env);
-    FREE_SYMBOL(func);
+    DLC_SYMBOL(TopMsgProcessFunc) func1 = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
+    addTopMsgProcess("NORMAL", func1, env);
+    FREE_SYMBOL(func1);
+
+    DLC_SYMBOL(TopMsgProcessFunc) func2 = MAKE_SYMBOL(mp_ERROR, TopMsgProcessFunc);
+    addTopMsgProcess("ERROR", func2, env);
+    FREE_SYMBOL(func2);
 
     env->core->status = core_init;
     return env;
@@ -525,14 +559,14 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO, env), env);
         return false;
     }
 
     env->activity->bt_next = next;
 
     newActivity(bt, next, return_first, env);
-    env->activity->bt_start = bt->next;
+    env->activity->bt_start = bt->next;  // TODO-szh 检查next是否属于block
     env->activity->bt_next = bt->next;
 
     env->activity->status = act_func_normal;
@@ -560,14 +594,14 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->parentheses_call = NULL;
 
     if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO, env), env);
         return false;
     }
 
     switch (bt->block.type) {
         case curly:
             if (bt->block.elements == 0) {
-                pushMessageDown(makeMessage("ERROR-STR", 0), env);
+                pushMessageDown(makeERRORMessage(CALL_ERRPR, CURLY_FUNC_BODY_INFO, env), env);
                 return false;
             }
             func = bt->next;
@@ -584,7 +618,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
                     break;
             }
             if (func == NULL) {
-                pushMessageDown(makeMessage("ERROR-STR", 0), env);
+                pushMessageDown(makeERRORMessage(CALL_ERRPR, BRACKETS_FUNC_BODY_INFO, env), env);
                 return false;
             }
             break;
@@ -606,7 +640,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->status = act_func_get;
     if (env->activity->call_type == parentheses) { // 对于类前缀调用, 已经获得func的实际值了
         if (parentheses_call == NULL) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            pushMessageDown(makeERRORMessage(CALL_ERRPR, PARENTHESES_FUNC_BODY_INFO, env), env);
             return false;
         }
         return setFuncActivityToArg(parentheses_call, env);
@@ -637,7 +671,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     printf("Run macro\n");
     if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) { // 释放外部变量空间
         env->activity->new_vs_count = 0;
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
         return false;
     }
 
@@ -695,7 +729,7 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", func->data->api);
 
     if (get_var_list == NULL) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_funcGetVarList), env), env);
         return false;
     }
 
@@ -723,7 +757,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", env->activity->func->data->api);
 
     if (get_info == NULL) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_funcGetInfo), env), env);
         return false;
     }
 
@@ -735,12 +769,12 @@ bool setFuncActivityAddVar(af_Environment *env){
     if (!get_info(&env->activity->fi, env->activity->func, env->activity->bt_top, env->activity->mark, env))
         return false;
     if (env->activity->fi == NULL) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(API_RUN_ERROR, API_DONOT_GIVE(FuncInfo), env), env);
         return false;
     }
     if (env->activity->fi->scope == super_pure_scope && env->activity->fi->scope == super_embedded) {
         /* 超纯函数和超内嵌函数不得搭配使用 */
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        pushMessageDown(makeERRORMessage(RUN_ERROR, PURE_EMBEDDED_INFO, env), env);
         return false;
     }
     env->activity->body_next = env->activity->fi->body;
@@ -750,7 +784,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         env->activity->macro_vs_count = env->activity->new_vs_count;
     } else if (env->activity->fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
         if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);  // 释放失败
+            pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);  // 释放失败
             return false;
         }
     }
@@ -777,7 +811,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     if (env->activity->fi->var_this && env->activity->belong != NULL) {
         if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong,
                                    env->activity->var_list, env->activity->belong, env)) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(this), env), env);
             return false;
         }
     }
@@ -785,17 +819,15 @@ bool setFuncActivityAddVar(af_Environment *env){
     if (env->activity->fi->var_func && env->activity->func != NULL) {
         if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func,
                                    env->activity->var_list, env->activity->belong, env)) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(func), env), env);
             return false;
         }
     }
 
     if (get_arg_list != NULL) {
         af_ArgList *al;
-        if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env)) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+        if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
             return false;
-        }
         runArgList(al, env->activity->var_list, env);
         freeAllArgList(al);
     }
@@ -847,7 +879,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
             break;
         default:
         case func_body_dynamic:
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
+            pushMessageDown(makeERRORMessage(RUN_ERROR, FUNCBODY_ERROR_INFO, env), env);
             env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             re = 2;
             break;
@@ -901,7 +933,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
 
         if (msg == NULL && env->activity->return_first) {
             if (env->activity->return_obj == NULL)
-                msg = makeMessage("ERROR-STR", 0);
+                msg = makeERRORMessage(RUN_ERROR, RETURN_OBJ_NOT_FOUND_INFO, env);
             else
                 msg = makeNORMALMessage(env->activity->return_obj);
         }
@@ -973,4 +1005,55 @@ bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environme
         }
     }
     return false;
+}
+
+af_ErrorInfo *makeErrorInfo(char *type, char *error, FileLine line, FilePath path) {
+    af_ErrorInfo *ei = calloc(1, sizeof(af_ErrorInfo));
+    ei->error_type = strCopy(type);
+    ei->error = strCopy(error);
+    pushErrorBacktracking(line, path, ei);
+    return ei;
+}
+
+void freeErrorInfo(af_ErrorInfo *ei) {
+    free(ei->error_type);
+    free(ei->error);
+    if (ei->obj != NULL)
+        gc_delReference(ei->obj);
+    freeAllErrorBacktracking(ei->track);
+    free(ei);
+}
+
+void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
+    fprintf(file, "Error Traceback (most recent call last):\n");
+    for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next)
+        fprintf(file, "  File \"%s\", line %d\n", ebt->file, ebt->line);
+    fprintf(file, "%s: \"%s\"\n", ei->error_type, ei->error);
+    fflush(file);
+}
+
+static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file) {
+    af_ErrorBacktracking *ebt = calloc(1, sizeof(af_ErrorBacktracking));
+    ebt->line = line;
+    ebt->file = strCopy(file);
+    return ebt;
+}
+
+static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt) {
+    af_ErrorBacktracking *next = ebt->next;
+    free(ebt->file);
+    free(ebt);
+    return next;
+}
+
+static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt) {
+    while(ebt != NULL) {
+        ebt = freeErrorBacktracking(ebt);
+    }
+}
+
+void pushErrorBacktracking(FileLine line, FilePath file, af_ErrorInfo *ei) {
+    af_ErrorBacktracking *ebt = makeErrorBacktracking(line, file);
+    ebt->next = ei->track;
+    ei->track = ebt;
 }

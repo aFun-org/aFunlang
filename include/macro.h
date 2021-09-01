@@ -7,7 +7,9 @@
 #define AFUN__MACRO_H
 #include <stdbool.h>
 #include <inttypes.h>
+#include <stdarg.h>
 #include "mem.h"
+#include "error_macro.h"
 
 #ifndef __bool_true_false_are_defined
 #define bool int

@@ -58,7 +58,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     if (func == NULL) {
         gc_delReference(obj);
         freeMessage(*msg);
-        *msg = makeMessage("ERROR-STR", 0);
+        *msg = makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_literalSetting), env);
         return false;
     }
 
@@ -137,8 +137,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
 
         if (var == NULL) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
-            printf("Literal not found: %s\n", code->element.data);
+            pushMessageDown(makeERRORMessageFormate(LITERAL_ERROR, env, "Literal not found: %s.", code->element.data), env);
             return false;
         }
 
@@ -149,8 +148,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->vsl);
 
     if (var == NULL) {
-        pushMessageDown(makeMessage("ERROR-STR", 0), env);
-        printf("Variable not found: %s\n", code->element.data);
+        pushMessageDown(makeERRORMessageFormate(VARIABLE_ERROR, env, "Variable not found: %s.", code->element.data), env);
         return false;
     }
 
@@ -163,8 +161,8 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
         else if (env->activity->status != act_func_get && // 在act_func模式时关闭保护
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
-            pushMessageDown(makeMessage("ERROR-STR", 0), env);
-            printf("Infix protect : %s\n", code->element.data);
+            pushMessageDown(makeERRORMessageFormate(INFIX_PROTECT, env,
+                                                    "Infix protect variable: %s.", code->element.data), env);
             return false;
         }
     }
@@ -229,7 +227,7 @@ static bool runCodeBase(af_Environment *env) {
  */
 static af_Message *getTopMsg(af_Environment *env) {
     if (env->activity->msg_down == NULL)  // 若未获得 msg
-        return makeMessage("ERROR-STR", 0);
+        return makeERRORMessage(RUN_ERROR, NOT_MSG_INFO, env);
     else
         return getFirstMessage(env);
 }
@@ -354,13 +352,13 @@ static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
     switch (env->activity->status) {
         case act_func_normal:
             if (!run_code)
-                popActivity(false, makeMessage("ERROR-STR", 0), env);
+                popActivity(false, makeERRORMessage(RUN_ERROR, NOT_CODE_INFO, env), env);
             else if (checkNormalEnd(msg, env))
                 popActivity(true, NULL, env);  // 正常退出
             break;
         case act_func_get:
             if (!run_code)
-                popActivity(false, makeMessage("ERROR-STR", 0), env);
+                popActivity(false, makeERRORMessage(RUN_ERROR, NOT_CODE_INFO, env), env);
             else {
                 af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
                 gc_delReference(func);  // 释放计数

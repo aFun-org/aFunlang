@@ -6,6 +6,7 @@
 
 typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
+typedef struct af_ErrorInfo af_ErrorInfo;
 
 /* 顶层消息处理器的处理函数 DLC */
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
@@ -49,6 +50,8 @@ void connectMessage(af_Message **base, af_Message *msg);
 
 /* 消息工具函数 */
 af_Message *makeNORMALMessage(af_Object *obj);
+af_Message *makeERRORMessage(char *type, char *error, af_Environment *env);
+af_Message *makeERRORMessageFormate(char *type, af_Environment *env, const char *formate, ...);
 
 /* 下行消息表管理函数 */
 void pushMessageDown(af_Message *msg, af_Environment *env);
@@ -65,4 +68,15 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Envi
 
 /* LiteralRegex操作函数 */
 bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment *env);
+
+/* ErrorInfo 创建与释放 */
+af_ErrorInfo *makeErrorInfo(char *type, char *error, FileLine line, FilePath path);
+void freeErrorInfo(af_ErrorInfo *ei);
+
+/* ErrorInfo 操作函数 */
+void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei);
+
+/* ErrorBacktracking 操作函数 */
+void pushErrorBacktracking(FileLine line, FilePath file, af_ErrorInfo *ei);
+
 #endif //AFUN__ENV_H_PUBLIC

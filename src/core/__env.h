@@ -10,6 +10,8 @@ typedef struct af_EnvVar af_EnvVar;
 typedef struct af_TopMsgProcess af_TopMsgProcess;
 typedef struct af_LiteralDataList af_LiteralDataList;
 typedef struct af_LiteralRegex af_LiteralRegex;
+typedef struct af_ErrorBacktracking af_ErrorBacktracking;
+
 
 #include "env.h"
 #include "__object.h"
@@ -156,6 +158,19 @@ struct af_LiteralRegex {
     char *func;  // 调用的函数
     bool in_protect;  // 是否在protect空间
     struct af_LiteralRegex *next;
+};
+
+struct af_ErrorBacktracking {
+    FilePath file;
+    FileLine line;
+    struct af_ErrorBacktracking *next;
+};
+
+struct af_ErrorInfo {
+    char *error_type;
+    char *error;
+    struct af_ErrorBacktracking *track;
+    af_Object *obj;
 };
 
 /* Core 管理函数 */

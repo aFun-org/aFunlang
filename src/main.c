@@ -1,17 +1,6 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
 
-void mp_ERROR_STR(af_Message *msg, bool is_gc, af_Environment *env) {
-    char **pinfo = getMessageData(msg);
-    if (!is_gc)
-        printf("ERROR\n");
-    if (pinfo == NULL || *pinfo == NULL)
-        return;
-    if (!is_gc)
-        fprintf(stderr, "ERROR-STR INFO : %s\n", *pinfo);
-    free(*pinfo);
-}
-
 size_t getSize(af_Object *obj) {
     return sizeof(int *);
 }
@@ -779,13 +768,6 @@ int main() {
     }
 
     printf("\n");
-
-    {
-        DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(mp_ERROR_STR, TopMsgProcessFunc);
-        addTopMsgProcess("ERROR-STR", func, env);
-        FREE_SYMBOL(func);
-    }
-
     enableEnvironment(env);
 
     {  // 正常程序
