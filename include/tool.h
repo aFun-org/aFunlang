@@ -9,8 +9,12 @@
 #include <wchar.h>
 #include <string.h>
 #include <signal.h>
-#include <dlfcn.h>
 #include "macro.h"
+#ifdef _MSC_VER
+#include "../src/deps/dlfcn/dlfcn.h"
+#else
+#include <dlfcn.h>
+#endif
 
 /* md5计算工具 */
 #define READ_DATA_SIZE	(1024)

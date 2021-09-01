@@ -1,7 +1,7 @@
 ﻿#include <stdio.h>
 #include "mem.h"
 #include "tool.h"
-#include "cJSON/cJSON.h"
+#include "cJSON.h"
 
 #ifndef FSTRING_SIZE
 #define FSTRING_SIZE (100)

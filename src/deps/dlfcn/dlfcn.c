@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif
-#include <windows.h>
+#include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 

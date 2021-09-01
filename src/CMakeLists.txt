@@ -1,11 +1,11 @@
 ﻿IF (MSVC)
     # 编译dlfcn-win32
-    ADD_SUBDIRECTORY(dlfcn)
+    ADD_SUBDIRECTORY(deps/dlfcn)
 ENDIF()
 
 ADD_SUBDIRECTORY(tool)
-ADD_SUBDIRECTORY(cjson)
-ADD_SUBDIRECTORY(regex)
+ADD_SUBDIRECTORY(deps/cjson)
+ADD_SUBDIRECTORY(deps/regex)
 
 SET(libary af_tool af_json  af_regex)
 
