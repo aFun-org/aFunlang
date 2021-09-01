@@ -9,6 +9,7 @@ typedef struct af_EnvVarSpace af_EnvVarSpace;
 typedef struct af_EnvVar af_EnvVar;
 typedef struct af_TopMsgProcess af_TopMsgProcess;
 typedef struct af_LiteralDataList af_LiteralDataList;
+typedef struct af_LiteralRegex af_LiteralRegex;
 
 #include "env.h"
 #include "__object.h"
@@ -16,6 +17,7 @@ typedef struct af_LiteralDataList af_LiteralDataList;
 #include "__code.h"
 #include "__gc.h"
 #include "__func.h"
+#include "regex.h"
 
 #define DEFAULT_GC_COUNT_MAX (10)
 #define ENV_VAR_HASH_SIZE (8)
@@ -28,7 +30,7 @@ struct af_Core {  // 解释器核心
         core_normal,  // 正常执行
     } status;
 
-    // GC基本信息
+    /* GC基本信息 */
     struct af_ObjectData *gc_ObjectData;
     struct af_Object *gc_Object;
     struct af_Var *gc_Var;
@@ -37,11 +39,14 @@ struct af_Core {  // 解释器核心
     size_t gc_count_max;  // gc计数最大值
     enum GcRunTime gc_run;
 
-    // 基本对象信息
+    /* 基本对象信息 */
     struct af_Object *global;  // 顶级属对象
 
-    // 保护空间
+    /* 保护空间 */
     struct af_VarSpace *protect;  // 顶级保护变量空间
+
+    /* 字面量基本信息 */
+    af_LiteralRegex *lr;
 };
 
 struct af_Message {
@@ -144,6 +149,13 @@ struct af_Environment {  // 运行环境
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
+};
+
+struct af_LiteralRegex {
+    af_Regex *rg;
+    char *func;  // 调用的函数
+    bool in_protect;  // 是否在protect空间
+    struct af_LiteralRegex *next;
 };
 
 /* Core 管理函数 */

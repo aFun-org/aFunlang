@@ -38,6 +38,11 @@ static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env);
 static af_LiteralDataList *makeLiteralDataList(char *data);
 static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
 
+/* LiteralRegex 创建与释放 */
+static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_protect);
+static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr);
+static void freeAllLiteralRegex(af_LiteralRegex *lr);
+
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->status = core_creat;
@@ -55,6 +60,7 @@ static af_Core *makeCore(enum GcRunTime grt) {
 static void freeCore(af_Environment *env) {
     printGCByCode(env->core);
     gc_freeAllValue(env);
+    freeAllLiteralRegex(env->core->lr);
     free(env->core);
 }
 
@@ -919,6 +925,35 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     env->activity = freeActivity(env->activity);
 }
 
+static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_protect) {
+    af_Regex *rg = makeRegex(pattern);
+    if (rg == NULL)
+        return NULL;
+
+    af_LiteralRegex *lr = calloc(sizeof(af_LiteralRegex), 1);
+    lr->rg = rg;
+    lr->func = strCopy(func);
+    lr->in_protect = in_protect;
+    return lr;
+}
+
+static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr) {
+    af_LiteralRegex *next = lr->next;
+    freeRegex(lr->rg);
+    free(lr->func);
+    free(lr);
+    return next;
+}
+
+static void freeAllLiteralRegex(af_LiteralRegex *lr) {
+    while (lr != NULL)
+        lr = freeLiteralRegex(lr);
+}
+
+/*
+ * 函数名: checkLiteralCode
+ * 目标: 检查对象是否为字面量
+ */
 bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {  // 桩函数
     if (strncmp(literal, "data", 4) == 0) {
         *in_protect = true;
