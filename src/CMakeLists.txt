@@ -5,8 +5,9 @@ ENDIF()
 
 ADD_SUBDIRECTORY(tool)
 ADD_SUBDIRECTORY(cjson)
+ADD_SUBDIRECTORY(regex)
 
-SET(libary af_tool af_json)
+SET(libary af_tool af_json  af_regex)
 
 ADD_SUBDIRECTORY(core)
 

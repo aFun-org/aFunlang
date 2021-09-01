@@ -5,7 +5,7 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 FUNCTION(ADD_aFunTest TEST_NAME TEST_SOURCE)
     ADD_EXECUTABLE(aFunTest_${TEST_NAME} ${TEST_SOURCE})
-    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} af_tool af_json af_core)
+    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} af_tool af_json af_regex pcre2-8 af_core)
     ADD_TEST(NAME aFunTest_${TEST_NAME} COMMAND $<TARGET_FILE:aFunTest_${TEST_NAME}>)
 ENDFUNCTION()
 
@@ -28,6 +28,7 @@ ADD_aFunTest(dlc test_dlc.c)
 ADD_aFunTest(byte test_byte.c)
 ADD_aFunTest(byte_code test_byte_code.c)
 ADD_aFunTest(env test_env.c)
+ADD_aFunTest(regex test_regex.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 

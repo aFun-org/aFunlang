@@ -11,6 +11,7 @@
 #include "run.h"
 #include "gc.h"
 #include "magic_func.h"
+#include "regex.h"
 
 // Init系列函数
 void aFunInit(void);
