@@ -24,7 +24,7 @@ static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af
  */
 static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
                                           af_Environment *env){
-    af_ObjectData *od = calloc(sizeof(af_ObjectData), 1);
+    af_ObjectData *od = calloc(1, sizeof(af_ObjectData));
     od->base = base_obj;
     base_obj->data = od;
     od->id = strCopy(id == NULL ? "Unknow" : id);
@@ -44,7 +44,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
         od->size = 0;
 
     if (od->size != 0) {
-        od->data = calloc(od->size, 1);
+        od->data = calloc(1, od->size);
         if (init != NULL)
             init(base_obj, od->data, env);
     }
@@ -54,7 +54,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
 }
 
 static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env){
-    af_Object *obj = calloc(sizeof(af_Object), 1);
+    af_Object *obj = calloc(1, sizeof(af_Object));
     obj->belong = NULL;
     makeObjectData_Pri(id, free_api, api, allow_inherit, obj, env);
     gc_addObject(obj, env);
@@ -145,7 +145,7 @@ af_Inherit *makeInherit(af_Object *obj) {
     if (func == NULL || (vs = func(obj)) == NULL)
         return NULL;
 
-    af_Inherit *ih = calloc(sizeof(af_Inherit), 1);
+    af_Inherit *ih = calloc(1, sizeof(af_Inherit));
     ih->vs = vs;
     ih->obj = obj;  // 调用API获取vs
     return ih;
@@ -174,7 +174,7 @@ static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char 
     if (func == NULL)
         return NULL;
 
-    af_ObjectAPINode *apin = calloc(sizeof(af_ObjectAPINode), 1);
+    af_ObjectAPINode *apin = calloc(1, sizeof(af_ObjectAPINode));
     apin->api = COPY_SYMBOL(func, objectAPIFunc);
     apin->name = strCopy(api_name);
     return apin;
@@ -194,7 +194,7 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin) {
 }
 
 af_ObjectAPI *makeObjectAPI(void) {
-    af_ObjectAPI *api = calloc(sizeof(af_ObjectAPI), 1);
+    af_ObjectAPI *api = calloc(1, sizeof(af_ObjectAPI));
     return api;
 }
 

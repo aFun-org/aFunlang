@@ -6,7 +6,7 @@ size_t getSize(af_Object *obj) {
 }
 
 void initData(af_Object *obj, int **data, af_Environment *env) {
-    *data = calloc(sizeof(int), 1);
+    *data = calloc(1, sizeof(int));
     **data = 100;
 }
 
@@ -53,7 +53,7 @@ af_VarSpace *getShareVS(af_Object *obj) {
 
 bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
     *acl = makeArgCodeList(makeElementCode("object", NUL, 0, "Unknown"), 0, true, false);
-    *mark = calloc(sizeof(int), 1);
+    *mark = calloc(1, sizeof(int));
     **mark = 100;
     return true;
 }

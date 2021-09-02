@@ -10,8 +10,8 @@ static void freeMsgType(char **msg_type);
 static void pushFuncBody(af_FuncBody **base, af_FuncBody *body);
 
 af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func) {
-    af_ArgCodeList *acl = calloc(sizeof(af_ArgCodeList), 1);
-    acl->info = calloc(size, 1);
+    af_ArgCodeList *acl = calloc(1, sizeof(af_ArgCodeList));
+    acl->info = calloc(1, size);
     acl->size = size;
     acl->code = code;
     acl->free_code = free_code;
@@ -61,7 +61,7 @@ af_Object *getArgCodeListResult(af_ArgCodeList *acl) {
 }
 
 af_ArgList *makeArgList(char *name, af_Object *obj) {
-    af_ArgList *arg_list = calloc(sizeof(af_ArgList), 1);
+    af_ArgList *arg_list = calloc(1, sizeof(af_ArgList));
     arg_list->name = strCopy(name);
     arg_list->obj = obj;
     gc_addReference(obj);
@@ -109,7 +109,7 @@ bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env){
 }
 
 static af_FuncBody *makeFuncBody(enum af_FuncBodyType type, char **msg_type) {
-    af_FuncBody *fb = calloc(sizeof(af_FuncBody), 1);
+    af_FuncBody *fb = calloc(1, sizeof(af_FuncBody));
     fb->type = type;
     fb->msg_type = msg_type;
     return fb;
@@ -164,7 +164,7 @@ static void pushFuncBody(af_FuncBody **base, af_FuncBody *body) {
 }
 
 af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded, bool is_macro, bool var_this, bool var_func){
-    af_FuncInfo *fi = calloc(sizeof(af_FuncInfo), 1);
+    af_FuncInfo *fi = calloc(1, sizeof(af_FuncInfo));
     fi->scope = scope;
     fi->embedded = embedded;
     fi->is_macro = is_macro;

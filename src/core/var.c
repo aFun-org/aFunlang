@@ -20,7 +20,7 @@ static bool checkReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *v
 static bool checkWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
 
 static af_VarNode *makeVarNode(af_Object *obj, char *id) {
-    af_VarNode *vn = calloc(sizeof(af_VarNode), 1);
+    af_VarNode *vn = calloc(1, sizeof(af_VarNode));
     if (id != NULL)
         vn->id = strCopy(id);
     vn->obj = obj;
@@ -41,7 +41,7 @@ static void freeAllVarNode(af_VarNode *vn) {
 
 af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
     af_VarNode *vn = makeVarNode(obj, NULL);
-    af_Var *var = calloc(sizeof(af_Var), 1);
+    af_Var *var = calloc(1, sizeof(af_Var));
     var->name = strCopy(name);
     var->vn = vn;
     var->permissions[0] = p_self;
@@ -53,7 +53,7 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
 
 af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core){
     af_VarNode *vn = makeVarNode(obj, NULL);
-    af_Var *var = calloc(sizeof(af_Var), 1);
+    af_Var *var = calloc(1, sizeof(af_Var));
     var->name = strCopy(name);
     var->vn = vn;
     var->permissions[0] = p_self;
@@ -84,7 +84,7 @@ void addVarNode(af_Var var, af_Object *obj, char *id) {
 }
 
 static af_VarCup *makeVarCup(af_Var *var) {
-    af_VarCup *vp = calloc(sizeof(af_VarCup), 1);
+    af_VarCup *vp = calloc(1, sizeof(af_VarCup));
     vp->var = var;
     return vp;
 }
@@ -104,7 +104,7 @@ af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env) {
     if (env->core->status != core_creat && belong == NULL)
         return NULL;
 
-    af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);
+    af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
     gc_addVarSpace(vs, env);
     return vs;
@@ -114,7 +114,7 @@ af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core) {
     if (core->status != core_creat && belong == NULL)
         return NULL;
 
-    af_VarSpace *vs = calloc(sizeof(af_VarSpace), 1);
+    af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
     gc_addVarSpaceByCore(vs, core);
     return vs;
@@ -135,7 +135,7 @@ void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core) {
 }
 
 af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs) {
-    af_VarSpaceListNode *vsl = calloc(sizeof(af_VarSpaceListNode), 1);
+    af_VarSpaceListNode *vsl = calloc(1, sizeof(af_VarSpaceListNode));
     vsl->vs = vs;
     return vsl;
 }

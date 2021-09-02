@@ -57,7 +57,7 @@ static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env);
 
 static af_Core *makeCore(enum GcRunTime grt) {
-    af_Core *core = calloc(sizeof(af_Core), 1);
+    af_Core *core = calloc(1, sizeof(af_Core));
     core->status = core_creat;
     core->protect = makeVarSpaceByCore(NULL, core);
     core->gc_run = grt;
@@ -136,7 +136,7 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
 }
 
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong) {
-    af_Activity *activity = calloc(sizeof(af_Activity), 1);
+    af_Activity *activity = calloc(1, sizeof(af_Activity));
     activity->msg_up = msg_up;
     activity->msg_up_count = 0;
     activity->var_list = vsl;
@@ -284,7 +284,7 @@ void setActivityBtNext(af_Code *bt_next, af_Activity *activity) {
  * makeLiteralDataList是内部函数, 属于可控函数, 因此data在函数内部不再复制
  */
 static af_LiteralDataList *makeLiteralDataList(char *data) {
-    af_LiteralDataList *ld = calloc(sizeof(af_LiteralDataList), 1);
+    af_LiteralDataList *ld = calloc(1, sizeof(af_LiteralDataList));
     ld->literal_data = data;
     return ld;
 }
@@ -308,10 +308,10 @@ void pushLiteralData(char *data, af_Environment *env) {
 }
 
 af_Message *makeMessage(char *type, size_t size) {
-    af_Message *msg = calloc(sizeof(af_Message), 1);
+    af_Message *msg = calloc(1, sizeof(af_Message));
     msg->type = strCopy(type);
     if (size != 0)
-        msg->msg = calloc(size, 1);
+        msg->msg = calloc(1, size);
     msg->size = size;
     return msg;
 }
@@ -434,7 +434,7 @@ af_Message *makeERRORMessageFormate(char *type, af_Environment *env, const char 
 }
 
 static af_EnvVar *makeEnvVar(char *name, char *data) {
-    af_EnvVar *var = calloc(sizeof(af_EnvVar), 1);
+    af_EnvVar *var = calloc(1, sizeof(af_EnvVar));
     var->name = strCopy(name);
     var->data = strCopy(data);
     return var;
@@ -454,7 +454,7 @@ static void freeAllEnvVar(af_EnvVar *var) {
 }
 
 static af_EnvVarSpace *makeEnvVarSpace(void) {
-    af_EnvVarSpace *esv = calloc(sizeof(af_EnvVarSpace), 1);
+    af_EnvVarSpace *esv = calloc(1, sizeof(af_EnvVarSpace));
     return esv;
 }
 
@@ -512,7 +512,7 @@ static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
 }
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
-    af_Environment *env = calloc(sizeof(af_Environment), 1);
+    af_Environment *env = calloc(1, sizeof(af_Environment));
     env->core = makeCore(grt);
     env->esv = makeEnvVarSpace();
     /* 生成global对象 */
@@ -571,7 +571,7 @@ bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
 }
 
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func) {
-    af_TopMsgProcess *mp = calloc(sizeof(af_TopMsgProcess), 1);
+    af_TopMsgProcess *mp = calloc(1, sizeof(af_TopMsgProcess));
     mp->type = strCopy(type);
     mp->func = COPY_SYMBOL(func, TopMsgProcessFunc);
     return mp;
@@ -1043,7 +1043,7 @@ static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_prot
     if (rg == NULL)
         return NULL;
 
-    af_LiteralRegex *lr = calloc(sizeof(af_LiteralRegex), 1);
+    af_LiteralRegex *lr = calloc(1, sizeof(af_LiteralRegex));
     lr->rg = rg;
     lr->func = strCopy(func);
     lr->in_protect = in_protect;

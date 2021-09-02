@@ -43,7 +43,7 @@ static gc_DestructList *freeDestructList(gc_DestructList *dl);
 static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl);
 
 static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func) {
-    gc_DestructList *dl = calloc(sizeof(gc_DestructList), 1);
+    gc_DestructList *dl = calloc(1, sizeof(gc_DestructList));
     dl->obj = od->base;
     dl->func = func;
     gc_addReference(dl->obj);
@@ -76,7 +76,7 @@ static af_GcList *freeGcList(af_GcList *gl);
 static void freeAllGcList(af_GcList *gl);
 
 static af_GcList *makeGcList(enum af_GcListType type, void *data) {
-    af_GcList *gl = calloc(sizeof(af_GcList), 1);
+    af_GcList *gl = calloc(1, sizeof(af_GcList));
     gl->type = type;
     gl->data = data;
     return gl;
@@ -110,7 +110,7 @@ static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist) {
     if (obj->gc.info.reachable)
         return plist;
 
-    *plist = calloc(sizeof(gc_Analyzed), 1);
+    *plist = calloc(1, sizeof(gc_Analyzed));
     (*plist)->obj = obj;
     return &((*plist)->next);
 }

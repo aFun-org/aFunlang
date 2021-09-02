@@ -6,7 +6,7 @@ size_t getSize(af_Object *obj) {
 }
 
 void initData(af_Object *obj, int **data, af_Environment *env) {
-    *data = calloc(sizeof(int), 1);
+    *data = calloc(1, sizeof(int));
     **data = 100;
 }
 

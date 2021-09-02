@@ -20,7 +20,7 @@ af_Regex *makeRegex(char *pattern) {
         return NULL;
     }
 
-    af_Regex *rg = calloc(sizeof(af_Regex), 1);
+    af_Regex *rg = calloc(1, sizeof(af_Regex));
     rg->pattern = strCopy(pattern);
     rg->re = re;
     return rg;
