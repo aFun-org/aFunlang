@@ -144,9 +144,9 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
     activity->type = act_func;
     activity->status = act_func_get;
     activity->func = func;
-    activity->bt_top = bt_top;
-    activity->bt_start = bt_start;
-    activity->bt_next = bt_start;
+
+    setActivityBtTop(bt_top, activity);
+    setActivityBtStart(bt_start, activity);
 
     activity->return_first = return_first;
     return activity;
@@ -159,6 +159,8 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
     activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
     activity->new_vs_count = 1;
 
+    activity->file = strCopy("aFun-gc.af.sys");
+    activity->line = 0;
     activity->dl = dl;
     activity->pdl = pdl;
     activity->dl_next = dl;
@@ -172,6 +174,7 @@ static af_Activity *freeActivity(af_Activity *activity) {
     freeMessageCount(activity->msg_up_count, activity->msg_up);
 
     freeVarSpaceListCount(activity->new_vs_count, activity->var_list);
+    free(activity->file);
 
     if (activity->type == act_gc) {
         if (activity->dl != NULL)
@@ -209,6 +212,61 @@ static void clearActivity(af_Activity *activity) {
     activity->acl_start = NULL;
     activity->acl_done = NULL;
     activity->body_next = NULL;
+    free(activity->file);
+    activity->line = 0;
+}
+
+/*
+ * 函数名: setActivityBtTop
+ * 目标: 设置activity的bt_top, 并且设置行号
+ * bt_start和bt_next会被设置为NULL
+ */
+void setActivityBtTop(af_Code *bt_top, af_Activity *activity) {
+    activity->bt_top = bt_top;
+    activity->bt_start = NULL;
+    activity->bt_next = NULL;
+    if (bt_top != NULL) {
+        activity->line = bt_top->line;
+        if (bt_top->path != NULL) {
+            free(activity->file);
+            activity->file = strCopy(bt_top->path);
+        }
+    } else
+        activity->line = 0;
+}
+
+/*
+ * 函数名: setActivityBtStart
+ * 目标: 设置activity的bt_start, 并且设置行号
+ * bt_next会被设置为NULL
+ */
+void setActivityBtStart(af_Code *bt_start, af_Activity *activity) {
+    activity->bt_start = bt_start;
+    activity->bt_next = bt_start;
+    if (bt_start != NULL) {
+        activity->line = bt_start->line;
+        if (bt_start->path != NULL) {
+            free(activity->file);
+            activity->file = strCopy(bt_start->path);
+        }
+    } else
+        activity->line = 0;
+}
+
+/*
+ * 函数名: setActivityBtNext
+ * 目标: 设置activity的bt_next, 并且设置行号
+ */
+void setActivityBtNext(af_Code *bt_next, af_Activity *activity) {
+    activity->bt_next = bt_next;
+    if (bt_next != NULL) {
+        activity->line = bt_next->line;
+        if (bt_next->path != NULL) {
+            free(activity->file);
+            activity->file = strCopy(bt_next->path);
+        }
+    } else
+        activity->line = 0;
 }
 
 /*
@@ -343,8 +401,12 @@ af_Message *makeNORMALMessage(af_Object *obj) {
 }
 
 af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
+    af_ErrorInfo *ei = makeErrorInfo(type, error, env->activity->line, env->activity->file);
+    for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev)
+        pushErrorBacktracking(activity->line, activity->file, ei);
+
     af_Message *msg = makeMessage("ERROR", sizeof(af_ErrorInfo *));
-    *(af_ErrorInfo **)msg->msg = makeErrorInfo(type, error, 0, "Unknown");
+    *(af_ErrorInfo **)msg->msg = ei;
     return msg;
 }
 
@@ -544,7 +606,7 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
-        env->activity->bt_top = bt;
+        setActivityBtTop(bt, env->activity);
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
             env->activity->return_first = return_first;
     } else {
@@ -563,11 +625,15 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
         return false;
     }
 
-    env->activity->bt_next = next;
+    if (bt->type != code_block || bt->block.count == 0) {
+        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
+        return false;
+    }
+
+    setActivityBtNext(next, env->activity);
 
     newActivity(bt, next, return_first, env);
-    env->activity->bt_start = bt->next;  // TODO-szh 检查next是否属于block
-    env->activity->bt_next = bt->next;
+    setActivityBtStart(bt->next, env->activity);
 
     env->activity->status = act_func_normal;
     return true;
@@ -630,11 +696,10 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
             break;
     }
 
-    env->activity->bt_next = next;
+    setActivityBtNext(next, env->activity);
 
     newActivity(bt, next, false, env);
-    env->activity->bt_start = func;
-    env->activity->bt_next = func;
+    setActivityBtStart(func, env->activity);
 
     env->activity->call_type = env->activity->bt_top->block.type;
     env->activity->status = act_func_get;
@@ -649,7 +714,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 }
 
 bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env) {
-    env->activity->bt_next = bt->next;
+    setActivityBtNext(bt->next, env->activity);
 
     newActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
@@ -658,7 +723,7 @@ bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environmen
 }
 
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
-    env->activity->bt_next = bt->next;
+    setActivityBtNext(bt->next, env->activity);
 
     newActivity(bt, bt->next, false, env);
     return setFuncActivityToArg(func, env);
@@ -714,12 +779,10 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
 
 void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env) {
     if (acl != NULL) {
-        env->activity->bt_start = acl->code;
-        env->activity->bt_next = acl->code;
+        setActivityBtStart(acl->code, env->activity);
         env->activity->run_in_func = acl->run_in_func;
     } else {
-        env->activity->bt_start = NULL;
-        env->activity->bt_next = NULL;
+        setActivityBtStart(NULL, env->activity);
         env->activity->run_in_func = false;
     }
 }
@@ -856,7 +919,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     int re;
     af_FuncBody *body = env->activity->body_next;
     env->activity->status = act_func_normal;
-    env->activity->bt_next = NULL;
+    setActivityBtNext(NULL, env->activity);
 
     if (body == NULL)  // 已经没有下一步了 (原msg不释放)
         return 0;
@@ -873,8 +936,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
             break;
         }
         case func_body_code:
-            env->activity->bt_start = body->code;
-            env->activity->bt_next = body->code;
+            setActivityBtStart(body->code, env->activity);
             re = 1;
             break;
         default:
@@ -1035,7 +1097,10 @@ void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
 static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file) {
     af_ErrorBacktracking *ebt = calloc(1, sizeof(af_ErrorBacktracking));
     ebt->line = line;
-    ebt->file = strCopy(file);
+    if (file == NULL)
+        ebt->file = strCopy("unknown.af.sys");
+    else
+        ebt->file = strCopy(file);
     return ebt;
 }
 

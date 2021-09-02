@@ -80,6 +80,9 @@ struct af_Activity {  // 活动记录器
     struct af_VarSpaceListNode *var_list;  // 主变量空间
     ActivityCount new_vs_count;  // 需要释放的空间数
 
+    FilePath file;
+    FileLine line;
+
     union {
         struct {
             struct gc_DestructList *dl;
@@ -194,6 +197,11 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 bool setFuncActivityAddVar(af_Environment *env);
 int setFuncActivityToNormal(af_Environment *env);
 void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env);
+
+/* 运行时Activity设置函数 (设置Activity的行号和文件) */
+void setActivityBtTop(af_Code *bt_top, af_Activity *activity);
+void setActivityBtStart(af_Code *bt_start, af_Activity *activity);
+void setActivityBtNext(af_Code *bt_next, af_Activity *activity);
 
 /* LiteralData 释放函数 */
 void freeAllLiteralData(af_LiteralDataList *ld);

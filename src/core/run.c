@@ -168,7 +168,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     }
 
     pushMessageDown(makeNORMALMessage(obj), env);
-    env->activity->bt_next = env->activity->bt_next->next;
+    setActivityBtNext(env->activity->bt_next->next, env->activity);
     printf("Get Variable %s : %p\n", code->element.data, obj);
     return false;
 }
