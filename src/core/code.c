@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include "aFun.h"
 #include "tool.h"
 #include "__code.h"
@@ -13,11 +14,20 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path);
 static af_Code *freeCode(af_Code *bt);
 
 /* Code 操作函数 */
-static void countElement(af_Code *element, CodeUint *elements, af_Code **next);
+static bool countElement(af_Code *element, CodeUint *elements, af_Code **next);
 
 /* Code IO函数 */
 static bool readCode(af_Code **bt, FILE *file);
 static bool writeCode(af_Code *bt, FILE *file);
+
+/* Code 转换STR函数 */
+struct af_BlockEnd {
+    char ch;
+    struct af_BlockEnd *next;
+};
+static bool checkElementData(char *data);
+static char *codeToStr_(af_Code *code, CodeUint *layer, struct af_BlockEnd **bn);
+static char *codeEndToStr(CodeUint code_end, CodeUint *layer, struct af_BlockEnd **bn);
 
 static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     af_Code *bt = calloc(1, sizeof(af_Code));
@@ -42,18 +52,21 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
  * 函数名: countElement
  * 目标: 统计元素个数（不包括元素的子元素）
  */
-static void countElement(af_Code *element, CodeUint *elements, af_Code **next) {
+static bool countElement(af_Code *element, CodeUint *elements, af_Code **next) {
     CodeUint layer = 0;
 
     for (*elements = 0; element != NULL; *next = element, element = element->next) {
         if (layer == 0)
             (*elements)++;
+        if (layer < 0)
+            return false;
 
         if (element->type == code_block)
             layer++;
         if (element->code_end)
             layer = layer - element->code_end;
     }
+    return true;
 }
 
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
@@ -67,7 +80,9 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
     if (prefix != NUL && strchr(B_PREFIX, prefix) == NULL)
         prefix = NUL;
 
-    countElement(element, &elements, next);
+    if (!countElement(element, &elements, next))
+        return NULL;
+
     bt = makeCode(prefix, line, path);
     bt->type = code_block;
     bt->block.type = type;
@@ -146,7 +161,7 @@ bool getCodeBlockNext(af_Code *bt, af_Code **next) {
 
     CodeUint count = 1;
     bt = bt->next;
-    for (NULL; count != 0; bt = bt->next) {
+    for (NULL; count > 0; bt = bt->next) {
         if (bt == NULL)
             return false;
         if (bt->type == code_block)
@@ -257,6 +272,99 @@ bool readAllCode(af_Code **bt, FILE *file) {
             return false;
     }
     return true;
+}
+
+/*
+ * 函数名: checkElementData
+ * 目标: 检查element中data字符串是否有空白符
+ */
+static bool checkElementData(char *data) {
+    for (char *ch = data; *ch != NUL; ch++) {
+        if (isspace(*ch) || *ch == '\n')
+            return true;
+    }
+    return false;
+}
+
+/*
+ * 函数名: codeEndToStr
+ * 目标: 转换element或开括号为字符串
+ */
+static char *codeToStr_(af_Code *code, CodeUint *layer, struct af_BlockEnd **bn) {
+    char *re = charToStr(code->prefix);
+    if (code->type == code_element) {
+        if (checkElementData(code->element.data)) {  // 需要|xx xx|语法
+            re = strJoin(re, "|", true, false);
+            re = strJoin(re, code->element.data, true, false);
+            re = strJoin(re, "| ", true, false);
+        } else
+            re = strJoin(re, code->element.data, true, false);
+    } else {
+        char ch = NUL;
+        switch(code->block.type) {
+            case parentheses:
+                re = strJoin(re, "(", true, false);
+                ch = ')';
+                break;
+            case brackets:
+                re = strJoin(re, "[", true, false);
+                ch = ']';
+                break;
+            case curly:
+                re = strJoin(re, "{", true, false);
+                ch = '}';
+                break;
+            default:
+                break;
+        }
+        struct af_BlockEnd *new = calloc(1, sizeof(struct af_BlockEnd));
+        new->ch = ch;
+        new->next = *bn;
+        *bn = new;
+        (*layer)++;
+    }
+    return re;
+}
+
+/*
+ * 函数名: codeEndToStr
+ * 目标: 转换收尾括号为字符串
+ */
+static char *codeEndToStr(CodeUint code_end, CodeUint *layer, struct af_BlockEnd **bn) {
+    char *re = NEW_STR(code_end);
+    for (size_t i = 0; code_end > 0; code_end--, i++) {
+        if ((*layer) <= 0 || *bn == NULL)
+            *layer = -1;
+        (*layer)--;
+        re[i] = (*bn)->ch;
+
+        struct af_BlockEnd *tmp = (*bn)->next;
+        free(*bn);
+        *bn = tmp;
+    }
+    re = strJoin(re, " ", true, false);
+    return re;
+}
+
+/*
+ * 函数名: codeToStr
+ * 目标: 转换n个元素(或n个函数调用)为code
+ */
+char *codeToStr(af_Code *code, int n) {
+    char *re = strCopy(NULL);
+    struct af_BlockEnd *bn = NULL;
+    CodeUint layer = 0;
+    for (NULL; code != NULL && layer >= 0 && (n > 0 || n == -1); code = code->next) {
+        char *get = codeToStr_(code, &layer, &bn);
+        re = strJoin(re, get, true, true);
+        if (code->code_end != 0) {
+            get = codeEndToStr(code->code_end, &layer, &bn);
+            re = strJoin(re, get, true, true);
+        }
+        if (n != -1 && layer == 0) /* 完成一个元素的打印 */
+            n--;
+    }
+    return re;
 }
 
 void printCode(af_Code *bt) {

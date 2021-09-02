@@ -25,6 +25,7 @@ af_Code *copyCode(af_Code *base, FilePath *path);
 /* 代码块属性获取函数 */
 bool getCodeBlockNext(af_Code *bt, af_Code **next);
 void printCode(af_Code *bt);
+char *codeToStr(af_Code *code, int n);
 
 /* 代码块IO函数 */
 bool writeAllCode(af_Code *bt, FILE *file);
