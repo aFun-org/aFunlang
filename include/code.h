@@ -2,6 +2,7 @@
 #define AFUN__BYTECODE_H_PUBLIC
 #include <stdio.h>
 
+#define CODE_STR_MAX_SIZE (50)
 typedef struct af_Code af_Code;
 
 /* 括号类型 */

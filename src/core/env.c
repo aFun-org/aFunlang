@@ -49,7 +49,7 @@ static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt);
 static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
 
 /* af_ErrorBacktracking 相关函数 */
-static char *getActivityInfoToBacktracking(af_Activity *activity);
+static char *getActivityInfoToBacktracking(af_Activity *activity, bool print_bt_top);
 static void fprintfNote(FILE *file, char *note);
 
 /* 内置顶层消息处理器 */
@@ -409,12 +409,12 @@ af_Message *makeNORMALMessage(af_Object *obj) {
 }
 
 af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
-    char *info = getActivityInfoToBacktracking(env->activity);
+    char *info = getActivityInfoToBacktracking(env->activity, false);
     af_ErrorInfo *ei = makeErrorInfo(type, error, info, env->activity->line, env->activity->file);
     free(info);
 
     for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev) {
-        info = getActivityInfoToBacktracking(activity);
+        info = getActivityInfoToBacktracking(activity, true);
         pushErrorBacktracking(activity->line, activity->file, info, ei);
         free(info);
     }
@@ -1111,7 +1111,7 @@ static void fprintfNote(FILE *file, char *note) {
         ent = strchr(note, '\n');
         if (ent != NULL)
             *ent = NUL;
-        fprintf(file, "   #note: %s\n", note);
+        fprintf(file, "   #note %s\n", note);
         if (ent == NULL)  // 意味着是最后一部分`note`
             break;
         *ent = '\n';
@@ -1162,7 +1162,7 @@ void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInf
     ei->track = ebt;
 }
 
-static char *getActivityInfoToBacktracking(af_Activity *activity) {
+static char *getActivityInfoToBacktracking(af_Activity *activity, bool print_bt_top){
     char *info = NULL;
     if (activity->type == act_gc) {
         info = strJoin(info, "gc-activity;", true, false);
@@ -1207,6 +1207,21 @@ static char *getActivityInfoToBacktracking(af_Activity *activity) {
 
     if (activity->optimization)
         info = strJoin(info, "\ntail-call-Optimization;", true, false);
+
+    info = strJoin(info, "\n", true, false);
+    char *print_code = NULL;
+    if (!print_bt_top && activity->bt_next != NULL)
+        print_code = codeToStr(activity->bt_next, 1);
+    else if (activity->bt_top != NULL)
+        print_code = codeToStr(activity->bt_top, 1);
+    else if (activity->prev == NULL && activity->bt_start != NULL)
+        print_code = codeToStr(activity->bt_start, -1);
+
+    if (print_code != NULL) {
+        info = strJoin(info, "code: ", true, false);
+        info = strJoin(info, print_code, true, true);
+    } else
+        info = strJoin(info, "sys-err non-code", true, false);
 
     return info;
 }

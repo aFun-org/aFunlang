@@ -299,6 +299,20 @@ static char *codeToStr_(af_Code *code, CodeUint *layer, struct af_BlockEnd **bn)
             re = strJoin(re, "| ", true, false);
         } else
             re = strJoin(re, code->element.data, true, false);
+    } else if (code->block.elements == 0) {
+        switch(code->block.type) {
+            case parentheses:
+                re = strJoin(re, "()", true, false);
+                break;
+            case brackets:
+                re = strJoin(re, "[]", true, false);
+                break;
+            case curly:
+                re = strJoin(re, "{}", true, false);
+                break;
+            default:
+                break;
+        }
     } else {
         char ch = NUL;
         switch(code->block.type) {
@@ -333,8 +347,8 @@ static char *codeToStr_(af_Code *code, CodeUint *layer, struct af_BlockEnd **bn)
 static char *codeEndToStr(CodeUint code_end, CodeUint *layer, struct af_BlockEnd **bn) {
     char *re = NEW_STR(code_end);
     for (size_t i = 0; code_end > 0; code_end--, i++) {
-        if ((*layer) <= 0 || *bn == NULL)
-            *layer = -1;
+        if (*bn == NULL)
+            break;
         (*layer)--;
         re[i] = (*bn)->ch;
 
@@ -354,7 +368,13 @@ char *codeToStr(af_Code *code, int n) {
     char *re = strCopy(NULL);
     struct af_BlockEnd *bn = NULL;
     CodeUint layer = 0;
+
     for (NULL; code != NULL && layer >= 0 && (n > 0 || n == -1); code = code->next) {
+        if (strlen(re) >= CODE_STR_MAX_SIZE) {
+            re = strJoin(re, " ...", true, false);  // 限度
+            break;
+        }
+
         char *get = codeToStr_(code, &layer, &bn);
         re = strJoin(re, get, true, true);
         if (code->code_end != 0) {
