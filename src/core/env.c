@@ -44,7 +44,7 @@ static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr);
 static void freeAllLiteralRegex(af_LiteralRegex *lr);
 
 /* af_ErrorBacktracking 创建与释放 */
-static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file);
+static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file, char *note);
 static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt);
 static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
 
@@ -401,9 +401,9 @@ af_Message *makeNORMALMessage(af_Object *obj) {
 }
 
 af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
-    af_ErrorInfo *ei = makeErrorInfo(type, error, env->activity->line, env->activity->file);
+    af_ErrorInfo *ei = makeErrorInfo(type, error, NULL, env->activity->line, env->activity->file);
     for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev)
-        pushErrorBacktracking(activity->line, activity->file, ei);
+        pushErrorBacktracking(activity->line, activity->file, NULL, ei);
 
     af_Message *msg = makeMessage("ERROR", sizeof(af_ErrorInfo *));
     *(af_ErrorInfo **)msg->msg = ei;
@@ -1069,11 +1069,11 @@ bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environme
     return false;
 }
 
-af_ErrorInfo *makeErrorInfo(char *type, char *error, FileLine line, FilePath path) {
+af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path) {
     af_ErrorInfo *ei = calloc(1, sizeof(af_ErrorInfo));
     ei->error_type = strCopy(type);
     ei->error = strCopy(error);
-    pushErrorBacktracking(line, path, ei);
+    pushErrorBacktracking(line, path, note, ei);
     return ei;
 }
 
@@ -1088,24 +1088,30 @@ void freeErrorInfo(af_ErrorInfo *ei) {
 
 void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
     fprintf(file, "Error Traceback (most recent call last):\n");
-    for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next)
+    for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next) {
         fprintf(file, "  File \"%s\", line %d\n", ebt->file, ebt->line);
+        if (ebt->note != NULL)
+            fprintf(file, "   #note: %s", ebt->note);
+    }
     fprintf(file, "%s: \"%s\"\n", ei->error_type, ei->error);
     fflush(file);
 }
 
-static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file) {
+static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file, char *note) {
     af_ErrorBacktracking *ebt = calloc(1, sizeof(af_ErrorBacktracking));
     ebt->line = line;
     if (file == NULL)
         ebt->file = strCopy("unknown.af.sys");
     else
         ebt->file = strCopy(file);
+    if (note != NULL)
+        ebt->note = strCopy(note);
     return ebt;
 }
 
 static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt) {
     af_ErrorBacktracking *next = ebt->next;
+    free(ebt->note);
     free(ebt->file);
     free(ebt);
     return next;
@@ -1117,8 +1123,8 @@ static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt) {
     }
 }
 
-void pushErrorBacktracking(FileLine line, FilePath file, af_ErrorInfo *ei) {
-    af_ErrorBacktracking *ebt = makeErrorBacktracking(line, file);
+void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei) {
+    af_ErrorBacktracking *ebt = makeErrorBacktracking(line, file, note);
     ebt->next = ei->track;
     ei->track = ebt;
 }

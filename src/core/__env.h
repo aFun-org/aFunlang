@@ -166,6 +166,7 @@ struct af_LiteralRegex {
 struct af_ErrorBacktracking {
     FilePath file;
     FileLine line;
+    char *note;  // 备注信息
     struct af_ErrorBacktracking *next;
 };
 

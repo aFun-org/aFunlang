@@ -70,13 +70,13 @@ bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Envi
 bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment *env);
 
 /* ErrorInfo 创建与释放 */
-af_ErrorInfo *makeErrorInfo(char *type, char *error, FileLine line, FilePath path);
+af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path);
 void freeErrorInfo(af_ErrorInfo *ei);
 
 /* ErrorInfo 操作函数 */
 void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei);
 
 /* ErrorBacktracking 操作函数 */
-void pushErrorBacktracking(FileLine line, FilePath file, af_ErrorInfo *ei);
+void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);
 
 #endif //AFUN__ENV_H_PUBLIC
