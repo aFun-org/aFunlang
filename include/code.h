@@ -16,7 +16,6 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path);
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next);
 
 /* 代码块释放函数 */
-bool freeCodeWithElement(af_Code *bt, af_Code **next);
 void freeAllCode(af_Code *bt);
 
 /* 代码块操作函数 */

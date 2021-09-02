@@ -19,6 +19,7 @@ enum af_CodeType {
 struct af_Code {  // 一个 Code 的结构体
     enum af_CodeType type;
     char prefix;  // 前缀
+    CodeUint code_end;  // 记录block的end
     union {
         struct {
             char *data;
@@ -26,7 +27,6 @@ struct af_Code {  // 一个 Code 的结构体
 
         struct {
             CodeUint elements;  // 元素个数
-            CodeUint count;  // 总元素个数
             enum af_BlockType type;  // 括号类型
         } block;
     };

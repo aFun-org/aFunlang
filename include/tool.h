@@ -39,6 +39,7 @@ time33_t w_time33(wchar_t *str);
 #define NEW_WSTR(size) (wchar_t *)calloc((size) + 1, sizeof(wchar_t))
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
 #define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))
+char *charToStr(char ch);
 char *strCopy(const char *str);
 wchar_t *wstrCopy(const wchar_t *str);
 wchar_t *wstrWithWchar(wchar_t *str, size_t size, int free_old, ...);

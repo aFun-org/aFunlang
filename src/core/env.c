@@ -636,11 +636,11 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO, env), env);
+        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO"1", env), env);
         return false;
     }
 
-    if (bt->type != code_block || bt->block.count == 0) {
+    if (bt->type != code_block || bt->block.elements == 0) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
         return false;
     }
@@ -676,7 +676,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->parentheses_call = NULL;
 
     if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO, env), env);
+        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO"2", env), env);
         return false;
     }
 

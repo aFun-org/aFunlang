@@ -13,7 +13,7 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path);
 static af_Code *freeCode(af_Code *bt);
 
 /* Code 操作函数 */
-static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next);
+static void countElement(af_Code *element, CodeUint *elements, af_Code **next);
 
 /* Code IO函数 */
 static bool readCode(af_Code **bt, FILE *file);
@@ -42,26 +42,24 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
  * 函数名: countElement
  * 目标: 统计元素个数（不包括元素的子元素）
  */
-static void countElement(af_Code *element, CodeUint *elements, CodeUint *count, af_Code **next) {
-    CodeUint to_next = 0;  // 表示紧接着的元素都不纳入统计(指block的子元素)
+static void countElement(af_Code *element, CodeUint *elements, af_Code **next) {
+    CodeUint layer = 0;
 
     for (*elements = 0; element != NULL; *next = element, element = element->next) {
-        (*count)++;
-        if (to_next == 0)
+        if (layer == 0)
             (*elements)++;
-        else
-            to_next--;
 
         if (element->type == code_block)
-            to_next += element->block.elements;
+            layer++;
+        if (element->code_end)
+            layer = layer - element->code_end;
     }
 }
 
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
     af_Code *bt = NULL;
-    af_Code *tmp = NULL;
+    af_Code *tmp = NULL;  // 保存最后一个code的地址
     CodeUint elements = 0;
-    CodeUint count = 0;
 
     if (next == NULL)
         next = &tmp;
@@ -69,13 +67,14 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
     if (prefix != NUL && strchr(B_PREFIX, prefix) == NULL)
         prefix = NUL;
 
-    countElement(element, &elements, &count, next);
+    countElement(element, &elements, next);
     bt = makeCode(prefix, line, path);
     bt->type = code_block;
     bt->block.type = type;
     bt->block.elements = elements;
-    bt->block.count = count;
     bt->next = element;
+    if (*next != NULL)
+        (*next)->code_end++;
     return bt;
 }
 
@@ -97,12 +96,12 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
     for (NULL; base != NULL; base = base->next) {
         *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
+        (*pdest)->code_end = base->code_end;
         switch (base->type) {
             case code_element:
                 (*pdest)->element.data = strCopy(base->element.data);
                 break;
             case code_block:
-                (*pdest)->block.count = base->block.count;
                 (*pdest)->block.elements = base->block.elements;
                 (*pdest)->block.type = base->block.type;
                 break;
@@ -134,28 +133,25 @@ static af_Code *freeCode(af_Code *bt) {
     return next;
 }
 
-bool freeCodeWithElement(af_Code *bt, af_Code **next) {
-    CodeUint count = 1 + bt->block.count;  // 要释放的元素个数
-    for (NULL; count != 0; count--) {
-        if (bt == NULL)
-            return false;
-        bt = freeCode(bt);
-    }
-    if (next != NULL)
-        *next = bt;
-    return true;
-}
-
 void freeAllCode(af_Code *bt) {
     while (bt != NULL)
         bt = freeCode(bt);
 }
 
 bool getCodeBlockNext(af_Code *bt, af_Code **next) {
-    CodeUint count = 1 + bt->block.count;
-    for (NULL; count != 0; count--, bt = bt->next) {
+    if (bt->block.elements == 0) {
+        *next = bt->next;
+        return true;
+    }
+
+    CodeUint count = 1;
+    bt = bt->next;
+    for (NULL; count != 0; bt = bt->next) {
         if (bt == NULL)
             return false;
+        if (bt->type == code_block)
+            count++;
+        count = count - bt->code_end;
     }
     *next = bt;
     return true;
@@ -166,6 +162,7 @@ static bool writeCode(af_Code *bt, FILE *file) {
     Done(byteWriteUint_8(file, bt->type));
     Done(byteWriteUint_8(file, bt->prefix));
     Done(byteWriteUint_32(file, bt->line));
+    Done(byteWriteUint_32(file, bt->code_end));
 
     if (bt->path != NULL) {
         Done(byteWriteUint_8(file, true));  // 表示有path
@@ -181,7 +178,6 @@ static bool writeCode(af_Code *bt, FILE *file) {
         case code_block:
             Done(byteWriteUint_8(file, bt->block.type));
             Done(byteWriteUint_32(file, bt->block.elements));
-            Done(byteWriteUint_32(file, bt->block.count));
             break;
         default:
             break;
@@ -217,19 +213,21 @@ static bool readCode(af_Code **bt, FILE *file) {
     uint8_t prefix;
     uint32_t line;
     uint8_t have_path;
+    uint32_t code_end;
     char *path = NULL;
 
     Done(byteReadUint_8(file, &type));
     Done(byteReadUint_8(file, &prefix));
     Done(byteReadUint_32(file,&line));
     Done(byteReadUint_8(file, &(have_path)));
-
     if (have_path)
         Done(byteReadStr(file, &path));
+    Done(byteReadUint_32(file, &code_end));
 
     *bt = makeCode((char)prefix, line, path);
     free(path);
     (*bt)->type = type;
+    (*bt)->code_end = code_end;
 
     switch (type) {
         case code_element:
@@ -238,13 +236,10 @@ static bool readCode(af_Code **bt, FILE *file) {
         case code_block: {
             uint8_t block_type;
             uint32_t elements;
-            uint32_t count;
             Done(byteReadUint_8(file, &block_type));
             Done(byteReadUint_32(file,&elements));
-            Done(byteReadUint_32(file,&count));
             (*bt)->block.type = block_type;
             (*bt)->block.elements = elements;
-            (*bt)->block.elements = count;
             break;
         }
         default:

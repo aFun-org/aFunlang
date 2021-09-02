@@ -10,6 +10,14 @@
 #include "tool.h"
 #include "mem.h"
 
+char *charToStr(char ch) {
+    if (ch == NUL)
+        return NULL;
+    char *tmp = NEW_STR(1);
+    *tmp = ch;
+    return tmp;
+}
+
 char *strCopy(const char *str){
     char *tmp = NEW_STR(STR_LEN(str));
     if (str != NULL)
