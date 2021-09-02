@@ -48,6 +48,14 @@ static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file,
 static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt);
 static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
 
+/* af_ErrorBacktracking 相关函数 */
+static char *getActivityInfoToBacktracking(af_Activity *activity);
+static void fprintfNote(FILE *file, char *note);
+
+/* 内置顶层消息处理器 */
+static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
+static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env);
+
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(sizeof(af_Core), 1);
     core->status = core_creat;
@@ -395,15 +403,21 @@ void connectMessage(af_Message **base, af_Message *msg) {
 
 af_Message *makeNORMALMessage(af_Object *obj) {
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
-    *(af_Object **)msg->msg = obj;  // env->activity->return_obj本来就有一个gc_Reference
+    *(af_Object **)msg->msg = obj;
     gc_addReference(obj);
     return msg;
 }
 
 af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
-    af_ErrorInfo *ei = makeErrorInfo(type, error, NULL, env->activity->line, env->activity->file);
-    for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev)
-        pushErrorBacktracking(activity->line, activity->file, NULL, ei);
+    char *info = getActivityInfoToBacktracking(env->activity);
+    af_ErrorInfo *ei = makeErrorInfo(type, error, info, env->activity->line, env->activity->file);
+    free(info);
+
+    for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev) {
+        info = getActivityInfoToBacktracking(activity);
+        pushErrorBacktracking(activity->line, activity->file, info, ei);
+        free(info);
+    }
 
     af_Message *msg = makeMessage("ERROR", sizeof(af_ErrorInfo *));
     *(af_ErrorInfo **)msg->msg = ei;
@@ -477,7 +491,7 @@ char *findEnvVar(char *name, af_Environment *env) {
     return NULL;
 }
 
-void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
+static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
         fprintf(stderr, "msg: %p error\n", msg->msg);
         return;
@@ -487,7 +501,7 @@ void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
         printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
 }
 
-void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
+static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
         printf("msg: %p error\n", msg->msg);
         return;
@@ -606,6 +620,7 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
         printf("Tail tone recursive optimization\n");
         clearActivity(env->activity);
+        env->activity->optimization = true;
         setActivityBtTop(bt, env->activity);
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
             env->activity->return_first = return_first;
@@ -636,6 +651,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
     setActivityBtStart(bt->next, env->activity);
 
     env->activity->status = act_func_normal;
+    env->activity->is_execution = true;
     return true;
 }
 
@@ -726,6 +742,7 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
     newActivity(bt, bt->next, false, env);
+    env->activity->is_obj_func = true;
     return setFuncActivityToArg(func, env);
 }
 
@@ -743,6 +760,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     env->activity->var_list = env->activity->macro_vsl;
     env->activity->new_vs_count = env->activity->macro_vs_count;
     env->activity->macro_vs_count = 0;
+    env->activity->is_macro_call = true;
 
     clearActivity(env->activity);  /* 隐式调用不设置 bt_top */
     return setFuncActivityToArg(func, env);
@@ -774,6 +792,7 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
                                              env->activity->var_list, env->activity->belong, NULL);
     activity->prev = env->activity;
     env->activity = activity;
+    env->activity->is_gc_call = true;
     return setFuncActivityToArg(dl->func, env);
 }
 
@@ -1086,12 +1105,26 @@ void freeErrorInfo(af_ErrorInfo *ei) {
     free(ei);
 }
 
+static void fprintfNote(FILE *file, char *note) {
+    char *ent = NULL;
+    while(true) {
+        ent = strchr(note, '\n');
+        if (ent != NULL)
+            *ent = NUL;
+        fprintf(file, "   #note: %s\n", note);
+        if (ent == NULL)  // 意味着是最后一部分`note`
+            break;
+        *ent = '\n';
+        note = ent + 1;
+    }
+}
+
 void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
     fprintf(file, "Error Traceback (most recent call last):\n");
     for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next) {
         fprintf(file, "  File \"%s\", line %d\n", ebt->file, ebt->line);
         if (ebt->note != NULL)
-            fprintf(file, "   #note: %s", ebt->note);
+            fprintfNote(file, ebt->note);
     }
     fprintf(file, "%s: \"%s\"\n", ei->error_type, ei->error);
     fflush(file);
@@ -1127,4 +1160,53 @@ void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInf
     af_ErrorBacktracking *ebt = makeErrorBacktracking(line, file, note);
     ebt->next = ei->track;
     ei->track = ebt;
+}
+
+static char *getActivityInfoToBacktracking(af_Activity *activity) {
+    char *info = NULL;
+    if (activity->type == act_gc) {
+        info = strJoin(info, "gc-activity;", true, false);
+        return info;
+    }
+
+    if (activity->is_execution)
+        info = strJoin(info, "execution-activity;", true, false);
+    else if (activity->is_gc_call)
+        info = strJoin(info, "gc-destruct-function-call-activity;", true, false);
+    else if (activity->prev == NULL)
+        info = strJoin(info, "top-activity;", true, false);
+    else
+        info = strJoin(info, "function-call-activity;", true, false);
+
+    switch (activity->status) {
+        case act_func_get:
+            info = strJoin(info, "\nfunc-get;", true, false);
+            break;
+        case act_func_arg:
+            info = strJoin(info, "\nfunc-arg;", true, false);
+            if (activity->run_in_func)
+                info = strJoin(info, " run-in-function-var-space;", true, false);
+            break;
+        case act_func_normal:
+            info = strJoin(info, "\nrun-code;", true, false);
+            if (activity->return_first)
+                info = strJoin(info, " return-first-result;", true, false);
+            break;
+        default:
+            break;
+    }
+
+    if (activity->is_macro_call)
+        info = strJoin(info, "\nmacro-call;", true, false);
+
+    if (activity->is_literal)
+        info = strJoin(info, "\nliteral-call;", true, false);
+
+    if (activity->is_obj_func)
+        info = strJoin(info, "\nobject-function-call;", true, false);
+
+    if (activity->optimization)
+        info = strJoin(info, "\ntail-call-Optimization;", true, false);
+
+    return info;
 }

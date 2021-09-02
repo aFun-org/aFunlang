@@ -107,11 +107,12 @@ struct af_Activity {  // 活动记录器
             struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
             struct af_Code *bt_next;  // 指示代码下一步要运行的位置 [总是超前当前执行的code]
 
+            /* 返回值 */
             bool return_first;  // 顺序执行, 获取第一个返回结果
             struct af_Object *return_obj;  // 调用者向被调用者传递信息
             size_t process_msg_first;  // 优先处理msg而不是code
 
-            /* 函数调用专项 */
+            /* 函数调用: 常规 */
             enum af_BlockType call_type;  // 函数调用类型
             struct af_Object *parentheses_call;  // 类前缀调用
             struct af_ArgCodeList *acl_start;
@@ -119,12 +120,27 @@ struct af_Activity {  // 活动记录器
             struct af_FuncInfo *fi;
             struct af_FuncBody *body_next;  // 下一个需要执行的body [总是超前当前执行的body]
             void *mark;  // 标记 [完全由API管理, 不随activity释放]
+
+            /* 函数调用: 宏函数*/
+            bool is_macro_call;  // 宏函数隐式调用
             struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
             ActivityCount macro_vs_count;
 
-            /* 字面量专项 */
+            /* 函数调用: 析构函数 */
+            bool is_gc_call;
+
+            /* 字面量 */
             bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
             struct af_LiteralDataList *ld;
+
+            /* 变量 */
+            bool is_obj_func;  // 对象函数的调用
+
+            /* 顺序执行 */
+            bool is_execution;
+
+            /* 尾调用优化 */
+            bool optimization;
         };
     };
 };
