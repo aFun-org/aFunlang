@@ -84,7 +84,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
             belong = env->activity->belong;
         else if (env->core->status == core_init)  // init模式生成: global
             belong = env->core->global;
-        else if (env->core->status == core_normal)
+        else if (env->core->status != core_creat)  // 只有creat可以使用belong=NULL
             return NULL;
     }
 

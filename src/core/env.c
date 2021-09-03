@@ -135,6 +135,23 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
     return getBaseObjectFromCore(name, env->core);
 }
 
+void setCoreStop(af_Environment *env) {
+    if (env->core->status != core_exit)
+        env->core->status = core_srop;
+}
+
+void setCoreExit(int exit_code, af_Environment *env) {
+    env->core->status = core_exit;
+    env->core->exit_code = exit_code;
+}
+
+void setCoreNormal(af_Environment *env) {
+    if (env->core->status == core_exit || env->core->status == core_srop) {
+        env->core->status = core_normal;
+        env->core->exit_code = 0;
+    }
+}
+
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong) {
     af_Activity *activity = calloc(1, sizeof(af_Activity));
     activity->msg_up = msg_up;

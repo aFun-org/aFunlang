@@ -35,6 +35,11 @@ bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
 af_Object *getBaseObject(char *name, af_Environment *env);
 af_VarSpace *getProtectVarSpace(af_Environment *env);
 
+/* Core 退出与停止 */
+void setCoreStop(af_Environment *env);
+void setCoreExit(int exit_code, af_Environment *env);
+void setCoreNormal(af_Environment *env);
+
 /* 消息创建与释放函数 */
 af_Message *makeMessage(char *type, size_t size);
 af_Message *freeMessage(af_Message *msg);

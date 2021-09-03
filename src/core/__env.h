@@ -30,6 +30,8 @@ struct af_Core {  // 解释器核心
         core_creat = 0,
         core_init,  // 执行.i.af
         core_normal,  // 正常执行
+        core_srop,  // 当前运算退出
+        core_exit,  // 解释器退出
     } status;
 
     /* GC基本信息 */
@@ -49,6 +51,9 @@ struct af_Core {  // 解释器核心
 
     /* 字面量基本信息 */
     af_LiteralRegex *lr;
+
+    /* exit */
+    int exit_code;  // 退出代码
 };
 
 struct af_Message {

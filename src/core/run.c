@@ -107,6 +107,10 @@ static bool checkRunGC(af_Environment *env) {
  * 目标: 初始化activity和environment (若environment中未存在activity则通过code新增一个TopActivity, 否则沿用原activity)
  */
 static bool iterCodeInit(af_Code *code, af_Environment *env) {
+    if (env == NULL || env->core == NULL || env->core->status == core_exit)
+        return false;
+    if (env->core->status == core_srop)
+        env->core->status = core_normal;
     if (env->activity == NULL && code == NULL || env->activity != NULL && code != NULL)
         return false;
     if (code != NULL && !addTopActivity(code, env))  // 初始化环境
@@ -390,8 +394,13 @@ bool iterCode(af_Code *code, af_Environment *env) {
     for (NULL; env->activity != NULL; ) {
         af_Message *msg = NULL;
         bool run_code = false;
-        checkRunGC(env);
+        if (env->core->status == core_srop || env->core->status == core_exit) {
+            for (NULL; env->activity != NULL;)
+                popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
+            return false;
+        }
 
+        checkRunGC(env);
         if (env->activity->type == act_gc) {  // gc 模式
             if (env->activity->dl_next == NULL)
                 popActivity(true, NULL, env);  // 结束运行
