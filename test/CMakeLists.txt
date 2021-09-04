@@ -29,6 +29,8 @@ ADD_aFunTest(byte test_byte.c)
 ADD_aFunTest(byte_code test_byte_code.c)
 ADD_aFunTest(env test_env.c)
 ADD_aFunTest(regex test_regex.c)
+ADD_aFunTest(run test_run.c)
+ADD_aFunTest(reader test_reader.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 

@@ -234,10 +234,10 @@ static bool readCode(af_Code **bt, FILE *file) {
     Done(byteReadUint_8(file, &type));
     Done(byteReadUint_8(file, &prefix));
     Done(byteReadUint_32(file,&line));
+    Done(byteReadUint_32(file, &code_end));
     Done(byteReadUint_8(file, &(have_path)));
     if (have_path)
         Done(byteReadStr(file, &path));
-    Done(byteReadUint_32(file, &code_end));
 
     *bt = makeCode((char)prefix, line, path);
     free(path);
