@@ -1,9 +1,9 @@
 ﻿#include "__reader.h"
 
-af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderDataFunc) destruct_func, size_t data_size) {
+af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size) {
     af_Reader *reader = calloc(1, sizeof(af_Reader));
     reader->read_func = COPY_SYMBOL(read_func, readerFunc);
-    reader->destruct = COPY_SYMBOL(destruct_func, destructReaderDataFunc);
+    reader->destruct = COPY_SYMBOL(destruct_func, destructReaderFunc);
 
     reader->data = calloc(1, data_size);
     reader->data_size = data_size;
@@ -16,8 +16,11 @@ af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReade
 }
 
 af_Reader *initReader(af_Reader *reader) {
+    if (reader->init)
+        return reader;
     char *new = readWord(reader->buf_size, reader);  // 写入数据
     free(new);
+    reader->init = true;
     return reader;
 }
 

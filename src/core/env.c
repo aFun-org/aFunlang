@@ -84,8 +84,8 @@ char setPrefix(size_t name, char prefix, af_Environment *env) {
     if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE)
         return '-';
     switch (name) {
-        case V_QUOTE:
-            if (prefix == NUL && strchr(LV_PREFIX, prefix) == NULL)
+        case E_QUOTE:
+            if (prefix == NUL && strchr(E_PREFIX, prefix) == NULL)
                 prefix = '-';
             break;
         case B_EXEC:
@@ -538,7 +538,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     /* 设置默认prefix */
     char prefix[PREFIX_SIZE + 1] = "";
-    prefix[V_QUOTE] = '\'';
+    prefix[E_QUOTE] = '\'';
     prefix[B_EXEC] = '\'';
     prefix[B_EXEC_FIRST] = ',';
     setEnvVar(ev_sys_prefix, prefix, env);
@@ -673,7 +673,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 }
 
 static bool isInfixFunc(af_Code *code, af_Environment *env) {
-    if (code == NULL || code->type != code_element || code->prefix == getPrefix(V_QUOTE, env))
+    if (code == NULL || code->type != code_element || code->prefix == getPrefix(E_QUOTE, env))
         return false;
 
     af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);

@@ -39,7 +39,7 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
 }
 
 af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
-    if (prefix != NUL && strchr(LV_PREFIX, prefix) == NULL)
+    if (prefix != NUL && strchr(E_PREFIX, prefix) == NULL)
         prefix = NUL;
 
     af_Code *bt = makeCode(prefix, line, path);

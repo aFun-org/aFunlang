@@ -160,7 +160,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     obj_isObjFunc *is_obj;
     obj_isInfixFunc *is_infix;
 
-    if (code->prefix != getPrefix(V_QUOTE, env)) {
+    if (code->prefix != getPrefix(E_QUOTE, env)) {
         if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
         else if (env->activity->status != act_func_get && // 在act_func模式时关闭保护

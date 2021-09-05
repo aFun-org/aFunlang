@@ -5,14 +5,15 @@
 #ifndef AFUN__PREFIX_MACRO_H
 #define AFUN__PREFIX_MACRO_H
 
-#define LV_PREFIX ",`'"  /* 字面量和变量前缀 */
-#define B_PREFIX "%^&'`,<?>"  /* 括号前缀 */
+#define E_PREFIX ",`'"  /* element前缀 */
+#define B_PREFIX ",`'%^&<?>"  /* block前缀 */
+#define ALL_PREFIX B_PREFIX
 
 // 作为顶层代码，以及'()运行时
-#define V_QUOTE           (0)  /* 变量前缀: 引用 */
+#define E_QUOTE           (0)  /* element前缀: 引用 */
 
-#define B_EXEC            (1)  /* 括号前缀: 顺序执行 */
-#define B_EXEC_FIRST      (2)  /* 括号前缀: 顺序执行, 返回第一个 */
+#define B_EXEC            (1)  /* block前缀: 顺序执行 */
+#define B_EXEC_FIRST      (2)  /* block前缀: 顺序执行, 返回第一个 */
 
 #define PREFIX_SIZE       (3)  /* 前缀总数 */
 

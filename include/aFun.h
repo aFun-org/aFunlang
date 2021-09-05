@@ -14,6 +14,9 @@
 #include "gc.h"
 #include "magic_func.h"
 
+#include "reader.h"
+#include "parser.h"
+
 // Init系列函数
 void aFunInit(void);
 
