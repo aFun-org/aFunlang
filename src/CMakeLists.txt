@@ -1,15 +1,15 @@
 ﻿IF (MSVC)
     # 编译dlfcn-win32
-    ADD_SUBDIRECTORY(deps/dlfcn)
+    add_subdirectory(deps/dlfcn)
 ENDIF()
 
-ADD_SUBDIRECTORY(tool)
-ADD_SUBDIRECTORY(deps/cjson)
-ADD_SUBDIRECTORY(deps/regex)
+add_subdirectory(tool)
+add_subdirectory(deps/cjson)
+add_subdirectory(deps/regex)
 
-SET(libary af_tool af_json  af_regex)
+set(libary af_tool af_json  af_regex)
 
-ADD_SUBDIRECTORY(core)
+add_subdirectory(core)
 
-ADD_EXECUTABLE(aFun main.c)
-TARGET_LINK_LIBRARIES(aFun ${libary} af_core)
+add_executable(aFun main.c)
+target_link_libraries(aFun ${libary} af_core)

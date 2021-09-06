@@ -1,10 +1,10 @@
-﻿PROJECT(cJson LANGUAGES C)
-ADD_LIBRARY(cJson STATIC cJSON/cJSON.c)
+﻿project(cJson LANGUAGES C)
+add_library(cJson STATIC cJSON/cJSON.c)
 
 
-PROJECT(af_json LANGUAGES C)
-ADD_LIBRARY(af_json tool.c)
-SET_TARGET_PROPERTIES(af_json PROPERTIES OUTPUT_NAME "aFunJson")
-TARGET_LINK_LIBRARIES(af_json af_tool cJson)
+project(af_json LANGUAGES C)
+add_library(af_json tool.c)
+set_target_properties(af_json PROPERTIES OUTPUT_NAME "aFunJson")
+target_link_libraries(af_json af_tool cJson)
 
-INSTALL(TARGETS af_json)
+install(TARGETS af_json)

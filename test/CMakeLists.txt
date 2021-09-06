@@ -1,40 +1,40 @@
-﻿SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+﻿set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
-SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})  # 统一输出到bin目录
-SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})  # 统一输出到bin目录
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-FUNCTION(ADD_aFunTest TEST_NAME TEST_SOURCE)
-    ADD_EXECUTABLE(aFunTest_${TEST_NAME} ${TEST_SOURCE})
-    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} af_tool af_json af_regex pcre2-8 af_core)
-    ADD_TEST(NAME aFunTest_${TEST_NAME} COMMAND $<TARGET_FILE:aFunTest_${TEST_NAME}>)
+FUNCTION(add_aFunTest name src)
+    add_executable(aFunTest_${name} ${src})
+    target_link_libraries(aFunTest_${name} af_tool af_json af_regex pcre2-8 af_core)
+    add_test(NAME aFunTest_${name} COMMAND $<TARGET_FILE:aFunTest_${name}>)
 ENDFUNCTION()
 
-FUNCTION(SET_PASS TEST_NAME PASS_STR)
-    SET_TESTS_PROPERTIES(aFunTest_${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION ${PASS_STR})
+FUNCTION(set_pass name pass_regex)
+    set_tests_properties(aFunTest_${name} PROPERTIES PASS_REGULAR_EXPRESSION ${pass_regex})
 ENDFUNCTION()
 
-FUNCTION(SET_LINK TEST_NAME LIB)
-    TARGET_LINK_LIBRARIES(aFunTest_${TEST_NAME} ${LIB})
+FUNCTION(set_link name lib)
+    target_link_libraries(aFunTest_${name} ${lib})
 ENDFUNCTION()
 
-ADD_LIBRARY(lib_Test1 test_lib.c)  # 测试程序需要使用的动态库
-SET_TARGET_PROPERTIES(lib_Test1 PROPERTIES OUTPUT_NAME "Test1")
+add_library(lib_Test1 test_lib.c)  # 测试程序需要使用的动态库
+set_target_properties(lib_Test1 PROPERTIES OUTPUT_NAME "Test1")
 
-ADD_DEFINITIONS(-DLIB_TEST1="$<TARGET_FILE:lib_Test1>")  # 设置宏: lib的所在路径
+add_definitions(-DLIB_TEST1="$<TARGET_FILE:lib_Test1>")  # 设置宏: lib的所在路径
 
-ADD_aFunTest(mem test_mem.c)
-ADD_aFunTest(lib test_test_lib.c)
-ADD_aFunTest(dlc test_dlc.c)
-ADD_aFunTest(byte test_byte.c)
-ADD_aFunTest(byte_code test_byte_code.c)
-ADD_aFunTest(env test_env.c)
-ADD_aFunTest(regex test_regex.c)
-ADD_aFunTest(run test_run.c)
-ADD_aFunTest(reader test_reader.c)
-ADD_aFunTest(lexical test_lexcial.c)
-ADD_aFunTest(syntactic test_syntactic.c)
+add_aFunTest(mem test_mem.c)
+add_aFunTest(lib test_test_lib.c)
+add_aFunTest(dlc test_dlc.c)
+add_aFunTest(byte test_byte.c)
+add_aFunTest(byte_code test_byte_code.c)
+add_aFunTest(env test_env.c)
+add_aFunTest(regex test_regex.c)
+add_aFunTest(run test_run.c)
+add_aFunTest(reader test_reader.c)
+add_aFunTest(lexical test_lexcial.c)
+add_aFunTest(syntactic test_syntactic.c)
 
-SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
+set_link(lib lib_Test1)  # 链接测试程序需要的动态库
 
-SET_PASS(lib "num = 100 test = 110")
-SET_PASS(dlc "a = 100, test = 110")
+set_pass(lib "num = 100 test = 110")
+set_pass(dlc "a = 100, test = 110")

@@ -1,23 +1,22 @@
-﻿CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
-SET(CMAKE_C_STANDARD 11)
+﻿set(CMAKE_C_STANDARD 11)
 
-PROJECT(af_regex LANGUAGES C)
+project(af_regex LANGUAGES C)
 
 # 在msvc编译PCRE2时, 会遇到`extern char *sys_errlist[];`的相关代码引发错误
 # 使用HAVE_STRERROR不编译该部分代码
 # 该部分出错代码用于实现GNU的`strerror(int n)`函数
 
 
-SET(PCRE2_SHOW_REPORT OFF)
-SET(PCRE2_BUILD_TESTS OFF)
-SET(PCRE2_BUILD_PCRE2GREP OFF)
-SET(BUILD_SHARED_LIBS OFF)
-SET(CMAKE_INSTALL_LIBDIR  ${LIBRARY_OUTPUT_PATH})
-ADD_DEFINITIONS(-DHAVE_STRERROR=1)
-ADD_SUBDIRECTORY(pcre2)
+set(PCRE2_SHOW_REPORT OFF)
+set(PCRE2_BUILD_TESTS OFF)
+set(PCRE2_BUILD_PCRE2GREP OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_INSTALL_LIBDIR  ${LIBRARY_OUTPUT_PATH})
+add_definitions(-DHAVE_STRERROR=1)
+add_subdirectory(pcre2)
 
-ADD_LIBRARY(af_regex regex.c)
-SET_TARGET_PROPERTIES(af_regex PROPERTIES OUTPUT_NAME "afRegex")
-TARGET_LINK_LIBRARIES(af_regex af_tool pcre2-8-static)
+add_library(af_regex regex.c)
+set_target_properties(af_regex PROPERTIES OUTPUT_NAME "afRegex")
+target_link_libraries(af_regex af_tool pcre2-8-static)
 
-INSTALL(TARGETS af_regex)
+install(TARGETS af_regex)
