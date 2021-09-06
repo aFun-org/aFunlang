@@ -377,9 +377,29 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
             char *word = readWord(parser->lexical->last, parser->reader);
             tt = parser->lexical->token;
 
-            if (tt == TK_ELEMENT_SHORT || tt == TK_ELEMENT_LONG)
+            if (tt == TK_ELEMENT_SHORT)
                 *text = word;
-            else
+            else if (tt == TK_ELEMENT_LONG) {
+                char *new = NEW_STR(STR_LEN(word) - 2);  // 去除收尾|
+
+                bool flat = false;
+                char *p = word + 1;
+                size_t count = 0;
+                for(NULL; *p != NUL; p++) {
+                    if (*p == '|' && !flat) {  // 跳过第一个 `|`, 如果是末尾|则自然跳过, 若不是则在遇到第二个`|`时写入数据
+                        flat = true; /* count不需要递增 */
+                        continue;
+                    } else if (*p != '|' && flat)  // 遇到错误
+                        break;
+                    else
+                        flat = false;
+                    new[count] = *p;
+                    count++;
+                }
+
+                *text = strCopy(new);
+                free(new);
+            } else
                 free(word);
 
             if (tt == TK_SPACE || tt == TK_COMMENT) {
