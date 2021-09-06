@@ -387,17 +387,26 @@ char *codeToStr(af_Code *code, int n) {
     return re;
 }
 
+static void printLayerSpace(size_t layer) {
+    for (size_t i = 0; i < layer; i++)
+        printf("    ");
+}
+
 void printCode(af_Code *bt) {
-    for (NULL; bt != NULL; bt = bt->next) {
+    size_t layer = 0;
+    for (NULL; bt != NULL || layer < 0; bt = bt->next) {
+        printLayerSpace(layer);
+        layer = layer - bt->code_end;
         switch (bt->type) {
             case code_element:
-                printf("code_element: %s prefix: %d\n", bt->element.data, bt->prefix);
+                printf("element: [prefix (%c)] [end %d] [data '%s']\n", bt->prefix, bt->code_end, bt->element.data);
                 break;
             case code_block:
-                printf("code_block: %d %d prefix: %d\n", bt->block.elements, bt->block.type, bt->prefix);
+                layer++;
+                printf("code: [prefix (%c)] [end %d] [type %c] [elements %d]\n", bt->prefix, bt->code_end, bt->block.type, bt->block.elements);
                 break;
             default:
-                printf("Unknow: %d prefix: %d\n", bt->type, bt->prefix);
+                printf("Unknown: [prefix (%c)] [end %d] [type %d]\n", bt->prefix, bt->code_end, bt->type);
                 break;
         }
     }

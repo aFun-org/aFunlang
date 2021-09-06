@@ -1,10 +1,10 @@
 ﻿/*
- * 文件名: error_macro.h
- * 目标: 定义错误信息
+ * 文件名: runtime_error.h
+ * 目标: 定义aFunlang运行时错误信息
  */
 
-#ifndef AFUN_ERROR_MACRO_H
-#define AFUN_ERROR_MACRO_H
+#ifndef AFUN_RUNTIME_ERROR_H
+#define AFUN_RUNTIME_ERROR_H
 
 #define SYNTAX_ERROR "Syntax-Error"
 #define SYNTAX_ERROR_INFO "Block syntax errors." /* block元素不足 */
@@ -33,4 +33,4 @@
 #define API_RUN_ERROR "API-Run-Error"
 #define API_DONOT_GIVE(name) ("Object API don't give: " #name)
 
-#endif //AFUN_ERROR_MACRO_H
+#endif //AFUN_RUNTIME_ERROR_H

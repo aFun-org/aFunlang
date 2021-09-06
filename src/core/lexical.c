@@ -5,12 +5,13 @@
 #include <ctype.h>
 #include "aFun.h"
 #include "__parser.h"
-#include "lexical_warning_error.h"
+#include "parserl_warning_error.h"
 
 static void printLexicalError(char *info, af_Parser *parser) {
     if (parser->error == NULL)
         return;
     fprintf(parser->error, "[Lexical-Error] %s\n", info);
+    parser->is_error = true;
 }
 
 static void printLexicalWarning(char *info, af_Parser *parser) {
@@ -327,11 +328,14 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
     if (parser->lexical->is_end) {
         *text = NULL;
         return TK_EOF;
+    } else if (parser->lexical->is_error) {
+        *text = NULL;
+        return TK_ERROR;
     }
 
     while (1) {
         char ch = getChar(parser->reader);
-        if (iscntrl(ch) && !isspace(ch))
+        if (iscntrl(ch) && !isspace(ch) && ch != NUL)
             printLexicalWarning(INCULDE_CONTROL(base), parser);
 
         switch (parser->lexical->status) {
@@ -377,7 +381,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
             char *word = readWord(parser->lexical->last, parser->reader);
             tt = parser->lexical->token;
 
-            if (tt == TK_ELEMENT_SHORT)
+            if (tt == TK_ELEMENT_SHORT || tt == TK_PREFIX)
                 *text = word;
             else if (tt == TK_ELEMENT_LONG) {
                 char *new = NEW_STR(STR_LEN(word) - 2);  // 去除收尾|
@@ -398,6 +402,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
                 }
 
                 *text = strCopy(new);
+                free(word);
                 free(new);
             } else
                 free(word);
@@ -415,11 +420,11 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
             free(word);
             parser->lexical->status = lex_begin;
             parser->lexical->last = 0;
-            parser->is_error = true;
             continue;
         } else if (re == -2 || re == -3) {
             tt = TK_ERROR;
             *text = NULL;
+            parser->lexical->is_error = true;
             break;
         }
     }

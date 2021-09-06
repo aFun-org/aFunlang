@@ -8,12 +8,15 @@
 
 static af_Lexical *makeLexical(void);
 static void freeLexical(af_Lexical *lex);
+static af_Syntactic *makeSyntactic(void);
+static void freeSyntactic(af_Syntactic *syntactic);
 
 af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size,
                       FILE *error) {
     af_Parser *parser = calloc(1, sizeof(af_Parser));
     parser->reader = makeReader(read_func, destruct_func, data_size);
     parser->lexical = makeLexical();
+    parser->syntactic = makeSyntactic();
     parser->error = error;
     return parser;
 }
@@ -21,6 +24,7 @@ af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReade
 void freeParser(af_Parser *parser) {
     freeReader(parser->reader);
     freeLexical(parser->lexical);
+    freeSyntactic(parser->syntactic);
     free(parser);
 }
 
@@ -42,7 +46,17 @@ static void freeLexical(af_Lexical *lex) {
     free(lex);
 }
 
+static af_Syntactic *makeSyntactic(void) {
+    af_Syntactic *syntactic = calloc(1, sizeof(af_Syntactic));
+    return syntactic;
+}
 
+static void freeSyntactic(af_Syntactic *syntactic) {
+    free(syntactic->text);
+    free(syntactic);
+}
+
+/* makeParser函数封装 */
 struct readerDataString {
     char *str;
     bool free_str;

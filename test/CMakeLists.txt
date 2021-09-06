@@ -32,23 +32,9 @@ ADD_aFunTest(regex test_regex.c)
 ADD_aFunTest(run test_run.c)
 ADD_aFunTest(reader test_reader.c)
 ADD_aFunTest(lexical test_lexcial.c)
+ADD_aFunTest(syntactic test_syntactic.c)
 
 SET_LINK(lib lib_Test1)  # 链接测试程序需要的动态库
 
 SET_PASS(lib "num = 100 test = 110")
 SET_PASS(dlc "a = 100, test = 110")
-
-SET_PASS(byte_code
-"out:
-code_element: data prefix: 44
-code_element: var1 prefix: 0
-code_block: 2 0 prefix: 0
-code_element: data2 prefix: 0
-code_element: var2 prefix: 0
-in:
-code_element: data prefix: 44
-code_element: var1 prefix: 0
-code_block: 2 0 prefix: 0
-code_element: data2 prefix: 0
-code_element: var2 prefix: 0"
-        )

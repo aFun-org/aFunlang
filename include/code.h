@@ -7,9 +7,9 @@ typedef struct af_Code af_Code;
 
 /* 括号类型 */
 enum af_BlockType {
-    parentheses = 0,  // 小括号
-    brackets,  // 中括号
-    curly,  // 大括号
+    parentheses = '(',  // 小括号
+    brackets = '[',  // 中括号
+    curly = '{',  // 大括号
 };
 
 /* 代码块创建函数 */

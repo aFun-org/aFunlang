@@ -33,10 +33,13 @@ enum af_LexicalStatus {
 
 typedef enum af_LexicalStatus af_LexicalStatus;
 typedef struct af_Lexical af_Lexical;
+typedef struct af_Syntactic af_Syntactic;
 
 struct af_Parser {
     struct af_Reader *reader;
     struct af_Lexical *lexical;
+    struct af_Syntactic *syntactic;
+
     FILE *error;
     bool is_error;  // Parser遇到错误
 };
@@ -48,6 +51,13 @@ struct af_Lexical {  // 词法匹配器的状态机
 
     size_t mutli_comment;  // 多行注释嵌套等级
     bool is_end;
+    bool is_error;
+};
+
+struct af_Syntactic {
+    bool back;
+    enum af_TokenType token;
+    char *text;
 };
 
 #endif //AFUN__PARSER_H
