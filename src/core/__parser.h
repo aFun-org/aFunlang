@@ -38,6 +38,7 @@ struct af_Parser {
     struct af_Reader *reader;
     struct af_Lexical *lexical;
     FILE *error;
+    bool is_error;  // Parser遇到错误
 };
 
 struct af_Lexical {  // 词法匹配器的状态机

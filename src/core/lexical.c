@@ -115,7 +115,7 @@ static int doneBegin(char ch, af_Parser *parser) {
         return 1;
     }
     printLexicalError(ILLEGAL_CHAR(lex_beging), parser);
-    return -2;
+    return 0;
 }
 
 /*
@@ -160,7 +160,7 @@ static int donePrefixBlock(char ch, af_Parser *parser) {
         }
     }
     printLexicalError(ILLEGAL_CHAR(lex_prefix_block), parser);
-    return -2;
+    return 0;
 }
 
 /*
@@ -410,6 +410,13 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
                 parser->lexical->is_end = true;
 
             break;
+        } else if (re == 0) {  // 删除该token, 继续执行
+            char *word = readWord(parser->lexical->last, parser->reader);
+            free(word);
+            parser->lexical->status = lex_begin;
+            parser->lexical->last = 0;
+            parser->is_error = true;
+            continue;
         } else if (re == -2 || re == -3) {
             tt = TK_ERROR;
             *text = NULL;
