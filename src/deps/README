@@ -15,3 +15,5 @@ url: https://github.com/dlfcn-win32/dlfcn-win32
 * regex依赖库
 该库用于处理正则表达式
 封装自`pcre2`库
+git子模块: pcre2
+url: https://github.com/PhilipHazel/pcre2
