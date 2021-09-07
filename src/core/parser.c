@@ -5,6 +5,7 @@
 
 #include "aFun.h"
 #include "__parser.h"
+#include <errno.h>
 
 static af_Lexical *makeLexical(void);
 static void freeLexical(af_Lexical *lex);
@@ -87,6 +88,37 @@ af_Parser *makeParserByString(char *str, bool free_str, FILE *error) {
     ((struct readerDataString *)parser->reader->data)->str = str;
     ((struct readerDataString *)parser->reader->data)->free_str = free_str;
     ((struct readerDataString *)parser->reader->data)->len = strlen(str);
+    initParser(parser);
+    FREE_SYMBOL(read_func);
+    FREE_SYMBOL(destruct);
+    return parser;
+}
+
+struct readerDataFile {
+    FILE *file;
+};
+
+static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len) {
+    return fread(dest, sizeof(char), len, data->file);
+}
+
+static void destructFile(struct readerDataFile *data) {
+    if (data->file != NULL)
+        fclose(data->file);
+}
+
+af_Parser *makeParserByFile(FilePath path, FILE *error) {
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) {
+        if (error != NULL)
+            fprintf(error, "File open error: %s\n", strerror(errno));
+        return NULL;
+    }
+
+    DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncFile, readerFunc);
+    DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFile, destructReaderFunc);
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
+    ((struct readerDataFile *)parser->reader->data)->file = file;
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

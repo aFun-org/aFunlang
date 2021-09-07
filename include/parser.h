@@ -12,6 +12,7 @@ af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReade
                       FILE *error);
 void freeParser(af_Parser *parser);
 af_Parser *makeParserByString(char *str, bool free_str, FILE *error);
+af_Parser *makeParserByFile(FilePath path, FILE *error);
 
 /* Parser 操作函数 */
 af_Code *parserCode(af_Parser *parser);
