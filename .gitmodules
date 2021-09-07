@@ -7,3 +7,6 @@
 [submodule "src/deps/regex/pcre2"]
 	path = src/deps/regex/pcre2
 	url = git@github.com:aFun-org/pcre2.git
+[submodule "src/deps/fflags/fflags"]
+	path = src/deps/fflags/fflags
+	url = git@github.com:aFun-org/fflags.git

@@ -5,6 +5,7 @@
 #include "tool.h"
 #include "regex.h"
 #include "cjson.h"
+#include "fflags.h"
 
 #include "code.h"
 #include "object.h"

@@ -17,3 +17,8 @@ url: https://github.com/dlfcn-win32/dlfcn-win32
 封装自`pcre2`库
 git子模块: pcre2
 url: https://github.com/PhilipHazel/pcre2
+
+* fflags依赖库
+该库用于处理命令行参数
+git子模块: fflags
+url: https://github.com/SuperH-0630/fflags

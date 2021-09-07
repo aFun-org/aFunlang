@@ -2,8 +2,9 @@
 add_subdirectory(tool)
 add_subdirectory(deps/cjson)
 add_subdirectory(deps/regex)
+add_subdirectory(deps/fflags)
 
-set(libary af_tool af_json af_regex)
+set(libary af_tool af_json af_regex FFlags)
 
 add_subdirectory(core)
 
