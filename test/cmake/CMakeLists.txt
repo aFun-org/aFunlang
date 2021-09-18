@@ -1,0 +1,1 @@
+﻿include(generic.cmake)  # 添加泛型宏的测试

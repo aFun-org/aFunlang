@@ -1,0 +1,105 @@
+﻿@PACKAGE_INIT@
+
+# 以上为configure_package_config_file自动生成的初始化程序
+
+set_and_check(target ${CMAKE_CURRENT_LIST_DIR}/aFunlang.cmake)
+include(${target})  # 调用msgTargets.cmake导入模块
+
+set(components_list)  # 记录组件的list
+
+# 检查是否存在对应 target
+if (TARGET aFunlang:tool-shared)
+    list(APPEND components_list tool-shared)
+endif()
+
+if (TARGET aFunlang:tool-static)
+    list(APPEND components_list tool-shared)
+endif()
+
+if (TARGET aFunlang:core-shared-t)
+    list(APPEND components_list core-shared-t)
+endif()
+
+if (TARGET aFunlang:core-shared-s)
+    list(APPEND components_list core-shared-s)
+endif()
+
+if (TARGET aFunlang:core-static-s)
+    list(APPEND components_list core-static-s)
+endif()
+
+# 查找可执行程序
+set_and_check(aFunlang_ROOT @PACKAGE_INSTALL_DIR@)
+set_and_check(aFunlang_INCLUDE_DIRS @PACKAGE_INCLUDEDIR@)
+set_and_check(aFunlang_RUNTIME_DIRS @PACKAGE_BINDIR@)
+
+if(WIN32 AND NOT CYGWIN)
+    set_and_check(aFunlang_RUNTIME_LIBRARIES_DIRS @PACKAGE_BINDIR@)
+else()
+    set_and_check(aFunlang_RUNTIME_LIBRARIES_DIRS @PACKAGE_LIBDIR@)
+endif()
+
+find_program(aFunlang_EXECUTABLE NAMES aFun aFun-ct aFun-cx aFun-xx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun executable" NO_DEFAULT_PATH)
+find_program(aFunlang_ct_EXECUTABLE NAMES aFun-ct HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-ct executable" NO_DEFAULT_PATH)
+find_program(aFunlang_cx_EXECUTABLE NAMES aFun-cx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-cx executable" NO_DEFAULT_PATH)
+find_program(aFunlang_xx_EXECUTABLE NAMES aFun-xx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-xx executable" NO_DEFAULT_PATH)
+
+if (aFunlang_EXECUTABLE)
+    list(APPEND components_list aFun)
+endif()
+
+if (aFunlang_ct_EXECUTABLE)
+    list(APPEND components_list aFun-ct)
+endif()
+
+if (aFunlang_cx_EXECUTABLE)
+    list(APPEND components_list aFun-cx)
+endif()
+
+if (aFunlang_xx_EXECUTABLE)
+    list(APPEND components_list aFun-xx)
+endif()
+
+# 用该函数取代find_package 避免变量污染
+function(find_package_safe)
+    set(multiValueArgs PACKAGE VARS)
+    cmake_parse_arguments(fp "" "" "${multiValueArgs}" ${ARGN})
+
+    set(_find_package_arg ${fp_PACKAGE})
+    set(_vars ${fp_VARS})
+    find_package(${_find_package_arg})
+
+    foreach(_var IN LISTS _vars)
+        set(${_var} ${${_var}} PARENT_SCOPE)
+    endforeach()
+endfunction()
+
+# 查找依赖
+if (WIN32 AND NOT CYGWIN)
+    set_and_check(aFunlang_dlfcn_ROOT @PACKAGE_dlfcn_INSTALL_DIR@)
+    find_package_safe(PACKAGE dlfcn-win32 QUIET HINTS @PACKAGE_dlfcn_CMAKEDIR@)  # 指定路径
+    if (NOT TARGET dlfcn-win32::dl)
+        message(FATAL_ERROR "Target dlfcn-win32::dl not found.")  # find_package的报错出自此处, 不需要REQUIRED
+    endif()
+endif()
+
+set(PCRE2_USE_STATIC_LIBS TRUE)
+set_and_check(aFunlang_pcre2_ROOT @PACKAGE_pcre2_INSTALL_DIR@)
+find_package_safe(PACKAGE PCRE2 QUIET COMPONENTS 8BIT HINTS @PACKAGE_pcre2_CMAKEDIR@)  # 不能用REQUIRED, 是PCRE2的bug
+unset(PCRE2_USE_STATIC_LIBS)
+if (NOT TARGET PCRE2::8BIT)
+    message(FATAL_ERROR "Target PCRE2::8BIT not found.")
+endif()
+
+set_and_check(aFunlang_fflags_ROOT @PACKAGE_fflags_INSTALL_DIR@)
+set(FFlags_ROOT ${aFunlang_fflags_ROOT})
+set(_CMAKE_MODULE_PATH_bak ${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH @PACKAGE_fflags_CMAKEDIR@)
+find_package_safe(PACKAGE FFlags QUIET)
+if (NOT TARGET FFlags::fflags)
+    message(FATAL_ERROR "Target FFlags::fflags not found.")
+endif()
+set(CMAKE_MODULE_PATH ${_CMAKE_MODULE_PATH_bak})
+unset(_CMAKE_MODULE_PATH_bak)
+
+check_required_components(${components_list})

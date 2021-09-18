@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include <assert.h>
 #include "tool.h"
-#include "mem.h"
 
 #ifndef S_ISREG
 #define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)

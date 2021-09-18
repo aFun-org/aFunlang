@@ -1,24 +1,6 @@
-﻿#ifndef AFUN__AFUN_H
-#define AFUN__AFUN_H
-#include "mem.h"
-#include "macro.h"
+﻿#ifndef AFUN_AFUN_H
+#define AFUN_AFUN_H
+#include "aFunCore.h"
 #include "tool.h"
-#include "regex.h"
-#include "cjson.h"
-#include "fflags.h"
 
-#include "code.h"
-#include "object.h"
-#include "var.h"
-#include "env.h"
-#include "run.h"
-#include "gc.h"
-#include "magic_func.h"
-
-#include "reader.h"
-#include "parser.h"
-
-// Init系列函数
-void aFunInit(void);
-
-#endif //AFUN__AFUN_H
+#endif //AFUN_AFUN_H

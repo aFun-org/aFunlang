@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include "aFun.h"
+#include "aFunCore.h"
 #include "tool.h"
 #include "__code.h"
 

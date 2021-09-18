@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include "tool.h"
-#include "mem.h"
 
 char *charToStr(char ch) {
     if (ch == NUL)

@@ -3,7 +3,7 @@
  * 目标: __parser.h中结构体的相关函数
  */
 
-#include "aFun.h"
+#include "aFunCore.h"
 #include "__parser.h"
 #include <errno.h>
 

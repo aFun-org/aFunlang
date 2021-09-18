@@ -1,0 +1,4 @@
+目录: lib
+存放test使用了动态库文件
+
+dlc_lib.c  tool_dlc 所使用的动态库

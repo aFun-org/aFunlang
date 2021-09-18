@@ -1,0 +1,17 @@
+目录: src
+存放简单测试的源文件
+简单测试: 即仅一个`.c`文件的测试
+
+tool_mem  测试内存管理函数
+tool_dlc  测试动态库导入函数 dlc
+tool_regex  测试正则表达式库
+tool_byte  测试字节 IO 函数
+
+byte_code  测试字节码写入读取
+reader  测试文件读取
+
+lexical  测试词法分析
+syntactic  测试语法分析
+
+env_init  测试-环境初始化
+run_code  测试-代码运行

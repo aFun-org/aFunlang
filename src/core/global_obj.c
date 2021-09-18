@@ -1,4 +1,4 @@
-﻿#include "aFun.h"
+﻿#include "aFunCore.h"
 #include "__object.h"
 
 static size_t getSize(af_Object *obj) {

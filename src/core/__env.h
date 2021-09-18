@@ -1,6 +1,5 @@
-﻿#ifndef AFUN__ENV_H
-#define AFUN__ENV_H
-#include "macro.h"
+﻿#ifndef AFUN_ENV_H_
+#define AFUN_ENV_H_
 #include "tool.h"
 
 typedef struct af_Core af_Core;
@@ -235,4 +234,4 @@ bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environme
 /* 顶层消息处理器 处理函数 */
 void runTopMessageProcess(bool is_gc, af_Environment *env);
 
-#endif //AFUN__ENV_H
+#endif //AFUN_ENV_H_

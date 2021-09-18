@@ -1,5 +1,4 @@
-﻿#include "mem.h"
-#include "tool.h"
+﻿#include "tool.h"
 
 #ifndef GC_SZIE
 #define GC_SZIE (0)

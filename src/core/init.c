@@ -3,7 +3,6 @@
  * 目标: 初始化函数
  */
 
-#include "macro.h"
 #include "tool.h"
 
 void aFunInit(void) {

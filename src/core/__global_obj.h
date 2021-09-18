@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_GLOBAL_OBJ_H
-#define AFUN_GLOBAL_OBJ_H
+﻿#ifndef AFUN_GLOBAL_OBJ_H_
+#define AFUN_GLOBAL_OBJ_H_
 
 af_Object *makeGlobalObject(af_Environment *env);
 
-#endif //AFUN_GLOBAL_OBJ_H
+#endif //AFUN_GLOBAL_OBJ_H_

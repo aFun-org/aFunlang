@@ -3,7 +3,7 @@
  * 目标: aFunlang词法分析
  */
 #include <ctype.h>
-#include "aFun.h"
+#include "aFunCore.h"
 #include "__parser.h"
 #include "parserl_warning_error.h"
 

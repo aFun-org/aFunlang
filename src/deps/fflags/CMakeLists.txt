@@ -1,4 +1,0 @@
-﻿set(BUILD_SHARED_LIBS OFF)
-set(FFLAGS_BUILD_TEST OFF)
-set(SET_OUTPUT_DIRECTORY OFF)
-add_subdirectory(fflags)

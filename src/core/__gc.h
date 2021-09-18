@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_GC_H
-#define AFUN_GC_H
-#include "macro.h"
+﻿#ifndef AFUN_GC_H_
+#define AFUN_GC_H_
+#include "tool.h"
 
 typedef struct GC_Var GC_Var;
 typedef struct GC_VarSpace GC_VarSpace;
@@ -112,4 +112,4 @@ void gc_freeAllValue(af_Environment *env);
 /* gc 信息函数 */
 void printGCByCode(af_Core *core);
 
-#endif //AFUN_GC_H
+#endif //AFUN_GC_H_

@@ -1,6 +1,6 @@
-﻿#ifndef AFUN__FUNC_H
-#define AFUN__FUNC_H
-#include "macro.h"
+﻿#ifndef AFUN_FUNC_H_
+#define AFUN_FUNC_H_
+#include "tool.h"
 
 #include "func.h"
 #include "__object.h"
@@ -62,4 +62,4 @@ struct af_FuncInfo {
 /* FuncInfo 操作函数 */
 bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
 
-#endif //AFUN__FUNC_H
+#endif //AFUN_FUNC_H_

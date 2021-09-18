@@ -1,9 +1,54 @@
-﻿project(af_tool LANGUAGES C)
+﻿set(BUILD_SAFE_MEMORY ON CACHE BOOL "Build safe-memory tool")
+set(_build_mem ${BUILD_SAFE_MEMORY})
 
-aux_source_directory(${af_tool_SOURCE_DIR} src)  # 寻找源文件
-add_library(af_tool ${src})
+file(GLOB source
+     LIST_DIRECTORIES FALSE
+     ${CMAKE_CURRENT_LIST_DIR}/*.c)
 
-set_target_properties(af_tool PROPERTIES OUTPUT_NAME "aFunTool")
-target_link_libraries(af_tool dl)
+file(GLOB private_h
+     LIST_DIRECTORIES FALSE
+     ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
-install(TARGETS af_tool)
+set(build_include_tool ${PROJECT_SOURCE_DIR}/include/tool)
+set(install_include_tool ${INSTALL_INCLUDEDIR})
+
+file(GLOB public_h
+     LIST_DIRECTORIES FALSE
+     RELATIVE "${build_include_tool}"
+     "${build_include_tool}/*.h")
+
+set(public_h_build)
+set(public_h_install)
+
+foreach(h IN LISTS public_h)
+    file(RELATIVE_PATH _path ${CMAKE_CURRENT_LIST_DIR} "${build_include_tool}/${h}")
+    list(APPEND public_h_build   "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${_path}>")  # 相对路径的转换, 此处只能使用相对路径
+    list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_tool}/${h}>")
+endforeach()
+
+add_library(tool-shared SHARED "")
+add_library(tool-static STATIC "")
+
+foreach(tgt tool-shared tool-static)
+    target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
+    target_include_directories(${tgt} PUBLIC
+                               $<BUILD_INTERFACE:${build_include_tool}>
+                               $<INSTALL_INTERFACE:${install_include_tool}>)
+    target_link_libraries(${tgt} PUBLIC ${dlfcn_lib} ${pcre2_lib} ${fflags_lib})
+    set_target_properties(${tgt} PROPERTIES
+                          PUBLIC_HEADER "${public_h_build}")
+    if(_build_mem)
+        target_compile_definitions(${tgt} PUBLIC BUILD_MEM=1)
+    endif()
+endforeach()
+
+set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFunTool")
+set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFunTool-static")
+
+install(TARGETS tool-shared tool-static
+        EXPORT aFunlang
+        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT runtime
+        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
+        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT runtime
+        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT unsafe-dev)

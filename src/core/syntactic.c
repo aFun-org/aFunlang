@@ -1,5 +1,5 @@
 ﻿#include <ctype.h>
-#include "aFun.h"
+#include "aFunCore.h"
 #include "__code.h"
 #include "__parser.h"
 #include "parserl_warning_error.h"

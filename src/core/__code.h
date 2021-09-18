@@ -3,9 +3,9 @@
  * 目标: 定义Code结构体
  */
 
-#ifndef AFUN__BYTECODE_H
-#define AFUN__BYTECODE_H
-#include "macro.h"
+#ifndef AFUN_BYTECODE_H_
+#define AFUN_BYTECODE_H_
+#include "tool.h"
 #include "code.h"
 
 typedef unsigned int CodeUint;  // Code uint
@@ -37,4 +37,4 @@ struct af_Code {  // 一个 Code 的结构体
     struct af_Code *next;
 };
 
-#endif //AFUN__BYTECODE_H
+#endif //AFUN_BYTECODE_H_

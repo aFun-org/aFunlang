@@ -1,7 +1,6 @@
-﻿#ifndef AFUN__READER_H
-#define AFUN__READER_H
+﻿#ifndef AFUN_READER_H_
+#define AFUN_READER_H_
 #include <stdio.h>
-#include "macro.h"
 #include "tool.h"
 #include "reader.h"
 
@@ -43,4 +42,4 @@ char *readWord(size_t del_index, af_Reader *reader);
 char getChar(af_Reader *reader);
 void *getReaderData(af_Reader *reader);
 
-#endif //AFUN__READER_H
+#endif //AFUN_READER_H_

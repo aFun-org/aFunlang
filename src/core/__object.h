@@ -3,9 +3,8 @@
  * 目标: 定义aft对象的结构体
  */
 
-#ifndef AFUN__OBJECT_H
-#define AFUN__OBJECT_H
-#include "macro.h"
+#ifndef AFUN_OBJECT_H_
+#define AFUN_OBJECT_H_
 #include "tool.h"
 
 // 这些typedef可能会被下面include的文件使用
@@ -69,4 +68,4 @@ void freeObjectData(af_ObjectData *od, af_Environment *env);
 /* Object 释放函数 */
 void freeObjectByCore(af_Object *obj, af_Core *core);
 
-#endif //AFUN__OBJECT_H
+#endif //AFUN_OBJECT_H_

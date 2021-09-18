@@ -1,5 +1,5 @@
-﻿#ifndef AFUN__VAR_H
-#define AFUN__VAR_H
+﻿#ifndef AFUN_VAR_H_
+#define AFUN_VAR_H_
 #include "macro.h"
 
 // 这些typedef可能会被下面include的文件使用
@@ -49,4 +49,4 @@ void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
 af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core);
 void freeVarByCore(af_Var *var, af_Core *core);
 
-#endif //AFUN__VAR_H
+#endif //AFUN_VAR_H_

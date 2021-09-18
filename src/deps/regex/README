@@ -1,9 +1,0 @@
-﻿regex依赖库
--------------------------
-
-该库依赖来自pcre2库
-提供正则表达式编译和匹配
-./pcre2文件夹是git子模块
-
-项目url: https://github.com/PhilipHazel/pcre2
-子模块: https://github.com/aFun-org/pcre2

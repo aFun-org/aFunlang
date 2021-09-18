@@ -1,5 +1,5 @@
-#ifndef MD5__H
-#define MD5__H
+#ifndef TOOL_MD5_H_
+#define TOOL_MD5_H_
 
 #define F(x,y,z) ((x & y) | (~x & z))
 #define G(x,y,z) ((x & z) | (y & ~z))
@@ -34,4 +34,4 @@
           a += b; \
           } while(0)
 
-#endif //MD5__H
+#endif //TOOL_MD5_H_

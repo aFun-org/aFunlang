@@ -1,5 +1,5 @@
-﻿#ifndef AFUN__PARSER_H
-#define AFUN__PARSER_H
+﻿#ifndef AFUN_PARSER_H_
+#define AFUN_PARSER_H_
 #include <stdio.h>
 #include "__reader.h"
 #include "token.h"
@@ -60,4 +60,4 @@ struct af_Syntactic {
     char *text;
 };
 
-#endif //AFUN__PARSER_H
+#endif //AFUN_PARSER_H_

@@ -1,4 +1,4 @@
-﻿#include "aFun.h"
+﻿#include "aFunCore.h"
 #include "__object.h"
 #include "__var.h"
 #include "__gc.h"
