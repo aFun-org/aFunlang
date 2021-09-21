@@ -1241,14 +1241,14 @@ static char *getActivityInfoToBacktracking(af_Activity *activity, bool print_bt_
     if (activity->type == act_gc) {
         info = strJoin(info, "gc-activity;", true, false);
         return info;
-    }
-
-    if (activity->is_execution)
+    } else if (activity->type == act_top)
+        info = strJoin(info, "top-activity;", true, false);
+    else if (activity->type == act_top_import)
+        info = strJoin(info, "top-import-activity;", true, false);
+    else if (activity->is_execution)
         info = strJoin(info, "execution-activity;", true, false);
     else if (activity->is_gc_call)
         info = strJoin(info, "gc-destruct-function-call-activity;", true, false);
-    else if (activity->prev == NULL)
-        info = strJoin(info, "top-activity;", true, false);
     else
         info = strJoin(info, "function-call-activity;", true, false);
 
