@@ -190,7 +190,7 @@ static void MD5Transform(unsigned int state[4], unsigned char block[64]) {
 }
 
 
-int getFileMd5(const char *path, char *md5str) {
+char *getFileMd5(const char *path) {
     FILE *fd;
 
     unsigned long ret;
@@ -199,8 +199,9 @@ int getFileMd5(const char *path, char *md5str) {
     MD5_CTX md5;
 
     if ((fd = fopen(path, "rb")) == NULL)
-        return -1;
+        return NULL;
 
+    char *md5str = calloc(MD5_STRING, sizeof(char));
     MD5Init(&md5);
     while (1) {
         ret = fread(data, 1, READ_DATA_SIZE, fd);
@@ -215,5 +216,5 @@ int getFileMd5(const char *path, char *md5str) {
     for(int i = 0; i < MD5_SIZE; i++)
         snprintf(md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
 
-    return 0;
+    return md5str;
 }

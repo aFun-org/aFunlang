@@ -6,6 +6,7 @@ tool_mem  测试内存管理函数
 tool_dlc  测试动态库导入函数 dlc
 tool_regex  测试正则表达式库
 tool_byte  测试字节 IO 函数
+tool_md5  测试 md5 函数
 
 byte_code  测试字节码写入读取
 reader  测试文件读取

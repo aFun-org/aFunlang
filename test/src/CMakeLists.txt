@@ -11,11 +11,13 @@ foreach(src IN LISTS src_list)
 endforeach()
 
 # tool 相关测试
+file(MD5 "${CMAKE_CURRENT_LIST_DIR}/../share/md5.txt" TOOL_MD5_ANS)
 add_new_test(tool_mem COMMAND "$<TARGET_FILE:tool_mem>")
 add_new_test(tool_byte COMMAND "$<TARGET_FILE:tool_byte>")
 add_new_test(tool_dlc COMMAND "$<TARGET_FILE:tool_byte>" "$<TARGET_FILE:dlc_lib>")
 add_new_test(tool_regex COMMAND "$<TARGET_FILE:tool_regex>")
-set_test_label(tool tool_mem tool_byte tool_dlc tool_regex)
+add_new_test(tool_md5 COMMAND "$<TARGET_FILE:tool_md5>" "${TOOL_MD5_ANS}" "${CMAKE_CURRENT_LIST_DIR}/../share/md5.txt")
+set_test_label(tool tool_mem tool_byte tool_dlc tool_regex tool_md5)
 
 # core 相关测试
 add_new_test(byte_code COMMAND "$<TARGET_FILE:byte_code>")
