@@ -356,6 +356,12 @@ bool getInfo10(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_E
     return true;
 }
 
+bool getInfo11(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+    *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
+    makeImportFuncBodyToFuncInfo(makeElementCode("global", NUL, 1, "func9.info.af"), true, NULL, *fi);
+    return true;
+}
+
 bool objFunc(af_Object *obj) {
     return true;
 }
@@ -371,7 +377,7 @@ int main() {
     af_Environment *env = makeEnvironment(grt_always);
     if(!pushLiteralRegex("data.*", "func", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
-        return 1;
+        goto RETURN_1;
     }
 
     {
@@ -383,15 +389,15 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) getShareVS_ = MAKE_SYMBOL(getShareVS, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) get_gl3 = MAKE_SYMBOL(getGcList3, objectAPIFunc);
         if (addAPI(getSize_3, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_3, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_3, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(getShareVS_, "obj_getShareVarSpace", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl3, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
                                         (obj = makeObject("object", true, api, true, NULL, NULL, env)),
@@ -418,23 +424,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -464,23 +470,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info2, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func2", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -510,23 +516,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info3, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func3", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -557,25 +563,25 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info4, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(obj_func, "obj_isObjFunc", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func4", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -606,23 +612,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info5, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func5", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -652,17 +658,17 @@ int main() {
             DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
             DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
             if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-                return 2;
+                goto RETURN_2;
             if (addAPI(initData_2, "obj_initData", api) != 1)
-                return 2;
+                goto RETURN_2;
             if (addAPI(freeData_2, "obj_destructData", api) != 1)
-                return 2;
+                goto RETURN_2;
             if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-                return 2;
+                goto RETURN_2;
             if (addAPI(get_info6, "obj_funcGetInfo", api) != 1)
-                return 2;
+                goto RETURN_2;
             if (addAPI(get_gl, "obj_getGcList", api) != 1)
-                return 2;
+                goto RETURN_2;
             des = makeObject("func-des", true, api, true, NULL, NULL, env);
             FREE_SYMBOL(get_vsl);
             FREE_SYMBOL(get_info6);
@@ -690,23 +696,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info9, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func7", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -737,25 +743,25 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) infix_func = MAKE_SYMBOL(infixFunc, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(infix_func, "obj_isInfixFunc", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func8", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -786,23 +792,23 @@ int main() {
         DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
         DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(freeData_2, "obj_destructData", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_info10, "obj_funcGetInfo", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
-            return 2;
+            goto RETURN_2;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
-            return 2;
+            goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func9", 3, 3, 3,
                                         (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
@@ -819,12 +825,58 @@ int main() {
         printf("func9(%p)\n", obj);
     }
 
+    {
+        af_ObjectAPI *api = makeObjectAPI();
+        af_Object *obj;
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info11 = MAKE_SYMBOL(getInfo11, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
+            goto RETURN_2;
+        if (addAPI(initData_2, "obj_initData", api) != 1)
+            goto RETURN_2;
+        if (addAPI(freeData_2, "obj_destructData", api) != 1)
+            goto RETURN_2;
+        if (addAPI(get_alc, "obj_funcGetArgCodeList", api) != 1)
+            goto RETURN_2;
+        if (addAPI(get_vsl, "obj_funcGetVarList", api) != 1)
+            goto RETURN_2;
+        if (addAPI(get_al, "obj_funcGetArgList", api) != 1)
+            goto RETURN_2;
+        if (addAPI(get_info11, "obj_funcGetInfo", api) != 1)
+            goto RETURN_2;
+        if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
+            goto RETURN_2;
+        if (addAPI(get_gl, "obj_getGcList", api) != 1)
+            goto RETURN_2;
+
+        addVarToProtectVarSpace(makeVar("func10", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                env);
+        FREE_SYMBOL(get_alc);
+        FREE_SYMBOL(get_vsl);
+        FREE_SYMBOL(get_al);
+        FREE_SYMBOL(get_info11);
+        FREE_SYMBOL(free_mark);
+        FREE_SYMBOL(get_gl);
+        FREE_SYMBOL(getSize_2);
+        FREE_SYMBOL(initData_2);
+        FREE_SYMBOL(freeData_2);
+        printf("func9(%p)\n", obj);
+    }
+
     printf("\n");
     enableEnvironment(env);
 
     {  // 正常程序
         printf("TAG A:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, NULL);
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Unknown");
         af_Code *bt2 = makeElementCode("data", ',', 0, "Unknown");
         connectCode(&bt1, bt2);
 
@@ -867,7 +919,7 @@ int main() {
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         connectCode(&bt2, bt5);
 
-        iterCode(bt1, env);
+        iterCode(bt5, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1064,6 +1116,20 @@ int main() {
         printf("\n");
     }
 
+    {  // func_body_import 测试
+        printf("TAG X:\n");
+
+        af_Code *bt2 = makeElementCode("func10", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "TagX.af", NULL);
+        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
+
+        connectCode(&bt1, bt3);
+
+        iterCode(bt1, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
     /* 错误用例 */
 
     {  // 中缀调用测试
@@ -1136,5 +1202,15 @@ int main() {
 
     printf("freeEnvironment:\n");
     freeEnvironment(env);
+
+    printf("Exit at 0.");
     return 0;
+
+RETURN_1:
+    printf("Exit at 1.");
+    return 1;
+
+RETURN_2:
+    printf("Exit at 2.");
+    return 2;
 }
