@@ -20,7 +20,7 @@ static void freeAllActivity(af_Activity *activity);
 static void clearActivity(af_Activity *activity);
 
 /* Activity 相关处理函数 */
-static void freeMark(af_Environment *env);
+static void freeMark(af_Activity *activity);
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
 
 /* 环境变量 创建与释放 */
@@ -1007,20 +1007,21 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     if (body == NULL)  // 已经没有下一步了 (原msg不释放)
         return 0;
 
+    af_Activity *activity = env->activity;  // 防止在函数调用期间env->activity被修改
     env->activity->body_next = body->next;
     switch (body->type) {
         case func_body_c: {
             af_FuncBody *new = GET_SYMBOL(body->c_func)(env->activity->mark, env);
-            env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+            activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             pushDynamicFuncBody(new, body);
-            env->activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置
+            activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置
             re = -1;
             break;
         }
         case func_body_import:
             if (!pushImportActivity(body->code, env)) {
                 pushMessageDown(makeERRORMessage(IMPORT_ERROR, IMPORT_OBJ_ERROR, env), env);
-                env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+                activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
                 re = 2;
                 break;
             }
@@ -1033,13 +1034,13 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
         default:
         case func_body_dynamic:
             pushMessageDown(makeERRORMessage(RUN_ERROR, FUNCBODY_ERROR_INFO, env), env);
-            env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+            activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             re = 2;
             break;
     }
 
-    if (env->activity->body_next == NULL)  // 最后一个aFunBody
-        freeMark(env);
+    if (activity->body_next == NULL)  // 最后一个aFunBody
+        freeMark(activity);
     return re;
 }
 
@@ -1059,12 +1060,12 @@ void runTopMessageProcess(bool is_gc, af_Environment *env) {
     }
 }
 
-static void freeMark(af_Environment *env) {
-    if (env->activity->type == act_func && env->activity->func != NULL && env->activity->mark != NULL) {
-        obj_funcFreeMask *func = findAPI("obj_funcFreeMask", env->activity->func->data->api);
+static void freeMark(af_Activity *activity) {
+    if (activity->type == act_func && activity->func != NULL && activity->mark != NULL) {
+        obj_funcFreeMask *func = findAPI("obj_funcFreeMask", activity->func->data->api);
         if (func != NULL)
-            func(env->activity->mark);
-        env->activity->mark = NULL;
+            func(activity->mark);
+        activity->mark = NULL;
     }
 }
 
@@ -1105,7 +1106,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     }
 
     if (!is_normal)
-        freeMark(env);  // 遇到非正常退出时, 释放`mark`
+        freeMark(env->activity);  // 遇到非正常退出时, 释放`mark`
 
     if (env->activity->type == act_top || env->activity->type == act_gc) // 顶层或gc层
         runTopMessageProcess((env->activity->type == act_gc), env);
