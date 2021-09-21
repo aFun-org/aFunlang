@@ -1,7 +1,7 @@
 ﻿#include <assert.h>
 #include "aFunCore.h"
 
-#include "run.h"
+#include "__run.h"
 #include "__env.h"
 
 /* 工具函数: 初始化类型 */

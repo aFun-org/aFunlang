@@ -234,4 +234,9 @@ AFUN_CORE_NO_EXPORT bool checkLiteralCode(char *literal, char **func, bool *in_p
 /* 顶层消息处理器 处理函数 */
 AFUN_CORE_NO_EXPORT void runTopMessageProcess(bool is_gc, af_Environment *env);
 
+/* 消息创建与释放函数 */
+AFUN_CORE_NO_EXPORT void freeAllMessage(af_Message *msg);
+
+/* 消息管理函数 */
+AFUN_CORE_NO_EXPORT void connectMessage(af_Message **base, af_Message *msg);
 #endif //AFUN_ENV_H_

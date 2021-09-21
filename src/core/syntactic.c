@@ -152,7 +152,7 @@ static af_Code *codeList(size_t deep, af_Parser *parser) {
                 goBackToken(parser);
                 code_list = codePrefix(deep, parser);
                 if (code_list != NULL)
-                    pre = &(connectCode(pre, code_list)->next);
+                    pre = &(pushCode(pre, code_list)->next);
                 break;
 
             case TK_ELEMENT_SHORT:
@@ -163,7 +163,7 @@ static af_Code *codeList(size_t deep, af_Parser *parser) {
                 goBackToken(parser);
                 code_list = code(deep, NUL, parser);
                 if (code_list != NULL)
-                    pre = &(connectCode(pre, code_list)->next);
+                    pre = &(pushCode(pre, code_list)->next);
                 break;
             case TK_ERROR:
                 freeAllCode(re);
@@ -192,7 +192,7 @@ static af_Code *codeListEnd(af_Parser *parser) {
         case TK_LC:
             goBackToken(parser);
             code_list = codeList(0, parser);
-            connectCode(pre, code_list);
+            pushCode(pre, code_list);
 
             getToken(parser);
             switch (parser->syntactic->token) {

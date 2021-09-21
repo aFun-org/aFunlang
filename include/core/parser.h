@@ -17,8 +17,6 @@ AFUN_CORE_EXPORT af_Parser *makeParserByFile(FilePath path, FILE *error);
 
 /* Parser 操作函数 */
 AFUN_CORE_EXPORT af_Code *parserCode(af_Parser *parser);
-AFUN_CORE_EXPORT af_TokenType getTokenFromLexical(char **text, af_Parser *parser);
-AFUN_CORE_EXPORT void *getParserData(af_Parser *parser);
 AFUN_CORE_EXPORT void initParser(af_Parser *parser);
 
 #endif //AFUN_PARSER_H

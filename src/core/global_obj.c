@@ -10,7 +10,7 @@ static void initData(af_Object *obj, af_VarSpace **data, af_Environment *env) {
 }
 
 static void freeData(af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    freeVarSpace(*data, env);
+    // 无操作
 }
 
 static af_GcList *getGcList(char *id, void *data) {

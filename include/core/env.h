@@ -21,14 +21,14 @@ enum GcRunTime {
 #include "object.h"
 #include "var.h"
 
-/* 前缀管理函数 */
-AFUN_CORE_EXPORT char getPrefix(size_t name, af_Environment *env);
-AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
-
 /* 运行环境函数 */
 AFUN_CORE_EXPORT af_Environment *makeEnvironment(enum GcRunTime grt);
 AFUN_CORE_EXPORT void enableEnvironment(af_Environment *env);
 AFUN_CORE_EXPORT void freeEnvironment(af_Environment *env);
+
+/* 前缀管理函数 */
+AFUN_CORE_EXPORT char getPrefix(size_t name, af_Environment *env);
+AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
 
 /* 保护空间管理函数 */
 AFUN_CORE_EXPORT bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
@@ -43,7 +43,6 @@ AFUN_CORE_EXPORT void setCoreNormal(af_Environment *env);
 /* 消息创建与释放函数 */
 AFUN_CORE_EXPORT af_Message *makeMessage(char *type, size_t size);
 AFUN_CORE_EXPORT af_Message *freeMessage(af_Message *msg);
-AFUN_CORE_EXPORT void freeAllMessage(af_Message *msg);
 AFUN_CORE_EXPORT bool freeMessageCount(size_t count, af_Message *msg);
 
 /* 消息管理函数 */
@@ -51,7 +50,6 @@ AFUN_CORE_EXPORT void pushMessageUp(af_Message *msg, af_Environment *env);
 AFUN_CORE_EXPORT void *popMessageUpData(char *type, af_Environment *env);
 AFUN_CORE_EXPORT af_Message *popMessageUp(af_Environment *env);
 AFUN_CORE_EXPORT void *getMessageData(af_Message *msg);
-AFUN_CORE_EXPORT void connectMessage(af_Message **base, af_Message *msg);
 
 /* 消息工具函数 */
 AFUN_CORE_EXPORT af_Message *makeNORMALMessage(af_Object *obj);
@@ -68,8 +66,7 @@ AFUN_CORE_EXPORT void setEnvVar(char *name, char *data, af_Environment *env);
 AFUN_CORE_EXPORT char *findEnvVar(char *name, af_Environment *env);
 
 /* 顶层消息处理器管理函数 */
-AFUN_CORE_EXPORT void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
-AFUN_CORE_EXPORT bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
+AFUN_CORE_EXPORT bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
 
 /* LiteralRegex操作函数 */
 AFUN_CORE_EXPORT bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment *env);

@@ -19,7 +19,7 @@ af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool
     return acl;
 }
 
-af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl) {
+static af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl) {
     af_ArgCodeList *next = acl->next;
     free(acl->info);
     if (acl->free_code)
@@ -45,13 +45,6 @@ af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new) {
     return base;
 }
 
-af_ArgCodeList **pushNewArgCodeList(af_ArgCodeList **base, af_Code *code, size_t size, bool free_code, bool run_in_func) {
-    while (*base != NULL)
-        base = &((*base)->next);
-    *base = makeArgCodeList(code, size, free_code, run_in_func);
-    return &((*base)->next);
-}
-
 void *getArgCodeListData(af_ArgCodeList *acl) {
     return acl->info;
 }
@@ -68,7 +61,7 @@ af_ArgList *makeArgList(char *name, af_Object *obj) {
     return arg_list;
 }
 
-af_ArgList *freeArgList(af_ArgList *al) {
+static af_ArgList *freeArgList(af_ArgList *al) {
     af_ArgList *next = al->next;
     free(al->name);
     if (al->obj != NULL)
@@ -90,13 +83,6 @@ af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new) {
     while (*base != NULL)
         base = &((*base)->next);
     return base;
-}
-
-af_ArgList **pushNewArgList(af_ArgList **base, char *name, af_Object *obj) {
-    while (*base != NULL)
-        base = &((*base)->next);
-    *base = makeArgList(name, obj);
-    return &((*base)->next);
 }
 
 bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env){

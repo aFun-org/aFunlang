@@ -1,0 +1,243 @@
+﻿aFun-core 的导出函数
+==================
+此处记录了aFun-Core模块导出的所有函数, 以及对应结构体解释
+
+core_init:
+* aFunCoreInit 初始化 全局应用程序
+
+
+code:
+af_Code 表示语法结构
+af_BlockType 表示block类型的枚举体 (公开)
+因为需要af_Code不能轻易修改, 因此不完全公开
+
+创建与释放：
+* makeElementCode
+* makeBlockCode
+* freeAllCode
+
+相关操作：
+* connectCode  [不会修改现有代码的结构, 只是在末尾追加内容]
+* copyCode
+* writeAllCode
+* readAllCode
+* codeToStr
+
+属性访问:
+* getCodeNext
+* getCodeBlockElement
+* getCodeType  [未存在]
+* getCodeBlockType  [未存在]
+* getCodePrefix  [未存在]
+* getCodeEndCount  [未存在]
+* getCodeElementData  [未存在]
+* getCodeBlockType  [未存在]
+* getCodeBlockElements  [未存在]
+
+
+func.h
+af_ArgCodeList  表示参数计算表, 已经计算结果
+af_ArgList  表示参数赋值表
+af_FuncBody  函数体信息 [无访问的必要性]
+af_FuncInfo  函数信息 [无访问的必要性]
+
+创建与释放
+* makeArgCodeList
+* freeAllArgCodeList
+* makeArgList
+* freeAllArgList
+
+* makeCodeFuncBody
+* makeImportFuncBody
+* makeCFuncBody
+* makeDynamicFuncBody
+* freeFuncBody
+* freeAllFuncBody
+* makeFuncInfo
+* freeFuncInfo
+
+相关操作
+* pushArgCodeList
+* pushArgList
+* pushFuncBody  [未存在]
+* makeCFuncBodyToFuncInfo
+* makeCodeFuncBodyToFuncInfo
+* makeImportFuncBodyToFuncInfo
+* makeDynamicFuncBodyToFuncInfo
+
+属性访问
+* getArgCodeListNext  [未存在]
+* getArgListNext  [未存在]
+* getArgCodeListResult
+* getArgCodeListData
+* getArgCodeListRunInFunc  [未存在]
+
+
+gc.h
+GcList 记录自定义的gc链接信息 [无访问的必要性]
+
+创建与释放
+* makeGcList
+* freeAllGcList
+
+相关操作
+* pushGcList
+* gc_addObjectReference
+* gc_addVarReference
+* gc_addVarSpaceReference
+* gc_delObjectReference
+* gc_delVarReference
+* gc_delVarSpaceReference
+
+属性访问
+* gc_getObjectReference  [未存在]
+* gc_getVarReference  [未存在]
+* gc_getVarSpaceReference  [未存在]
+
+
+object.h
+af_Object 描述一个对象
+af_Inherit 描述继承关系
+af_ObjectAPI 描述API
+
+创建与释放
+* makeObject
+* makeInherit
+* freeAllInherit
+* makeObjectAPI
+* freeObjectAPI
+
+相关操作
+* objectSetAllowInherit
+* setObjectAttributes
+* addAPI
+* addAPIToObject
+* pushInherit  [未定义]
+
+属性访问
+* getObjectID  [未定义]
+* getObjectData
+* getObjectAPI   [未定义]
+* getBelongObject
+* getInherit  (副本) [未定义]
+* findObjectAttributes
+* checkPosterity
+* getInheritObject  [未定义]
+* getInheritVarSpace  [未定义]
+* findAPI
+* findObjectAPI
+* getAPICount  [未定义]
+
+
+parser.h
+af_Parser 描述解释器
+
+创建与释放:
+* makeParser
+* freeParser
+* makeParserByString
+* makeParserByFile
+* makeParserByStdin  [未定义]
+
+相关操作:
+* parserCode
+* initParser
+
+
+run.h
+相关操作:
+* iterCode
+
+var.h
+af_Var 描述一个变量
+af_VarSpace 描述一个变量空间
+af_VarSpaceListNode 描述变量空间链
+
+创建与释放:
+* makeVar
+* makeVarSpace
+* makeVarSpaceList
+* freeAllVarSpaceList
+* freeVarSpaceListCount
+
+相关操作
+* addVarNode
+* addVarToVarSpace
+* makeVarToVarSpace
+* addVarToVarSpaceList
+* makeVarToVarSpaceList
+* makeVarToProtectVarSpace
+* delVarFromVarSpace
+* delVarFromVarList
+* setVarToVarSpace
+* setVarToVarList
+* pushNewVarList
+* setVarPermison  [未定义]
+* setVarSpacePermison  [未定义]
+* setVarSpaceProtect  [未定义]
+
+属性访问
+* getVarNode  [未定义]
+* findVarFromVarSpace
+* findVarFromVarList
+* getVarSpaceFromList
+
+
+env.h
+af_Environment 描述运行环境
+af_Message 描述消息传递
+af_ErrorInfo 描述错误信息
+
+创建与释放
+* makeEnvironment
+* freeEnvironment
+* makeMessage
+* freeMessage
+* freeMessageCount
+* makeNORMALMessage
+* makeERRORMessage
+* makeERRORMessageFormate
+* makeErrorInfo
+* freeErrorInfo
+
+相关操作
+* enableEnvironment
+* setPrefix
+* addVarToProtectVarSpace
+* setCoreStop
+* setCoreExit
+* setCoreNormal
+* pushMessageUp
+* popMessageUpData
+* popMessageUp
+* pushMessageDown
+* popMessageDown
+* setEnvVar
+* addTopMsgProcess
+* pushLiteralRegex
+* fprintfErrorInfo
+* pushErrorBacktracking
+* setGcMax  [未定义]
+* setGcRun  [未定义]
+
+属性访问
+* getPrefix
+* getBaseObject
+* getProtectVarSpace
+* getMessageData
+* getFirstMessage
+* getCoreSttaus  [未定义]
+* getGcCount  [未定义]
+* getGcMax  [未定义]
+* getGcRun  [未定义]
+* getCoreGlobal  [未定义]
+* getGlobal (会涉及import)  [未定义]
+* getBelong  [未定义]
+* getActivityType  [未定义]
+* getActivityFile  [未定义]
+* getActivityLine  [未定义]
+* findEnvVar
+* getMsgNormalData  [未定义]
+* getMsgErrorInfo  [未定义]
+* getErrorType  [未定义]
+* getMsgError  [未定义]

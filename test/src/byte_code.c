@@ -9,11 +9,11 @@ int main() {
     af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
     af_Code *bt4 = makeElementCode("var2", 0, 1, NULL);
 
-    connectCode(&bt1, bt2);
-    connectCode(&bt3, bt4);
+    pushCode(&bt1, bt2);
+    pushCode(&bt3, bt4);
 
     af_Code *bt5 = makeBlockCode(parentheses, bt3, 0, 1, NULL, NULL);
-    connectCode(&bt2, bt5);
+    pushCode(&bt2, bt5);
 
     FILE *file = fopen("test.afb", "wb");
     if (file == NULL) {
@@ -40,10 +40,6 @@ int main() {
     }
     fclose(file);
 
-    printf("out:\n");
-    printCode(bt1);
-    printf("in:\n");
-    printCode(get);
     freeAllCode(bt1);
     freeAllCode(get);
     return EXIT_SUCCESS;

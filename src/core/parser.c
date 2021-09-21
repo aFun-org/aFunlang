@@ -29,10 +29,6 @@ void freeParser(af_Parser *parser) {
     free(parser);
 }
 
-void *getParserData(af_Parser *parser) {
-    return getReaderData(parser->reader);
-}
-
 void initParser(af_Parser *parser) {
     initReader(parser->reader);
 }

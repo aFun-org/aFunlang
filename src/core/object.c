@@ -151,7 +151,7 @@ af_Inherit *makeInherit(af_Object *obj) {
     return ih;
 }
 
-af_Inherit *freeInherit(af_Inherit *ih) {
+static af_Inherit *freeInherit(af_Inherit *ih) {
     af_Inherit *next = ih->next;  // vs一定是被gc托管的
     free(ih);
     return next;

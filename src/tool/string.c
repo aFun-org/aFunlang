@@ -32,6 +32,20 @@ wchar_t *wstrCopy(const wchar_t *str){
 }
 
 /*
+ * 函数名: wstrExpansion
+ * 目标: 把wstr复制到新的空间, 并拓展其大小
+ */
+wchar_t *wstrExpansion(wchar_t *str, size_t size, bool free_old) {
+    size_t base_len = WSTR_LEN(str);
+    wchar_t *tmp = NEW_WSTR(base_len + size);
+    if (base_len != 0)
+        wcscpy(tmp, str);
+    if (free_old)
+        free(str);
+    return tmp;
+}
+
+/*
  * 函数名: strJoin
  * 目标: 拼接两个字符串
  */

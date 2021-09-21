@@ -25,7 +25,6 @@ void initData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
 
 void freeData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
-    freeVarSpace(*data, env);
 }
 
 af_GcList *getGcList3(char *id, void *data) {

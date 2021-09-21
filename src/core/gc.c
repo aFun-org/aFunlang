@@ -71,11 +71,9 @@ static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc
 
 /* gcList 函数 */
 /* gcList 创建与释放函数 */
-static af_GcList *makeGcList(enum af_GcListType type, void *data);
 static af_GcList *freeGcList(af_GcList *gl);
-static void freeAllGcList(af_GcList *gl);
 
-static af_GcList *makeGcList(enum af_GcListType type, void *data) {
+af_GcList *makeGcList(enum af_GcListType type, void *data) {
     af_GcList *gl = calloc(1, sizeof(af_GcList));
     gl->type = type;
     gl->data = data;
@@ -88,7 +86,7 @@ static af_GcList *freeGcList(af_GcList *gl) {
     return next;
 }
 
-static void freeAllGcList(af_GcList *gl) {
+void freeAllGcList(af_GcList *gl) {
     while (gl != NULL)
         gl = freeGcList(gl);
 }

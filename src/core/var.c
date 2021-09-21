@@ -146,7 +146,7 @@ af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs) {
     return vsl;
 }
 
-af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl){
+static af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl){
     af_VarSpaceListNode *next = vsl->next;
     free(vsl);
     return next;
@@ -421,8 +421,4 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
     af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(belong, 3, 2, 0, env));
     new->next = base;
     return new;
-}
-
-af_VarSpaceListNode *popLastVarList(af_VarSpaceListNode *base) {
-    return freeVarSpaceList(base);
 }

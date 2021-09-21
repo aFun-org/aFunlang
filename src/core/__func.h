@@ -24,9 +24,6 @@ struct af_ArgList {
     struct af_ArgList *next;
 };
 
-typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);
-NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
-
 struct af_FuncBody {
     enum af_FuncBodyType {
         func_body_c = 0,  // 回调C函数
@@ -62,5 +59,8 @@ struct af_FuncInfo {
 
 /* FuncInfo 操作函数 */
 AFUN_CORE_NO_EXPORT bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
+
+/* ArgList 操作函数 */
+AFUN_CORE_NO_EXPORT bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env);
 
 #endif //AFUN_FUNC_H_

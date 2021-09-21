@@ -6,5 +6,4 @@
 
 /* 代码运行工具 */
 AFUN_CORE_EXPORT bool iterCode(af_Code *code, af_Environment *env);
-AFUN_CORE_EXPORT bool iterDestruct(int deep, af_Environment *env);
 #endif //AFUN_RUN_H

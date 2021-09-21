@@ -17,7 +17,6 @@ DEFINE_DLC_SYMBOL(objectAPIFunc);
 /* 对象创建与释放函数 */
 AFUN_CORE_EXPORT af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
                       af_Inherit *inherit, af_Environment *env);
-AFUN_CORE_EXPORT void freeObject(af_Object *obj, af_Environment *env);
 
 /* 对象属性获取函数 */
 AFUN_CORE_EXPORT void *getObjectData(af_Object *obj);
@@ -30,8 +29,8 @@ AFUN_CORE_EXPORT bool setObjectAttributes(char *name, char p_self, char p_poster
 
 /* 对象继承关系函数 */
 AFUN_CORE_EXPORT af_Inherit *makeInherit(af_Object *obj);
-AFUN_CORE_EXPORT af_Inherit *freeInherit(af_Inherit *ih);
 AFUN_CORE_EXPORT void freeAllInherit(af_Inherit *ih);
+
 AFUN_CORE_EXPORT bool checkPosterity(af_Object *base, af_Object *posterity);
 
 /* API表 创建与释放 */
@@ -43,6 +42,6 @@ AFUN_CORE_EXPORT int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_O
 AFUN_CORE_EXPORT void *findAPI(char *api_name, af_ObjectAPI *api);
 
 /* 对象API函数 */
-AFUN_CORE_EXPORT void *findObjectAPI(char *api_name, af_Object *obj);
 AFUN_CORE_EXPORT int addAPIToObject(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_Object *obj);
+AFUN_CORE_EXPORT void *findObjectAPI(char *api_name, af_Object *obj);
 #endif //AFUN_OBJECT

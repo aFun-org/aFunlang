@@ -59,6 +59,9 @@ struct af_Inherit {
     struct af_Inherit *next;
 };
 
+/* 对象创建与释放函数 */
+AFUN_CORE_NO_EXPORT void freeObject(af_Object *obj, af_Environment *env);
+
 /* ObjectData 属性获取函数 */
 AFUN_CORE_NO_EXPORT af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
 

@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
+#include "../../src/core/__parser.h"
 
 char *str = "Hello_var\n"
             "10 20.32 100var\n"

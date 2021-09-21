@@ -1,7 +1,7 @@
 ﻿#include "aFunCore.h"
 #include "__env.h"
 #include "__global_obj.h"
-#include "run.h"
+#include "__run.h"
 
 /* Core 创建和释放 */
 static af_Core *makeCore(enum GcRunTime grt);
@@ -645,20 +645,15 @@ static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env) 
     return NULL;
 }
 
-void addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
+bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
                       af_Environment *env) {
-    af_TopMsgProcess *mp = makeTopMsgProcess(type, func);
+    af_TopMsgProcess *mp = findTopMsgProcessFunc(type, env);
+    if (mp != NULL)
+        return false;
+
+    mp = makeTopMsgProcess(type, func);
     mp->next = env->process;
     env->process = mp;
-}
-
-bool changeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
-                         af_Environment *env) {
-    af_TopMsgProcess *mp = findTopMsgProcessFunc(type, env);
-    if (mp == NULL)
-        return false;
-    FREE_SYMBOL(mp->func);
-    mp->func = COPY_SYMBOL(func, TopMsgProcessFunc);
     return true;
 }
 
@@ -702,11 +697,7 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
-    if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO"1", env), env);
-        return false;
-    }
-
+    next = getCodeNext(bt);
     if (bt->type != code_block || bt->block.elements == 0) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
         return false;
@@ -728,11 +719,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Object *parentheses_call = env->activity->parentheses_call;
     env->activity->parentheses_call = NULL;
 
-    if (!getCodeBlockNext(bt, &next)) {
-        pushMessageDown(makeERRORMessage(SYNTAX_ERROR, SYNTAX_ERROR_INFO"2", env), env);
-        return false;
-    }
-
+    next = getCodeNext(bt);
     switch (bt->block.type) {
         case curly:
             if (bt->block.elements == 0) {
@@ -749,7 +736,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
                     func = code;
                     break;
                 }
-                if (!getCodeBlockNext(bt, &code))
+                if ((code = getCodeNext(bt)) == NULL)
                     break;
             }
             if (func == NULL) {

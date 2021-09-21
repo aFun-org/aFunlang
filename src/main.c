@@ -38,7 +38,6 @@ void initData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
 
 void freeData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
-    freeVarSpace(*data, env);
 }
 
 af_GcList *getGcList3(char *id, void *data) {
@@ -878,14 +877,14 @@ int main() {
         printf("TAG A:\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Unknown");
         af_Code *bt2 = makeElementCode("data", ',', 0, "Unknown");
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
-        connectCode(&bt2, bt5);
+        pushCode(&bt2, bt5);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -898,10 +897,10 @@ int main() {
 
         af_Code *bt3 = makeElementCode("func2", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
-        connectCode(&bt1, bt5);
+        pushCode(&bt1, bt5);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -913,11 +912,11 @@ int main() {
         printf("TAG B:\n");
         af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
         af_Code *bt2 = makeElementCode("object", 0, 1, NULL);
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
-        connectCode(&bt2, bt5);
+        pushCode(&bt2, bt5);
 
         iterCode(bt5, env);
         freeAllCode(bt1);
@@ -937,14 +936,14 @@ int main() {
         printf("TAG D:\n");
         af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
         af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         af_Code *bt5 = makeBlockCode(parentheses, NULL, 0, 1, NULL, NULL);
-        connectCode(&bt2, bt5);
+        pushCode(&bt2, bt5);
 
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -956,12 +955,12 @@ int main() {
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt3, bt4);
+        pushCode(&bt3, bt4);
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, NULL, NULL);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt5, env);
         freeAllCode(bt5);
@@ -973,12 +972,12 @@ int main() {
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt3, bt4);
+        pushCode(&bt3, bt4);
 
         af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt5, env);
         freeAllCode(bt5);
@@ -990,7 +989,7 @@ int main() {
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt3, bt4);
+        pushCode(&bt3, bt4);
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, NULL, NULL);
 
@@ -1004,7 +1003,7 @@ int main() {
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt3, bt4);
+        pushCode(&bt3, bt4);
 
         af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
 
@@ -1020,10 +1019,10 @@ int main() {
 
         af_Code *bt4 = makeElementCode("func3", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt4, 0, 1, NULL, NULL);
-        connectCode(&bt3, bt5);
+        pushCode(&bt3, bt5);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt3, env);
         freeAllCode(bt3);
@@ -1034,7 +1033,7 @@ int main() {
         printf("TAG N:\n");
         af_Code *bt1 = makeElementCode("func4", 0, 1, NULL);
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1045,7 +1044,7 @@ int main() {
         printf("TAG O:\n");
         af_Code *bt1 = makeElementCode("func4", '\'', 1, NULL);
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1080,8 +1079,8 @@ int main() {
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt1, bt3);
-        connectCode(&bt3, bt4);
+        pushCode(&bt1, bt3);
+        pushCode(&bt3, bt4);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1095,7 +1094,7 @@ int main() {
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "TagR.af", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt1, bt3);
+        pushCode(&bt1, bt3);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1109,7 +1108,7 @@ int main() {
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "TagS.af", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt1, bt3);
+        pushCode(&bt1, bt3);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1123,7 +1122,7 @@ int main() {
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "TagX.af", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt1, bt3);
+        pushCode(&bt1, bt3);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1139,7 +1138,7 @@ int main() {
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "TagT.error.af", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
 
-        connectCode(&bt1, bt3);
+        pushCode(&bt1, bt3);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1151,10 +1150,10 @@ int main() {
         af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
 
         af_Code *bt5 = makeBlockCode(curly, NULL, 0, 1, NULL, NULL);
-        connectCode(&bt1, bt5);
+        pushCode(&bt1, bt5);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt5, bt6);
+        pushCode(&bt5, bt6);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1166,7 +1165,7 @@ int main() {
         af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
         af_Code *bt2 = makeElementCode("object2", 0, 1, NULL);
 
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1179,7 +1178,7 @@ int main() {
         af_Code *bt2 = makeElementCode("func8", 0, 2, NULL);
         af_Code *bt1 = makeElementCode("global", 0, 1, "TagV.error.af");
 
-        connectCode(&bt1, bt2);
+        pushCode(&bt1, bt2);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -1193,7 +1192,7 @@ int main() {
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "TagW.error.af", NULL);
 
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
-        connectCode(&bt1, bt3);
+        pushCode(&bt1, bt3);
 
         iterCode(bt1, env);
         freeAllCode(bt1);
