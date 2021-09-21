@@ -17,16 +17,18 @@ AFUN_CORE_EXPORT void freeVar(af_Var *var, af_Environment *env);
 AFUN_CORE_EXPORT void addVarNode(af_Var var, af_Object *obj, char *id);
 
 /* 变量空间创建与释放 */
-AFUN_CORE_EXPORT af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env);
+AFUN_CORE_EXPORT af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char p_external, af_Environment *env);
 AFUN_CORE_EXPORT void freeVarSpace(af_VarSpace *vs, af_Environment *env);
 
 /* 变量定义函数 */
 AFUN_CORE_EXPORT bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs);
 AFUN_CORE_EXPORT bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_VarSpace *vs,
-                       af_Object *visitor, af_Environment *env);
+                                        af_Object *visitor, af_Environment *env);
 AFUN_CORE_EXPORT bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl);
 AFUN_CORE_EXPORT bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
-                           af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env);
+                                            af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env);
+AFUN_CORE_EXPORT bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
+                                               af_Environment *env);
 
 /* 变量删除函数 */
 AFUN_CORE_EXPORT bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs);

@@ -16,8 +16,8 @@ static void freeAllVarCup(af_VarCup *vp);
 static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpace *vs);
 
 /* 变量权限函数 */
-static bool checkReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
-static bool checkWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
+static bool checkVarReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
+static bool checkVarWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs);
 
 static af_VarNode *makeVarNode(af_Object *obj, char *id) {
     af_VarNode *vn = calloc(1, sizeof(af_VarNode));
@@ -100,22 +100,28 @@ static void freeAllVarCup(af_VarCup *vp) {
         vp = freeVarCup(vp);
 }
 
-af_VarSpace *makeVarSpace(af_Object *belong, af_Environment *env) {
+af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char p_external, af_Environment *env){
     if (env->core->status != core_creat && belong == NULL)
         return NULL;
 
     af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
+    vs->permissions[0] = p_self;
+    vs->permissions[1] = p_posterity;
+    vs->permissions[2] = p_external;
     gc_addVarSpace(vs, env);
     return vs;
 }
 
-af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core) {
+af_VarSpace *makeVarSpaceByCore(af_Object *belong, char p_self, char p_posterity, char p_external, af_Core *core) {
     if (core->status != core_creat && belong == NULL)
         return NULL;
 
     af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
+    vs->permissions[0] = p_self;
+    vs->permissions[1] = p_posterity;
+    vs->permissions[2] = p_external;
     gc_addVarSpaceByCore(vs, core);
     return vs;
 }
@@ -166,6 +172,17 @@ bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
     return true;
 }
 
+static bool checkVarSpaceDefinePermissions(af_Object *visitor, af_VarSpace *vs){
+    char p = vs->permissions[2];  // 默认外部权限
+
+    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+        p = vs->permissions[0];
+    else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
+        p = vs->permissions[1];
+
+    return p == 2 || p == 3;
+}
+
 /*
  * 函数名: addVarToVarSpace
  * 目标: 把var添加到VarSpace中
@@ -179,7 +196,7 @@ bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs) {
     if (vs->is_protect)
         return false;
 
-    if (vs->belong != NULL && (visitor == NULL || visitor->data != vs->belong->data))
+    if (!checkVarSpaceDefinePermissions(visitor, vs))
         return false;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
@@ -229,6 +246,31 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
 }
 
 /*
+ * 函数名: makeVarToProtectVarSpace
+ * 目标: 创建一个新的var变量添加到保护空间中
+ * 若已存在同名Var则返回false不作修改
+ * 否则返回true
+ * 调用 addVarToVarSpace
+ */
+bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
+    env->core->protect->is_protect = false;
+    bool re = addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), env->activity->belong, env->core->protect);
+    env->core->protect->is_protect = true;
+    return re;
+}
+
+static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs){
+    char p = vs->permissions[2];  // 默认外部权限
+
+    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+        p = vs->permissions[0];
+    else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
+        p = vs->permissions[1];
+
+    return p == 1 || p == 3;
+}
+
+/*
  * 函数名: delVarFromVarSpace
  * 目标: 从VarSpace中删除指定的变量
  * 若空间被保护, 权限错误或已存在同名Var则返回false不作修改
@@ -241,7 +283,7 @@ bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs) {
     if (vs->is_protect)
         return false;
 
-    if (vs->belong != NULL && (visitor == NULL || visitor->data != vs->belong->data))
+    if (!checkVarSpaceDelPermissions(visitor, vs))
         return false;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
@@ -278,7 +320,7 @@ static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpac
     return NULL;
 }
 
-static bool checkReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
+static bool checkVarReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
     char p = var->permissions[2];  // 默认外部权限
 
     if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
@@ -299,7 +341,7 @@ af_Var *findVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs){
     if (var == NULL)
         return NULL;
 
-    if (checkReadPermissions(var, visitor, vs))
+    if (checkVarReadPermissions(var, visitor, vs))
         return var;
     return NULL;
 }
@@ -316,7 +358,7 @@ af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *
     for (NULL; vsl != NULL; vsl = vsl->next) {
         var = findVarFromVarSpaceByIndex(index, name, vsl->vs);
         if (var != NULL) {
-            if (checkReadPermissions(var, visitor, vsl->vs))
+            if (checkVarReadPermissions(var, visitor, vsl->vs))
                 return var;
             return NULL;
         }
@@ -325,7 +367,7 @@ af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *
     return NULL;
 }
 
-static bool checkWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
+static bool checkVarWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
     char p = var->permissions[2];  // 默认外部权限
 
     if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
@@ -346,7 +388,7 @@ bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpac
     if (var == NULL)
         return false;
 
-    if (checkWritePermissions(var, visitor, vs)) {
+    if (checkVarWritePermissions(var, visitor, vs)) {
         var->vn->obj = obj;
         return true;
     }
@@ -365,7 +407,7 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
     for (NULL; vsl != NULL; vsl = vsl->next) {
         var = findVarFromVarSpaceByIndex(index, name, vsl->vs);
         if (var != NULL) {
-            if (checkWritePermissions(var, visitor, vsl->vs)) {
+            if (checkVarWritePermissions(var, visitor, vsl->vs)) {
                 var->vn->obj = obj;
                 return true;
             }
@@ -376,7 +418,7 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
 }
 
 af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env){
-    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(belong, env));
+    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(belong, 3, 2, 0, env));
     new->next = base;
     return new;
 }

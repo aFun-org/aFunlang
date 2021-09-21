@@ -6,7 +6,7 @@ static size_t getSize(af_Object *obj) {
 }
 
 static void initData(af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    *data = makeVarSpace(obj, env);
+    *data = makeVarSpace(obj, 3, 2, 0, env);
 }
 
 static void freeData(af_Object *obj, af_VarSpace **data, af_Environment *env) {

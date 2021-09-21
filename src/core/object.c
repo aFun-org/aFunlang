@@ -33,7 +33,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     od->free_api = free_api;
     od->allow_inherit = allow_inherit;
 
-    od->var_space = makeVarSpace(base_obj, env);
+    od->var_space = makeVarSpace(base_obj, 3, 2, 0, env);
     od->inherit = NULL;
 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);

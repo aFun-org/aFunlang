@@ -30,9 +30,10 @@ struct af_VarCup {
 };
 
 struct af_VarSpace {
-    bool is_protect;  // 是否为保护变量空间
+    bool is_protect;  // 是否为保护变量空间 (对VarSpaceList的操作都跳过保护空间)
     struct af_VarCup *(var[VAR_HASHTABLE_SIZE]);
     struct af_Object *belong;  // 属主
+    char permissions[3];  // 可定义（2），可删除（1） [自身权限 后代权限 外部权限]
     GC_VarSpace gc;
 };
 
@@ -42,7 +43,7 @@ struct af_VarSpaceListNode {  // 变量链
 };
 
 /* 变量空间创建与释放 */
-AFUN_CORE_NO_EXPORT af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core);
+AFUN_CORE_NO_EXPORT af_VarSpace *makeVarSpaceByCore(af_Object *belong, char p_self, char p_posterity, char p_external, af_Core *core);
 AFUN_CORE_NO_EXPORT void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
 
 /* 变量创建与释放 */

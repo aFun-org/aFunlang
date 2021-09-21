@@ -65,7 +65,7 @@ static bool isInfixFunc(af_Code *code, af_Environment *env);
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(1, sizeof(af_Core));
     core->status = core_creat;
-    core->protect = makeVarSpaceByCore(NULL, core);
+    core->protect = makeVarSpaceByCore(NULL, 3, 3, 3, core);
     core->gc_run = grt;
     core->gc_count_max = DEFAULT_GC_COUNT_MAX;
     return core;
