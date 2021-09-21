@@ -32,69 +32,6 @@ wchar_t *wstrCopy(const wchar_t *str){
 }
 
 /*
- * 函数名: wstrWithWchar
- * 目标: 赋值str到新空间，并且扩展 size 个大小, 若write为true则为扩展到大小写入...字符
- */
-wchar_t *wstrWithWchar(wchar_t *str, size_t size, int free_old, ...) {  // free_base使用int而不是bool, 是因为va_start
-    size_t base_len = WSTR_LEN(str);
-    wchar_t *tmp = NEW_WSTR(base_len + size);
-    if (base_len != 0)
-        wcscpy(tmp, str);
-    va_list va;
-    va_start(va, free_old);
-    for (int i = 0; i < size; i++)
-        tmp[base_len + i] = (wchar_t)va_arg(va, int);
-    va_end(va);
-    if (free_old)
-        free(str);
-    return tmp;
-}
-
-/*
- * 函数名: wstrWithWchar_
- * 目标: 在str后增加一个新的字符
- */
-wchar_t *wstrWithWchar_(wchar_t *str, wint_t new, bool free_old) {
-    size_t base_len = WSTR_LEN(str);
-    wchar_t *tmp = NEW_WSTR(base_len + 1);
-    if (base_len != 0)
-        wcscpy(tmp, str);
-    tmp[base_len] = new;
-    if (free_old)
-        free(str);
-    return tmp;
-}
-
-/*
- * 函数名: wstrExpansion
- * 目标: 把str复制到新的空间, 并拓展其大小
- */
-wchar_t *wstrExpansion(wchar_t *str, size_t size, bool free_old) {
-    size_t base_len = WSTR_LEN(str);
-    wchar_t *tmp = NEW_WSTR(base_len + size);
-    if (base_len != 0)
-        wcscpy(tmp, str);
-    if (free_old)
-        free(str);
-    return tmp;
-}
-
-/*
- * 函数名: strJoinIter
- * 目标: 在base后面拼接...字符串，...必须以NULL结尾
- */
-char *strJoinIter(char *base, int free_base, ...) {  // free_base使用int而不是bool, 是因为va_start
-    va_list ap;
-    va_start(ap, free_base);
-    for (char *ch = va_arg(ap, char *); ch != NULL; ch = va_arg(ap, char *)) {
-        base = strJoin(base, ch, free_base, false);
-        free_base = true;
-    }
-    va_end(ap);
-    return base;
-}
-
-/*
  * 函数名: strJoin
  * 目标: 拼接两个字符串
  */

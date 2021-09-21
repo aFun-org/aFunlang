@@ -14,13 +14,10 @@
 #define NEW_WSTR(size) (wchar_t *)calloc((size) + 1, sizeof(wchar_t))
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
 #define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))
+
 AFUN_TOOL_EXPORT char *charToStr(char ch);
 AFUN_TOOL_EXPORT char *strCopy(const char *str);
 AFUN_TOOL_EXPORT wchar_t *wstrCopy(const wchar_t *str);
-AFUN_TOOL_EXPORT wchar_t *wstrWithWchar(wchar_t *str, size_t size, int free_old, ...);
-AFUN_TOOL_EXPORT wchar_t *wstrWithWchar_(wchar_t *str, wint_t new, bool free_old);
-AFUN_TOOL_EXPORT wchar_t *wstrExpansion(wchar_t *str, size_t size, bool free_old);
-AFUN_TOOL_EXPORT char *strJoinIter(char *base, int free_base, ...);
 AFUN_TOOL_EXPORT char *strJoin(char *first, char *second, bool free_first, bool free_last);
 AFUN_TOOL_EXPORT char *strJoin_(char *first, char *second, bool free_first, bool free_last);
 AFUN_TOOL_EXPORT wchar_t *wstrJoin(wchar_t *first, wchar_t *second, bool free_first, bool free_last);
