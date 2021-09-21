@@ -59,6 +59,9 @@ static void fprintfNote(FILE *file, char *note);
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env);
 
+/* 变量检查函数 */
+static bool isInfixFunc(af_Code *code, af_Environment *env);
+
 static af_Core *makeCore(enum GcRunTime grt) {
     af_Core *core = calloc(1, sizeof(af_Core));
     core->status = core_creat;
@@ -676,6 +679,25 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
     }
 }
 
+/*
+ * 函数名: isInfixFunc
+ * 目标: 检查是否中缀调用函数
+ */
+static bool isInfixFunc(af_Code *code, af_Environment *env) {
+    if (code == NULL || code->type != code_element || code->prefix == getPrefix(E_QUOTE, env))
+        return false;
+
+    // TODO-szh 检查是否变量
+    af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);
+    if (var == NULL)
+        return false;
+
+    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", var->vn->obj->data->api);
+    if (func == NULL)
+        return false;
+    return func(var->vn->obj);
+}
+
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     if (!getCodeBlockNext(bt, &next)) {
@@ -696,20 +718,6 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
     env->activity->status = act_func_normal;
     env->activity->is_execution = true;
     return true;
-}
-
-static bool isInfixFunc(af_Code *code, af_Environment *env) {
-    if (code == NULL || code->type != code_element || code->prefix == getPrefix(E_QUOTE, env))
-        return false;
-
-    af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);
-    if (var == NULL)
-        return false;
-
-    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", var->vn->obj->data->api);
-    if (func == NULL)
-        return false;
-    return func(var->vn->obj);
 }
 
 bool pushFuncActivity(af_Code *bt, af_Environment *env) {
@@ -825,6 +833,17 @@ void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *
 
     activity->prev = env->activity;
     env->activity = activity;
+}
+
+bool pushImportActivity(af_Code *bt, af_Environment *env) {
+    af_Object *obj = makeGlobalObject(env);
+    if (obj == NULL)
+        return false;
+
+    af_Activity *activity = makeTopImportActivity(bt, bt, env->core->protect, obj);
+    activity->prev = env->activity;
+    env->activity = activity;
+    return true;
 }
 
 bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
@@ -965,7 +984,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     env->activity->acl_done = NULL;
 
     if (setFuncActivityToNormal(env) == 0)
-        return false;
+        return false;  // 运行结束, 且已写入msg
     return true;
 }
 
@@ -974,7 +993,7 @@ bool setFuncActivityAddVar(af_Environment *env){
  * 目标: 获取下一步需要运行的结果
  * 返回  (0) 表示无下一步
  * 返回 (-1) 表示运行C函数, 并且设置了 process_msg_first
- * 返回  (1) 表示下一步运动Code
+ * 返回  (1) 表示下一步运行Code
  * 返回  (2) 表示遇到未被替换的动态代码块
  */
 int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
@@ -989,14 +1008,22 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     env->activity->body_next = body->next;
     switch (body->type) {
         case func_body_c: {
-            af_FuncBody *new;
-            new = GET_SYMBOL(body->c_func)(env->activity->mark, env);
+            af_FuncBody *new = GET_SYMBOL(body->c_func)(env->activity->mark, env);
             env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             pushDynamicFuncBody(new, body);
             env->activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置
             re = -1;
             break;
         }
+        case func_body_import:
+            if (!pushImportActivity(body->code, env)) {
+                pushMessageDown(makeERRORMessage(IMPORT_ERROR, IMPORT_OBJ_ERROR, env), env);
+                env->activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+                re = 2;
+                break;
+            }
+            re = 1;
+            break;
         case func_body_code:
             setActivityBtStart(body->code, env->activity);
             re = 1;
@@ -1041,13 +1068,13 @@ static void freeMark(af_Environment *env) {
 
 void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_func || env->activity->type == act_top || env->activity->type == act_top_import) {
-        if (msg != NULL && env->activity->return_first) {
+        if (msg != NULL && env->activity->return_first) {  // msg有内容, 并且设定了返回首位, 则清除msg内容, 并压入首位(压入的代码在下面)
             if (EQ_STR(msg->type, "NORMAL")) {
                 gc_delReference(*(af_Object **) msg->msg);
                 freeMessage(msg);
                 msg = NULL;
             }
-        } else if (env->activity->return_first) {  // msg == NULL
+        } else if (env->activity->return_first) {  // msg无内容, 并且设定了返回首位, 则检查msg_down是否有normal, 有则清除
             if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
                 af_Message *tmp = getFirstMessage(env);
                 gc_delReference(*(af_Object **) (tmp->msg));
@@ -1055,7 +1082,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
             }
         }
 
-        if (msg == NULL && env->activity->return_first) {
+        if (msg == NULL && env->activity->return_first) {  // 如果首位
             if (env->activity->return_obj == NULL)
                 msg = makeERRORMessage(RUN_ERROR, RETURN_OBJ_NOT_FOUND_INFO, env);
             else
@@ -1066,10 +1093,19 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (msg != NULL)
         pushMessageDown(msg, env);
 
+    if (env->activity->type == act_top_import && /* import模式, 并且msg_down中有normal, 则把normal替换为belong */
+        env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
+        af_Message *tmp = getFirstMessage(env);
+        gc_delReference(*(af_Object **) (tmp->msg));
+        freeMessage(tmp);
+
+        pushMessageDown(makeNORMALMessage(env->activity->belong), env);  // 压入belong作为msg
+    }
+
     if (!is_normal)
         freeMark(env);  // 遇到非正常退出时, 释放`mark`
 
-    if (env->activity->type == act_top || env->activity->type == act_top_import || env->activity->type == act_gc)  // 顶层或gc层
+    if (env->activity->type == act_top || env->activity->type == act_gc) // 顶层或gc层
         runTopMessageProcess((env->activity->type == act_gc), env);
     else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
@@ -1078,7 +1114,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         env->activity->prev->process_msg_first++;  // 优先处理通过msg_down返回的结果
     }
 
-    if (env->activity->type != act_top)  // TODO-szh 处理act_top_import
+    if (env->activity->type != act_top)
         env->activity = freeActivity(env->activity);
     else
         freeActivityTop(env->activity);  // activity不被释放

@@ -213,6 +213,7 @@ AFUN_CORE_NO_EXPORT void pushGCActivity(gc_DestructList *dl, gc_DestructList **p
 AFUN_CORE_NO_EXPORT bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushImportActivity(af_Code *bt, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool setFuncActivityAddVar(af_Environment *env);
 AFUN_CORE_NO_EXPORT int setFuncActivityToNormal(af_Environment *env);

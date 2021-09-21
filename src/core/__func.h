@@ -29,8 +29,9 @@ NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 
 struct af_FuncBody {
     enum af_FuncBodyType {
-        func_body_c,  // 回调C函数
+        func_body_c = 0,  // 回调C函数
         func_body_code,  // 执行af_Code
+        func_body_import,  // import内容
         func_body_dynamic,
     } type;
 

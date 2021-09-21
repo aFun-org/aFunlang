@@ -122,6 +122,13 @@ af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type) {
     return fb;
 }
 
+af_FuncBody *makeImportFuncBody(af_Code *code, bool free_code, char **msg_type) {
+    af_FuncBody *fb = makeFuncBody(func_body_import, msg_type);
+    fb->code = code;
+    fb->free_code = free_code;
+    return fb;
+}
+
 af_FuncBody *makeDynamicFuncBody(void) {
     af_FuncBody *fb = makeFuncBody(func_body_dynamic, NULL);
     return fb;
@@ -141,7 +148,7 @@ static void freeMsgType(char **msg_type) {
 
 af_FuncBody *freeFuncBody(af_FuncBody *fb) {
     af_FuncBody *next = fb->next;
-    if (fb->type == func_body_code && fb->free_code)
+    if ((fb->type == func_body_code || fb->type == func_body_import) && fb->free_code)
         freeAllCode(fb->code);
     else if (fb->type == func_body_c)
         FREE_SYMBOL(fb->c_func);
@@ -184,6 +191,10 @@ void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, a
 
 void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
     pushFuncBody(&fi->body, makeCodeFuncBody(code, free_code, msg_type));
+}
+
+void makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
+    pushFuncBody(&fi->body, makeImportFuncBody(code, free_code, msg_type));
 }
 
 void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi) {

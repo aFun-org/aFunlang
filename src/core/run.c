@@ -13,7 +13,7 @@ static af_Message *getTopMsg(af_Environment *env);
 /* 工具函数: 检查类型 */
 static bool checkInMsgType(char *type, af_Environment *env);
 static bool checkLiteral(af_Message **msg, af_Environment *env);
-static bool checkMacro(af_Message *msg, af_Environment *env);
+static int checkMacro(af_Message *msg, af_Environment *env);
 static bool checkRunGC(af_Environment *env);
 static int checkMsg(af_Message *msg, af_Environment *env);
 bool checkNormalEnd(af_Message *msg, af_Environment *env);
@@ -69,18 +69,24 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
 /*
  * 函数名: checkMacro
  * 目标: 检查是否宏函数调用, 若是则返回true并修改activity隐式调用(activity继续执行时则会执行该调用), 否则返回false不做修改
+ * 返回值:
+ * -1 非宏函数
+ *  0 错误
+ *  1 宏函数
  */
-static bool checkMacro(af_Message *msg, af_Environment *env) {
+static int checkMacro(af_Message *msg, af_Environment *env) {
     if (env->activity->fi == NULL || !env->activity->fi->is_macro)  // 非宏函数
-        return false;
+        return -1;
     if (!EQ_STR(msg->type, "NORMAL"))  // msg非正常值
-        return false;
+        return -1;
 
     af_Object *obj = *(af_Object **)(msg->msg);
-    pushMacroFuncActivity(obj, env);
+    bool re = pushMacroFuncActivity(obj, env);
     gc_delReference(obj);
     freeMessage(msg);
-    return true;
+    if (re)
+        return 1;
+    return 0;
 }
 
 /*
@@ -229,8 +235,15 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
                 return true;
             }
 
-            if (checkMacro(msg, env))  // 检查是否宏函数
-                return false;  // 继续执行
+            switch (checkMacro(msg, env)) {
+                case 0:
+                    return true;  // 错误
+                case 1:
+                    return false;  // 宏函数
+                case -1:
+                default:
+                    break;  // 非宏函数
+            }
 
             checkLiteral(&msg, env);  // 检查是否字面量
             pushMessageDown(msg, env);

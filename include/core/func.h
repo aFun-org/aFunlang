@@ -50,6 +50,7 @@ AFUN_CORE_EXPORT bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_En
 
 /* FuncBody 创建与释放 */
 AFUN_CORE_EXPORT af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type);
+AFUN_CORE_EXPORT af_FuncBody *makeImportFuncBody(af_Code *code, bool free_code, char **msg_type);
 AFUN_CORE_EXPORT af_FuncBody *makeCFuncBody(DLC_SYMBOL(callFuncBody) c_func, char **msg_type);
 AFUN_CORE_EXPORT af_FuncBody *makeDynamicFuncBody(void);
 AFUN_CORE_EXPORT af_FuncBody *freeFuncBody(af_FuncBody *fb);
@@ -57,12 +58,13 @@ AFUN_CORE_EXPORT void freeAllFuncBody(af_FuncBody *fb);
 
 /* FuncInfo 创建与释放 */
 AFUN_CORE_EXPORT af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_FuncInfoEmbedded embedded,
-        bool is_macro, bool var_this, bool var_func);
+                                           bool is_macro, bool var_this, bool var_func);
 AFUN_CORE_EXPORT void freeFuncInfo(af_FuncInfo *fi);
 
 /* FuncInfo 操作函数 */
 AFUN_CORE_EXPORT void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
 AFUN_CORE_EXPORT void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
+AFUN_CORE_EXPORT void makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
 AFUN_CORE_EXPORT void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi);
 
 #endif //AFUN_FUNC

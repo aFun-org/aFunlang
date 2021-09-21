@@ -19,6 +19,9 @@
 #define NOT_MSG_INFO "Don't get msg after function call."
 #define NOT_NORMAL_MSG_INFO "Don't get normal msg after function call."
 
+#define IMPORT_ERROR "Import-Error"
+#define IMPORT_OBJ_ERROR "Cannot creat an import object."
+
 #define INFIX_PROTECT "Infix-Protect"
 #define LITERAL_ERROR "Literal-Error"
 #define VARIABLE_ERROR "Variable-Error"
