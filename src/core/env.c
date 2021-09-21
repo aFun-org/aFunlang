@@ -684,10 +684,12 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
  * 目标: 检查是否中缀调用函数
  */
 static bool isInfixFunc(af_Code *code, af_Environment *env) {
-    if (code == NULL || code->type != code_element || code->prefix == getPrefix(E_QUOTE, env))
+    if (code == NULL || code->type != code_element || code->prefix == getPrefix(E_QUOTE, env))  // 检查是否element, 且无引用前缀
         return false;
 
-    // TODO-szh 检查是否变量
+    if (checkLiteralCode(code->element.data, NULL, NULL, env))  // 检查是否字面量
+        return false;
+
     af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);
     if (var == NULL)
         return false;
@@ -1162,8 +1164,10 @@ bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment
 bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {
     for (af_LiteralRegex *lr = env->core->lr; lr != NULL; lr = lr->next) {
         if (matchRegex(literal, lr->rg) == 1) {
-            *func = lr->func;  // 不使用复制
-            *in_protect = lr->in_protect;
+            if (func != NULL)
+                *func = lr->func;  // 不使用复制
+            if (in_protect != NULL)
+                *in_protect = lr->in_protect;
             return true;
         }
     }
