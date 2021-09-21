@@ -29,7 +29,7 @@ struct af_Core {  // 解释器核心
         core_creat = 0,
         core_init,  // 执行.i.af
         core_normal,  // 正常执行
-        core_srop,  // 当前运算退出
+        core_stop,  // 当前运算退出
         core_exit,  // 解释器退出
     } status;
 
@@ -71,8 +71,10 @@ struct af_Activity {  // 活动记录器
     struct af_Activity *prev;  // 上一个活动记录器
 
     enum af_ActivityType {
-        act_func,
-        act_gc,
+        act_top = 0,  /* 顶层 永远存在第一层 */
+        act_func,  /* 函数调用 */
+        act_top_import,  /* 导入 运算结束后global进入msg反 */
+        act_gc,  /* gc机制 只存在一层 */
     } type;
 
     struct af_Object *belong;  // 属对象 (belong通常为func的belong)
@@ -88,13 +90,13 @@ struct af_Activity {  // 活动记录器
     FileLine line;
 
     union {
-        struct {
+        struct {  // 仅gc使用
             struct gc_DestructList *dl;
             struct gc_DestructList **pdl;  // 执行dl的最末端
             struct gc_DestructList *dl_next;  // dl执行的位置
         };
 
-        struct {
+        struct {  // gc以外的其他内容使用
             enum af_ActivityStatus {
                 act_func_get = 0,
                 act_func_arg,
@@ -130,7 +132,7 @@ struct af_Activity {  // 活动记录器
             struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
             ActivityCount macro_vs_count;
 
-            /* 函数调用: 析构函数 */
+            /* 函数调用: 析构函数 在错误回溯时使用, 是个标记*/
             bool is_gc_call;
 
             /* 字面量 */
@@ -199,9 +201,6 @@ struct af_ErrorInfo {
 
 /* Core 管理函数 */
 AFUN_CORE_NO_EXPORT af_Object *getBaseObjectFromCore(char *name, af_Core *core);
-
-/* Activity 运行初始化函数 */
-AFUN_CORE_NO_EXPORT bool addTopActivity(af_Code *code, af_Environment *env);
 
 /* 运行时Activity设置函数 (新增Activity) */
 AFUN_CORE_NO_EXPORT bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);

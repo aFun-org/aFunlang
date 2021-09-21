@@ -107,14 +107,12 @@ static bool checkRunGC(af_Environment *env) {
  * 目标: 初始化activity和environment (若environment中未存在activity则通过code新增一个TopActivity, 否则沿用原activity)
  */
 static bool iterCodeInit(af_Code *code, af_Environment *env) {
-    if (env == NULL || env->core == NULL || env->core->status == core_exit)
+    if (env == NULL || env->core == NULL || env->activity == NULL || env->core->status == core_exit)
         return false;
-    if (env->core->status == core_srop)
+    if (env->core->status == core_stop)
         env->core->status = core_normal;
-    if (env->activity == NULL && code == NULL || env->activity != NULL && code != NULL)
-        return false;
-    if (code != NULL && !addTopActivity(code, env))  // 初始化环境
-        return false;
+    setActivityBtTop(code, env->activity);
+    setActivityBtStart(code, env->activity);
     return true;
 }
 
@@ -163,7 +161,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     if (code->prefix != getPrefix(E_QUOTE, env)) {
         if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
-        else if (env->activity->status != act_func_get && // 在act_func模式时关闭保护
+        else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
             pushMessageDown(makeERRORMessageFormate(INFIX_PROTECT, env,
                                                     "Infix protect variable: %s.", code->element.data), env);
@@ -387,28 +385,37 @@ static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
  * 函数名: iterCode
  * 目标: 运行代码 (代码可通过code参数传入, 或通过env->activity传入)
  */
-bool iterCode(af_Code *code, af_Environment *env) {
+bool iterCode(af_Code *code, af_Environment *env){
     if (!iterCodeInit(code, env))
         return false;
 
-    for (NULL; env->activity != NULL; ) {
-        af_Message *msg = NULL;
-        bool run_code = false;
-        if (env->core->status == core_srop || env->core->status == core_exit) {
-            for (NULL; env->activity != NULL;)
+    /* destruct模式下则以activity为NULL作为判断 */
+    /* 普通模式则以是否释放到顶层作为判断 */
+    while (env->activity->type != act_top ||
+          env->activity->bt_next != NULL  ||
+          env->activity->process_msg_first != 0) {
+
+        /* 检查是否需要退出执行 */
+        if (env->core->status == core_stop || env->core->status == core_exit) {
+            while (env->activity->type != act_top || env->activity->prev != NULL)
                 popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
+            popActivity(false, NULL, env);  // 在释放 act_top
             return false;
         }
 
+        /* 检查gc机制 */
         checkRunGC(env);
+
+        /* 检查是否gc状态 */
         if (env->activity->type == act_gc) {  // gc 模式
             if (env->activity->dl_next == NULL)
                 popActivity(true, NULL, env);  // 结束运行
-            else {
-                printf("env->activity->dl_next.obj = %p, %d\n", env->activity->dl_next->obj->data, env->activity->dl_next->obj->data->gc.done_destruct);
+            else
                 pushDestructActivity(env->activity->dl_next, env);
-            }
-        } else {
+        } else {  // 普通运行模式
+            af_Message *msg = NULL;
+            bool run_code = false;
+
             setRunVarSpaceList(env);
             if (runCode(&msg, &run_code, env))
                 continue;  // 若未获得msg (未进行实质性运算) 则再次运算

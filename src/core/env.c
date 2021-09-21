@@ -11,8 +11,11 @@ static void freeCore(af_Environment *env);
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong);
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
                                      af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
+static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
+static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
 static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 static af_Activity *freeActivity(af_Activity *activity);
+static void freeActivityTop(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 static void clearActivity(af_Activity *activity);
 
@@ -137,7 +140,7 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
 
 void setCoreStop(af_Environment *env) {
     if (env->core->status != core_exit)
-        env->core->status = core_srop;
+        env->core->status = core_stop;
 }
 
 void setCoreExit(int exit_code, af_Environment *env) {
@@ -146,7 +149,7 @@ void setCoreExit(int exit_code, af_Environment *env) {
 }
 
 void setCoreNormal(af_Environment *env) {
-    if (env->core->status == core_exit || env->core->status == core_srop) {
+    if (env->core->status == core_exit || env->core->status == core_stop) {
         env->core->status = core_normal;
         env->core->exit_code = 0;
     }
@@ -174,6 +177,29 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
     setActivityBtStart(bt_start, activity);
 
     activity->return_first = return_first;
+    return activity;
+}
+
+static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong) {
+    af_Activity *activity = makeActivity(NULL, NULL, belong);
+
+    activity->type = act_top;
+    activity->status = act_func_normal;
+
+    activity->new_vs_count = 2;
+    activity->var_list = makeVarSpaceList(belong->data->var_space);
+    activity->var_list->next = makeVarSpaceList(protect);
+
+    setActivityBtTop(bt_top, activity);
+    setActivityBtStart(bt_start, activity);
+
+    return activity;
+}
+
+static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong) {
+    af_Activity *activity = makeTopActivity(bt_top, bt_start, protect, belong);
+
+    activity->type = act_top_import;
     return activity;
 }
 
@@ -217,6 +243,17 @@ static af_Activity *freeActivity(af_Activity *activity) {
 
     free(activity);
     return prev;
+}
+
+static void freeActivityTop(af_Activity *activity) {
+    freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
+    freeMessageCount(activity->msg_up_count, activity->msg_up);
+    free(activity->file);
+    activity->line = 0;
+
+    activity->bt_top = NULL;
+    activity->bt_start = NULL;
+    activity->bt_next = NULL;
 }
 
 static void freeAllActivity(af_Activity *activity) {
@@ -553,19 +590,8 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     FREE_SYMBOL(func2);
 
     env->core->status = core_init;
+    env->activity = makeTopActivity(NULL, NULL, env->core->protect, env->core->global);
     return env;
-}
-
-bool addTopActivity(af_Code *code, af_Environment *env) {
-    if (env->activity != NULL)
-        return false;
-
-    env->activity = makeFuncActivity(NULL, code, false, NULL, NULL, env->core->global, NULL);
-    env->activity->new_vs_count = 2;
-    env->activity->var_list = makeVarSpaceList(env->core->global->data->var_space);
-    env->activity->var_list->next = makeVarSpaceList(env->core->protect);
-    env->activity->status = act_func_normal;
-    return true;
 }
 
 void enableEnvironment(af_Environment *env) {
@@ -576,8 +602,8 @@ void enableEnvironment(af_Environment *env) {
 void freeEnvironment(af_Environment *env) {
     if (env->core->status != core_creat)
         iterDestruct(10, env);
-    freeCore(env);
     freeAllActivity(env->activity);
+    freeCore(env);
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
     free(env);
@@ -1014,7 +1040,7 @@ static void freeMark(af_Environment *env) {
 }
 
 void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
-    if (env->activity->type == act_func) {
+    if (env->activity->type == act_func || env->activity->type == act_top || env->activity->type == act_top_import) {
         if (msg != NULL && env->activity->return_first) {
             if (EQ_STR(msg->type, "NORMAL")) {
                 gc_delReference(*(af_Object **) msg->msg);
@@ -1043,7 +1069,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (!is_normal)
         freeMark(env);  // 遇到非正常退出时, 释放`mark`
 
-    if (env->activity->prev == NULL || env->activity->type == act_gc)  // 顶层或gc层
+    if (env->activity->type == act_top || env->activity->type == act_top_import || env->activity->type == act_gc)  // 顶层或gc层
         runTopMessageProcess((env->activity->type == act_gc), env);
     else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
@@ -1052,7 +1078,10 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         env->activity->prev->process_msg_first++;  // 优先处理通过msg_down返回的结果
     }
 
-    env->activity = freeActivity(env->activity);
+    if (env->activity->type != act_top)  // TODO-szh 处理act_top_import
+        env->activity = freeActivity(env->activity);
+    else
+        freeActivityTop(env->activity);  // activity不被释放
 }
 
 static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_protect) {

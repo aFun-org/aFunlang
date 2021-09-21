@@ -824,7 +824,7 @@ int main() {
 
     {  // 正常程序
         printf("TAG A:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, NULL);
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Unknown");
         af_Code *bt2 = makeElementCode("data", ',', 0, "Unknown");
         connectCode(&bt1, bt2);
 
@@ -867,7 +867,7 @@ int main() {
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         connectCode(&bt2, bt5);
 
-        iterCode(bt1, env);
+        iterCode(bt5, env);
         freeAllCode(bt1);
         printf("\n");
     }
