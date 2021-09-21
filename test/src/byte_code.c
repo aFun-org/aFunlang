@@ -1,6 +1,7 @@
 ﻿#include <stdlib.h>
 #include <stdio.h>
 #include "aFun.h"
+#include "../../src/core/__code.h"
 
 int main() {
     af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
@@ -40,6 +41,10 @@ int main() {
     }
     fclose(file);
 
+    printf("out:\n");
+    printCode(bt1);
+    printf("in:\n");
+    printCode(get);
     freeAllCode(bt1);
     freeAllCode(get);
     return EXIT_SUCCESS;

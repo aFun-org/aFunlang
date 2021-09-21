@@ -259,7 +259,7 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
     return re;
 }
 
-static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs){
+static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs) {
     char p = vs->permissions[2];  // 默认外部权限
 
     if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限

@@ -1,5 +1,6 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
+#include "../../src/core/__code.h"
 
 char *str = "10 '20.32 100var\n"
             "|10||20.32|int->num\n"
@@ -41,6 +42,7 @@ void test2(void) {
 
     af_Parser *parser = makeParserByFile(path, stderr);
     af_Code *code = parserCode(parser);
+    printCode(code);
     freeParser(parser);
     freeAllCode(code);
 }
