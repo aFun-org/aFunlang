@@ -8,7 +8,8 @@ set(C_STANDARD_REQUIRED OFF)
 set(BUILD_SHARED_LIBS OFF)  # 默认编译静态库 (该设定不可被修改)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)  # TOFIX: 不导出所有符号
+set(VISIBILITY_INLINES_HIDDEN TRUE)  # 默认内联函数不可见
+set(CMAKE_C_VISIBILITY_PRESET "hidden")  # 默认所有符号不可见
 
 # 系统检查
 include(CheckCCompilerFlag)
@@ -41,11 +42,11 @@ set(CMAKE_INSTALL_RPATH
     "${CMAKE_INSTALL_PREFIX}/${deps_install_dir}/${INSTALL_LIBDIR}")  # INSTALL_RPATH 初始化值
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH TRUE)
-include_directories(${CMAKE_SOURCE_DIR}/include)  # 添加默认的include路径
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
-
 add_subdirectory(src)
+include(aFunHeader)
 
 install(EXPORT aFunlang
         NAMESPACE "aFunlang::"

@@ -60,12 +60,12 @@ struct af_Inherit {
 };
 
 /* ObjectData 属性获取函数 */
-af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
+AFUN_CORE_NO_EXPORT af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
 
 /* ObjectData 释放函数 */
-void freeObjectData(af_ObjectData *od, af_Environment *env);
+AFUN_CORE_NO_EXPORT void freeObjectData(af_ObjectData *od, af_Environment *env);
 
 /* Object 释放函数 */
-void freeObjectByCore(af_Object *obj, af_Core *core);
+AFUN_CORE_NO_EXPORT void freeObjectByCore(af_Object *obj, af_Core *core);
 
 #endif //AFUN_OBJECT_H_

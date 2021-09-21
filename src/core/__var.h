@@ -42,11 +42,11 @@ struct af_VarSpaceListNode {  // 变量链
 };
 
 /* 变量空间创建与释放 */
-af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core);
-void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
+AFUN_CORE_NO_EXPORT af_VarSpace *makeVarSpaceByCore(af_Object *belong, af_Core *core);
+AFUN_CORE_NO_EXPORT void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core);
 
 /* 变量创建与释放 */
-af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core);
-void freeVarByCore(af_Var *var, af_Core *core);
+AFUN_CORE_NO_EXPORT af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core);
+AFUN_CORE_NO_EXPORT void freeVarByCore(af_Var *var, af_Core *core);
 
 #endif //AFUN_VAR_H_

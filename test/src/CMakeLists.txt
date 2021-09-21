@@ -4,7 +4,7 @@
 foreach(src IN LISTS src_list)
     cmake_path(GET src STEM file_name)
     add_executable(${file_name} ${src})
-    target_link_libraries(${file_name} core-shared-t)
+    target_link_libraries(${file_name} core-static-s)  # 链接静态库 (导出所有符号)
     set_target_properties(${file_name}
                           PROPERTIES OUTPUT_NAME "test_${file_name}")
     unset(file_name)

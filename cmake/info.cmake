@@ -9,6 +9,7 @@ endif()
 
 # 显示编译器信息(1)
 message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")  # 显示C编译器的路径
+message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")  # 显示CPP编译器的路径
 message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")  # 显示C编译器的选项
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")  # 当前的构建类型(若为设置则为空)
 

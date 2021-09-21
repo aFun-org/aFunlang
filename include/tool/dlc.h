@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_DLC_H
 #define AFUN_DLC_H
+#include "aFunToolExport.h"
 #include "dlfcn.h"  // CMake 处理 dlfcn.h 的位置
 
 /* 动态库工具(dlc): 处理动态库的使用 */
@@ -34,13 +35,14 @@ struct DlcHandle *dlc; \
 typedef struct DlcSymbol_ DlcSymbol_;
 typedef struct DlcHandle DlcHandle;
 
-struct DlcHandle *openLibary(const char *file, int mode);
-struct DlcSymbol_ *makeSymbol_(void *symbol);
-struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds);
-struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name);
-void freeSymbol_(struct DlcSymbol_ *symbol);
-bool freeLibary(struct DlcHandle *dlc);
-void dlcExit(void);
+AFUN_TOOL_EXPORT struct DlcHandle *openLibary(const char *file, int mode);
+AFUN_TOOL_EXPORT struct DlcSymbol_ *makeSymbol_(void *symbol);
+AFUN_TOOL_EXPORT struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds);
+AFUN_TOOL_EXPORT struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name);
+
+AFUN_TOOL_EXPORT void freeSymbol_(struct DlcSymbol_ *symbol);
+AFUN_TOOL_EXPORT bool freeLibary(struct DlcHandle *dlc);
+AFUN_TOOL_EXPORT void dlcExit(void);
 
 
 #endif //AFUN_DLC_H

@@ -1,10 +1,11 @@
 ﻿/*
- * 文件名: init.c
+ * 文件名: core_init.c
  * 目标: 初始化函数
  */
 
+#include "core_init.h"
 #include "tool.h"
 
-void aFunInit(void) {
+void aFunCoreInit(void) {
     getEndian();
 }

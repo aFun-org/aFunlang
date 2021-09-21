@@ -8,23 +8,23 @@ include(${target})  # 调用msgTargets.cmake导入模块
 set(components_list)  # 记录组件的list
 
 # 检查是否存在对应 target
-if (TARGET aFunlang:tool-shared)
+if (TARGET aFunlang::tool-shared)
     list(APPEND components_list tool-shared)
 endif()
 
-if (TARGET aFunlang:tool-static)
+if (TARGET aFunlang::tool-static)
     list(APPEND components_list tool-shared)
 endif()
 
-if (TARGET aFunlang:core-shared-t)
+if (TARGET aFunlang::core-shared-t)
     list(APPEND components_list core-shared-t)
 endif()
 
-if (TARGET aFunlang:core-shared-s)
+if (TARGET aFunlang::core-shared-s)
     list(APPEND components_list core-shared-s)
 endif()
 
-if (TARGET aFunlang:core-static-s)
+if (TARGET aFunlang::core-static-s)
     list(APPEND components_list core-static-s)
 endif()
 

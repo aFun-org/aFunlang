@@ -198,40 +198,40 @@ struct af_ErrorInfo {
 };
 
 /* Core 管理函数 */
-af_Object *getBaseObjectFromCore(char *name, af_Core *core);
+AFUN_CORE_NO_EXPORT af_Object *getBaseObjectFromCore(char *name, af_Core *core);
 
 /* Activity 运行初始化函数 */
-bool addTopActivity(af_Code *code, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool addTopActivity(af_Code *code, af_Environment *env);
 
 /* 运行时Activity设置函数 (新增Activity) */
-bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
-bool pushFuncActivity(af_Code *bt, af_Environment *env);
-void popActivity(bool is_normal, af_Message *msg, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushFuncActivity(af_Code *bt, af_Environment *env);
+AFUN_CORE_NO_EXPORT void popActivity(bool is_normal, af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
-bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
-void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
-bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
-bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
-bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
-bool setFuncActivityToArg(af_Object *func, af_Environment *env);
-bool setFuncActivityAddVar(af_Environment *env);
-int setFuncActivityToNormal(af_Environment *env);
-void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
+AFUN_CORE_NO_EXPORT void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool setFuncActivityToArg(af_Object *func, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool setFuncActivityAddVar(af_Environment *env);
+AFUN_CORE_NO_EXPORT int setFuncActivityToNormal(af_Environment *env);
+AFUN_CORE_NO_EXPORT void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity的行号和文件) */
-void setActivityBtTop(af_Code *bt_top, af_Activity *activity);
-void setActivityBtStart(af_Code *bt_start, af_Activity *activity);
-void setActivityBtNext(af_Code *bt_next, af_Activity *activity);
+AFUN_CORE_NO_EXPORT void setActivityBtTop(af_Code *bt_top, af_Activity *activity);
+AFUN_CORE_NO_EXPORT void setActivityBtStart(af_Code *bt_start, af_Activity *activity);
+AFUN_CORE_NO_EXPORT void setActivityBtNext(af_Code *bt_next, af_Activity *activity);
 
 /* LiteralData 释放函数 */
-void freeAllLiteralData(af_LiteralDataList *ld);
+AFUN_CORE_NO_EXPORT void freeAllLiteralData(af_LiteralDataList *ld);
 
 /* LiteralData 操作函数 */
-void pushLiteralData(char *data, af_Environment *env);
-bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env);
+AFUN_CORE_NO_EXPORT void pushLiteralData(char *data, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env);
 
 /* 顶层消息处理器 处理函数 */
-void runTopMessageProcess(bool is_gc, af_Environment *env);
+AFUN_CORE_NO_EXPORT void runTopMessageProcess(bool is_gc, af_Environment *env);
 
 #endif //AFUN_ENV_H_

@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_READER_H_
 #define AFUN_READER_H_
 #include <stdio.h>
+#include "aFunCoreExport.h"  // reader.h 不包含 aFunCoreExport.h
 #include "tool.h"
 #include "reader.h"
 
@@ -31,15 +32,15 @@ struct af_Reader {
 };
 
 /* Reader 创建与释放 */
-af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
-void freeReader(af_Reader *reader);
+AFUN_CORE_NO_EXPORT af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
+AFUN_CORE_NO_EXPORT void freeReader(af_Reader *reader);
 
 /* Reader 初始化函数 */
-af_Reader *initReader(af_Reader *reader);
+AFUN_CORE_NO_EXPORT af_Reader *initReader(af_Reader *reader);
 
 /* Reader 操作哈桑 */
-char *readWord(size_t del_index, af_Reader *reader);
-char getChar(af_Reader *reader);
-void *getReaderData(af_Reader *reader);
+AFUN_CORE_NO_EXPORT char *readWord(size_t del_index, af_Reader *reader);
+AFUN_CORE_NO_EXPORT char getChar(af_Reader *reader);
+AFUN_CORE_NO_EXPORT void *getReaderData(af_Reader *reader);
 
 #endif //AFUN_READER_H_

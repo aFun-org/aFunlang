@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_SIG_H
 #define AFUN_SIG_H
 #include <signal.h>
+#include "aFunToolExport.h"
 
 /* 信号处理工具 */
 typedef int vsignal;
@@ -14,6 +15,7 @@ struct SignalTag{
 };
 
 extern volatile struct SignalTag signal_tag;  // 在tool.c中定义
-void afSignalHandler(int signum);
+
+AFUN_TOOL_EXPORT void afSignalHandler(int signum);
 
 #endif //AFUN_SIG_H

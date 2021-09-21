@@ -39,7 +39,7 @@ af_VarSpace *getShareVS(af_Object *obj) {
 }
 
 int main() {
-    aFunInit();
+    aFunCoreInit();
 
     af_Environment *env = makeEnvironment(grt_always);
     {

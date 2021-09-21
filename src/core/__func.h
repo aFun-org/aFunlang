@@ -60,6 +60,6 @@ struct af_FuncInfo {
 };
 
 /* FuncInfo 操作函数 */
-bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
+AFUN_CORE_NO_EXPORT bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
 
 #endif //AFUN_FUNC_H_

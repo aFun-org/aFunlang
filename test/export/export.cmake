@@ -21,5 +21,3 @@ set_test_label(export export-test export-install)
 set_tests_properties(export-install PROPERTIES FIXTURES_SETUP "export")  # 添加测试固件
 set_tests_properties(export-mkdir PROPERTIES FIXTURES_SETUP "export")  # 添加测试固件
 set_tests_properties(export-test PROPERTIES FIXTURES_REQUIRED "export")
-
-message(STATUS "CMAKE_COMMAND = ${CMAKE_COMMAND}")

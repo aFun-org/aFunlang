@@ -365,7 +365,7 @@ bool infixFunc(af_Object *obj) {
 }
 
 int main() {
-    aFunInit();
+    aFunCoreInit();
     printf("Hello World\n");
 
     af_Environment *env = makeEnvironment(grt_always);

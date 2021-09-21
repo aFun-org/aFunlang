@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_AFUNCORE_H
 #define AFUN_AFUNCORE_H
+#include "aFunCoreExport.h"
 #include "tool.h"
 
 #include "magic_func.h"
@@ -9,6 +10,7 @@
 #include "parserl_warning_error.h"
 #include "runtime_error.h"
 
+#include "core_init.h"
 #include "run.h"
 #include "code.h"
 #include "env.h"
@@ -19,8 +21,5 @@
 #include "parser.h"
 #include "reader.h"
 #include "token.h"
-
-// Init系列函数
-void aFunInit(void);
 
 #endif //AFUN_AFUNCORE_H
