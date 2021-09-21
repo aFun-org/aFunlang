@@ -1,16 +1,11 @@
-﻿#include "aFunCore.h"
+﻿#include <assert.h>
+#include "aFunCore.h"
 
 #include "run.h"
 #include "__env.h"
 
 /* 工具函数: 初始化类型 */
 static bool iterCodeInit(af_Code *code, af_Environment *env);
-
-/* 工具函数: 运行函数 */
-static void setRunVarSpaceList(af_Environment *env);
-static bool runCodeBase(af_Environment *env);
-static bool runCode(af_Message **msg, bool *run_code, af_Environment *env);
-static void processMsg(af_Message *msg, bool run_code, af_Environment *env);
 
 /* 工具函数: Message类函数 */
 static af_Message *getTopMsg(af_Environment *env);
@@ -26,7 +21,6 @@ static bool checkGetArgEnd(af_Message *msg, af_Environment *env);
 
 /* Code 执行函数 */
 static bool codeElement(af_Code *code, af_Environment *env);
-static bool codeLiteral(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
 
 /*
@@ -79,7 +73,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
 static bool checkMacro(af_Message *msg, af_Environment *env) {
     if (env->activity->fi == NULL || !env->activity->fi->is_macro)  // 非宏函数
         return false;
-    if (msg == NULL || !EQ_STR(msg->type, "NORMAL"))  // msg非正常值
+    if (!EQ_STR(msg->type, "NORMAL"))  // msg非正常值
         return false;
 
     af_Object *obj = *(af_Object **)(msg->msg);
@@ -190,38 +184,6 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
         return pushFuncActivity(env->activity->bt_next, env);
 }
 
-/*
- * 函数名: setRunVarSpaceList
- * 目标: 设置运行的变量空间
- * 仅在act_arg模式下, 允许运行变量空间设置为函数变量空间 (参数计算)
- */
-static void setRunVarSpaceList(af_Environment *env) {
-    if (env->activity->status == act_func_arg && env->activity->run_in_func && env->activity->func_var_list != NULL)
-        env->activity->vsl = env->activity->func_var_list;
-    else
-        env->activity->vsl = env->activity->var_list;
-}
-
-/*
- * 函数名: runCodeBase
- * 目标: 获取代码类型, 调用(codeLiteral, codeElement, codeBlock)运行代码
- * 返回true- 表示执行无消息写入 msg_down (通常是无实质性代码运算)
- * 返回false-表示有消息写入 msg_down
- */
-static bool runCodeBase(af_Environment *env) {
-    switch (env->activity->bt_next->type) {
-        case code_element:
-            if (codeElement(env->activity->bt_next, env))
-                return true;
-            break;
-        case code_block:
-            if (codeBlock(env->activity->bt_next, env))
-                return true;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
-        default:
-            break;  // 错误
-    }
-    return false;
-}
 
 /*
  * 函数名: getTopMsg
@@ -256,70 +218,28 @@ static int checkMsg(af_Message *msg, af_Environment *env) {
 }
 
 /*
- * 函数名: runCode
- * 目标: 执行代码
- * *msg - 写入获取的执行信息
- * *run_code - 写入是否有代码运行
- * 返回-true  表示未获得msg (未进行实质性运算)
- * 返回-false 表示获得msg  (进行实质性运算)
- */
-static bool runCode(af_Message **msg, bool *run_code, af_Environment *env) {
-    if (env->activity->bt_next == NULL && env->activity->process_msg_first == 0) {  // 无代码运行, 并且非msg_first
-        *run_code = false;
-        *msg = NULL;
-        return false;
-    }
-
-    if (env->activity->process_msg_first == 0) {
-        if (env->activity->bt_next == NULL) {
-            *run_code = false;
-            *msg = NULL;
-            return false;
-        } else if (runCodeBase(env)) {
-            *msg = NULL;
-            return true;  // (该步骤仅为设置Activity, 无实际运算)
-        }
-    } else
-        env->activity->process_msg_first--;
-
-    *run_code = true;
-    (*msg) = getTopMsg(env);
-
-    switch (checkMsg((*msg), env)) {
-        case 0:  // 不可处理的信号
-            *msg = NULL;
-            popActivity(false, NULL, env);  // 跳出当前activity
-            return true;
-        case -1:  // 非正常但可处理 [已经放回]
-            (*msg) = NULL;
-            break;
-        case 1:  // 正常信号
-            if (env->activity->return_first && env->activity->return_obj == NULL)  // 设置return_first
-                env->activity->return_obj = *(af_Object **)(*msg)->msg;
-            break;
-        default:
-            break;
-    }
-    return false;
-}
-
-/*
  * 函数名: checkNormalEnd
  * 目标: 检查act_normal是否运行到结尾 (若运行到结尾则返回true, 否则返回false)
  */
 bool checkNormalEnd(af_Message *msg, af_Environment *env) {
     if (env->activity->bt_next == NULL) {
         if (setFuncActivityToNormal(env) == 0) {  // 已经没有下一步了
+            if (msg == NULL) {  // msg 得不到处理
+                pushMessageDown(makeERRORMessage(RUN_ERROR, NOT_NORMAL_MSG_INFO, env), env);
+                return true;
+            }
+
             if (checkMacro(msg, env))  // 检查是否宏函数
                 return false;  // 继续执行
+
             checkLiteral(&msg, env);  // 检查是否字面量
             pushMessageDown(msg, env);
             return true;
-        } else {
+        } else if (msg != NULL) {
             gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
             freeMessage(msg);
         }
-    } else {
+    } else if (msg != NULL) {
         if (env->activity->bt_next->type == code_block && env->activity->bt_next->block.type == parentheses &&
             env->activity->bt_next->prefix != getPrefix(B_EXEC, env)) {
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
@@ -346,80 +266,129 @@ static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
     return false;
 }
 
-/*
- * 函数名: processMsg
- * 目标: 处理msg
- */
-static void processMsg(af_Message *msg, bool run_code, af_Environment *env) {
-    switch (env->activity->status) {
-        case act_func_normal:
-            if (!run_code)
-                popActivity(false, makeERRORMessage(RUN_ERROR, NOT_CODE_INFO, env), env);
-            else if (checkNormalEnd(msg, env))
-                popActivity(true, NULL, env);  // 正常退出
-            break;
-        case act_func_get:
-            if (!run_code)
-                popActivity(false, makeERRORMessage(RUN_ERROR, NOT_CODE_INFO, env), env);
-            else {
-                af_Object *func = *(af_Object **)(msg->msg);  // func仍保留了msg的gc计数
-                gc_delReference(func);  // 释放计数
-                freeMessage(msg);
-                if (!setFuncActivityToArg(func, env))
-                    popActivity(false, NULL, env);
-            }
-            break;
-        case act_func_arg: {
-            if (!run_code || checkGetArgEnd(msg, env)) {  // 无参数设定或参数设定完成
-                if (!setFuncActivityAddVar(env))
-                    popActivity(false, NULL, env);
-            }
-            break;
-        }
-        default:
-            break;
+static bool checkStop(af_Environment *env) {
+    if (env->core->status == core_stop || env->core->status == core_exit) {
+        while (env->activity->type != act_top || env->activity->prev != NULL)
+            popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
+        popActivity(false, NULL, env);  // 再释放 act_top
+        return true;
     }
+    return false;
 }
 
 /*
  * 函数名: iterCode
  * 目标: 运行代码 (代码可通过code参数传入, 或通过env->activity传入)
+ * 注意: 曾为缩短改函数而将该函数的内容进行大量的封装
+ *      但实际上, 这个函数各个部分的关联性是很强的
+ *      因此, 取消了封装, 反而提高了代码的可读性
+ *
+ *      因为该函数的大部分内容运行在循环中, 因此使用continue表示不在运行后面的代码
  */
 bool iterCode(af_Code *code, af_Environment *env){
     if (!iterCodeInit(code, env))
         return false;
 
-    /* destruct模式下则以activity为NULL作为判断 */
-    /* 普通模式则以是否释放到顶层作为判断 */
-    while (env->activity->type != act_top ||
-          env->activity->bt_next != NULL  ||
-          env->activity->process_msg_first != 0) {
-
+    /* 必须位于act_top, 且无next, 并且无msg处理才退出执行 */
+    while (env->activity->type != act_top || env->activity->bt_next != NULL  || env->activity->process_msg_first != 0) {
         /* 检查是否需要退出执行 */
-        if (env->core->status == core_stop || env->core->status == core_exit) {
-            while (env->activity->type != act_top || env->activity->prev != NULL)
-                popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
-            popActivity(false, NULL, env);  // 在释放 act_top
+        if (checkStop(env))
             return false;
-        }
 
         /* 检查gc机制 */
         checkRunGC(env);
 
-        /* 检查是否gc状态 */
-        if (env->activity->type == act_gc) {  // gc 模式
+        if (env->activity->type == act_gc) {
             if (env->activity->dl_next == NULL)
                 popActivity(true, NULL, env);  // 结束运行
             else
                 pushDestructActivity(env->activity->dl_next, env);
-        } else {  // 普通运行模式
-            af_Message *msg = NULL;
-            bool run_code = false;
+            continue;
+        }
 
-            setRunVarSpaceList(env);
-            if (runCode(&msg, &run_code, env))
-                continue;  // 若未获得msg (未进行实质性运算) 则再次运算
-            processMsg(msg, run_code, env);
+        /* 切换执行的var_list */
+        if (env->activity->type == act_func && env->activity->status == act_func_arg &&
+            env->activity->run_in_func && env->activity->func_var_list != NULL)
+            env->activity->vsl = env->activity->func_var_list;
+        else
+            env->activity->vsl = env->activity->var_list;
+
+        /* 无代码运行 */
+        if (env->activity->bt_next == NULL && env->activity->process_msg_first == 0) {  // 无代码运行, 并且非msg_first
+            switch (env->activity->status) {
+                case act_func_get:
+                case act_func_normal:
+                    popActivity(false, makeERRORMessage(RUN_ERROR, NOT_CODE_INFO, env), env);
+                    break;
+                case act_func_arg:  // 无参数设定
+                    if (!setFuncActivityAddVar(env))
+                        popActivity(false, NULL, env);
+                    break;
+                default:
+                    break;
+            }
+            continue;  // 后面的代码不再运行
+        }
+
+        /* 有代码运行 */
+        bool pass_msg = false;  // 表示不处理msg
+        if (env->activity->process_msg_first == 0) {  /* 运行实际代码 */
+            switch (env->activity->bt_next->type) {
+                case code_element:
+                    if (codeElement(env->activity->bt_next, env))
+                        pass_msg = true;
+                    break;
+                case code_block:
+                    if (codeBlock(env->activity->bt_next, env))
+                        pass_msg = true;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
+                    break;
+                default:
+                    break;
+            }
+        } else
+            env->activity->process_msg_first--;
+
+        if (pass_msg)
+            continue;  // 后面的代码不再运行
+
+        /* 处理msg */
+        af_Message *msg = getTopMsg(env);
+        switch (checkMsg(msg, env)) {
+            case 0:  // 不可处理的信号
+                popActivity(false, NULL, env);  // 跳出当前activity
+                continue;  // 下面的代码不再执行
+            case 1:  // 正常信号
+                if (env->activity->return_first && env->activity->return_obj == NULL)  // 设置return_first
+                    env->activity->return_obj = *(af_Object **)msg->msg;
+                break;
+            case -1:  // 非正常但可处理 [已经放回]
+            default:
+                assert(env->activity->status == act_func_normal);
+                break;
+        }
+
+        switch (env->activity->status) {
+            case act_func_normal:  // 需要考虑 msg == NULL
+                if (checkNormalEnd(msg, env))
+                    popActivity(true, NULL, env);  // 正常退出
+                break;
+            case act_func_get: {
+                af_Object *func = *(af_Object **) (msg->msg);  // func仍保留了msg的gc计数
+                gc_delReference(func);  // 释放计数
+                freeMessage(msg);
+                if (!setFuncActivityToArg(func, env))
+                    popActivity(false, NULL, env);
+                break;
+            }
+            case act_func_arg: {
+                if (checkGetArgEnd(msg, env)) {  // 参数设定完成
+                    if (!setFuncActivityAddVar(env))
+                        popActivity(false, NULL, env);
+                }
+                break;
+            }
+            default:
+                break;
         }
     }
     return true;

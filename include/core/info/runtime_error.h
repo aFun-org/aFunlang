@@ -17,12 +17,13 @@
 #define FUNCBODY_ERROR_INFO "Dynamic function body is not filled."  /* 执行函数体时, 获得func_body_dynamic类型的函数体 */
 #define RETURN_OBJ_NOT_FOUND_INFO "Sequential execution but unable to return the first execution result (The result does not exist)."
 #define NOT_MSG_INFO "Don't get msg after function call."
+#define NOT_NORMAL_MSG_INFO "Don't get normal msg after function call."
 
 #define INFIX_PROTECT "Infix-Protect"
 #define LITERAL_ERROR "Literal-Error"
 #define VARIABLE_ERROR "Variable-Error"
 
-#define CALL_ERRPR "Call-Error"
+#define CALL_ERROR "Call-Error"
 #define BRACKETS_FUNC_BODY_INFO "Brackets cannot get function body."
 #define PARENTHESES_FUNC_BODY_INFO "Parentheses cannot get function body."
 #define CURLY_FUNC_BODY_INFO "Curly cannot get function body."

@@ -835,7 +835,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         connectCode(&bt5, bt6);
 
-        iterCode(bt1, env);
+        iterCode(bt5, env);
         freeAllCode(bt1);
         printf("\n");
     }

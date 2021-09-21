@@ -726,7 +726,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     switch (bt->block.type) {
         case curly:
             if (bt->block.elements == 0) {
-                pushMessageDown(makeERRORMessage(CALL_ERRPR, CURLY_FUNC_BODY_INFO, env), env);
+                pushMessageDown(makeERRORMessage(CALL_ERROR, CURLY_FUNC_BODY_INFO, env), env);
                 return false;
             }
             func = bt->next;
@@ -743,7 +743,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
                     break;
             }
             if (func == NULL) {
-                pushMessageDown(makeERRORMessage(CALL_ERRPR, BRACKETS_FUNC_BODY_INFO, env), env);
+                pushMessageDown(makeERRORMessage(CALL_ERROR, BRACKETS_FUNC_BODY_INFO, env), env);
                 return false;
             }
             break;
@@ -764,7 +764,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->status = act_func_get;
     if (env->activity->call_type == parentheses) { // 对于类前缀调用, 已经获得func的实际值了
         if (parentheses_call == NULL) {
-            pushMessageDown(makeERRORMessage(CALL_ERRPR, PARENTHESES_FUNC_BODY_INFO, env), env);
+            pushMessageDown(makeERRORMessage(CALL_ERROR, PARENTHESES_FUNC_BODY_INFO, env), env);
             return false;
         }
         return setFuncActivityToArg(parentheses_call, env);
