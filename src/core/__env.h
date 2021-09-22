@@ -179,6 +179,7 @@ struct af_Environment {  // 运行环境
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
+    bool in_run;
 };
 
 struct af_LiteralRegex {

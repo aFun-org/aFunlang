@@ -110,9 +110,10 @@ static bool checkRunGC(af_Environment *env) {
  * 0. 在top运行
  * 1. 在import运行
  * 2. 直接运行
+ * 3. gc模式
  */
 static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
-    if (env == NULL || env->core == NULL || env->activity == NULL || env->core->status == core_exit)
+    if (env == NULL || env->core == NULL || env->activity == NULL || env->core->status == core_exit || env->in_run)
         return false;
     if (env->core->status == core_stop)
         env->core->status = core_normal;
@@ -134,12 +135,18 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
             break;
         }
         case 2:
-            if (env->activity->bt_start == NULL || env->activity->bt_next == NULL || code != NULL)
+            if (env->activity->type == act_gc || env->activity->bt_next == NULL || code != NULL)
+                return false;
+            break;
+        case 3:
+            if (env->activity->type != act_gc || code != NULL)
                 return false;
             break;
         default:
             return false;
     }
+
+    env->in_run = true;
     return true;
 }
 
@@ -354,7 +361,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     while (env->activity->type != act_top || env->activity->bt_next != NULL || env->activity->process_msg_first != 0) {
         /* 检查是否需要退出执行 */
         if (checkStop(env))
-            return false;
+            goto RETURN_FALSE;
 
         /* 检查gc机制 */
         checkRunGC(env);
@@ -452,7 +459,13 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 break;
         }
     }
+
+    env->in_run = false;
     return true;
+
+RETURN_FALSE:
+    env->in_run = false;
+    return false;
 }
 
 /*
@@ -470,7 +483,7 @@ bool iterDestruct(int deep, af_Environment *env) {
         if (dl == NULL)
             return true;
         pushGCActivity(dl, pdl, env);
-        if (!iterCode(NULL, 0, env))
+        if (!iterCode(NULL, 3, env))
             return false;
     }
     return false;
