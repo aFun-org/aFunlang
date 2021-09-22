@@ -31,7 +31,7 @@ AFUN_CORE_EXPORT af_Message *freeMessage(af_Message *msg);
 AFUN_CORE_EXPORT bool freeMessageCount(size_t count, af_Message *msg);
 AFUN_CORE_EXPORT af_Message *makeNORMALMessage(af_Object *obj);
 AFUN_CORE_EXPORT af_Message *makeERRORMessage(char *type, char *error, af_Environment *env);
-AFUN_CORE_EXPORT af_Message *makeERRORMessageFormate(char *type, af_Environment *env, const char *formate, ...);
+AFUN_CORE_EXPORT af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *format, ...);
 
 /* ErrorInfo 创建与释放 */
 AFUN_CORE_EXPORT af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path);

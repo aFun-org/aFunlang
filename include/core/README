@@ -172,8 +172,8 @@ af_VarSpaceListNode 描述变量空间链
 * setVarToVarSpace
 * setVarToVarList
 * pushNewVarList
-* setVarPermison
-* setVarSpacePermison
+* setVarPermissions
+* setVarSpacePermissions
 * setVarSpaceProtect
 
 属性访问
@@ -197,7 +197,7 @@ af_ErrorInfo 描述错误信息
 * freeMessageCount
 * makeNORMALMessage
 * makeERRORMessage
-* makeERRORMessageFormate
+* makeERRORMessageFormat
 * makeErrorInfo
 * freeErrorInfo
 

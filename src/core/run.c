@@ -139,7 +139,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
 
         if (var == NULL) {
-            pushMessageDown(makeERRORMessageFormate(LITERAL_ERROR, env, "Literal not found: %s.", code->element.data), env);
+            pushMessageDown(makeERRORMessageFormat(LITERAL_ERROR, env, "Literal not found: %s.", code->element.data), env);
             return false;
         }
 
@@ -150,7 +150,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->vsl);
 
     if (var == NULL) {
-        pushMessageDown(makeERRORMessageFormate(VARIABLE_ERROR, env, "Variable not found: %s.", code->element.data), env);
+        pushMessageDown(makeERRORMessageFormat(VARIABLE_ERROR, env, "Variable not found: %s.", code->element.data), env);
         return false;
     }
 
@@ -163,8 +163,8 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
         else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
-            pushMessageDown(makeERRORMessageFormate(INFIX_PROTECT, env,
-                                                    "Infix protect variable: %s.", code->element.data), env);
+            pushMessageDown(makeERRORMessageFormat(INFIX_PROTECT, env,
+                                                   "Infix protect variable: %s.", code->element.data), env);
             return false;
         }
     }

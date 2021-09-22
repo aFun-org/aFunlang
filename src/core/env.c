@@ -481,11 +481,11 @@ af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
     return msg;
 }
 
-af_Message *makeERRORMessageFormate(char *type, af_Environment *env, const char *formate, ...) {
+af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *format, ...) {
     char buf[1024];
     va_list ap;
-    va_start(ap, formate);
-    vsnprintf(buf, 1024, formate, ap);
+    va_start(ap, format);
+    vsnprintf(buf, 1024, format, ap);
     va_end(ap);
     return makeERRORMessage(type, buf, env);;
 }

@@ -445,7 +445,7 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
     return new;
 }
 
-void setVarPermison(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
     if (vs->belong->data != visitor->data)
         return;
     var->permissions[0] = p_self;
@@ -453,7 +453,7 @@ void setVarPermison(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_sel
     var->permissions[2] = p_external;
 }
 
-void setVarSpacePermison(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+void setVarSpacePermissions(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
     if (vs->belong->data != visitor->data)
         return;
     vs->permissions[0] = p_self;

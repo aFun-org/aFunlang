@@ -29,8 +29,8 @@ AFUN_CORE_EXPORT bool makeVarToVarSpace(char *name, char p_self, char p_posterit
                                         af_Object *visitor, af_Environment *env);
 AFUN_CORE_EXPORT bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs);
 AFUN_CORE_EXPORT bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpace *vs);
-AFUN_CORE_EXPORT void setVarPermison(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
-AFUN_CORE_EXPORT void setVarSpacePermison(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
+AFUN_CORE_EXPORT void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
+AFUN_CORE_EXPORT void setVarSpacePermissions(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
 AFUN_CORE_EXPORT bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, char protect);
 
 /* 变量空间链 相关操作 */
