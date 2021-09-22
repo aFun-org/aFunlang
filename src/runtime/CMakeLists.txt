@@ -6,6 +6,10 @@ file(GLOB private_h
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
+file(GLOB private_h_core
+     LIST_DIRECTORIES FALSE
+     ${CMAKE_CURRENT_LIST_DIR}/../core/*.h)  # 需要使用 core 的特定头文件 (高级开发)
+
 set(build_include_runtime ${PROJECT_SOURCE_DIR}/include/runtime)
 set(install_include_runtime ${INSTALL_INCLUDEDIR})
 
@@ -29,10 +33,13 @@ add_library(aFun-cx-libs SHARED "")  # cx表示仅core动态链接 core-share-c
 add_library(aFun-ct-libs SHARED "")  # ct表示均静态链接 core-static-s
 
 foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
-    target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
-    target_include_directories(${tgt} PUBLIC
-                               $<BUILD_INTERFACE:${build_include_runtime}>
-                               $<INSTALL_INTERFACE:${install_include_runtime}>)
+    target_sources(${tgt} PRIVATE ${source} ${private_h} ${private_h_core} PUBLIC ${public_h_build} ${public_h_install})
+    target_include_directories(${tgt}
+                               PRIVATE
+                                   "${CMAKE_CURRENT_LIST_DIR}/../core"
+                               PUBLIC
+                                   $<BUILD_INTERFACE:${build_include_runtime}>
+                                   $<INSTALL_INTERFACE:${install_include_runtime}>)
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
 endforeach()
 

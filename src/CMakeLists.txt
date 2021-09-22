@@ -42,8 +42,6 @@ elseif(_afun_lib STREQUAL "aFunCore-s")
     target_link_libraries(aFun PUBLIC aFun-cx-libs)
 else()
     target_link_libraries(aFun PUBLIC aFun-ct-libs)
-    get_target_property(include_h aFun INCLUDE_DIRECTORIES)
-    message(STATUS "include_h = ${include_h}")
 endif()
 
 install(TARGETS aFun

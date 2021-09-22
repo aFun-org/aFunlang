@@ -1008,7 +1008,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
         case func_body_import:
             if (!pushImportActivity(body->code, env)) {
                 pushMessageDown(makeERRORMessage(IMPORT_ERROR, IMPORT_OBJ_ERROR, env), env);
-                activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+                activity->process_msg_first++;
                 re = 2;
                 break;
             }
@@ -1021,7 +1021,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
         default:
         case func_body_dynamic:
             pushMessageDown(makeERRORMessage(RUN_ERROR, FUNCBODY_ERROR_INFO, env), env);
-            activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
+            activity->process_msg_first++;
             re = 2;
             break;
     }
@@ -1101,7 +1101,9 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
         env->activity->prev->msg_down = env->activity->msg_down;
         env->activity->msg_down = NULL;
-        env->activity->prev->process_msg_first++;  // 优先处理通过msg_down返回的结果
+
+        /* popActivity必然设定process_msg_first */
+        env->activity->prev->process_msg_first++;
     }
 
     if (env->activity->type != act_top)

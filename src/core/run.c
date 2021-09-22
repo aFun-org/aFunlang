@@ -229,7 +229,10 @@ static int checkMsg(af_Message *msg, af_Environment *env) {
  */
 bool checkNormalEnd(af_Message *msg, af_Environment *env) {
     if (env->activity->bt_next == NULL) {
-        if (setFuncActivityToNormal(env) == 0) {  // 已经没有下一步了
+        if (env->activity->type == act_top || env->activity->type == act_top_import) {
+            pushMessageDown(msg, env);
+            return true;
+        } else if (setFuncActivityToNormal(env) == 0) {  // 已经没有下一步了
             if (msg == NULL) {  // msg 得不到处理
                 pushMessageDown(makeERRORMessage(RUN_ERROR, NOT_NORMAL_MSG_INFO, env), env);
                 return true;
@@ -302,8 +305,26 @@ bool iterCode(af_Code *code, af_Environment *env){
     if (!iterCodeInit(code, env))
         return false;
 
+    /*
+     * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
+     * 为什么会有这个问题: top-Activity只有在bt_next=NULL时被pop, 而循环也是在bt_next=NULL时可能被退出
+     *                  如此以来就可能导致在pop之前循环就退出了
+     * 实际上并不会发生。
+     * bt_next设定后，会出现两种情况: 一是马上检查bt_next, 而是设定了pass
+     * 设定了pass是意味着压入新的activity。当新的activity被返回时, 必定设置了process_msg_first
+     * 而process_msg_first时, 也会检查bt_next
+     *
+     * 【run-code设置了bt_next】 -> 检查bt_next并可能做pop处理 -> while循环检查bt_next  [例如变量访问语句]
+     * 【run-code设置了bt_next】 -> 压入了新的activity -> while循环检查 和一系列运行
+     *  -> 新activity返回, 设定process_msg_first -> while循环检查 (因为process_msg_first, 所以不会跳出循环)
+     *  -> process_msg_first会处理msg, 检查bt_next.
+     *
+     * popActivity会是一定会设置process_msg_first, 除了gc机制。
+     * 而gc机制前后, bt_next不会改变，这意味着如果gc之后while循环就会被跳出, 那么gc之前while循环早就跳出了
+     */
+
     /* 必须位于act_top, 且无next, 并且无msg处理才退出执行 */
-    while (env->activity->type != act_top || env->activity->bt_next != NULL  || env->activity->process_msg_first != 0) {
+    while (env->activity->type != act_top || env->activity->bt_next != NULL || env->activity->process_msg_first != 0) {
         /* 检查是否需要退出执行 */
         if (checkStop(env))
             return false;
