@@ -1,5 +1,6 @@
 ﻿add_subdirectory(tool)
 add_subdirectory(core)  # core 依赖 tool
+add_subdirectory(runtime)  # runtime 依赖 core
 
 # source在子目录中被使用, 为了避免子目录访问到source, 子目录将在此前面被执行
 file(GLOB source
@@ -19,9 +20,9 @@ set(_build_all ${AFUN_BUILD_ALL})
 
 add_executable(aFun "")
 if (${_build_all})
-    add_executable(aFun-xx "")  # xx表示均为动态链接 core-share-t
-    add_executable(aFun-cx "")  # cx表示仅core动态链接 core-share-c
-    add_executable(aFun-ct "")  # ct表示均静态链接 core-static-s
+    add_executable(aFun-xx "")  # xx表示均为动态链接
+    add_executable(aFun-cx "")  # cx表示仅core动态链接
+    add_executable(aFun-ct "")  # ct表示均静态链接
     set(aFunList aFun aFun-xx aFun-cx aFun-ct)
 else()
     set(aFunList aFun)
@@ -36,11 +37,13 @@ endforeach()
 set(AFUN_LIBRARY "aFunCore" CACHE STRING "Assign core to aFun")
 set(_afun_lib ${AFUN_LIBRARY})
 if (_afun_lib STREQUAL "aFunCore-t")
-    target_link_libraries(aFun PUBLIC core-shared-t)
+    target_link_libraries(aFun PUBLIC aFun-xx-libs)
 elseif(_afun_lib STREQUAL "aFunCore-s")
-    target_link_libraries(aFun PUBLIC core-shared-s)
+    target_link_libraries(aFun PUBLIC aFun-cx-libs)
 else()
-    target_link_libraries(aFun PUBLIC core-static-s)
+    target_link_libraries(aFun PUBLIC aFun-ct-libs)
+    get_target_property(include_h aFun INCLUDE_DIRECTORIES)
+    message(STATUS "include_h = ${include_h}")
 endif()
 
 install(TARGETS aFun
@@ -49,11 +52,11 @@ install(TARGETS aFun
         PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)  # 设定安装
 
 if (${_build_all})
-    target_link_libraries(aFun-xx PUBLIC core-shared-t)
-    target_link_libraries(aFun-cx PUBLIC core-shared-s)
-    target_link_libraries(aFun-ct PUBLIC core-static-s)
+    target_link_libraries(aFun-xx PUBLIC aFun-xx-libs)
+    target_link_libraries(aFun-cx PUBLIC aFun-cx-libs)
+    target_link_libraries(aFun-ct PUBLIC aFun-ct-libs)
     install(TARGETS aFun-xx aFun-cx aFun-ct
-            RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT advanced-runtim
+            RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT advanced-runtime
             PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
             PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)
 endif()

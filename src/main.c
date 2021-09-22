@@ -370,7 +370,7 @@ bool infixFunc(af_Object *obj) {
 }
 
 int main() {
-    aFunCoreInit();
+    aFunInit();
     printf("Hello World\n");
 
     af_Environment *env = makeEnvironment(grt_always);
