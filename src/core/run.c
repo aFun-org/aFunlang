@@ -5,7 +5,7 @@
 #include "__env.h"
 
 /* 工具函数: 初始化类型 */
-static bool iterCodeInit(af_Code *code, af_Environment *env);
+static bool iterCodeInit(af_Code *code, int mode, af_Environment *env);
 
 /* 工具函数: Message类函数 */
 static af_Message *getTopMsg(af_Environment *env);
@@ -105,14 +105,41 @@ static bool checkRunGC(af_Environment *env) {
 /*
  * 函数名: iterCodeInit
  * 目标: 初始化activity和environment (若environment中未存在activity则通过code新增一个TopActivity, 否则沿用原activity)
+ *
+ * mode 标识运行模式
+ * 0. 在top运行
+ * 1. 在import运行
+ * 2. 直接运行
  */
-static bool iterCodeInit(af_Code *code, af_Environment *env) {
+static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
     if (env == NULL || env->core == NULL || env->activity == NULL || env->core->status == core_exit)
         return false;
     if (env->core->status == core_stop)
         env->core->status = core_normal;
-    setActivityBtTop(code, env->activity);
-    setActivityBtStart(code, env->activity);
+
+    switch (mode) {
+        case 0:
+            if (env->activity->type != act_top || code == NULL || code->path == NULL)
+                return false;
+            setActivityBtTop(code, env->activity);
+            setActivityBtStart(code, env->activity);
+            break;
+        case 1: {
+            if (env->activity->type != act_top || code == NULL || code->path == NULL)
+                return false;
+            char *name = getFileName(code->path);
+            pushImportActivity(code, NULL, name, env);
+            printf("name = %s\n", name);
+            free(name);
+            break;
+        }
+        case 2:
+            if (env->activity->bt_start == NULL || env->activity->bt_next == NULL || code != NULL)
+                return false;
+            break;
+        default:
+            return false;
+    }
     return true;
 }
 
@@ -301,8 +328,8 @@ static bool checkStop(af_Environment *env) {
  *
  *      因为该函数的大部分内容运行在循环中, 因此使用continue表示不在运行后面的代码
  */
-bool iterCode(af_Code *code, af_Environment *env){
-    if (!iterCodeInit(code, env))
+bool iterCode(af_Code *code, int mode, af_Environment *env){
+    if (!iterCodeInit(code, mode, env))
         return false;
 
     /*
@@ -443,7 +470,7 @@ bool iterDestruct(int deep, af_Environment *env) {
         if (dl == NULL)
             return true;
         pushGCActivity(dl, pdl, env);
-        if (!iterCode(NULL, env))
+        if (!iterCode(NULL, 0, env))
             return false;
     }
     return false;

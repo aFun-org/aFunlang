@@ -7,6 +7,7 @@ foreach(src IN LISTS src_list)
     target_link_libraries(${file_name} aFun-ct-libs)  # 链接静态库 (导出所有符号)
     set_target_properties(${file_name}
                           PROPERTIES OUTPUT_NAME "test_${file_name}")
+    target_compile_definitions(${file_name} PRIVATE IN_CTEST)
     unset(file_name)
 endforeach()
 
