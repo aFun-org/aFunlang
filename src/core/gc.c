@@ -25,6 +25,9 @@ void gc_add##type##Reference(af_##type *obj) { \
 } \
 void gc_del##type##Reference(af_##type *obj) { \
     obj->gc.info.reference--; \
+} \
+GcCount gc_get##type##Reference(af_##type *obj) { \
+    return obj->gc.info.reference; \
 }
 
 GC_FUNC_DEFINED(ObjectData)
@@ -35,11 +38,11 @@ GC_FUNC_DEFINED(VarSpace)
 #undef GC_FUNC_DEFINED
 
 /* gc_DestructList 函数 */
-/* gc_DestructList 创建与释放函数 */
+/* gc_DestructList 创建与释放 */
 static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func);
 static gc_DestructList *freeDestructList(gc_DestructList *dl);
 
-/* gc_DestructList 操作函数 */
+/* gc_DestructList 相关操作 */
 static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl);
 
 static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func) {
@@ -70,7 +73,7 @@ static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc
 }
 
 /* gcList 函数 */
-/* gcList 创建与释放函数 */
+/* gcList 创建与释放 */
 static af_GcList *freeGcList(af_GcList *gl);
 
 af_GcList *makeGcList(enum af_GcListType type, void *data) {
@@ -98,7 +101,7 @@ af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base) {
 }
 
 /* 分析记录器函数 */
-/* 分析记录器创建与释放函数 */
+/* 分析记录器 创建与释放 */
 static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist);
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base);
 static void freeAllAnalyzed(gc_Analyzed *base);

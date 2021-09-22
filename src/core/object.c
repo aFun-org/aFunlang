@@ -151,6 +151,15 @@ af_Inherit *makeInherit(af_Object *obj) {
     return ih;
 }
 
+af_Inherit *pushInherit(af_Inherit **base, af_Inherit *new) {
+    while ((*base) != NULL)
+        base = &((*base)->next);
+    *base = new;
+    while (new != NULL && new->next != NULL)
+        new = new->next;
+    return new;
+}
+
 static af_Inherit *freeInherit(af_Inherit *ih) {
     af_Inherit *next = ih->next;  // vs一定是被gc托管的
     free(ih);
@@ -318,4 +327,36 @@ af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_O
     }
 
     return NULL;
+}
+
+char *getObjectID(af_Object *obj) {
+    return obj->data->id;
+}
+
+af_ObjectAPI *getObjectAPI(af_Object *obj) {
+    return obj->data->api;
+}
+
+af_Inherit *getObjectInherit(af_Object *obj) {
+    return obj->data->inherit;
+}
+
+af_Inherit *getInheritNext(af_Inherit *ih) {
+    return ih->next;
+}
+
+af_Object *getInheritObject(af_Inherit *ih) {
+    return ih->obj;
+}
+
+af_VarSpace *getInheritVarSpace(af_Inherit *ih) {
+    return ih->vs;
+}
+
+ObjAPIUint getAPICount(af_ObjectAPI *api) {
+    return api->count;
+}
+
+void objectSetAllowInherit(af_Object *obj, bool allow) {
+    obj->data->allow_inherit = allow;
 }

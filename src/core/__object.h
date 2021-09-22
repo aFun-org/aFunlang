@@ -26,7 +26,7 @@ struct af_ObjectAPINode {
 };
 
 struct af_ObjectAPI {
-    uint32_t count;  // api个数记录
+    ObjAPIUint count;  // api个数记录
     struct af_ObjectAPINode *(node[API_HASHTABLE_SIZE]);
 };
 
@@ -59,10 +59,10 @@ struct af_Inherit {
     struct af_Inherit *next;
 };
 
-/* 对象创建与释放函数 */
+/* 对象 创建与释放 */
 AFUN_CORE_NO_EXPORT void freeObject(af_Object *obj, af_Environment *env);
 
-/* ObjectData 属性获取函数 */
+/* ObjectData 属性访问 */
 AFUN_CORE_NO_EXPORT af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
 
 /* ObjectData 释放函数 */

@@ -1,11 +1,13 @@
 ﻿#include "__var.h"
-#include "__env.h"
 #include "tool.h"
 
 /* VarNode 创建与释放 */
 static af_VarNode *makeVarNode(af_Object *obj, char *id);
 static af_VarNode *freeVarNode(af_VarNode *vn);
 static void freeAllVarNode(af_VarNode *vn);
+
+/* VarNode 相关操作 */
+static af_VarNode *findVarNode_(af_Var *var, char *id);
 
 /* VarCup 创建与释放 */
 static af_VarCup *makeVarCup(af_Var *var);
@@ -77,10 +79,30 @@ void freeVarByCore(af_Var *var, af_Core *core) {
     free(var);
 }
 
-void addVarNode(af_Var var, af_Object *obj, char *id) {
+static af_VarNode *findVarNode_(af_Var *var, char *id) {
+    af_VarNode *vn = var->vn->next;
+
+    if (id == NULL)
+        return var->vn;
+
+    for (NULL; vn != NULL; vn = vn->next) {
+        if (EQ_STR(vn->id, id))
+            return vn;
+    }
+    return NULL;
+}
+
+void addVarNode(af_Var *var, af_Object *obj, char *id) {
     af_VarNode *vn = makeVarNode(obj, id);
-    vn->next = var.vn->next;  // 第一个 vn 必须表示返回值
-    var.vn->next = vn;
+    vn->next = var->vn->next;  // 第一个 vn 必须表示返回值
+    var->vn->next = vn;
+}
+
+af_Object *findVarNode(af_Var *var, char *id) {
+    af_VarNode *vn = findVarNode_(var, id);
+    if (vn != NULL)
+        return vn->obj;
+    return NULL;
 }
 
 static af_VarCup *makeVarCup(af_Var *var) {
@@ -421,4 +443,32 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
     af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(belong, 3, 2, 0, env));
     new->next = base;
     return new;
+}
+
+void setVarPermison(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+    if (vs->belong->data != visitor->data)
+        return;
+    var->permissions[0] = p_self;
+    var->permissions[1] = p_posterity;
+    var->permissions[2] = p_external;
+}
+
+void setVarSpacePermison(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+    if (vs->belong->data != visitor->data)
+        return;
+    vs->permissions[0] = p_self;
+    vs->permissions[1] = p_posterity;
+    vs->permissions[2] = p_external;
+}
+
+bool isProtectVarSpace(af_VarSpace *vs) {
+    return vs->is_protect;
+}
+
+bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, char protect) {
+    bool re = vs->is_protect;
+    if (vs->belong->data != visitor->data)
+        return re;
+    vs->is_protect = protect;
+    return re;
 }

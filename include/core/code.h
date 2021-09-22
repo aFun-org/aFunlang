@@ -20,25 +20,27 @@ enum af_BlockType {
     curly = '{',  // 大括号
 };
 
-/* 代码块创建函数 */
+/* 代码块 创建与释放 */
 AFUN_CORE_EXPORT af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path);
 AFUN_CORE_EXPORT af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix,
-        FileLine line, FilePath path, af_Code **next);
-
-/* 代码块释放函数 */
+                                        FileLine line, FilePath path, af_Code **next);
 AFUN_CORE_EXPORT void freeAllCode(af_Code *bt);
 
-/* 代码块操作函数 */
+/* 代码块 相关操作 */
 AFUN_CORE_EXPORT af_Code *pushCode(af_Code **base, af_Code *next);
 AFUN_CORE_EXPORT af_Code *copyCode(af_Code *base, FilePath *path);
+AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FILE *file);
+AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FILE *file);
 
-/* 代码块属性获取函数 */
+/* 代码块 属性访问 */
 AFUN_CORE_EXPORT af_Code *getCodeNext(af_Code *bt);
 AFUN_CORE_EXPORT af_Code *getCodeElement(af_Code *bt);
 AFUN_CORE_EXPORT char *codeToStr(af_Code *code, int n);
-
-/* 代码块IO函数 */
-AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FILE *file);
-AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FILE *file);
+AFUN_CORE_EXPORT enum af_CodeType getCodeType(af_Code *code);
+AFUN_CORE_EXPORT enum af_BlockType getCodeBlockType(af_Code *code);
+AFUN_CORE_EXPORT char getCodePrefix(af_Code *code);
+AFUN_CORE_EXPORT CodeInt getCodeEndCount(af_Code *code);
+AFUN_CORE_EXPORT char *getCodeElementData(af_Code *code);
+AFUN_CORE_EXPORT CodeInt getCodeElementCount(af_Code *code);
 
 #endif //AFUN_BYTECODE

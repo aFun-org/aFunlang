@@ -29,19 +29,9 @@ NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 AFUN_CORE_EXPORT af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func);
 AFUN_CORE_EXPORT void freeAllArgCodeList(af_ArgCodeList *acl);
 
-/* af_ArgCodeList 操作函数 */
-AFUN_CORE_EXPORT af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new);
-
-/* af_ArgCodeList 属性获取 */
-AFUN_CORE_EXPORT void *getArgCodeListData(af_ArgCodeList *acl);
-AFUN_CORE_EXPORT af_Object *getArgCodeListResult(af_ArgCodeList *acl);
-
 /* af_ArgList 创建与释放 */
 AFUN_CORE_EXPORT af_ArgList *makeArgList(char *name, af_Object *obj);
 AFUN_CORE_EXPORT void freeAllArgList(af_ArgList *al);
-
-/* af_ArgList 操作函数 */
-AFUN_CORE_EXPORT af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new);
 
 /* FuncBody 创建与释放 */
 AFUN_CORE_EXPORT af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type);
@@ -56,10 +46,28 @@ AFUN_CORE_EXPORT af_FuncInfo *makeFuncInfo(enum af_FuncInfoScope scope, enum af_
                                            bool is_macro, bool var_this, bool var_func);
 AFUN_CORE_EXPORT void freeFuncInfo(af_FuncInfo *fi);
 
-/* FuncInfo 操作函数 */
+/* af_ArgCodeList 相关操作 */
+AFUN_CORE_EXPORT af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new);
+
+/* af_ArgList 相关操作 */
+AFUN_CORE_EXPORT af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new);
+
+/* af_FuncBody 相关操作 */
+AFUN_CORE_EXPORT void pushFuncBody(af_FuncBody **base, af_FuncBody *body);
+
+/* FuncInfo 相关操作 */
 AFUN_CORE_EXPORT void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
 AFUN_CORE_EXPORT void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
 AFUN_CORE_EXPORT void makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
 AFUN_CORE_EXPORT void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi);
+
+/* af_ArgCodeList 属性获取 */
+AFUN_CORE_EXPORT void *getArgCodeListData(af_ArgCodeList *acl);
+AFUN_CORE_EXPORT af_Object *getArgCodeListResult(af_ArgCodeList *acl);
+af_ArgCodeList *getArgCodeListNext(af_ArgCodeList *acl);
+bool getArgCodeListRunInFunc(af_ArgCodeList *acl);
+
+/* af_ArgList 属性获取 */
+af_ArgList *getArgListNext(af_ArgList *al);
 
 #endif //AFUN_FUNC

@@ -14,8 +14,9 @@ AFUN_CORE_EXPORT af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYM
 AFUN_CORE_EXPORT void freeParser(af_Parser *parser);
 AFUN_CORE_EXPORT af_Parser *makeParserByString(char *str, bool free_str, FILE *error);
 AFUN_CORE_EXPORT af_Parser *makeParserByFile(FilePath path, FILE *error);
+AFUN_CORE_EXPORT af_Parser *makeParserByStdin(FILE *error);
 
-/* Parser 操作函数 */
+/* Parser 相关操作 */
 AFUN_CORE_EXPORT af_Code *parserCode(af_Parser *parser);
 AFUN_CORE_EXPORT void initParser(af_Parser *parser);
 

@@ -1299,3 +1299,77 @@ static char *getActivityInfoToBacktracking(af_Activity *activity, bool print_bt_
 
     return info;
 }
+
+void setGcMax(size_t max, af_Environment *env) {
+    env->core->gc_count_max = max;
+}
+
+void setGcRun(enum GcRunTime grt, af_Environment *env) {
+    env->core->gc_run = grt;
+}
+
+size_t getGcCount(af_Environment *env) {
+    return env->core->gc_count_max;
+}
+
+size_t getGcMax(af_Environment *env) {
+    return env->core->gc_count;
+}
+
+enum GcRunTime getGcRun(af_Environment *env) {
+    return env->core->gc_run;
+}
+
+af_Object *getCoreGlobal(af_Environment *env) {
+    return env->core->global;
+}
+
+af_Object *getGlobal(af_Environment *env) {
+    af_Activity *activity = env->activity;
+    for (NULL; activity != NULL; activity = activity->prev) {
+        if (activity->type == act_top || activity->type == act_top_import)
+            return activity->belong;
+    }
+    return env->core->global;
+}
+
+af_Object *getBelong(af_Environment *env) {
+    if (env == NULL || env->activity == NULL)
+        return NULL;
+    return env->activity->belong;
+}
+
+FilePath getActivityFile(af_Environment *env){
+    if (env == NULL || env->activity == NULL)
+        return NULL;
+    return env->activity->file;
+}
+
+FileLine getActivityLine(af_Environment *env){
+    if (env == NULL || env->activity == NULL)
+        return 0;
+    return env->activity->line;
+}
+
+af_Object *getMsgNormalData(af_Message *msg) {
+    if (!EQ_STR("NORMAL", msg->type))
+        return NULL;
+    af_Object *obj = *(af_Object **)msg->msg;
+    gc_delReference(obj);
+    return obj;
+}
+
+af_ErrorInfo *getMsgErrorInfo(af_Message *msg) {
+    if (!EQ_STR("ERROR", msg->type))
+        return NULL;
+    af_ErrorInfo *ei = *(af_ErrorInfo **)msg->msg;
+    return ei;
+}
+
+char *getErrorType(af_ErrorInfo *ei) {
+    return ei->error_type;
+}
+
+char *getError(af_ErrorInfo *ei) {
+    return ei->error;
+}

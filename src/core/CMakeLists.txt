@@ -45,7 +45,8 @@ foreach(tgt core-shared-t core-shared-s core-static-s)
                                $<BUILD_INTERFACE:${build_include_core}/info>
                                $<INSTALL_INTERFACE:${install_include_core}>)
     set_target_properties(${tgt} PROPERTIES
-                          PUBLIC_HEADER "${public_h_build}")
+                          PUBLIC_HEADER "${public_h_build}"
+                          PRIVATE_HEADER "${private_h}")  # PRIVATE_HEADER私有头文件, 可以用于高级开发
 endforeach()
 
 set_target_properties(core-shared-t PROPERTIES OUTPUT_NAME "aFunCore-t")

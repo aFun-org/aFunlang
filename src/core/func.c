@@ -6,9 +6,6 @@ static af_FuncBody *makeFuncBody(enum af_FuncBodyType type, char **msg_type);
 /* msg_type 释放 */
 static void freeMsgType(char **msg_type);
 
-/* FuncBody 操作函数 */
-static void pushFuncBody(af_FuncBody **base, af_FuncBody *body);
-
 af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool run_in_func) {
     af_ArgCodeList *acl = calloc(1, sizeof(af_ArgCodeList));
     acl->info = calloc(1, size);
@@ -150,7 +147,7 @@ void freeAllFuncBody(af_FuncBody *fb) {
         fb = freeFuncBody(fb);
 }
 
-static void pushFuncBody(af_FuncBody **base, af_FuncBody *body) {
+void pushFuncBody(af_FuncBody **base, af_FuncBody *body) {
     while (*base != NULL)
         base = &((*base)->next);
     *base = body;
@@ -204,4 +201,16 @@ bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body) {
     }
 
     return true;
+}
+
+af_ArgCodeList *getArgCodeListNext(af_ArgCodeList *acl) {
+    return acl->next;
+}
+
+af_ArgList *getArgListNext(af_ArgList *al) {
+    return al->next;
+}
+
+bool getArgCodeListRunInFunc(af_ArgCodeList *acl) {
+    return acl->run_in_func;
 }

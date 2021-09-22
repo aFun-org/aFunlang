@@ -227,14 +227,14 @@ AFUN_CORE_NO_EXPORT void setActivityBtNext(af_Code *bt_next, af_Activity *activi
 /* LiteralData 释放函数 */
 AFUN_CORE_NO_EXPORT void freeAllLiteralData(af_LiteralDataList *ld);
 
-/* LiteralData 操作函数 */
+/* LiteralData 相关操作 */
 AFUN_CORE_NO_EXPORT void pushLiteralData(char *data, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env);
 
 /* 顶层消息处理器 处理函数 */
 AFUN_CORE_NO_EXPORT void runTopMessageProcess(bool is_gc, af_Environment *env);
 
-/* 消息创建与释放函数 */
+/* 消息 创建与释放 */
 AFUN_CORE_NO_EXPORT void freeAllMessage(af_Message *msg);
 
 /* 消息管理函数 */

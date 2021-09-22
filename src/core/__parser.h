@@ -60,7 +60,7 @@ struct af_Syntactic {
     char *text;
 };
 
-/* Parser 操作函数 */
+/* Parser 相关操作 */
 AFUN_CORE_EXPORT af_TokenType getTokenFromLexical(char **text, af_Parser *parser);
 
 #endif //AFUN_PARSER_H_

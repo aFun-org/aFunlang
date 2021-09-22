@@ -16,8 +16,8 @@ af_BlockType 表示block类型的枚举体 (公开)
 * makeBlockCode
 * freeAllCode
 
-相关操作：
-* connectCode  [不会修改现有代码的结构, 只是在末尾追加内容]
+相关操作:：
+* pushCode  [不会修改现有代码的结构, 只是在末尾追加内容]
 * copyCode
 * writeAllCode
 * readAllCode
@@ -26,16 +26,15 @@ af_BlockType 表示block类型的枚举体 (公开)
 属性访问:
 * getCodeNext
 * getCodeBlockElement
-* getCodeType  [未存在]
-* getCodeBlockType  [未存在]
-* getCodePrefix  [未存在]
-* getCodeEndCount  [未存在]
-* getCodeElementData  [未存在]
-* getCodeBlockType  [未存在]
-* getCodeBlockElements  [未存在]
+* getCodeType
+* getCodeBlockType
+* getCodePrefix
+* getCodeEndCount
+* getCodeElementData
+* getCodeElementCount
 
 
-func.h
+func
 af_ArgCodeList  表示参数计算表, 已经计算结果
 af_ArgList  表示参数赋值表
 af_FuncBody  函数体信息 [无访问的必要性]
@@ -56,31 +55,31 @@ af_FuncInfo  函数信息 [无访问的必要性]
 * makeFuncInfo
 * freeFuncInfo
 
-相关操作
+相关操作:
 * pushArgCodeList
 * pushArgList
-* pushFuncBody  [未存在]
+* pushFuncBody
 * makeCFuncBodyToFuncInfo
 * makeCodeFuncBodyToFuncInfo
 * makeImportFuncBodyToFuncInfo
 * makeDynamicFuncBodyToFuncInfo
 
 属性访问
-* getArgCodeListNext  [未存在]
-* getArgListNext  [未存在]
+* getArgCodeListNext
+* getArgListNext
 * getArgCodeListResult
 * getArgCodeListData
-* getArgCodeListRunInFunc  [未存在]
+* getArgCodeListRunInFunc
 
 
-gc.h
+gc
 GcList 记录自定义的gc链接信息 [无访问的必要性]
 
 创建与释放
 * makeGcList
 * freeAllGcList
 
-相关操作
+相关操作:
 * pushGcList
 * gc_addObjectReference
 * gc_addVarReference
@@ -90,12 +89,12 @@ GcList 记录自定义的gc链接信息 [无访问的必要性]
 * gc_delVarSpaceReference
 
 属性访问
-* gc_getObjectReference  [未存在]
-* gc_getVarReference  [未存在]
-* gc_getVarSpaceReference  [未存在]
+* gc_getObjectReference
+* gc_getVarReference
+* gc_getVarSpaceReference
 
 
-object.h
+object
 af_Object 描述一个对象
 af_Inherit 描述继承关系
 af_ObjectAPI 描述API
@@ -107,29 +106,30 @@ af_ObjectAPI 描述API
 * makeObjectAPI
 * freeObjectAPI
 
-相关操作
+相关操作:
 * objectSetAllowInherit
 * setObjectAttributes
 * addAPI
 * addAPIToObject
-* pushInherit  [未定义]
+* pushInherit
 
 属性访问
-* getObjectID  [未定义]
+* getObjectID
 * getObjectData
-* getObjectAPI   [未定义]
+* getObjectAPI
 * getBelongObject
-* getInherit  (副本) [未定义]
+* getObjectInherit
+* getInheritNext
 * findObjectAttributes
 * checkPosterity
-* getInheritObject  [未定义]
-* getInheritVarSpace  [未定义]
+* getInheritObject
+* getInheritVarSpace
 * findAPI
 * findObjectAPI
-* getAPICount  [未定义]
+* getAPICount
 
 
-parser.h
+parser
 af_Parser 描述解释器
 
 创建与释放:
@@ -137,18 +137,18 @@ af_Parser 描述解释器
 * freeParser
 * makeParserByString
 * makeParserByFile
-* makeParserByStdin  [未定义]
+* makeParserByStdin
 
 相关操作:
 * parserCode
 * initParser
 
 
-run.h
+run
 相关操作:
 * iterCode
 
-var.h
+var
 af_Var 描述一个变量
 af_VarSpace 描述一个变量空间
 af_VarSpaceListNode 描述变量空间链
@@ -160,7 +160,7 @@ af_VarSpaceListNode 描述变量空间链
 * freeAllVarSpaceList
 * freeVarSpaceListCount
 
-相关操作
+相关操作:
 * addVarNode
 * addVarToVarSpace
 * makeVarToVarSpace
@@ -172,18 +172,19 @@ af_VarSpaceListNode 描述变量空间链
 * setVarToVarSpace
 * setVarToVarList
 * pushNewVarList
-* setVarPermison  [未定义]
-* setVarSpacePermison  [未定义]
-* setVarSpaceProtect  [未定义]
+* setVarPermison
+* setVarSpacePermison
+* setVarSpaceProtect
 
 属性访问
-* getVarNode  [未定义]
+* isProtectVarSpace
+* findVarNode
 * findVarFromVarSpace
 * findVarFromVarList
 * getVarSpaceFromList
 
 
-env.h
+env
 af_Environment 描述运行环境
 af_Message 描述消息传递
 af_ErrorInfo 描述错误信息
@@ -200,8 +201,10 @@ af_ErrorInfo 描述错误信息
 * makeErrorInfo
 * freeErrorInfo
 
-相关操作
+相关操作:
 * enableEnvironment
+* setGcMax
+* setGcRun
 * setPrefix
 * addVarToProtectVarSpace
 * setCoreStop
@@ -217,8 +220,6 @@ af_ErrorInfo 描述错误信息
 * pushLiteralRegex
 * fprintfErrorInfo
 * pushErrorBacktracking
-* setGcMax  [未定义]
-* setGcRun  [未定义]
 
 属性访问
 * getPrefix
@@ -226,18 +227,16 @@ af_ErrorInfo 描述错误信息
 * getProtectVarSpace
 * getMessageData
 * getFirstMessage
-* getCoreSttaus  [未定义]
-* getGcCount  [未定义]
-* getGcMax  [未定义]
-* getGcRun  [未定义]
-* getCoreGlobal  [未定义]
-* getGlobal (会涉及import)  [未定义]
-* getBelong  [未定义]
-* getActivityType  [未定义]
-* getActivityFile  [未定义]
-* getActivityLine  [未定义]
+* getGcCount
+* getGcMax
+* getGcRun
+* getCoreGlobal
+* getGlobal (会涉及import)
+* getBelong
+* getActivityFile
+* getActivityLine
 * findEnvVar
-* getMsgNormalData  [未定义]
-* getMsgErrorInfo  [未定义]
-* getErrorType  [未定义]
-* getMsgError  [未定义]
+* getMsgNormalData
+* getMsgErrorInfo
+* getErrorType
+* getError

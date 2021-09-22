@@ -13,7 +13,7 @@
 static af_Code *makeCode(char prefix, FileLine line, FilePath path);
 static af_Code *freeCode(af_Code *bt);
 
-/* Code 操作函数 */
+/* Code 相关操作 */
 static bool countElement(af_Code *element, CodeInt *elements, af_Code **next);
 
 /* Code IO函数 */
@@ -416,4 +416,34 @@ void printCode(af_Code *bt) {
                 break;
         }
     }
+}
+
+enum af_CodeType getCodeType(af_Code *code) {
+    return code->type;
+}
+
+enum af_BlockType getCodeBlockType(af_Code *code) {
+    if (code->type != code_block)
+        return '(';
+    return code->block.type;
+}
+
+char getCodePrefix(af_Code *code) {
+    return code->prefix;
+}
+
+CodeInt getCodeEndCount(af_Code *code) {
+    return code->code_end;
+}
+
+char *getCodeElementData(af_Code *code) {
+    if (code->type != code_element)
+        return NULL;
+    return code->element.data;
+}
+
+CodeInt getCodeElementCount(af_Code *code) {
+    if (code->type != code_block)
+        return -1;
+    return code->block.elements;
 }

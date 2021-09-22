@@ -120,3 +120,23 @@ af_Parser *makeParserByFile(FilePath path, FILE *error) {
     FREE_SYMBOL(destruct);
     return parser;
 }
+
+static size_t readFuncStdin(struct readerDataFile *data, char *dest, size_t len) {
+    if (fgets(dest, (int)(len + 1), stdin) == NULL)
+        return 0;
+    return strlen(dest);
+}
+
+static void destructStdin(struct readerDataFile *data) {
+    // 什么都不用做
+}
+
+af_Parser *makeParserByStdin(FILE *error) {
+    DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
+    DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
+    initParser(parser);
+    FREE_SYMBOL(read_func);
+    FREE_SYMBOL(destruct);
+    return parser;
+}

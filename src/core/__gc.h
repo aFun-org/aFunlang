@@ -77,8 +77,10 @@ struct gc_DestructList {
 };
 
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
+#ifdef core_shared_t_EXPORTS
 #undef gc_addReference
 #undef gc_delReference
+#undef gc_getReference
 #define gc_addReference(obj) ((_Generic((obj), \
                                af_ObjectData *: gc_addObjectDataReference, \
                                af_Object *: gc_addObjectReference, \
@@ -91,6 +93,12 @@ struct gc_DestructList {
                                af_Var *: gc_delVarReference, \
                                af_VarSpace *: gc_delVarSpaceReference))(obj))
 
+#define gc_getReference(obj) ((_Generic((obj), \
+                               af_ObjectData *: gc_getObjectDataReference, \
+                               af_Object *: gc_getObjectReference, \
+                               af_Var *: gc_getVarReference, \
+                               af_VarSpace *: gc_getVarSpaceReference))(obj))
+#endif
 /* gc 对象新增函数 */
 AFUN_CORE_NO_EXPORT void gc_addObject(af_Object *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVar(af_Var *obj, af_Environment *env);
@@ -104,6 +112,7 @@ AFUN_CORE_NO_EXPORT void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *
 /* gc Reference 管理函数 : 涉及af_ObjectData 不对外公开 */
 AFUN_CORE_NO_EXPORT void gc_addObjectDataReference(af_ObjectData *obj);
 AFUN_CORE_NO_EXPORT void gc_delObjectDataReference(af_ObjectData *obj);
+AFUN_CORE_NO_EXPORT GcCount gc_getObjectDataReference(af_ObjectData *obj);
 
 /* gc 操控函数 : gc的启动由解释器完全管理 */
 AFUN_CORE_NO_EXPORT void gc_RunGC(af_Environment *env);
