@@ -198,8 +198,11 @@ af_ErrorInfo 描述错误信息
 * makeNORMALMessage
 * makeERRORMessage
 * makeERRORMessageFormat
+* makeIMPORTMessage
 * makeErrorInfo
 * freeErrorInfo
+* makeImportInfo
+* freeImportInfo
 
 相关操作:
 * enableEnvironment
@@ -238,5 +241,8 @@ af_ErrorInfo 描述错误信息
 * findEnvVar
 * getMsgNormalData
 * getMsgErrorInfo
+* getMsgImportInfo
 * getErrorType
 * getError
+* getImportMark
+* getImportObject

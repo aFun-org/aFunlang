@@ -7,6 +7,7 @@
 typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
 typedef struct af_ErrorInfo af_ErrorInfo;
+typedef struct af_ImportInfo af_ImportInfo;
 
 /* 顶层消息处理器的处理函数 DLC */
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
@@ -32,10 +33,15 @@ AFUN_CORE_EXPORT bool freeMessageCount(size_t count, af_Message *msg);
 AFUN_CORE_EXPORT af_Message *makeNORMALMessage(af_Object *obj);
 AFUN_CORE_EXPORT af_Message *makeERRORMessage(char *type, char *error, af_Environment *env);
 AFUN_CORE_EXPORT af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *format, ...);
+AFUN_CORE_EXPORT af_Message *makeIMPORTMessage(char *mark, af_Object *obj);
 
 /* ErrorInfo 创建与释放 */
 AFUN_CORE_EXPORT af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path);
 AFUN_CORE_EXPORT void freeErrorInfo(af_ErrorInfo *ei);
+
+/* ImportInfo 创建与释放 */
+af_ImportInfo *makeImportInfo(char *mark, af_Object *obj);
+void freeImportInfo(af_ImportInfo *ii);
 
 /* 运行环境 相关操作 */
 AFUN_CORE_EXPORT void enableEnvironment(af_Environment *env);
@@ -90,8 +96,14 @@ AFUN_CORE_EXPORT FileLine getActivityLine(af_Environment *env);
 /* 消息 属性访问 */
 AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg);
 AFUN_CORE_EXPORT af_ErrorInfo *getMsgErrorInfo(af_Message *msg);
+AFUN_CORE_EXPORT af_ImportInfo *getMsgImportInfo(af_Message *msg);
 
 /* ErrorInfo 属性访问 */
 AFUN_CORE_EXPORT char *getErrorType(af_ErrorInfo *ei);
 AFUN_CORE_EXPORT char *getError(af_ErrorInfo *ei);
+
+/* ImportInfo 属性访问 */
+AFUN_CORE_EXPORT char *getImportMark(af_ImportInfo *ii);
+AFUN_CORE_EXPORT af_Object *getImportObject(af_ImportInfo *ii);
+
 #endif //AFUN_ENV

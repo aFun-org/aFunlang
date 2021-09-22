@@ -12,7 +12,7 @@ static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, a
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
                                      af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
 static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
-static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
+static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark);
 static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeActivityTop(af_Activity *activity);
@@ -58,6 +58,7 @@ static void fprintfNote(FILE *file, char *note);
 /* 内置顶层消息处理器 */
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env);
+static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env);
 
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
@@ -199,10 +200,11 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     return activity;
 }
 
-static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong) {
+static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark) {
     af_Activity *activity = makeTopActivity(bt_top, bt_start, protect, belong);
-
     activity->type = act_top_import;
+    if (mark != NULL)
+        activity->import_mark = strCopy(mark);
     return activity;
 }
 
@@ -242,6 +244,8 @@ static af_Activity *freeActivity(af_Activity *activity) {
         if (activity->fi != NULL)
             freeFuncInfo(activity->fi);
         freeAllLiteralData(activity->ld);
+
+        free(activity->import_mark);
     }
 
     free(activity);
@@ -490,6 +494,12 @@ af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *
     return makeERRORMessage(type, buf, env);;
 }
 
+af_Message *makeIMPORTMessage(char *mark, af_Object *obj) {
+    af_Message *msg = makeMessage("IMPORT", sizeof(af_ImportInfo *));
+    *(af_ImportInfo **)msg->msg = makeImportInfo(mark, obj);
+    return msg;
+}
+
 static af_EnvVar *makeEnvVar(char *name, char *data) {
     af_EnvVar *var = calloc(1, sizeof(af_EnvVar));
     var->name = strCopy(name);
@@ -550,7 +560,7 @@ char *findEnvVar(char *name, af_Environment *env) {
 
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        fprintf(stderr, "msg: %p error\n", msg->msg);
+        fprintf(stderr, "NORMAL msg: %p error\n", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
@@ -560,12 +570,32 @@ static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
 
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
-        printf("msg: %p error\n", msg->msg);
+        printf("ERROR msg: %p error\n", msg->msg);
         return;
     }
     if (!is_gc)
         fprintfErrorInfo(stdout, *(af_ErrorInfo **)msg->msg);
     freeErrorInfo(*(af_ErrorInfo **)msg->msg);
+}
+
+static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
+    if (msg->msg == NULL || *(af_ImportInfo **)msg->msg == NULL) {
+        printf("IMPORT msg: %p error\n", msg->msg);
+        return;
+    }
+    af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
+    if (ii->obj == NULL) {
+        printf("IMPORT msg: %p do not get obj\n", msg->msg);
+        return;
+    }
+
+    gc_delReference(ii->obj);
+    if (ii->mark != NULL) {
+        makeVarToProtectVarSpace(ii->mark, 3, 3, 3, ii->obj, env);
+        printf("IMPORT point: [%s] %p \n", ii->mark, ii->obj);
+    } else
+        printf("IMPORT point: <no-name> %p \n", ii->obj);
+    freeImportInfo(ii);
 }
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
@@ -591,6 +621,10 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     DLC_SYMBOL(TopMsgProcessFunc) func2 = MAKE_SYMBOL(mp_ERROR, TopMsgProcessFunc);
     addTopMsgProcess("ERROR", func2, env);
     FREE_SYMBOL(func2);
+
+    DLC_SYMBOL(TopMsgProcessFunc) func3 = MAKE_SYMBOL(mp_IMPORT, TopMsgProcessFunc);
+    addTopMsgProcess("IMPORT", func3, env);
+    FREE_SYMBOL(func3);
 
     env->core->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->core->protect, env->core->global);
@@ -824,12 +858,18 @@ void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *
     env->activity = activity;
 }
 
-bool pushImportActivity(af_Code *bt, af_Environment *env) {
-    af_Object *obj = makeGlobalObject(env);
+bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment *env) {
+    af_Object *tmp = NULL;
     if (obj == NULL)
+        obj = &tmp;
+
+    if (*obj == NULL)
+        *obj = makeGlobalObject(env);
+
+    if (*obj == NULL)
         return false;
 
-    af_Activity *activity = makeTopImportActivity(bt, bt, env->core->protect, obj);
+    af_Activity *activity = makeTopImportActivity(bt, bt, env->core->protect, *obj, mark);
     activity->prev = env->activity;
     env->activity = activity;
     return true;
@@ -1006,7 +1046,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
             break;
         }
         case func_body_import:
-            if (!pushImportActivity(body->code, env)) {
+            if (!pushImportActivity(body->code, NULL, NULL, env)) {
                 pushMessageDown(makeERRORMessage(IMPORT_ERROR, IMPORT_OBJ_ERROR, env), env);
                 activity->process_msg_first++;
                 re = 2;
@@ -1086,10 +1126,8 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_top_import && /* import模式, 并且msg_down中有normal, 则把normal替换为belong */
         env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
         af_Message *tmp = getFirstMessage(env);
-        gc_delReference(*(af_Object **) (tmp->msg));
-        freeMessage(tmp);
-
-        pushMessageDown(makeNORMALMessage(env->activity->belong), env);  // 压入belong作为msg
+        pushMessageDown(makeIMPORTMessage(env->activity->import_mark, env->activity->belong), env);  // 压入belong作为msg
+        pushMessageDown(tmp, env);
     }
 
     if (!is_normal)
@@ -1302,6 +1340,22 @@ static char *getActivityInfoToBacktracking(af_Activity *activity, bool print_bt_
     return info;
 }
 
+af_ImportInfo *makeImportInfo(char *mark, af_Object *obj) {
+    af_ImportInfo *ii = calloc(1, sizeof(af_ImportInfo));
+    if (mark != NULL)
+        ii->mark = strCopy(mark);
+    ii->obj = obj;
+    gc_addReference(obj);
+    return ii;
+}
+
+void freeImportInfo(af_ImportInfo *ii) {
+    free(ii->mark);
+    if (ii->obj != NULL)
+        gc_delReference(ii->obj);
+    free(ii);
+}
+
 void setGcMax(size_t max, af_Environment *env) {
     env->core->gc_count_max = max;
 }
@@ -1358,6 +1412,7 @@ af_Object *getMsgNormalData(af_Message *msg) {
         return NULL;
     af_Object *obj = *(af_Object **)msg->msg;
     gc_delReference(obj);
+    *(af_Object **)msg->msg = NULL;
     return obj;
 }
 
@@ -1368,10 +1423,30 @@ af_ErrorInfo *getMsgErrorInfo(af_Message *msg) {
     return ei;
 }
 
+af_ImportInfo *getMsgImportInfo(af_Message *msg) {
+    if (!EQ_STR("IMPORT", msg->type))
+        return NULL;
+    af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
+    return ii;
+}
+
 char *getErrorType(af_ErrorInfo *ei) {
     return ei->error_type;
 }
 
 char *getError(af_ErrorInfo *ei) {
     return ei->error;
+}
+
+char *getImportMark(af_ImportInfo *ii) {
+    return ii->mark;
+}
+
+af_Object *getImportObject(af_ImportInfo *ii) {
+    af_Object *obj = ii->obj;
+    if (obj == NULL)
+        return NULL;
+    ii->obj = NULL;
+    gc_delReference(obj);
+    return obj;
 }

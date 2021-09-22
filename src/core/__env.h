@@ -147,6 +147,9 @@ struct af_Activity {  // 活动记录器
 
             /* 尾调用优化 */
             bool optimization;
+
+            /* Import使用 */
+            char *import_mark;
         };
     };
 };
@@ -199,6 +202,11 @@ struct af_ErrorInfo {
     af_Object *obj;
 };
 
+struct af_ImportInfo {
+    char *mark;
+    af_Object *obj;
+};
+
 /* Core 管理函数 */
 AFUN_CORE_NO_EXPORT af_Object *getBaseObjectFromCore(char *name, af_Core *core);
 
@@ -213,7 +221,7 @@ AFUN_CORE_NO_EXPORT void pushGCActivity(gc_DestructList *dl, gc_DestructList **p
 AFUN_CORE_NO_EXPORT bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
-AFUN_CORE_NO_EXPORT bool pushImportActivity(af_Code *bt, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool setFuncActivityToArg(af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool setFuncActivityAddVar(af_Environment *env);
 AFUN_CORE_NO_EXPORT int setFuncActivityToNormal(af_Environment *env);
