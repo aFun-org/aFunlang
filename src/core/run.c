@@ -57,7 +57,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     }
 
     for (af_LiteralDataList *ld = env->activity->ld; ld != NULL; ld = ld->next)
-        func(ld->literal_data, obj->data->data, obj, env);
+        func(obj->data->id, obj, obj->data->data, ld->literal_data, env);
 
     freeAllLiteralData(env->activity->ld);
     env->activity->ld = NULL;
@@ -194,10 +194,10 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     obj_isInfixFunc *is_infix;
 
     if (code->prefix != getPrefix(E_QUOTE, env)) {
-        if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj))
+        if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj->data->id, obj))
             return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
         else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
-                 (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj)) {
+                 (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj->data->id, obj)) {
             pushMessageDown(makeERRORMessageFormat(INFIX_PROTECT, env,
                                                    "Infix protect variable: %s.", code->element.data), env);
             return false;

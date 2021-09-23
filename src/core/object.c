@@ -39,14 +39,14 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);
     obj_initData *init = findAPI("obj_initData", api);
     if (func != NULL)
-        od->size = func(base_obj);
+        od->size = func(id, base_obj);
     else
         od->size = 0;
 
     if (od->size != 0) {
         od->data = calloc(1, od->size);
         if (init != NULL)
-            init(base_obj, od->data, env);
+            init(id, base_obj, od->data, env);
     }
 
     gc_addObjectData(od, env);
@@ -104,7 +104,7 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->size != 0) {
         obj_destructData *func = findAPI("obj_destructData", od->api);
         if (func != NULL)
-            func(od->base, od->data, env);
+            func(od->id, od->base, od->data, env);
     }
 
     free(od->id);
@@ -142,7 +142,7 @@ af_Inherit *makeInherit(af_Object *obj) {
 
     obj_getShareVarSpace *func = findAPI("obj_getShareVarSpace", obj->data->api);
     af_VarSpace *vs = NULL;
-    if (func == NULL || (vs = func(obj)) == NULL)
+    if (func == NULL || (vs = func(obj->data->id, obj)) == NULL)
         return NULL;
 
     af_Inherit *ih = calloc(1, sizeof(af_Inherit));

@@ -1,24 +1,24 @@
 ﻿#include "aFunCore.h"
 #include "__object.h"
 
-static size_t getSize(af_Object *obj) {
+static size_t getSize(char *id, af_Object *obj) {
     return sizeof(af_VarSpace *);
 }
 
-static void initData(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+static void initData(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     *data = makeVarSpace(obj, 3, 2, 0, env);
 }
 
-static void freeData(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+static void freeData(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     // 无操作
 }
 
-static af_GcList *getGcList(char *id, void *data) {
+static af_GcList *getGcList(char *id, af_Object *obj, void *data) {
     return pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
 }
 
 
-static af_VarSpace *getShareVS(af_Object *obj) {
+static af_VarSpace *getShareVS(char *id, af_Object *obj) {
     return *(af_VarSpace **)getObjectData(obj);
 }
 

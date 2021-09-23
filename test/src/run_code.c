@@ -1,78 +1,78 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
 
-size_t getSize(af_Object *obj) {
+size_t getSize(char *id, af_Object *obj) {
     return sizeof(int *);
 }
 
-void initData(af_Object *obj, int **data, af_Environment *env) {
+void initData(char *id, af_Object *obj, int **data, af_Environment *env) {
     *data = calloc(1, sizeof(int));
     **data = 100;
 }
 
-void freeData(af_Object *obj, int **data, af_Environment *env) {
+void freeData(char *id, af_Object *obj, int **data, af_Environment *env) {
     printf("freeData(): **data = %d\n", **data);
     free(*data);
 }
 
-size_t getSize2(af_Object *obj) {
+size_t getSize2(char *id, af_Object *obj) {
     return sizeof(af_VarSpaceListNode *);
 }
 
-void initData2(af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+void initData2(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
     *data = makeVarSpaceList(getProtectVarSpace(env));
 }
 
-void freeData2(af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+void freeData2(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
     printf("freeData2(): vsl = %p\n", *data);
     freeAllVarSpaceList(*data);
 }
 
-size_t getSize3(af_Object *obj) {
+size_t getSize3(char *id, af_Object *obj) {
     return sizeof(af_VarSpace *);
 }
 
-void initData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     *data = makeVarSpace(obj, 3, 2, 0, env);
 }
 
-void freeData3(af_Object *obj, af_VarSpace **data, af_Environment *env) {
+void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
 }
 
-af_GcList *getGcList3(char *id, void *data) {
+af_GcList *getGcList3(char *id, af_Object *obj, void *data) {
     af_GcList *gl = pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
     return gl;
 }
 
 
-af_VarSpace *getShareVS(af_Object *obj) {
+af_VarSpace *getShareVS(char *id, af_Object *obj) {
     return *(af_VarSpace **)getObjectData(obj);
 }
 
-bool getAcl(af_ArgCodeList **acl, af_Object *obj, af_Code *code, int **mark, af_Environment *env) {
+bool getAcl(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, int **mark, af_Environment *env) {
     *acl = makeArgCodeList(makeElementCode("object", NUL, 0, "Unknown"), 0, true, false);
     *mark = calloc(1, sizeof(int));
     **mark = 100;
     return true;
 }
 
-bool getVsl(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env) {
+bool getVsl(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
     *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
     return true;
 }
 
-af_GcList *getGcList(char *id, void *data) {
+af_GcList *getGcList(char *id, af_Object *obj, void *data) {
     af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
     return gl;
 }
 
-bool getAl(af_ArgList **al, af_Object *obj, af_ArgCodeList *acl, void *mark, af_Environment *env) {
+bool getAl(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
     *al = makeArgList("test", getArgCodeListResult(acl));
     return true;
 }
 
-void literalSet(char *str, void *data, af_Object *obj, af_Environment *env) {
+void literalSet(char *id, af_Object *obj, void *data, char *str, af_Environment *env) {
     printf("literalSet(): str = %s\n", str);
 }
 
@@ -93,7 +93,7 @@ af_FuncBody *testFunc(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, NULL, *fi);
 
@@ -103,7 +103,7 @@ bool getInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Env
     return true;
 }
 
-void freeMark(int *mark) {
+void freeMark(char *id, af_Object *obj, int *mark) {
     printf("freeMark(): mark = %d\n", *mark);
     free(mark);
 }
@@ -158,7 +158,7 @@ af_FuncBody *testFunc2(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo2(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, NULL, *fi);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc2, callFuncBody);
@@ -167,7 +167,7 @@ bool getInfo2(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_En
     return true;
 }
 
-bool getInfo3(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo3(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("data3", NUL, 0, "Unknown"), true, NULL, *fi);
     return true;
@@ -190,7 +190,7 @@ af_FuncBody *testFunc4(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo4(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo4(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc4, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
@@ -212,7 +212,7 @@ af_FuncBody *testFunc9(int *mark, af_Environment *env) {  // 测试用函数
     return fb;
 }
 
-bool getInfo9(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc9, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, NULL, *fi);
@@ -240,7 +240,7 @@ af_FuncBody *testFunc7(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo7(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo7(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc7, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
@@ -288,7 +288,7 @@ af_FuncBody *testFunc6(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo6(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo6(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc6, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, NULL, *fi);
@@ -340,7 +340,7 @@ af_FuncBody *testFunc5(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-bool getInfo5(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo5(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc5, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
@@ -349,23 +349,23 @@ bool getInfo5(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_En
     return true;
 }
 
-bool getInfo10(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo10(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("no-var", NUL, 1, "func9.info.af"), true, NULL, *fi);
     return true;
 }
 
-bool getInfo11(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo11(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeImportFuncBodyToFuncInfo(makeElementCode("global", NUL, 1, "func9.info.af"), true, NULL, *fi);
     return true;
 }
 
-bool objFunc(af_Object *obj) {
+bool objFunc(char *id, af_Object *obj) {
     return true;
 }
 
-bool infixFunc(af_Object *obj) {
+bool infixFunc(char *id, af_Object *obj) {
     return true;
 }
 
@@ -871,7 +871,6 @@ int main() {
     }
 
     printf("\n");
-    enableEnvironment(env);
 
     {  // 正常程序
         printf("TAG A:\n");
@@ -886,7 +885,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -902,7 +901,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -918,7 +917,7 @@ int main() {
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         pushCode(&bt2, bt5);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -927,7 +926,7 @@ int main() {
         printf("TAG C:\n");
         af_Code *bt1 = makeElementCode("data", ',', 0, "tagc.af");
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -945,7 +944,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -962,7 +961,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt5, 0, env);
+        runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -979,7 +978,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt5, 0, env);
+        runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -993,7 +992,7 @@ int main() {
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "tagg.af", NULL);
 
-        iterCode(bt5, 0, env);
+        runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -1007,7 +1006,7 @@ int main() {
 
         af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, "tagh.af", NULL);
 
-        iterCode(bt5, 0, env);
+        runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -1024,7 +1023,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt3, 0, env);
+        runCodeFromMemory(bt3, env);
         freeAllCode(bt3);
         printf("\n");
     }
@@ -1035,7 +1034,7 @@ int main() {
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1046,7 +1045,7 @@ int main() {
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1055,7 +1054,7 @@ int main() {
         printf("TAG L:\n");
         af_Code *bt1 = makeElementCode("func4", 0, 1, "tagl.af");
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1066,7 +1065,7 @@ int main() {
         af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagm.af", NULL);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1082,7 +1081,7 @@ int main() {
         pushCode(&bt1, bt3);
         pushCode(&bt3, bt4);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1096,7 +1095,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1110,7 +1109,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1124,7 +1123,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1142,7 +1141,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt1, 1, env);
+        runCodeFromMemoryAsImport(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1173,7 +1172,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1188,7 +1187,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1200,7 +1199,7 @@ int main() {
 
         pushCode(&bt1, bt2);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1213,7 +1212,7 @@ int main() {
 
         pushCode(&bt1, bt2);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1227,7 +1226,7 @@ int main() {
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt3);
 
-        iterCode(bt1, 0, env);
+        runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
         printf("\n");
     }

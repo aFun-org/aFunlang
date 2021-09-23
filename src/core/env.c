@@ -726,7 +726,7 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
     obj_isInfixFunc *func = findAPI("obj_isInfixFunc", var->vn->obj->data->api);
     if (func == NULL)
         return false;
-    return func(var->vn->obj);
+    return func(var->vn->obj->data->id, var->vn->obj);
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
@@ -912,12 +912,12 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
     if (get_acl != NULL) {
-        if (!get_acl(&env->activity->acl_start, func, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
+        if (!get_acl(func->data->id, func, &env->activity->acl_start, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
             return false;
     } else
         env->activity->acl_start = NULL;
 
-    if (!get_var_list(&env->activity->func_var_list, func, env->activity->mark, env))  // 设置 func_var_list
+    if (!get_var_list(func->data->id, func, &env->activity->func_var_list, env->activity->mark, env))  // 设置 func_var_list
         return false;
 
     env->activity->acl_done = env->activity->acl_start;
@@ -939,7 +939,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     env->activity->fi = NULL;
     env->activity->body_next = NULL;
 
-    if (!get_info(&env->activity->fi, env->activity->func, env->activity->bt_top, env->activity->mark, env))
+    if (!get_info(env->activity->func->data->id, env->activity->func, &env->activity->fi, env->activity->bt_top, env->activity->mark, env))
         return false;
     if (env->activity->fi == NULL) {
         pushMessageDown(makeERRORMessage(API_RUN_ERROR, API_DONOT_GIVE(FuncInfo), env), env);
@@ -999,7 +999,7 @@ bool setFuncActivityAddVar(af_Environment *env){
 
     if (get_arg_list != NULL) {
         af_ArgList *al;
-        if (!get_arg_list(&al, env->activity->func, env->activity->acl_start, env->activity->mark, env))
+        if (!get_arg_list(env->activity->func->data->id, env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
             return false;
         runArgList(al, env->activity->var_list, env);
         freeAllArgList(al);
@@ -1091,7 +1091,7 @@ static void freeMark(af_Activity *activity) {
     if (activity->type == act_func && activity->func != NULL && activity->mark != NULL) {
         obj_funcFreeMask *func = findAPI("obj_funcFreeMask", activity->func->data->api);
         if (func != NULL)
-            func(activity->mark);
+            func(activity->func->data->id, activity->func, activity->mark);
         activity->mark = NULL;
     }
 }

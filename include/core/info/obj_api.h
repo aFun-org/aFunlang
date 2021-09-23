@@ -24,29 +24,43 @@ typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env)
 typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);  // 位于env.h
 
 /* 定义Object的函数签名 */
-/* Object void *data 管理 */
-typedef size_t obj_getDataSize(af_Object *obj);  // 获取data的大小
-typedef void obj_initData(af_Object *obj, void *data, af_Environment *env);  // 初始化data
-typedef void obj_destructData(af_Object *obj, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
+/*
+ * API的第一个参数必须为: id
+ * API第二个参数通常为: object
+ * API第三个参数: 通常为void *data [仅与data有关的函数会直接传入该值]
+ */
 
-/* Object 面向对象管理 */
-typedef af_VarSpace *obj_getShareVarSpace(af_Object *obj);
+#define BASE_ARG char *id, af_Object *obj /* 基础参数 */
 
-/* Object 函数调用 */
-typedef bool obj_funcGetArgCodeList(af_ArgCodeList **acl, af_Object *obj, af_Code *code, void **mark, af_Environment *env);  // 获取参数计算表
-typedef bool obj_funcGetVarList(af_VarSpaceListNode **vsl, af_Object *obj, void *mark, af_Environment *env);  // 获取函数变量空间
-typedef bool obj_funcGetArgList(af_ArgList **al, af_Object *obj, af_ArgCodeList *acl, void *mark, af_Environment *env);  // 获取参数赋值表
-typedef bool obj_funcGetInfo(af_FuncInfo **fi, af_Object *obj, af_Code *code, void *mark, af_Environment *env);  // 获取函数信息
-typedef void obj_funcFreeMask(void *mark);  // 释放mask的函数
+/*** Object void *data 管理 ***/
+typedef size_t obj_getDataSize(BASE_ARG);  // 获取data的大小
+typedef void obj_initData(BASE_ARG, void *data, af_Environment *env);  // 初始化data
+typedef void obj_destructData(BASE_ARG, void *data, af_Environment *env);  // 释放data的内容 (但不释放void *data)指针
 
-/* Object 字面量设定 */
-typedef void obj_literalSetting(char *str, void *data, af_Object *obj, af_Environment *env);
+/*** Object 面向对象管理 ***/
+typedef af_VarSpace *obj_getShareVarSpace(BASE_ARG);
 
-/* Object 函数管理 */
-typedef bool obj_isObjFunc(af_Object *obj);  // 是否对象函数
-typedef bool obj_isInfixFunc(af_Object *obj);  // 是否中缀函数
+/*** Object 函数调用 ***/
+/* 获取参数计算表 */
+typedef bool obj_funcGetArgCodeList(BASE_ARG, af_ArgCodeList **acl, af_Code *code, void **mark, af_Environment *env);
+/* 获取函数变量空间 */
+typedef bool obj_funcGetVarList(BASE_ARG, af_VarSpaceListNode **vsl, void *mark, af_Environment *env);
+/* 获取参数赋值表 */
+typedef bool obj_funcGetArgList(BASE_ARG, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env);
+/* 获取函数信息 */
+typedef bool obj_funcGetInfo(BASE_ARG, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env);
+/* 释放mask的函数 */
+typedef void obj_funcFreeMask(BASE_ARG, void *mark);
 
-/* Object gc管理 */
-typedef af_GcList *obj_getGcList(char *id, void *data);  // 是否对象函数
+/*** Object 字面量设定 ***/
+typedef void obj_literalSetting(BASE_ARG, void *data, char *str, af_Environment *env);
 
+/*** Object 函数管理 ***/
+typedef bool obj_isObjFunc(BASE_ARG);  // 是否对象函数
+typedef bool obj_isInfixFunc(BASE_ARG);  // 是否中缀函数
+
+/*** Object gc管理 ***/
+typedef af_GcList *obj_getGcList(BASE_ARG, void *data);  // 是否对象函数
+
+#undef BASE_ARG
 #endif //AFUN_OBJ_API_H
