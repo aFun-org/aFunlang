@@ -8,7 +8,20 @@ void aFunInit() {
 
 af_Environment *creatAFunEnviroment(void) {
     af_Environment *env = makeEnvironment(grt_count);
-    /* 内置量操作 */
+    af_Code *code;
+
+    aFunTool("base", &code, NULL, env->core->protect, env);
+
+    if (code != NULL) {
+        bool res = iterCode(code, 0, env);
+        freeAllCode(code);
+        if (!res) {
+            freeEnvironment(env);
+            return NULL;
+        }
+    }
+
+    enableEnvironment(env);
     return env;
 }
 

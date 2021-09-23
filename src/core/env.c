@@ -647,10 +647,6 @@ void freeEnvironment(af_Environment *env) {
     free(env);
 }
 
-bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
-    return addVarToVarSpace(var, NULL, env->core->protect);
-}
-
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func) {
     af_TopMsgProcess *mp = calloc(1, sizeof(af_TopMsgProcess));
     mp->type = strCopy(type);

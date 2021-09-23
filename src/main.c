@@ -871,7 +871,6 @@ int main() {
     }
 
     printf("\n");
-    enableEnvironment(env);
 
     {  // 正常程序
         printf("TAG A:\n");

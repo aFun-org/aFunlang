@@ -48,7 +48,6 @@ AFUN_CORE_EXPORT void enableEnvironment(af_Environment *env);
 AFUN_CORE_EXPORT void setGcMax(size_t max, af_Environment *env);
 AFUN_CORE_EXPORT void setGcRun(enum GcRunTime grt, af_Environment *env);
 AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
-AFUN_CORE_EXPORT bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreStop(af_Environment *env);
 AFUN_CORE_EXPORT void setCoreExit(int exit_code, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreNormal(af_Environment *env);

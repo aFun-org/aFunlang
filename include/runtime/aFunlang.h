@@ -3,6 +3,8 @@
 #include "aFunlangExport.h"
 #include "aFunCore.h"
 
+#include "aFun_tool.h"
+
 AFUN_LANG_EXPORT void aFunInit();
 
 AFUN_LANG_EXPORT af_Environment *creatAFunEnviroment(void);

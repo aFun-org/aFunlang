@@ -281,6 +281,21 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
     return re;
 }
 
+/*
+ * 函数名: addVarToProtectVarSpace
+ * 目标: 添加一个var变量添加到保护空间中
+ * 若已存在同名Var则返回false不作修改
+ * 否则返回true
+ * 调用 addVarToVarSpace
+ */
+bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
+    env->core->protect->is_protect = false;
+    bool re = addVarToVarSpace(var, NULL, env->core->protect);
+    env->core->protect->is_protect = true;
+    return re;
+}
+
+
 static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs) {
     char p = vs->permissions[2];  // 默认外部权限
 

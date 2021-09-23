@@ -39,6 +39,7 @@ AFUN_CORE_EXPORT bool makeVarToVarSpaceList(char *name, char p_self, char p_post
                                             af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env);
 AFUN_CORE_EXPORT bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                                                af_Environment *env);
+AFUN_CORE_EXPORT bool addVarToProtectVarSpace(af_Var *var, af_Environment *env);
 AFUN_CORE_EXPORT bool delVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl);
 AFUN_CORE_EXPORT bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpaceListNode *vsl);
 AFUN_CORE_EXPORT af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env);
