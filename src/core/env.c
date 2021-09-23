@@ -636,14 +636,17 @@ void enableEnvironment(af_Environment *env) {
 }
 
 void freeEnvironment(af_Environment *env) {
-    if (env->core->status != core_creat) {
-        if (!iterDestruct(10, env))
-            printf("iterDestruct Error\n");
-    }
+    bool res = true;
+    if (env->core->status != core_creat)
+        res = iterDestruct(10, env);
+
     freeAllActivity(env->activity);
     freeCore(env);
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
+
+    if (!res)
+        printf("iterDestruct Error\n");
     free(env);
 }
 
