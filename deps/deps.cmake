@@ -29,6 +29,7 @@ if (WIN32 AND NOT CYGWIN)
     get_target_property(_dlfcn_include dlfcn-win32::dl INTERFACE_INCLUDE_DIRECTORIES)  # INTERFACE_INCLUDE_DIRECTORIES
     find_path(dlfcn_h_file NAMES dlfcn.h HINTS ${_dlfcn_include} DOC "The directory of dlfcn.h" REQUIRED NO_DEFAULT_PATH)
     wi_copy_import(TARGETS dlfcn-win32::dl)
+    wi_build_import(TARGETS dlfcn-win32::dl)
     wi_install_import(TARGETS dlfcn-win32::dl)
     install(DIRECTORY "${dlfcn_h_file}/" DESTINATION ${INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")  # 把目录下的内容安装到include
     cfep_install(dlfcn-win32 PREFIX ${deps_install_dir})
