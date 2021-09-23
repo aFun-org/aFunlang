@@ -589,7 +589,6 @@ static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
         return;
     }
 
-    gc_delReference(ii->obj);
     if (ii->mark != NULL) {
         makeVarToProtectVarSpace(ii->mark, 3, 3, 3, ii->obj, env);
         printf("IMPORT point: [%s] %p \n", ii->mark, ii->obj);
