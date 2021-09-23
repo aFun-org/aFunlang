@@ -21,5 +21,6 @@
 #include "parser.h"
 #include "reader.h"
 #include "token.h"
+#include "global_obj.h"
 
 #endif //AFUN_AFUNCORE_H

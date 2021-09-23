@@ -2,6 +2,8 @@
 #include "aFunCore.h"
 #include "__env.h"
 
+static int runCode_(FilePath name, af_Parser *parser, int mode, af_Environment *env);
+
 void aFunInit() {
     aFunCoreInit();
 }
@@ -43,6 +45,10 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, af_Environment *
 }
 
 
+/*
+ * 函数名: runCodeFromString
+ * 目标: 运行字符串中的程序 (源码形式)
+ */
 int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Environment *env) {
     if (env == NULL || code == NULL)
         return -1;
@@ -56,6 +62,10 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Enviro
     return runCode_(string_name, parser, 1, env);
 }
 
+/*
+ * 函数名: runCodeFromString
+ * 目标: 运行文件中的程序 (源码形式)
+ */
 int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env) {
     if (env == NULL || file == NULL)
         return -1;
@@ -66,6 +76,10 @@ int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env) {
     return runCode_(file, parser, 1, env);
 }
 
+/*
+ * 函数名: runCodeFromString
+ * 目标: 运行stdin的程序 (源码形式)
+ */
 int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
     if (env == NULL || feof(stdin) || ferror(stdin))
         return -1;
@@ -77,4 +91,26 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
         error_file = stderr;
     af_Parser *parser = makeParserByStdin(error_file);
     return runCode_(name, parser, 0, env);
+}
+
+/*
+ * 函数名: runCodeFromString
+ * 目标: 运行内存中的程序 (字节码形式)
+ */
+int runCodeFromMemory(af_Code *code, af_Environment *env) {
+    bool res = iterCode(code, 0, env);
+    if (!res)
+        return env->core->exit_code;
+    return 0;
+}
+
+/*
+ * 函数名: runCodeFromMemoryAsImport
+ * 目标: 采用import的方式运行内存中程序 (字节码形式)
+ */
+int runCodeFromMemoryAsImport(af_Code *code, af_Environment *env) {
+    bool res = iterCode(code, 1, env);
+    if (!res)
+        return env->core->exit_code;
+    return 0;
 }
