@@ -45,7 +45,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
     switch (parser->syntactic->token) {
         case TK_ELEMENT_SHORT:
         case TK_ELEMENT_LONG:
-            re = makeElementCode(parser->syntactic->text, prefix, 0, NULL);
+            re = makeElementCode(parser->syntactic->text, prefix, parser->reader->line, NULL);
             free(parser->syntactic->text);
             break;
         case TK_LP:
@@ -67,7 +67,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     break;
             }
 
-            re = makeBlockCode(parentheses, code_list, prefix, 0, NULL, NULL);
+            re = makeBlockCode(parentheses, code_list, prefix, parser->reader->line, NULL, NULL);
             break;
         case TK_LB:
             if (deep <= SYNTACTIC_MAX_DEEP)
@@ -88,7 +88,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     break;
             }
 
-            re = makeBlockCode(brackets, code_list, prefix, 0, NULL, NULL);
+            re = makeBlockCode(brackets, code_list, prefix, parser->reader->line, NULL, NULL);
             break;
         case TK_LC:
             if (deep <= SYNTACTIC_MAX_DEEP)
@@ -109,7 +109,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     break;
             }
 
-            re = makeBlockCode(curly, code_list, prefix, 0, NULL, NULL);
+            re = makeBlockCode(curly, code_list, prefix, parser->reader->line, NULL, NULL);
             break;
         case TK_ERROR:
             return NULL;
@@ -217,12 +217,17 @@ static af_Code *codeListEnd(af_Parser *parser) {
     return re;
 }
 
-af_Code *parserCode(af_Parser *parser) {
+af_Code *parserCode(FilePath file, af_Parser *parser) {
     af_Code *code = codeListEnd(parser);
+    if (file == NULL)
+        return NULL;
+
     if (parser->is_error) {
         freeAllCode(code);
         return NULL;
     }
 
+    if (code != NULL)
+        code->path = pathCopy(file);
     return code;
 }

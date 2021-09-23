@@ -21,6 +21,7 @@ af_Reader *initReader(af_Reader *reader) {
     char *new = readWord(reader->buf_size, reader);  // 写入数据
     free(new);
     reader->init = true;
+    reader->line = 1;
     return reader;
 }
 
@@ -56,6 +57,12 @@ char *readWord(size_t del_index, af_Reader *reader) {
         else if (len < del_index)
             reader->read_end = true;
         *(write + len) = NUL;
+    }
+
+    /* 计算行号 */
+    for (char *tmp = re; *tmp != NUL; tmp ++) {
+        if (*tmp == '\n')
+            reader->line++;
     }
 
     return re;

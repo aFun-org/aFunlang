@@ -12,13 +12,15 @@ void gc_add##type(af_##type *obj, af_Environment *env) { \
         env->core->gc_##type->gc.prev = obj; \
     }                             \
     obj->gc.next = env->core->gc_##type; \
-    env->core->gc_##type = obj; \
+    env->core->gc_##type = obj;  \
+    env->core->gc_count++;  \
 } \
 void gc_add##type##ByCore(af_##type *obj, af_Core *core) { \
 if (obj->gc.next != NULL || obj->gc.prev != NULL) {return;} \
 obj->gc.prev = NULL; \
 obj->gc.next = core->gc_##type; \
-core->gc_##type = obj; \
+core->gc_##type = obj;        \
+core->gc_count++;  \
 } \
 void gc_add##type##Reference(af_##type *obj) { \
     obj->gc.info.reference++; \

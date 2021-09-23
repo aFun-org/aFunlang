@@ -27,6 +27,7 @@ struct af_Reader {
     size_t buf_size;  // buf的长度-1
     char *read;
     bool read_end;
+    FileLine line;
 
     bool init;  // 是否初始化
 };

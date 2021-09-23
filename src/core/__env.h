@@ -20,7 +20,7 @@ typedef struct af_ErrorBacktracking af_ErrorBacktracking;
 #include "__func.h"
 #include "regex.h"
 
-#define DEFAULT_GC_COUNT_MAX (10)
+#define DEFAULT_GC_COUNT_MAX (50)
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
 

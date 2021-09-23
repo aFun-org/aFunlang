@@ -373,7 +373,7 @@ int main() {
     aFunInit();
     printf("Hello World\n");
 
-    af_Environment *env = makeEnvironment(grt_always);
+    af_Environment *env = creatAFunEnviroment();
     if(!pushLiteralRegex("data.*", "func", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
         goto RETURN_1;
@@ -1147,6 +1147,21 @@ int main() {
         printf("\n");
     }
 
+    {
+        printf("TAG S: STRING\n");
+        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "tags-string.af", NULL, env);
+        printf("exit code = %d\n\n", exit_code);
+    }
+
+#ifndef IN_CTEST
+    {
+        printf("TAG T: [stdin]\n");
+        int exit_code = runCodeFromStdin(NULL, NULL, env);
+        printf("exit code = %d\n\n", exit_code);
+        getc(stdin);
+    }
+#endif
+
     /* 错误用例 */
 
     {  // 中缀调用测试
@@ -1218,7 +1233,7 @@ int main() {
     }
 
     printf("freeEnvironment:\n");
-    freeEnvironment(env);
+    destructAFunEnvironment(env);
 
     printf("Exit at 0.");
 #ifndef IN_CTEST

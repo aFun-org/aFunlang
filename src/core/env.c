@@ -1366,11 +1366,11 @@ void setGcRun(enum GcRunTime grt, af_Environment *env) {
 }
 
 size_t getGcCount(af_Environment *env) {
-    return env->core->gc_count_max;
+    return env->core->gc_count;
 }
 
 size_t getGcMax(af_Environment *env) {
-    return env->core->gc_count;
+    return env->core->gc_count_max;
 }
 
 enum GcRunTime getGcRun(af_Environment *env) {

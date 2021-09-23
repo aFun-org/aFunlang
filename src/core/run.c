@@ -96,6 +96,7 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 static bool checkRunGC(af_Environment *env) {
     if (env->core->gc_run == grt_always ||
         env->core->gc_run == grt_count && env->core->gc_count >= env->core->gc_count_max) {
+        env->core->gc_count = 0;  // 清零
         gc_RunGC(env);
         return true;
     }

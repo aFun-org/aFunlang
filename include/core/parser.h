@@ -17,7 +17,7 @@ AFUN_CORE_EXPORT af_Parser *makeParserByFile(FilePath path, FILE *error);
 AFUN_CORE_EXPORT af_Parser *makeParserByStdin(FILE *error);
 
 /* Parser 相关操作 */
-AFUN_CORE_EXPORT af_Code *parserCode(af_Parser *parser);
+AFUN_CORE_EXPORT af_Code *parserCode(FilePath file, af_Parser *parser);
 AFUN_CORE_EXPORT void initParser(af_Parser *parser);
 
 #endif //AFUN_PARSER_H
