@@ -1,25 +1,56 @@
 ﻿#include "aFunCore.h"
 #include "__object.h"
 
+typedef struct GlobalObjectData GlobalObjectData;
+struct GlobalObjectData {
+    af_VarSpace *share;
+};
+
+static char *global_id = "global-object";
+
+static GlobalObjectData *initGOD(af_Object  *obj, af_Environment *env) {
+    GlobalObjectData *god = calloc(1, sizeof(GlobalObjectData));
+    god->share = makeVarSpace(obj, 3, 2, 0, env);
+    return god;
+}
+
+static void freeGOD(GlobalObjectData *god, af_Object  *obj, af_Environment *env) {
+    god->share = NULL;
+}
+
 static size_t getSize(char *id, af_Object *obj) {
-    return sizeof(af_VarSpace *);
+    /* 不需要检查 id */
+    return sizeof(GlobalObjectData *);
 }
 
-static void initData(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    *data = makeVarSpace(obj, 3, 2, 0, env);
+static void initData(char *id, af_Object *obj, GlobalObjectData **data, af_Environment *env) {
+    if (EQ_STR(id, global_id))
+        *data = initGOD(obj, env);
 }
 
-static void freeData(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    // 无操作
+static void freeData(char *id, af_Object *obj, GlobalObjectData **data, af_Environment *env) {
+    if (EQ_STR(id, global_id))
+        freeGOD(*data, obj, env);
 }
 
 static af_GcList *getGcList(char *id, af_Object *obj, void *data) {
-    return pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
+    if (!EQ_STR(id, global_id))
+        return NULL;
+
+    GlobalObjectData *god = *(GlobalObjectData **)data;
+    if (god->share != NULL)
+        return pushGcList(glt_vs, god->share, NULL);
+    else
+        return NULL;
 }
 
 
 static af_VarSpace *getShareVS(char *id, af_Object *obj) {
-    return *(af_VarSpace **)getObjectData(obj);
+    if (!EQ_STR(id, global_id))
+        return NULL;
+
+    GlobalObjectData *god = *(GlobalObjectData **)getObjectData(obj);
+    return god->share;
 }
 
 af_Object *makeGlobalObject(af_Environment *env) {
@@ -46,5 +77,5 @@ af_Object *makeGlobalObject(af_Environment *env) {
     FREE_SYMBOL(get_share_vs);
     FREE_SYMBOL(get_gl);
 
-    return makeObject("object", true, api, true, NULL, NULL, env);
+    return makeObject(global_id, true, api, true, NULL, NULL, env);
 }
