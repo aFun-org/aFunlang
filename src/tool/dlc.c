@@ -75,19 +75,21 @@ static bool freeLibary_(struct DlcHandle *dlc, bool f) {
     return true;
 }
 
-struct DlcSymbol_ *makeSymbol_(void *symbol) {
-    struct DlcSymbol_ *ds = calloc(1, sizeof(struct DlcSymbol_));
-    ds->symbol = symbol;
-    ds->dlc = NULL;
-    return ds;
-}
-
 static void blindSymbol(struct DlcSymbol_ *ds, struct DlcHandle *dlc) {
     if (ds->dlc != NULL)
         ds->dlc->link--;
 
     ds->dlc = dlc;
     dlc->link++;
+}
+
+struct DlcSymbol_ *makeSymbol_(DlcHandle *dlc, void *symbol) {
+    struct DlcSymbol_ *ds = calloc(1, sizeof(struct DlcSymbol_));
+    ds->symbol = symbol;
+
+    if (dlc != NULL)
+        blindSymbol(ds, dlc);
+    return ds;
 }
 
 struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds) {

@@ -4,11 +4,15 @@
 
 file(GLOB source_tool
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/aFunTool/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/aFunTool/*/*.c)
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
+
+file(GLOB private_tool_h
+     LIST_DIRECTORIES FALSE
+     ${CMAKE_CURRENT_LIST_DIR}/aFunTool/*/*.h)
 
 file(GLOB private_h_core
      LIST_DIRECTORIES FALSE
@@ -38,7 +42,7 @@ add_library(aFun-ct-libs SHARED "")  # ct表示均静态链接 core-static-s
 
 foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
     target_sources(${tgt}
-                   PRIVATE ${source} ${source_tool} ${private_h} ${private_h_core}
+                   PRIVATE ${source} ${source_tool} ${private_h} ${private_tool_h} ${private_h_core}
                    PUBLIC ${public_h_build} ${public_h_install})
     target_include_directories(${tgt}
                                PRIVATE

@@ -4,7 +4,7 @@
 typedef struct APIFunc APIFunc;
 struct APIFunc {
     char *name;
-    objectAPIFunc *func;
+    void *func;  // objectAPIFunc
     DlcHandle *dlc;  // func 的 来源
     DLC_SYMBOL(objectAPIFunc) func_;  // func_和func二选一, func_时dlc无效
     bool free_func_;  // func_是否需要释放

@@ -17,6 +17,7 @@ AFUN_CORE_EXPORT af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char 
 
 /* 变量空间链 创建与释放 */
 AFUN_CORE_EXPORT af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs);
+AFUN_CORE_EXPORT af_VarSpaceListNode *copyVarSpaceList(af_VarSpaceListNode *vsl);
 AFUN_CORE_EXPORT void freeAllVarSpaceList(af_VarSpaceListNode *vsl);
 AFUN_CORE_EXPORT bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl);
 

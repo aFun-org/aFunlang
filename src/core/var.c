@@ -168,6 +168,14 @@ af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs) {
     return vsl;
 }
 
+af_VarSpaceListNode *copyVarSpaceList(af_VarSpaceListNode *vsl) {
+    af_VarSpaceListNode *base = NULL;
+    af_VarSpaceListNode **pvsl = &base;
+    for (NULL; vsl != NULL; vsl = vsl->next, pvsl = &((*pvsl)->next))
+        *pvsl = makeVarSpaceList(vsl->vs);
+    return base;
+}
+
 static af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl){
     af_VarSpaceListNode *next = vsl->next;
     free(vsl);
@@ -289,9 +297,10 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
  * 调用 addVarToVarSpace
  */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
+    bool is_protect = env->core->protect->is_protect;
     env->core->protect->is_protect = false;
     bool re = addVarToVarSpace(var, NULL, env->core->protect);
-    env->core->protect->is_protect = true;
+    env->core->protect->is_protect = is_protect;
     return re;
 }
 

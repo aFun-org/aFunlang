@@ -16,6 +16,7 @@ static GlobalObjectData *initGOD(af_Object  *obj, af_Environment *env) {
 
 static void freeGOD(GlobalObjectData *god, af_Object  *obj, af_Environment *env) {
     god->share = NULL;
+    free(god);
 }
 
 static size_t getSize(char *id, af_Object *obj) {

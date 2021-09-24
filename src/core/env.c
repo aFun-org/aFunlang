@@ -1450,3 +1450,10 @@ af_Object *getImportObject(af_ImportInfo *ii) {
     gc_delReference(obj);
     return obj;
 }
+
+af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
+    if (env->activity->type == act_gc)
+        return env->activity->var_list;
+    else
+        return env->activity->vsl;
+}

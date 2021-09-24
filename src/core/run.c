@@ -174,7 +174,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
 
         if (var == NULL) {
-            pushMessageDown(makeERRORMessageFormat(LITERAL_ERROR, env, "Literal not found: %s.", code->element.data), env);
+            pushMessageDown(makeERRORMessageFormat(LITERAL_ERROR, env, "Literal not found: %s: %s.", code->element.data, func), env);
             return false;
         }
 
