@@ -151,13 +151,13 @@ af_Inherit *makeInherit(af_Object *obj) {
     return ih;
 }
 
-af_Inherit *pushInherit(af_Inherit **base, af_Inherit *new) {
+af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new) {
     while ((*base) != NULL)
         base = &((*base)->next);
     *base = new;
-    while (new != NULL && new->next != NULL)
-        new = new->next;
-    return new;
+    while ((*base) != NULL)
+        base = &((*base)->next);
+    return base;
 }
 
 static af_Inherit *freeInherit(af_Inherit *ih) {

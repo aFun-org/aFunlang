@@ -27,7 +27,8 @@ struct DlcHandle *dlc; \
 
 #define DLC_SYMBOL(NAME) pDLC##NAME##SYMBOL
 #define GET_SYMBOL(SYMBOL) (*((SYMBOL)->symbol))
-#define MAKE_SYMBOL(symbol, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_(symbol)))
+#define MAKE_SYMBOL(symbol, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_(NULL, symbol)))
+#define MAKE_SYMBOL_FROM_HANDLE(symbol, handle, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_((handle), symbol)))
 #define COPY_SYMBOL(ds, TYPE) ((pDLC##TYPE##SYMBOL) (copySymbol_((DlcSymbol_ *)(ds))))
 #define READ_SYMBOL(dlc, name, TYPE) ((pDLC##TYPE##SYMBOL) (getSymbol_((dlc), (name))))
 #define FREE_SYMBOL(symbol) ((symbol) != NULL ? (freeSymbol_((DlcSymbol_ *)(symbol)), NULL) : NULL)
@@ -35,13 +36,13 @@ struct DlcHandle *dlc; \
 typedef struct DlcSymbol_ DlcSymbol_;
 typedef struct DlcHandle DlcHandle;
 
-AFUN_TOOL_EXPORT struct DlcHandle *openLibary(const char *file, int mode);
-AFUN_TOOL_EXPORT struct DlcSymbol_ *makeSymbol_(void *symbol);
-AFUN_TOOL_EXPORT struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds);
-AFUN_TOOL_EXPORT struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name);
+AFUN_TOOL_EXPORT DlcHandle *openLibary(const char *file, int mode);
+AFUN_TOOL_EXPORT DlcSymbol_ *makeSymbol_(DlcHandle *dlc, void *symbol);
+AFUN_TOOL_EXPORT DlcSymbol_ *copySymbol_(DlcSymbol_ *ds);
+AFUN_TOOL_EXPORT DlcSymbol_ *getSymbol_(DlcHandle *dlc, const char *name);
 
-AFUN_TOOL_EXPORT void freeSymbol_(struct DlcSymbol_ *symbol);
-AFUN_TOOL_EXPORT bool freeLibary(struct DlcHandle *dlc);
+AFUN_TOOL_EXPORT void freeSymbol_(DlcSymbol_ *symbol);
+AFUN_TOOL_EXPORT bool freeLibary(DlcHandle *dlc);
 AFUN_TOOL_EXPORT void dlcExit(void);
 
 

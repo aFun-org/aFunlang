@@ -38,7 +38,7 @@ AFUN_CORE_EXPORT int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_O
 AFUN_CORE_EXPORT int addAPIToObject(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_Object *obj);
 
 /* 对象继承表 相关操作 */
-AFUN_CORE_EXPORT af_Inherit *pushInherit(af_Inherit **base, af_Inherit *new);
+AFUN_CORE_EXPORT af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new);
 
 /* 对象 属性访问 */
 AFUN_CORE_EXPORT void *getObjectData(af_Object *obj);
