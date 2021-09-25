@@ -33,6 +33,13 @@ int checkFile(char *path){
         return 0;
 }
 
+time_t getFileMTime(char *path) {
+    struct stat my_stat;
+    if (path == NULL || stat(path, &my_stat) != 0)
+        return 0;
+    return my_stat.st_mtime;
+}
+
 /*
  * 函数: getFileName
  * 目标: 给定路径获取该路径所指定的文件名
@@ -40,7 +47,6 @@ int checkFile(char *path){
 char *getFileName(char *path_1){
     char *slash = NULL;  // 名字开始的字符的指针
     char *point = NULL;  // 后缀名.所在的字符的指针
-    char *name = NULL;  // 返回值
     char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
 
     if (path[STR_LEN(path) - 1] == SEP_CH)  // 若路径的最后一个字符为SEP, 则忽略此SEP
@@ -54,15 +60,34 @@ char *getFileName(char *path_1){
     if ((point = strchr(path, '.')) != NULL)
         *point = NUL;
 
-    name = strCopy(slash);
+    char *res = strCopy(slash);
     free(path);
+    return res;
+}
 
-    if (!isalpha(*name) && *name != '_')
-        name = strJoin("_", name, false, true);
-    for (char *tmp = name; *tmp != 0; tmp++)
-        if (!isalnum(*tmp) &&'_' != *tmp)
-            *tmp = '_';
-    return name;
+/*
+ * 函数名: getFileNameWithPath
+ * 目标: 取出指定路径的文件后缀
+ */
+char *getFileNameWithPath(char *path_1){
+    char *point = NULL;  // 后缀名.所在的字符的指针
+    char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
+    char *res;
+
+    if ((point = strchr(path, '.')) != NULL)
+        *point = NUL;
+
+    res = strCopy(path);
+    free(path);
+    return res;
+}
+
+/*
+ * 函数名: getFileSurfix
+ * 目标: 获取文件后缀 (不会生成新字符串)
+ */
+char *getFileSurfix(char *path) {
+    return strchr(path, '.');
 }
 
 /*

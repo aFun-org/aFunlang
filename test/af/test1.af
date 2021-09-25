@@ -1,0 +1,5 @@
+global
+{str}
+str()
+"Hello"
+str

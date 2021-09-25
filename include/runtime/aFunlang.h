@@ -12,8 +12,10 @@ AFUN_LANG_EXPORT void destructAFunEnvironment(af_Environment *env);
 
 /* 源文件运行 */
 AFUN_LANG_EXPORT int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Environment *env);
-AFUN_LANG_EXPORT int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env);
+AFUN_LANG_EXPORT int runCodeFromFileSource(FilePath file, FILE *error_file, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromMemory(af_Code *code, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromMemoryAsImport(af_Code *code, af_Environment *env);
+AFUN_LANG_EXPORT int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env);
+AFUN_LANG_EXPORT int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env);
 #endif //AFUN_AFUNLANG_H

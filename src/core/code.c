@@ -248,7 +248,7 @@ static bool readCode(af_Code **bt, FILE *file) {
     *bt = makeCode((char)prefix, line, path);
     free(path);
     (*bt)->type = type;
-    (*bt)->code_end = code_end;
+    (*bt)->code_end = (CodeInt)code_end;
 
     switch (type) {
         case code_element:
@@ -260,7 +260,7 @@ static bool readCode(af_Code **bt, FILE *file) {
             Done(byteReadUint_8(file, &block_type));
             Done(byteReadUint_32(file,&elements));
             (*bt)->block.type = block_type;
-            (*bt)->block.elements = elements;
+            (*bt)->block.elements = (CodeInt)elements;
             break;
         }
         default:

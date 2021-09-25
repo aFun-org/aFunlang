@@ -4,7 +4,10 @@
 
 /* 文件处理工具 */
 AFUN_TOOL_EXPORT int checkFile(char *path);
+AFUN_TOOL_EXPORT time_t getFileMTime(char *path);
 AFUN_TOOL_EXPORT char *getFileName(char *path_1);
+AFUN_TOOL_EXPORT char *getFileNameWithPath(char *path_1);
+AFUN_TOOL_EXPORT char *getFileSurfix(char *path);
 AFUN_TOOL_EXPORT char *fileNameToVar(char *name, bool need_free);
 AFUN_TOOL_EXPORT char *findPath(char *path, char *env, bool need_free);
 

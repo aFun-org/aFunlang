@@ -69,10 +69,10 @@ int runCodeFromRunList(RunList *run_list, RunList **bak, af_Environment *env) {
                 exit_code = runCodeFromFile(run_list->file, stderr, env);
                 break;
             case rl_file_b:
-                printf("run code byte.\n");
+                exit_code = runCodeFromFileByte(run_list->file, stderr, env);
                 break;
             case rl_file_s:
-                exit_code = runCodeFromFile(run_list->file, stderr, env);
+                exit_code = runCodeFromFileSource(run_list->file, stderr, env);
                 break;
             default:
                 break;
