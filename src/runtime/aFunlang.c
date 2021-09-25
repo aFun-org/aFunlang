@@ -2,7 +2,7 @@
 #include "aFunCore.h"
 #include "__env.h"
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, af_Environment *env);
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
 
 void aFunInit() {
     aFunCoreInit();
@@ -31,7 +31,7 @@ void destructAFunEnvironment(af_Environment *env) {
     freeEnvironment(env);
 }
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, af_Environment *env) {
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env){
     if (parser == NULL)
         return -1;
 
@@ -39,6 +39,13 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, af_Environment *
     freeParser(parser);
     if (bt_code == NULL)
         return -2;
+
+    /* 写入文件 */
+    if (save_path != NULL) {
+        FILE *file_ = fopen(save_path, "wb");
+        if (file_ != NULL)
+            writeAllCode(bt_code, file_);
+    }
 
     bool res = iterCode(bt_code, mode, env);
     freeAllCode(bt_code);
@@ -62,14 +69,14 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Enviro
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByString(code, false, error_file);
-    return runCode_(string_name, parser, 1, env);
+    return runCode_(string_name, parser, 1, NULL, env);
 }
 
 /*
  * 函数名: runCodeFromFileSource
  * 目标: 运行文件中的程序 (源码形式)
  */
-int runCodeFromFileSource(FilePath file, FILE *error_file, af_Environment *env) {
+int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePath save_path, af_Environment *env) {
     if (env == NULL || file == NULL)
         return -1;
 
@@ -77,10 +84,22 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, af_Environment *env) 
     if (sufix == NULL || !EQ_STR(".af", sufix))
         return -2;
 
+    /* 若文件不存在则自动生成 */
+    bool free_save_path = false;
+    if (save_afb && !save_path) {
+        char *path = getFileNameWithPath(file);
+        save_path = strJoin(path, ".afb", true, false);
+        free_save_path = true;
+    } else if (!save_afb)
+        save_path = NULL;
+
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByFile(file, error_file);
-    return runCode_(file, parser, 1, env);
+    int exit_code = runCode_(file, parser, 1, save_path, env);
+    if (free_save_path)
+        free(save_path);
+    return exit_code;
 }
 
 /*
@@ -97,7 +116,7 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByStdin(error_file);
-    return runCode_(name, parser, 0, env);
+    return runCode_(name, parser, 0, NULL, env);
 }
 
 /*
@@ -142,7 +161,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
         return -3;
     }
 
-    if(!readAllCode(&code, file_)) {
+    if(!readAllCode(&code, file, file_)) {
         freeAllCode(code);
         return -2;
     }
@@ -158,7 +177,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
  * 目标: 运行文件中的程序 (字节码/源码形式)
  * 注意: 必须传入.af文件
  */
-int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env) {
+int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environment *env) {
     if (env == NULL || file == NULL)
         return -1;
 
@@ -180,7 +199,7 @@ int runCodeFromFile(FilePath file, FILE *error_file, af_Environment *env) {
     if (time_2 >= time_1)
         exit_code = runCodeFromFileByte(path_2, error_file, env);
     else
-        exit_code = runCodeFromFileSource(path_1, error_file, env);
+        exit_code = runCodeFromFileSource(path_1, error_file, save_afb, path_2, env);
 
     free(path_1);
     free(path_2);

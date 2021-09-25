@@ -25,6 +25,6 @@ RunList *makeStringRunList(char *string);
 void freeAllRunList(RunList *rl);
 RunList **pushRunList(RunList *rl, RunList **base);
 
-int runCodeFromRunList(RunList *run_list, RunList **bak, af_Environment *env);
+int runCodeFromRunList(RunList *run_list, RunList **bak, bool save_afb, af_Environment *env);
 
 #endif //AFUN___MAIN_RUN_H

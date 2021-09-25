@@ -57,7 +57,7 @@ RunList **pushRunList(RunList *rl, RunList **base) {
     return base;
 }
 
-int runCodeFromRunList(RunList *run_list, RunList **bak, af_Environment *env) {
+int runCodeFromRunList(RunList *run_list, RunList **bak, bool save_afb, af_Environment *env) {
     int exit_code = 0;
 
     for (NULL; run_list != NULL; run_list = run_list->next) {
@@ -66,13 +66,13 @@ int runCodeFromRunList(RunList *run_list, RunList **bak, af_Environment *env) {
                 exit_code = runCodeFromString(run_list->string, "command-line-eval", stderr, env);
                 break;
             case rl_file:
-                exit_code = runCodeFromFile(run_list->file, stderr, env);
+                exit_code = runCodeFromFile(run_list->file, stderr, save_afb, env);
                 break;
             case rl_file_b:
                 exit_code = runCodeFromFileByte(run_list->file, stderr, env);
                 break;
             case rl_file_s:
-                exit_code = runCodeFromFileSource(run_list->file, stderr, env);
+                exit_code = runCodeFromFileSource(run_list->file, stderr, save_afb, NULL, env);
                 break;
             default:
                 break;

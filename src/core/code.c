@@ -185,13 +185,6 @@ static bool writeCode(af_Code *bt, FILE *file) {
     Done(byteWriteUint_32(file, bt->line));
     Done(byteWriteUint_32(file, bt->code_end));
 
-    if (bt->path != NULL) {
-        Done(byteWriteUint_8(file, true));  // 表示有path
-        Done(byteWriteStr(file, bt->path));
-    } else {
-        Done(byteWriteUint_8(file, false));  // 表示无path
-    }
-
     switch (bt->type) {
         case code_element:
             Done(byteWriteStr(file, bt->element.data));
@@ -212,18 +205,13 @@ static bool writeCode(af_Code *bt, FILE *file) {
  * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可
  */
 bool writeAllCode(af_Code *bt, FILE *file) {
-    uint32_t count = 0;
-
     if (bt == NULL || bt->path == NULL)
         return false;
 
-    for (af_Code *tmp = bt; tmp != NULL; tmp = tmp->next)  // 统计个数
-        count++;
-
-    Done(byteWriteUint_32(file,count));
     for (NULL; bt != NULL; bt = bt->next) {
         if (!writeCode(bt, file))
             return false;
+        Done(byteWriteUint_8(file, (bt->next == NULL)));  // 记录是否为最后一位
     }
 
     return true;
@@ -233,20 +221,14 @@ static bool readCode(af_Code **bt, FILE *file) {
     uint8_t type;
     uint8_t prefix;
     uint32_t line;
-    uint8_t have_path;
     uint32_t code_end;
-    char *path = NULL;
 
     Done(byteReadUint_8(file, &type));
     Done(byteReadUint_8(file, &prefix));
     Done(byteReadUint_32(file,&line));
     Done(byteReadUint_32(file, &code_end));
-    Done(byteReadUint_8(file, &(have_path)));
-    if (have_path)
-        Done(byteReadStr(file, &path));
 
-    *bt = makeCode((char)prefix, line, path);
-    free(path);
+    *bt = makeCode((char)prefix, line, NULL);
     (*bt)->type = type;
     (*bt)->code_end = (CodeInt)code_end;
 
@@ -269,14 +251,23 @@ static bool readCode(af_Code **bt, FILE *file) {
     return true;
 }
 
-bool readAllCode(af_Code **bt, FILE *file) {
-    uint32_t count;
-    Done(byteReadUint_32(file,&count));
-
-    for (NULL; count != 0; count--, bt = &((*bt)->next)) {
+bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
+    af_Code **base = bt;
+    *bt = NULL;
+    for (NULL; true;bt = &((*bt)->next)) {
         if(!readCode(bt, file))
             return false;
+        if (ferror(stdin))
+            return false;
+
+        uint8_t last;
+        Done(byteReadUint_8(file, &last));
+        if (last)
+            break;
     }
+
+    if (*base != NULL)
+        (*base)->path = strCopy(path);
     return true;
 }
 

@@ -35,7 +35,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if(!readAllCode(&get, file)) {
+    if(!readAllCode(&get, "test.afb", file)) {
         fprintf(stderr, "Read test.afb error.\n");
         return EXIT_FAILURE;
     }

@@ -12,6 +12,7 @@ ff_defArg(run, false)
                 ff_argRule('f', file, must, 'f')
                 ff_argRule('s', source, must, 's')
                 ff_argRule('b', byte, must, 'b')
+                ff_argRule(NUL, no-afb, not, 'a')
                 ff_argRule(NUL, no-cl, not, 'n')
 ff_endArg(run, false);
 
@@ -107,11 +108,14 @@ out:
     return EXIT_SUCCESS;
 }
 
-static RunList *getRunList(ff_FFlags *ff, bool *command_line) {
+static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_afb) {
     char *text = NULL;
     RunList *run_list = NULL;
     RunList **prl = &run_list;
     int mark;
+
+    *command_line = true;
+    *save_afb = true;
 
     while (1) {
         mark = ff_getopt(&text, ff);
@@ -131,6 +135,9 @@ static RunList *getRunList(ff_FFlags *ff, bool *command_line) {
             case 'n':
                 *command_line = false;
                 break;
+            case 'a':
+                *save_afb = false;
+                break;
             case -1:
                 goto out;
             default:
@@ -148,12 +155,13 @@ out:
 
 static int mainRun(ff_FFlags *ff) {
     bool command_line = true;
+    bool save_afb = true;
     int exit_code;
-    RunList *rl = getRunList(ff, &command_line);
+    RunList *rl = getRunList(ff, &command_line, &save_afb);
 
     af_Environment *env = creatAFunEnviroment();
     if (rl != NULL)
-        exit_code = runCodeFromRunList(rl, NULL, env);
+        exit_code = runCodeFromRunList(rl, NULL, save_afb, env);
     else if (!command_line) {
         fprintf(stderr, "Not code to run.\n");
         printHelp();
