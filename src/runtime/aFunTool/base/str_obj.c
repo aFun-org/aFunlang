@@ -1,5 +1,13 @@
 ﻿#include "__base.h"
 
+#define string_func_id "string-maker"
+typedef struct ObjectStrFunc ObjectStrFunc;
+struct ObjectStrFunc {
+    af_ObjectAPI *api;
+    af_VarSpace *share_vs;
+    af_VarSpaceListNode *func_var_list;
+};
+
 static size_t strGetSize(char *id, af_Object *obj) {
     return sizeof(ObjectString);
 }

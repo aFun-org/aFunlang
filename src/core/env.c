@@ -1457,3 +1457,11 @@ af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
     else
         return env->activity->vsl;
 }
+
+int isCoreExit(af_Environment *env) {
+    if (env->core->status == core_exit)
+        return 1;
+    else if (env->core->status == core_stop)
+        return -1;
+    return 0;
+}

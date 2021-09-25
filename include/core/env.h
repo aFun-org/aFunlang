@@ -92,6 +92,7 @@ AFUN_CORE_EXPORT af_Object *getBelong(af_Environment *env);
 AFUN_CORE_EXPORT FilePath getActivityFile(af_Environment *env);
 AFUN_CORE_EXPORT FileLine getActivityLine(af_Environment *env);
 AFUN_CORE_EXPORT af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env);
+AFUN_CORE_EXPORT int isCoreExit(af_Environment *env);
 
 /* 消息 属性访问 */
 AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg);

@@ -122,9 +122,24 @@ af_Parser *makeParserByFile(FilePath path, FILE *error) {
 }
 
 static size_t readFuncStdin(struct readerDataFile *data, char *dest, size_t len) {
-    if (fgets(dest, (int)(len + 1), stdin) == NULL)
-        return 0;
-    return strlen(dest);
+    size_t read_size = 0;
+    printf(">>> ");
+    while (1) {
+        if (fgets(dest, (int)((len - read_size) + 1), stdin) == NULL)  // + 1 是因为len不包含NUL的位置
+            break;
+        read_size += strlen(dest);
+        if (read_size == len)
+            break;
+        dest += strlen(dest);  // 移动的NUL的位置
+        printf("... ");
+
+        int ch = getc(stdin);
+        if (ch == '\n' || ch == EOF)
+            break;
+        else
+            ungetc(ch, stdin);
+    }
+    return read_size;
 }
 
 static void destructStdin(struct readerDataFile *data) {
