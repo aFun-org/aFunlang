@@ -7,6 +7,7 @@
 static const LiteralFunc literal[] = {
         /* 字符串匹配：\"[\s\S]*\" */
         {.pattern="\\\"[\\s\\S]*\\\"", .func="str", .in_protect=true},
+        {.pattern=NULL}
 };
 
 #define string_id "string"
