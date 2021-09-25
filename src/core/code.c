@@ -204,17 +204,29 @@ static bool writeCode(af_Code *bt, FILE *file) {
  * 目标: 将Code写入字节码文件中
  * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可
  */
-bool writeAllCode(af_Code *bt, FILE *file) {
+bool writeAllCode(af_Code *bt, FilePath path) {
     if (bt == NULL || bt->path == NULL)
+        return false;
+
+    FILE *file = fopen(path, "wb");
+    if (file == NULL)
         return false;
 
     for (NULL; bt != NULL; bt = bt->next) {
         if (!writeCode(bt, file))
-            return false;
+            goto RETURN_FALSE;
+        if (ferror(stdin))
+            goto RETURN_FALSE;
+
         Done(byteWriteUint_8(file, (bt->next == NULL)));  // 记录是否为最后一位
     }
 
+    fclose(file);
     return true;
+
+RETURN_FALSE:
+    fclose(file);
+    return false;
 }
 
 static bool readCode(af_Code **bt, FILE *file) {
@@ -251,14 +263,19 @@ static bool readCode(af_Code **bt, FILE *file) {
     return true;
 }
 
-bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
+bool readAllCode(af_Code **bt, FilePath path) {
     af_Code **base = bt;
     *bt = NULL;
+
+    FILE *file = fopen(path, "rb");
+    if (file == NULL)
+        return false;
+
     for (NULL; true;bt = &((*bt)->next)) {
         if(!readCode(bt, file))
-            return false;
+            goto RETURN_FALSE;
         if (ferror(stdin))
-            return false;
+            goto RETURN_FALSE;
 
         uint8_t last;
         Done(byteReadUint_8(file, &last));
@@ -268,7 +285,12 @@ bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
 
     if (*base != NULL)
         (*base)->path = strCopy(path);
+    fclose(file);
     return true;
+
+RETURN_FALSE:
+    fclose(file);
+    return false;
 }
 
 /*

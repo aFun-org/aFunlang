@@ -41,11 +41,8 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
         return -2;
 
     /* 写入文件 */
-    if (save_path != NULL) {
-        FILE *file_ = fopen(save_path, "wb");
-        if (file_ != NULL)
-            writeAllCode(bt_code, file_);
-    }
+    if (save_path != NULL)
+        writeAllCode(bt_code, save_path);
 
     bool res = iterCode(bt_code, mode, env);
     freeAllCode(bt_code);
@@ -161,7 +158,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
         return -3;
     }
 
-    if(!readAllCode(&code, file, file_)) {
+    if(!readAllCode(&code, file)) {
         freeAllCode(code);
         return -2;
     }

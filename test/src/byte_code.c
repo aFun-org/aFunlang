@@ -16,30 +16,16 @@ int main() {
     af_Code *bt5 = makeBlockCode(parentheses, bt3, 0, 1, NULL, NULL);
     pushCode(&bt2, bt5);
 
-    FILE *file = fopen("test.afb", "wb");
-    if (file == NULL) {
-        fprintf(stderr, "Can't not creat file: test.afb\n");
-        return EXIT_FAILURE;
-    }
-
-    if(!writeAllCode(bt1, file)) {
+    if(!writeAllCode(bt1, "test.afb")) {
         fprintf(stderr, "Write test.afb error.\n");
         return EXIT_FAILURE;
     }
-    fclose(file);
 
     af_Code *get;
-    file = fopen("test.afb", "rb");
-    if (file == NULL) {
-        fprintf(stderr, "Can't not read file: test.afb\n");
-        return EXIT_FAILURE;
-    }
-
-    if(!readAllCode(&get, "test.afb", file)) {
+    if(!readAllCode(&get, "test.afb")) {
         fprintf(stderr, "Read test.afb error.\n");
         return EXIT_FAILURE;
     }
-    fclose(file);
 
     printf("out:\n");
     printCode(bt1);
