@@ -3,21 +3,21 @@
 #include "__main_run.h"
 
 ff_defArg(help, true)
-                ff_argRule(h, help, not, 'h')
-                ff_argRule(v, version, not, 'v')
+                ff_argRule('h', help, not, 'h')
+                ff_argRule('v', version, not, 'v')
 ff_endArg(help, true);
 
 ff_defArg(run, false)
-                ff_argRule(e, eval, must, 'e')
-                ff_argRule(f, file, must, 'f')
-                ff_argRule(s, source, must, 's')
-                ff_argRule(b, byte, must, 'b')
+                ff_argRule('e', eval, must, 'e')
+                ff_argRule('f', file, must, 'f')
+                ff_argRule('s', source, must, 's')
+                ff_argRule('b', byte, must, 'b')
                 ff_argRule(NUL, no-cl, not, 'n')
 ff_endArg(run, false);
 
 ff_defArg(build, false)
-                ff_argRule(o, out, not, 'o')
-                ff_argRule(f, fource, not, 'f')
+                ff_argRule('o', out, not, 'o')
+                ff_argRule('f', fource, not, 'f')
 ff_endArg(build, false);
 
 // exe 是指可执行程序, 而非仅PE的可执行程序
@@ -150,11 +150,15 @@ static int mainRun(ff_FFlags *ff) {
     bool command_line = true;
     int exit_code;
     RunList *rl = getRunList(ff, &command_line);
-    if (rl == NULL)
-        return EXIT_FAILURE;
 
     af_Environment *env = creatAFunEnviroment();
-    exit_code = runCodeFromRunList(rl, NULL, env);
+    if (rl != NULL)
+        exit_code = runCodeFromRunList(rl, NULL, env);
+    else if (!command_line) {
+        fprintf(stderr, "Not code to run.\n");
+        printHelp();
+        return EXIT_FAILURE;
+    }
 
     if (command_line) {
         while (isCoreExit(env) != 1)
