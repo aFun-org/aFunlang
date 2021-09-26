@@ -36,7 +36,7 @@ static int mainBuild(ff_FFlags *ff);
 
 int main(int argc, char **argv) {
     int exit_code = EXIT_SUCCESS;
-    ff_FFlags *ff = ff_initFFlags(argc, argv, aFunlang_exe);
+    ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, aFunlang_exe);
     if (ff == NULL)
         return EXIT_FAILURE;
     char *child = ff_getChild(ff);
