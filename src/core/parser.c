@@ -125,6 +125,13 @@ static size_t readFuncStdin(struct readerDataFile *data, char *dest, size_t len)
     size_t read_size = 0;
     printf(">>> ");
     while (1) {
+        /* 检查是否只输入了回车符 */
+        /* 若是则结束循环 */
+        int ch = getc(stdin);
+        if (ch == '\n' || ch == EOF)
+            break;
+        ungetc(ch, stdin);
+
         if (fgets(dest, (int)((len - read_size) + 1), stdin) == NULL)  // + 1 是因为len不包含NUL的位置
             break;
         read_size += strlen(dest);
@@ -132,12 +139,6 @@ static size_t readFuncStdin(struct readerDataFile *data, char *dest, size_t len)
             break;
         dest += strlen(dest);  // 移动的NUL的位置
         printf("... ");
-
-        int ch = getc(stdin);
-        if (ch == '\n' || ch == EOF)
-            break;
-        else
-            ungetc(ch, stdin);
     }
     return read_size;
 }
@@ -147,6 +148,9 @@ static void destructStdin(struct readerDataFile *data) {
 }
 
 af_Parser *makeParserByStdin(FILE *error) {
+    if (ferror(stdin))
+        clearerr(stdin);
+
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
     af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
