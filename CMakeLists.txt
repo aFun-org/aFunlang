@@ -1,5 +1,13 @@
 ﻿cmake_minimum_required(VERSION 3.16)
-project(aFun LANGUAGES C)
+
+# 获取版本信息
+file(READ ${CMAKE_SOURCE_DIR}/version aFunVersion)
+file(READ ${CMAKE_SOURCE_DIR}/version-info aFunDescription)
+
+project(aFun
+        VERSION ${aFunVersion}
+        DESCRIPTION ${aFunDescription}
+        LANGUAGES C)
 
 # CMake系统的相关设定
 set(CMAKE_C_STANDARD 11)
@@ -43,6 +51,8 @@ set(CMAKE_INSTALL_RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH TRUE)
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
+add_compile_definitions(aFunVersion="${aFunVersion}" aFunDescription="${aFunDescription}")
+
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
 add_subdirectory(src)
@@ -55,7 +65,7 @@ install(EXPORT aFunlang
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
-                                 VERSION "0.0.0"
+                                 VERSION ${aFunVersion}
                                  COMPATIBILITY SameMinorVersion)
 
 # 生成Config.cmake文件

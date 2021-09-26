@@ -58,8 +58,9 @@ int main(int argc, char **argv) {
 }
 
 static void printVersion(void) {
-    printf("aFunlang-varsion %s\n", name);
-    printf("0.0.1\n");
+    printf("aFunlang at %s\n", name);
+    printf("version: " aFunVersion "\n");
+    printf(aFunDescription "\n");
 }
 
 static void printHelp(void) {
@@ -215,7 +216,6 @@ static int mainBuild(ff_FFlags *ff) {
     }
 
 out:
-
     if (out_put != NULL) {
         FilePath in = NULL;
 
