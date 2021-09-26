@@ -76,7 +76,7 @@ void literalSet(char *id, af_Object *obj, void *data, char *str, af_Environment 
     printf("literalSet(): str = %s\n", str);
 }
 
-af_FuncBody *testFunc(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc(): I am testFunc\n");
     af_Object *obj;
 
@@ -108,7 +108,7 @@ void freeMark(char *id, af_Object *obj, int *mark) {
     free(mark);
 }
 
-af_FuncBody *testFunc2(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc2(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc2(): I am testFunc2\n");
     af_Object *obj;
 
@@ -173,7 +173,7 @@ bool getInfo3(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc4(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc4(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc4(): I am testFunc4\n");
     af_Object *obj;
 
@@ -198,7 +198,7 @@ bool getInfo4(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc9(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc9(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_FuncBody *fb;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
@@ -222,7 +222,7 @@ bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc8(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc8(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
@@ -231,7 +231,7 @@ af_FuncBody *testFunc8(int *mark, af_Environment *env) {  // 测试用函数
     return NULL;
 }
 
-af_FuncBody *testFunc7(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc7(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
@@ -248,7 +248,7 @@ bool getInfo7(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc6(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc6(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
@@ -300,7 +300,7 @@ bool getInfo6(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc5(int *mark, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc5(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
@@ -874,7 +874,7 @@ int main() {
 
     {  // 正常程序
         printf("TAG A:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, "taga.aun");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
         af_Code *bt2 = makeElementCode("data", ',', 0, NULL);
         pushCode(&bt1, bt2);
 
@@ -892,7 +892,7 @@ int main() {
 
     {  // 宏函数
         printf("TAG L:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, "tagl.aun");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagl.aun");
 
         af_Code *bt3 = makeElementCode("func2", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
@@ -909,7 +909,7 @@ int main() {
 
     {  // 尾调递归优化
         printf("TAG B:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "tagb.aun");
+        af_Code *bt1 = makeElementCode("data", ',', 0, "Tagb.aun");
         af_Code *bt2 = makeElementCode("object", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
@@ -924,7 +924,7 @@ int main() {
 
     {  // 尾调递归优化2
         printf("TAG C:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "tagc.aun");
+        af_Code *bt1 = makeElementCode("data", ',', 0, "Tagc.aun");
 
         runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
@@ -933,7 +933,7 @@ int main() {
 
     {  // 测试类前缀调用
         printf("TAG D:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "tagd.aun");
+        af_Code *bt1 = makeElementCode("data", ',', 0, "Tagd.aun");
         af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
@@ -956,7 +956,7 @@ int main() {
 
         pushCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "tage.aun", NULL);
+        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "Tage.aun", NULL);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
@@ -973,7 +973,7 @@ int main() {
 
         pushCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, "tagf.aun", NULL);
+        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, "Tagf.aun", NULL);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
@@ -990,7 +990,7 @@ int main() {
 
         pushCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "tagg.aun", NULL);
+        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "Tagg.aun", NULL);
 
         runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
@@ -1004,7 +1004,7 @@ int main() {
 
         pushCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, "tagh.aun", NULL);
+        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, "Tagh.aun", NULL);
 
         runCodeFromMemory(bt5, env);
         freeAllCode(bt5);
@@ -1014,7 +1014,7 @@ int main() {
     {  // 双层尾调递归优化 （函数内调用函数）
         printf("TAG I:\n");
         af_Code *bt2 = makeElementCode("func3", 0, 1, NULL);
-        af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, "tagi.aun", NULL);
+        af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, "Tagi.aun", NULL);
 
         af_Code *bt4 = makeElementCode("func3", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt4, 0, 1, NULL, NULL);
@@ -1030,7 +1030,7 @@ int main() {
 
     {  // 对象函数的调用
         printf("TAG J:\n");
-        af_Code *bt1 = makeElementCode("func4", 0, 1, "tagj.aun");
+        af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagj.aun");
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
@@ -1041,7 +1041,7 @@ int main() {
 
     {  // 变量引用调用
         printf("TAG K:\n");
-        af_Code *bt1 = makeElementCode("func4", '\'', 1, "tagk.aun");
+        af_Code *bt1 = makeElementCode("func4", '\'', 1, "Tagk.aun");
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
@@ -1052,7 +1052,7 @@ int main() {
 
     {  // 对象函数的调用 (尾调递归优化)
         printf("TAG L:\n");
-        af_Code *bt1 = makeElementCode("func4", 0, 1, "tagl.aun");
+        af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagl.aun");
 
         runCodeFromMemory(bt1, env);
         freeAllCode(bt1);
@@ -1130,7 +1130,7 @@ int main() {
 
     {  // 导入式运行
         printf("TAG R:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, "tagr.aun");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagr.aun");
         af_Code *bt2 = makeElementCode("data", ',', 0, NULL);
         pushCode(&bt1, bt2);
 
@@ -1148,7 +1148,7 @@ int main() {
 
     {
         printf("TAG S: STRING\n");
-        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "tags-string.aun", NULL, env);
+        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", NULL, env);
         printf("exit code = %d\n\n", exit_code);
     }
 

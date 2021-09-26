@@ -21,7 +21,8 @@ typedef void objectAPIFunc();  // 位于object.h (所有Object API函数指针�
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);  // 位于env.h
 
 /* 回调C函数 */
-typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);  // 位于env.h
+typedef struct CallFuncInfo CallFuncInfo;
+typedef struct af_FuncBody *callFuncBody(CallFuncInfo *info, af_Environment *env);  // 位于env.h
 
 /* 定义Object的函数签名 */
 /*

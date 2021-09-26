@@ -33,7 +33,7 @@ static bool funcVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, voi
     return true;
 }
 
-static af_FuncBody *funcBody(void *mark, af_Environment *env) {
+static af_FuncBody *funcBody(CallFuncInfo *cfi, af_Environment *env) {
     env->core->exit_code = 0;
     env->core->status = core_exit;
     pushMessageDown(makeNORMALMessage(getGlobal(env)), env);

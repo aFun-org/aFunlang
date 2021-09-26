@@ -50,17 +50,8 @@ static void strFuncInit(char *id, af_Object *obj, ObjectStrFunc *data, af_Enviro
     data->api = makeAPIFromList(api_list);
 }
 
-typedef struct strFuncMark strFuncMark;
-struct strFuncMark {
-    af_Object *obj;
-};
-
 static bool strFuncArgCodeList(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, void **mark, af_Environment *env) {
     *acl = NULL;
-    *mark = calloc(1, sizeof(strFuncMark));
-
-    strFuncMark *sfm = *mark;
-    sfm->obj = obj;
     return true;
 }
 
@@ -75,8 +66,8 @@ static bool strFuncVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, 
     return true;
 }
 
-static af_FuncBody *strFuncBody(strFuncMark *mark, af_Environment *env) {
-    af_Object *obj = mark->obj;
+static af_FuncBody *strFuncBody(CallFuncInfo *cfi, af_Environment *env) {
+    af_Object *obj = cfi->func;
     ObjectStrFunc *osf = getObjectData(obj);
     af_Object *str = makeObject((char *)string_id, false, osf->api, false, NULL, makeInherit(obj), env);
     af_Message *msg = makeNORMALMessage(str);
@@ -90,10 +81,6 @@ static bool strFuncGetInfo(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
-}
-
-static void strFuncFreeMark(char *id, af_Object *obj, strFuncMark *mark) {
-    free(mark);
 }
 
 static void strFuncDestruct(char *id, af_Object *obj, ObjectStrFunc *data, af_Environment *env) {
@@ -112,7 +99,6 @@ void makeStrFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
             {.name="obj_funcGetVarList", .func=strFuncVarList, .dlc=NULL},
             {.name="obj_funcGetArgList", .func=strFuncArgList, .dlc=NULL},
             {.name="obj_funcGetInfo", .func=strFuncGetInfo, .dlc=NULL},
-            {.name="obj_funcFreeMask", .func=strFuncFreeMark, .dlc=NULL},
             {.name=NULL}
     };
 

@@ -1017,6 +1017,19 @@ bool setFuncActivityAddVar(af_Environment *env){
     return true;
 }
 
+static void initCallFuncInfo(CallFuncInfo *cfi, af_Environment *env) {
+    cfi->mark = env->activity->mark;
+    cfi->belong = env->activity->belong;
+    cfi->func = env->activity->func;
+    cfi->var_list = env->activity->var_list;  // 传var_list而非vsl
+
+    cfi->call_type = env->activity->call_type;
+    cfi->is_gc_call = env->activity->is_gc_call;
+    cfi->is_literal = env->activity->is_literal;
+    cfi->is_obj_func = env->activity->is_obj_func;
+    cfi->is_macro_call = env->activity->is_macro_call;
+}
+
 /*
  * 函数名: setFuncActivityToNormal
  * 目标: 获取下一步需要运行的结果
@@ -1038,7 +1051,10 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     env->activity->body_next = body->next;
     switch (body->type) {
         case func_body_c: {
-            af_FuncBody *new = GET_SYMBOL(body->c_func)(env->activity->mark, env);
+            CallFuncInfo cfi;
+            initCallFuncInfo(&cfi, env);
+
+            af_FuncBody *new = GET_SYMBOL(body->c_func)(&cfi, env);
             activity->process_msg_first++;  // 处理C函数通过msg_down返回的结果
             pushDynamicFuncBody(new, body);
             activity->body_next = body->next;  // 添加新元素后要重新设定body_next的位置

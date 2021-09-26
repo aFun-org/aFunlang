@@ -22,7 +22,21 @@ enum af_FuncInfoEmbedded {
 #include "code.h"
 #include "object.h"
 
-typedef struct af_FuncBody *callFuncBody(void *mark, af_Environment *env);
+typedef struct CallFuncInfo CallFuncInfo;
+struct CallFuncInfo {
+    void *mark;
+    af_Object *belong;
+    af_Object *func;
+    struct af_VarSpaceListNode *var_list;
+
+    enum af_BlockType call_type;
+    bool is_gc_call;
+    bool is_literal;
+    bool is_obj_func;
+    bool is_macro_call;
+};
+
+typedef struct af_FuncBody *callFuncBody(CallFuncInfo *info, af_Environment *env);
 NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 
 /* af_ArgCodeList 创建与释放 */

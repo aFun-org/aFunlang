@@ -27,7 +27,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     af_ObjectData *od = calloc(1, sizeof(af_ObjectData));
     od->base = base_obj;
     base_obj->data = od;
-    od->id = strCopy(id == NULL ? "Unknow" : id);
+    od->id = strCopy(id == NULL ? "Unknown" : id);
 
     od->api = api;
     od->free_api = free_api;
