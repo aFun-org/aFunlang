@@ -8,39 +8,35 @@ struct GlobalObjectData {
 
 static char *global_id = "global-object";
 
-static GlobalObjectData *initGOD(af_Object  *obj, af_Environment *env) {
-    GlobalObjectData *god = calloc(1, sizeof(GlobalObjectData));
-    god->share = makeVarSpace(obj, 3, 2, 0, env);
-    return god;
+static void initGOD(af_Object *obj, GlobalObjectData *data, af_Environment *env) {
+    data->share = makeVarSpace(obj, 3, 2, 0, env);
 }
 
 static void freeGOD(GlobalObjectData *god, af_Object  *obj, af_Environment *env) {
     god->share = NULL;
-    free(god);
 }
 
 static size_t getSize(char *id, af_Object *obj) {
     /* 不需要检查 id */
-    return sizeof(GlobalObjectData *);
+    return sizeof(GlobalObjectData);
 }
 
-static void initData(char *id, af_Object *obj, GlobalObjectData **data, af_Environment *env) {
+static void initData(char *id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
     if (EQ_STR(id, global_id))
-        *data = initGOD(obj, env);
+        initGOD(obj, data, env);
 }
 
-static void freeData(char *id, af_Object *obj, GlobalObjectData **data, af_Environment *env) {
+static void freeData(char *id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
     if (EQ_STR(id, global_id))
-        freeGOD(*data, obj, env);
+        freeGOD(data, obj, env);
 }
 
-static af_GcList *getGcList(char *id, af_Object *obj, void *data) {
+static af_GcList *getGcList(char *id, af_Object *obj, GlobalObjectData *data) {
     if (!EQ_STR(id, global_id))
         return NULL;
 
-    GlobalObjectData *god = *(GlobalObjectData **)data;
-    if (god->share != NULL)
-        return pushGcList(glt_vs, god->share, NULL);
+    if (data->share != NULL)
+        return pushGcList(glt_vs, data->share, NULL);
     else
         return NULL;
 }
@@ -49,9 +45,7 @@ static af_GcList *getGcList(char *id, af_Object *obj, void *data) {
 static af_VarSpace *getShareVS(char *id, af_Object *obj) {
     if (!EQ_STR(id, global_id))
         return NULL;
-
-    GlobalObjectData *god = *(GlobalObjectData **)getObjectData(obj);
-    return god->share;
+    return ((GlobalObjectData *)getObjectData(obj))->share;
 }
 
 af_Object *makeGlobalObject(af_Environment *env) {
