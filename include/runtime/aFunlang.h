@@ -18,4 +18,5 @@ AFUN_LANG_EXPORT int runCodeFromMemory(af_Code *code, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromMemoryAsImport(af_Code *code, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env);
 AFUN_LANG_EXPORT int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environment *env);
+AFUN_LANG_EXPORT int buildFile(FilePath out, FilePath in, FILE *error_file);
 #endif //AFUN_AFUNLANG_H

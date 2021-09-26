@@ -82,7 +82,7 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
 
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aun", sufix)) {
-        fprintf(error_file, "Is not .aun file[%s].", (sufix == NULL ? "" : sufix));
+        fprintf(error_file, "Is not .aun file[%s].\n", (sufix == NULL ? "" : sufix));
         return -2;
     }
 
@@ -154,7 +154,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
 
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aub", sufix)) {
-        fprintf(error_file, "Is not .aub file[%s].", (sufix == NULL ? "" : sufix));
+        fprintf(error_file, "Is not .aub file[%s].\n", (sufix == NULL ? "" : sufix));
         return -2;
     }
 
@@ -181,8 +181,8 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
         error_file = stderr;
 
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || (!EQ_STR(".aun", sufix) && EQ_STR(".aub", sufix))) {  // 不是源文件或字节码文件
-        fprintf(error_file, "Is not .aun/.aub file[%s].", (sufix == NULL ? "" : sufix));
+    if (sufix != NULL && !EQ_STR(".aun", sufix) && !EQ_STR(".aub", sufix)) {  // 不是源文件, 字节码文件或无后缀文件
+        fprintf(error_file, "Is not .aun/.aub file[%s].\n", sufix);
         return -2;
     }
 
@@ -194,7 +194,7 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
     time_t time_2 = getFileMTime(path_2);
 
     if (time_1 == 0 && time_2 == 0) {
-        fprintf(error_file, "File not exists [%s].", file);
+        fprintf(error_file, "File not exists [%s].\n", file);
         free(path_1);
         free(path_2);
         return -3;
@@ -209,4 +209,44 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
     free(path_1);
     free(path_2);
     return exit_code;
+}
+
+/*
+ * 函数名: buildFile
+ * 目标: 生成字节码文件
+ */
+int buildFile(FilePath out, FilePath in, FILE *error_file) {
+    if (out == NULL || in == NULL)
+        return -1;
+
+    if (error_file == NULL)
+        error_file = stderr;
+
+    char *suffix_in = getFileSurfix(in);
+    char *suffix_out = getFileSurfix(out);
+    if (suffix_in == NULL || !EQ_STR(".aun", suffix_in)) {  // 不是源文件
+        fprintf(error_file, "Input file is not .aun file[%s].\n", (suffix_in == NULL ? "" : suffix_in));
+        return -2;
+    }
+
+    if (suffix_out == NULL || !EQ_STR(".aub", suffix_out)) {  // 不是字节码文件
+        fprintf(error_file, "Output file is not .aub file[%s].\n", (suffix_out == NULL ? "" : suffix_out));
+        return -2;
+    }
+
+    af_Parser *parser = makeParserByFile(in, error_file);
+    af_Code *code = parserCode(in, parser);
+    freeParser(parser);
+    if (code == NULL)
+        return -2;
+
+    bool res = writeAllCode(code, out);
+    freeAllCode(code);
+
+    if (!res) {
+        fprintf(error_file, "Build error.\n");
+        return -3;
+    }
+
+    return 0;
 }

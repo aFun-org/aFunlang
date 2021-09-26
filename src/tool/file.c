@@ -40,6 +40,22 @@ time_t getFileMTime(char *path) {
     return my_stat.st_mtime;
 }
 
+char *joinPath(char *path, char *name, char *suffix) {
+    char *name_suffix = strJoin(name, suffix, false, false);
+    char *res = NULL;
+
+    if (path != NULL && path[STR_LEN(path) - 1] == SEP_CH)
+        res = strJoin(path, name_suffix, false, true);
+    else if (path != NULL) {
+        res = strJoin(path, SEP, false, false);
+        res = strJoin(res, name_suffix, true, true);
+    } else
+        res = name_suffix;
+
+    /* name_suffix已经在上述的strJoin释放 */
+    return res;
+}
+
 /*
  * 函数: getFileName
  * 目标: 给定路径获取该路径所指定的文件名
@@ -57,7 +73,7 @@ char *getFileName(char *path_1){
     else
         slash++;
 
-    if ((point = strchr(path, '.')) != NULL)
+    if ((point = getFileSurfix(path)) != NULL)
         *point = NUL;
 
     char *res = strCopy(slash);
@@ -74,7 +90,7 @@ char *getFileNameWithPath(char *path_1){
     char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
     char *res;
 
-    if ((point = strchr(path, '.')) != NULL)
+    if ((point = getFileSurfix(path)) != NULL)
         *point = NUL;
 
     res = strCopy(path);
@@ -87,7 +103,12 @@ char *getFileNameWithPath(char *path_1){
  * 目标: 获取文件后缀 (不会生成新字符串)
  */
 char *getFileSurfix(char *path) {
-    return strchr(path, '.');
+    char *last_ = strrchr(path, SEP_CH);
+
+    if (last_ != NULL)
+        return strrchr(last_ + 1, '.');
+    else
+        return strrchr(path, '.');
 }
 
 /*

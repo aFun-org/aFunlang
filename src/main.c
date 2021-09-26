@@ -1,6 +1,7 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
 #include "__main_run.h"
+#include "__main_build.h"
 
 ff_defArg(help, true)
                 ff_argRule('h', help, not, 'h')
@@ -17,7 +18,8 @@ ff_defArg(run, false)
 ff_endArg(run, false);
 
 ff_defArg(build, false)
-                ff_argRule('o', out, not, 'o')
+                ff_argRule('o', out, must, 'o')
+                ff_argRule('p', path, must, 'p')
                 ff_argRule('f', fource, not, 'f')
 ff_endArg(build, false);
 
@@ -30,6 +32,7 @@ static int mainHelp(ff_FFlags *ff);
 static void printVersion(void);
 static void printHelp(void);
 static int mainRun(ff_FFlags *ff);
+static int mainBuild(ff_FFlags *ff);
 
 int main(int argc, char **argv) {
     int exit_code = EXIT_SUCCESS;
@@ -42,13 +45,14 @@ int main(int argc, char **argv) {
     if (EQ_STR(child, "run"))
         exit_code = mainRun(ff);
     else if (EQ_STR(child, "build"))
-        printf("build");
+        exit_code = mainBuild(ff);
     else
         exit_code = mainHelp(ff);
 
     ff_freeFFlags(ff);
 
-    printf("Enter any key to continue...");
+    printf("aFunlang exit as: %d\n", exit_code);
+    printf("Enter any key to continue...\n");
     getc(stdin);
     return exit_code;
 }
@@ -176,4 +180,73 @@ static int mainRun(ff_FFlags *ff) {
     destructAFunEnvironment(env);
     freeAllRunList(rl);
     return exit_code;
+}
+
+static int mainBuild(ff_FFlags *ff) {
+    char *text = NULL;
+    char *out_put = NULL;
+    char *path = NULL;
+    bool force = false;
+    int mark;
+
+    while (1) {
+        mark = ff_getopt(&text, ff);
+
+        switch (mark) {
+            case 'o':
+                if (path != NULL)
+                    goto error;
+                out_put = text;
+                break;
+            case 'p':
+                if (out_put != NULL)
+                    goto error;
+                path = text;
+                break;
+            case 'f':
+                force = true;
+                break;
+            case -1:
+                goto out;
+            default:
+                printError(ff);
+                return EXIT_FAILURE;
+        }
+    }
+
+out:
+
+    if (out_put != NULL) {
+        FilePath in = NULL;
+
+        /* 如果没有参数 */
+        if (!ff_getopt_wild(&text, ff)) {
+            fprintf(stderr, "No source file to build.\n");
+            printHelp();
+            return EXIT_FAILURE;
+        } else
+            in = text;
+
+        /* 如果还有第二个参数 */
+        if (ff_getopt_wild(&text, ff)) {
+            fprintf(stderr, "Too many source file to build.\n");
+            printHelp();
+            return EXIT_FAILURE;
+        }
+
+        return buildFileOutput(out_put, in, force);
+    } else if (path != NULL) {
+        int exit_code = 0;
+        while (ff_getopt_wild(&text, ff) && exit_code == 0)
+            exit_code = buildFileToPath(path, text, force);
+        return exit_code;
+    }
+
+    int exit_code = 0;
+    while (ff_getopt_wild(&text, ff) && exit_code == 0)
+        exit_code = buildFileToSelf(text, force);
+    return exit_code;
+
+error:
+    return EXIT_FAILURE;
 }
