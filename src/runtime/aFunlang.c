@@ -77,9 +77,14 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
     if (env == NULL || file == NULL)
         return -1;
 
+    if (error_file == NULL)
+        error_file = stderr;
+
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || !EQ_STR(".aun", sufix))
+    if (sufix == NULL || !EQ_STR(".aun", sufix)) {
+        fprintf(error_file, "Is not .aun file[%s].", (sufix == NULL ? "" : sufix));
         return -2;
+    }
 
     /* 若文件不存在则自动生成 */
     bool free_save_path = false;
@@ -90,8 +95,6 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
     } else if (!save_afb)
         save_path = NULL;
 
-    if (error_file == NULL)
-        error_file = stderr;
     af_Parser *parser = makeParserByFile(file, error_file);
     int exit_code = runCode_(file, parser, 1, save_path, env);
     if (free_save_path)
@@ -146,18 +149,16 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
     if (env == NULL || file == NULL)
         return -1;
 
-    char *sufix = getFileSurfix(file);
-    if (sufix == NULL || !EQ_STR(".aub", sufix))
-        return -2;
-
     if (error_file == NULL)
         error_file = stderr;
-    af_Code *code;
-    FILE *file_ = fopen(file, "rb");
-    if (file_ == NULL) {
-        return -3;
+
+    char *sufix = getFileSurfix(file);
+    if (sufix == NULL || !EQ_STR(".aub", sufix)) {
+        fprintf(error_file, "Is not .aub file[%s].", (sufix == NULL ? "" : sufix));
+        return -2;
     }
 
+    af_Code *code;
     if(!readAllCode(&code, file)) {
         freeAllCode(code);
         return -2;
@@ -165,7 +166,6 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
 
     int exit_code = runCodeFromMemoryAsImport(code, env);
     freeAllCode(code);
-
     return exit_code;
 }
 
@@ -177,9 +177,14 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
     if (env == NULL || file == NULL)
         return -1;
 
+    if (error_file == NULL)
+        error_file = stderr;
+
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || (!EQ_STR(".aun", sufix) && EQ_STR(".aub", sufix)))  // 不是源文件或字节码文件
+    if (sufix == NULL || (!EQ_STR(".aun", sufix) && EQ_STR(".aub", sufix))) {  // 不是源文件或字节码文件
+        fprintf(error_file, "Is not .aun/.aub file[%s].", (sufix == NULL ? "" : sufix));
         return -2;
+    }
 
     char *path = getFileNameWithPath(file);
     char *path_1 = strJoin(path, ".aun", false, false);
@@ -188,8 +193,12 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
     time_t time_1 = getFileMTime(path_1);
     time_t time_2 = getFileMTime(path_2);
 
-    if (time_1 == 0 && time_2 == 0)
+    if (time_1 == 0 && time_2 == 0) {
+        fprintf(error_file, "File not exists [%s].", file);
+        free(path_1);
+        free(path_2);
         return -3;
+    }
 
     int exit_code;
     if (time_2 >= time_1)
