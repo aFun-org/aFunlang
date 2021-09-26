@@ -1,5 +1,5 @@
 ﻿#include "aFun.h"
-#include "__main_run.h"
+#include "main_run.h"
 
 
 static RunList *makeRunList() {

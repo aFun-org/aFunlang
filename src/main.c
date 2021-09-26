@@ -1,7 +1,7 @@
 ﻿#include <stdio.h>
 #include "aFun.h"
-#include "__main_run.h"
-#include "__main_build.h"
+#include "main_run.h"
+#include "main_build.h"
 
 ff_defArg(help, true)
                 ff_argRule('h', help, not, 'h')
