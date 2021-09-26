@@ -215,7 +215,7 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
     activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
     activity->new_vs_count = 1;
 
-    activity->file = strCopy("aFun-gc.af.sys");
+    activity->file = strCopy("aFun-gc.aun.sys");
     activity->line = 0;
     activity->dl = dl;
     activity->pdl = pdl;
@@ -1248,7 +1248,7 @@ static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file,
     af_ErrorBacktracking *ebt = calloc(1, sizeof(af_ErrorBacktracking));
     ebt->line = line;
     if (file == NULL)
-        ebt->file = strCopy("unknown.af.sys");
+        ebt->file = strCopy("unknown.aun.sys");
     else
         ebt->file = strCopy(file);
     if (note != NULL)

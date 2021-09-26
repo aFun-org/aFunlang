@@ -61,7 +61,7 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Enviro
         return -1;
 
     if (string_name == NULL)
-        string_name = "string-code.af";
+        string_name = "string-code.aun";
 
     if (error_file == NULL)
         error_file = stderr;
@@ -78,14 +78,14 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
         return -1;
 
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || !EQ_STR(".af", sufix))
+    if (sufix == NULL || !EQ_STR(".aun", sufix))
         return -2;
 
     /* 若文件不存在则自动生成 */
     bool free_save_path = false;
     if (save_afb && !save_path) {
         char *path = getFileNameWithPath(file);
-        save_path = strJoin(path, ".afb", true, false);
+        save_path = strJoin(path, ".aub", true, false);
         free_save_path = true;
     } else if (!save_afb)
         save_path = NULL;
@@ -108,7 +108,7 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
         return -1;
 
     if (name == NULL)
-        name = "sys-stdin.af";
+        name = "sys-stdin.aun";
 
     if (error_file == NULL)
         error_file = stderr;
@@ -147,7 +147,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
         return -1;
 
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || !EQ_STR(".afb", sufix))
+    if (sufix == NULL || !EQ_STR(".aub", sufix))
         return -2;
 
     if (error_file == NULL)
@@ -178,12 +178,12 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
         return -1;
 
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || (!EQ_STR(".af", sufix) && EQ_STR(".afb", sufix)))  // 不是源文件或字节码文件
+    if (sufix == NULL || (!EQ_STR(".aun", sufix) && EQ_STR(".aub", sufix)))  // 不是源文件或字节码文件
         return -2;
 
     char *path = getFileNameWithPath(file);
-    char *path_1 = strJoin(path, ".af", false, false);
-    char *path_2 = strJoin(path, ".afb", true, false);  // 此时释放path
+    char *path_1 = strJoin(path, ".aun", false, false);
+    char *path_2 = strJoin(path, ".aub", true, false);  // 此时释放path
 
     time_t time_1 = getFileMTime(path_1);
     time_t time_2 = getFileMTime(path_2);

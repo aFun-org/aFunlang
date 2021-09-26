@@ -21,13 +21,13 @@ int main() {
 
 void test1(void) {
     af_Parser *parser = makeParserByString(str, false, stderr);
-    af_Code *code = parserCode("test1.af", parser);
+    af_Code *code = parserCode("test1.aun", parser);
     freeParser(parser);
     freeAllCode(code);
 }
 
 void test2(void) {
-    FilePath path = "./test.af";
+    FilePath path = "./test.aun";
     FILE *file = fopen(path, "wb");
     if (file == NULL) {
         perror("File open error");
@@ -41,7 +41,7 @@ void test2(void) {
     fclose(file);
 
     af_Parser *parser = makeParserByFile(path, stderr);
-    af_Code *code = parserCode("test2.af", parser);
+    af_Code *code = parserCode("test2.aun", parser);
     printCode(code);
     freeParser(parser);
     freeAllCode(code);
