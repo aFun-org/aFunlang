@@ -15,6 +15,11 @@ file(GLOB include_h
      LIST_DIRECTORIES FALSE
      "${PROJECT_SOURCE_DIR}/include/*.h")
 
+file(READ ${CMAKE_CURRENT_LIST_DIR}/help-info _help-info)
+string(REPLACE "\n" "\\n" help-info "${_help-info}")
+configure_file(${CMAKE_CURRENT_LIST_DIR}/help_info.c.in ${CMAKE_BINARY_DIR}/help_info.c @ONLY)
+list(APPEND source "${CMAKE_BINARY_DIR}/help_info.c")
+
 option(AFUN_BUILD_ALL "Build all types of aFun" ON)
 set(_build_all ${AFUN_BUILD_ALL})
 
@@ -31,6 +36,7 @@ endif()
 foreach(tgt IN LISTS aFunList)
     target_sources(${tgt} PRIVATE ${source} ${private_h} ${include_h})
     target_include_directories(${tgt} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+    get_target_property(tmp ${tgt} COMPILE_DEFINITIONS)
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${include_h}")
 endforeach()
 

@@ -10,10 +10,13 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
             return -1;
         }
 
-        if (time_2 >= time_1)
+        if (time_2 >= time_1) {
+            fprintf(stdout, "[aFunlang] Source already build (%s), use --force to build again.\n", in);
             return 0;
+        }
     }
 
+    fprintf(stdout, "[aFunlang] File (%s) will be build. (%s)\n", in, out);
     return buildFile(out, in, stderr);
 }
 

@@ -13,7 +13,7 @@ ff_defArg(run, true)
                 ff_argRule('f', file, must, 'f')
                 ff_argRule('s', source, must, 's')
                 ff_argRule('b', byte, must, 'b')
-                ff_argRule(NUL, no-afb, not, 'a')
+                ff_argRule(NUL, no-aub, not, 'a')
                 ff_argRule(NUL, no-cl, not, 'n')
 ff_endArg(run, true);
 
@@ -33,10 +33,11 @@ static void printVersion(void);
 static void printHelp(void);
 static int mainRun(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
+extern const char *help_info;
 
 int main(int argc, char **argv) {
     int exit_code = EXIT_SUCCESS;
-    ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, aFunlang_exe);
+    ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
     if (ff == NULL)
         return EXIT_FAILURE;
     char *child = ff_getChild(ff);
@@ -59,9 +60,15 @@ static void printVersion(void) {
     printf(aFunDescription "\n");
 }
 
+static void printWelcomeInfo(void) {
+    printf("\naFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n");
+    printf("["compilerID"] on "systemName"\n");
+    printf("(Enter the aFun code to run in the top activity)\n");
+}
+
 static void printHelp(void) {
     printf("aFunlang Usage:\n");
-    printf("Github: <https://github.com/aFun-org/aFunlang>\n");
+    printf("%s\n", help_info);
 }
 
 /*
@@ -69,7 +76,7 @@ static void printHelp(void) {
  * 目标: 打印参数错误信息
  */
 static void printError(ff_FFlags *ff) {
-    fprintf(stderr, "Command line argumenterror (%s)\n", ff_getChild(ff));
+    fprintf(stderr, "[aFunlang] Command line argument error (%s)\n", ff_getChild(ff));
     printHelp();
 }
 
@@ -106,14 +113,14 @@ out:
     return EXIT_SUCCESS;
 }
 
-static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_afb) {
+static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_aub) {
     char *text = NULL;
     RunList *run_list = NULL;
     RunList **prl = &run_list;
     int mark;
 
     *command_line = true;
-    *save_afb = true;
+    *save_aub = true;
 
     while (1) {
         mark = ff_getopt(&text, ff);
@@ -134,11 +141,12 @@ static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_afb) {
                 *command_line = false;
                 break;
             case 'a':
-                *save_afb = false;
+                *save_aub = false;
                 break;
             case -1:
                 goto out;
             default:
+                *command_line = false;  // 命令行也不启动
                 printError(ff);
                 freeAllRunList(run_list);
                 return NULL;
@@ -153,22 +161,25 @@ out:
 
 static int mainRun(ff_FFlags *ff) {
     bool command_line = true;
-    bool save_afb = true;
+    bool save_aub = true;
     int exit_code;
-    RunList *rl = getRunList(ff, &command_line, &save_afb);
+    RunList *rl = getRunList(ff, &command_line, &save_aub);
 
-    af_Environment *env = creatAFunEnviroment();
-    if (rl != NULL)
-        exit_code = runCodeFromRunList(rl, NULL, save_afb, env);
-    else if (!command_line) {
-        fprintf(stderr, "Not code to run.\n");
-        printHelp();
+    if (rl == NULL && !command_line) {
+        fprintf(stderr, "[aFunlang] There are not code to run.\n");
+        printError(ff);
         return EXIT_FAILURE;
     }
 
-    if (command_line) {
-        while (isCoreExit(env) != 1)
+    af_Environment *env = creatAFunEnviroment();
+    if (rl != NULL)
+        exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
+
+    if (command_line && isCoreExit(env) != 1) {
+        printWelcomeInfo();
+        do
             exit_code = runCodeFromStdin("stdin", stderr, env);
+        while (isCoreExit(env) != 1);
     }
 
     destructAFunEnvironment(env);
@@ -189,14 +200,14 @@ static int mainBuild(ff_FFlags *ff) {
         switch (mark) {
             case 'o':
                 if (path != NULL) {
-                    fprintf(stderr, "Parameter conflict.\n");
+                    fprintf(stderr, "[aFunlang] Argument conflict (out, path).\n");
                     goto error;
                 }
                 out_put = text;
                 break;
             case 'p':
                 if (out_put != NULL) {
-                    fprintf(stderr, "Parameter conflict.\n");
+                    fprintf(stderr, "[aFunlang] Argument conflict (out, path).\n");
                     goto error;
                 }
                 path = text;
@@ -207,8 +218,7 @@ static int mainBuild(ff_FFlags *ff) {
             case -1:
                 goto out;
             default:
-                printError(ff);
-                return EXIT_FAILURE;
+                goto error;
         }
     }
 
@@ -218,17 +228,15 @@ out:
 
         /* 如果没有参数 */
         if (!ff_getopt_wild(&text, ff)) {
-            fprintf(stderr, "No source file to build.\n");
-            printHelp();
-            return EXIT_FAILURE;
+            fprintf(stderr, "[aFunlang] There are not source file to build.\n");
+            goto error;
         } else
             in = text;
 
         /* 如果还有第二个参数 */
         if (ff_getopt_wild(&text, ff)) {
-            fprintf(stderr, "Too many source file to build.\n");
-            printHelp();
-            return EXIT_FAILURE;
+            fprintf(stderr, "[aFunlang] There are too many source file to build. (Do not use --out option)\n");
+            goto error;
         }
 
         return buildFileOutput(out_put, in, force);
@@ -245,6 +253,6 @@ out:
     return exit_code;
 
 error:
-    printHelp();
+    printError(ff);
     return EXIT_FAILURE;
 }

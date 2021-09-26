@@ -51,8 +51,12 @@ set(CMAKE_INSTALL_RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH TRUE)
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
-add_compile_definitions(aFunVersion="${aFunVersion}" aFunDescription="${aFunDescription}")
-
+set(base_compile_definitions
+    aFunVersion="${aFunVersion}"
+    aFunDescription="${aFunDescription}"
+    systemName="${CMAKE_SYSTEM_NAME}"
+    compilerID="${CMAKE_C_COMPILER_ID}")  # 默认的预定义宏
+add_compile_definitions(${base_compile_definitions})
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
 add_subdirectory(src)
