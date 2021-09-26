@@ -12,7 +12,6 @@ typedef struct af_ObjectAPI af_ObjectAPI;
 typedef void objectAPIFunc();
 DEFINE_DLC_SYMBOL(objectAPIFunc);
 
-#include "obj_api.h"
 #include "env.h"
 #include "var.h"
 

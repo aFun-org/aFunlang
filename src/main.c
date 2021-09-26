@@ -3,19 +3,19 @@
 #include "main_run.h"
 #include "main_build.h"
 
-ff_defArg(help, true)
+ff_defArg(help, false)
                 ff_argRule('h', help, not, 'h')
                 ff_argRule('v', version, not, 'v')
-ff_endArg(help, true);
+ff_endArg(help, false);
 
-ff_defArg(run, false)
+ff_defArg(run, true)
                 ff_argRule('e', eval, must, 'e')
                 ff_argRule('f', file, must, 'f')
                 ff_argRule('s', source, must, 's')
                 ff_argRule('b', byte, must, 'b')
                 ff_argRule(NUL, no-afb, not, 'a')
                 ff_argRule(NUL, no-cl, not, 'n')
-ff_endArg(run, false);
+ff_endArg(run, true);
 
 ff_defArg(build, false)
                 ff_argRule('o', out, must, 'o')
@@ -50,10 +50,6 @@ int main(int argc, char **argv) {
         exit_code = mainHelp(ff);
 
     ff_freeFFlags(ff);
-
-    printf("aFunlang exit as: %d\n", exit_code);
-    printf("Enter any key to continue...\n");
-    getc(stdin);
     return exit_code;
 }
 
@@ -102,9 +98,6 @@ static int mainHelp(ff_FFlags *ff) {
         have_opt = true;  // 表示有实际参数
     }
 out:
-    if (ff_getopt_wild(&text, ff))
-        return EXIT_FAILURE;
-
     if (!have_opt) {
         printHelp();
         return EXIT_SUCCESS;
@@ -195,13 +188,17 @@ static int mainBuild(ff_FFlags *ff) {
 
         switch (mark) {
             case 'o':
-                if (path != NULL)
+                if (path != NULL) {
+                    fprintf(stderr, "Parameter conflict.\n");
                     goto error;
+                }
                 out_put = text;
                 break;
             case 'p':
-                if (out_put != NULL)
+                if (out_put != NULL) {
+                    fprintf(stderr, "Parameter conflict.\n");
                     goto error;
+                }
                 path = text;
                 break;
             case 'f':
@@ -248,5 +245,6 @@ out:
     return exit_code;
 
 error:
+    printHelp();
     return EXIT_FAILURE;
 }

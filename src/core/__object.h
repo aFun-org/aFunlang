@@ -6,6 +6,7 @@
 #ifndef AFUN_OBJECT_H_
 #define AFUN_OBJECT_H_
 #include "tool.h"
+#include "obj_api.h"  // 该文件不包含在object.h中, object.h并不依赖该文件
 
 // 这些typedef可能会被下面include的文件使用
 typedef struct af_ObjectData af_ObjectData;

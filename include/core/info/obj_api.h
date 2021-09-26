@@ -3,6 +3,8 @@
  * 目标:
  * 1) 定义一些函数签名
  * 2) 定义Object的函数签名
+ *
+ * 注意: 该文件不包含在object.h中, object.h并不依赖该文件
  */
 
 #ifndef AFUN_OBJ_API_H
