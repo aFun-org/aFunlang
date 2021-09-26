@@ -172,14 +172,13 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
 /*
  * 函数名: runCodeFromFileByte
  * 目标: 运行文件中的程序 (字节码/源码形式)
- * 注意: 必须传入.af文件
  */
 int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environment *env) {
     if (env == NULL || file == NULL)
         return -1;
 
     char *sufix = getFileSurfix(file);
-    if (sufix == NULL || !EQ_STR(".af", sufix))
+    if (sufix == NULL || (!EQ_STR(".af", sufix) && EQ_STR(".afb", sufix)))  // 不是源文件或字节码文件
         return -2;
 
     char *path = getFileNameWithPath(file);
