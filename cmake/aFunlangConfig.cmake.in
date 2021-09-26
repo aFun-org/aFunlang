@@ -33,7 +33,7 @@ set_and_check(aFunlang_ROOT @PACKAGE_INSTALL_DIR@)
 set_and_check(aFunlang_INCLUDE_DIRS @PACKAGE_INCLUDEDIR@)
 set_and_check(aFunlang_RUNTIME_DIRS @PACKAGE_BINDIR@)
 
-if(WIN32 AND NOT CYGWIN)
+if(WIN32 OR CYGWIN)  # cygwin 和 win32 一样使用.dll
     set_and_check(aFunlang_RUNTIME_LIBRARIES_DIRS @PACKAGE_BINDIR@)
 else()
     set_and_check(aFunlang_RUNTIME_LIBRARIES_DIRS @PACKAGE_LIBDIR@)
@@ -75,7 +75,7 @@ function(find_package_safe)
 endfunction()
 
 # 查找依赖
-if (WIN32 AND NOT CYGWIN)
+if (WIN32 AND NOT CYGWIN)  # cygwin 不需要 dl
     set_and_check(aFunlang_dlfcn_ROOT @PACKAGE_dlfcn_INSTALL_DIR@)
     find_package_safe(PACKAGE dlfcn-win32 QUIET HINTS @PACKAGE_dlfcn_CMAKEDIR@)  # 指定路径
     if (NOT TARGET dlfcn-win32::dl)

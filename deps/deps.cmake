@@ -12,7 +12,7 @@ set(dlfcn-win32_MUST_BUILD TRUE CACHE BOOL "Must build dlfcn-win32")
 set(PCRE2_MUST_BUILD TRUE CACHE BOOL "Must build pcre2")
 set(FFlags_MUST_BUILD TRUE CACHE BOOL "Must build FFlags")
 
-if (WIN32 AND NOT CYGWIN)
+if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
     if (_print)
         message(STATUS "Build dlfcn-win32...")
     endif()
@@ -86,3 +86,10 @@ install(DIRECTORY "${fflags_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FI
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindFFlags.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
 cfep_install(FFlags PREFIX ${deps_install_dir})
 
+# 安装 cygwin1.dll
+if (CYGWIN)
+    wi_find_cygwin1()
+    wi_copy_import(TARGETS CYGWIN::cygwin1)
+    wi_build_import(TARGETS CYGWIN::cygwin1)
+    wi_install_import(TARGETS CYGWIN::cygwin1)
+endif()

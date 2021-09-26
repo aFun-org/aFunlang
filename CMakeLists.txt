@@ -66,7 +66,7 @@ set(CMAKEDIR ${INSTALL_CMAKEDIR})
 set(INCLUDEDIR ${INSTALL_INCLUDEDIR})
 
 set(path_var)
-if (WIN32 AND NOT CYGWIN)
+if (WIN32 AND NOT CYGWIN)  # cygwin 不需要编译 dl
     foreach(tgt dlfcn pcre2 fflags)
         set(${tgt}_INSTALL_DIR ${deps_install_dir})
         set(${tgt}_CMAKEDIR ${deps_install_dir}/${${tgt}_cmake})
