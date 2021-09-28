@@ -6,7 +6,8 @@
 #define CODE_STR_MAX_SIZE (50)
 typedef struct af_Code af_Code;
 
-typedef long CodeInt;  // Code uint
+typedef long CodeInt;  // Code int
+typedef long CodeUint;  // Code uint  TODO-szh 在code结构体使用该函数
 
 enum af_CodeType {
     code_element = 0,
@@ -28,6 +29,7 @@ AFUN_CORE_EXPORT void freeAllCode(af_Code *bt);
 
 /* 代码块 相关操作 */
 AFUN_CORE_EXPORT af_Code *pushCode(af_Code **base, af_Code *next);
+AFUN_CORE_EXPORT af_Code *copyAllCode(af_Code *base, FilePath *path);
 AFUN_CORE_EXPORT af_Code *copyCode(af_Code *base, FilePath *path);
 AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FilePath path);
 AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FilePath path);

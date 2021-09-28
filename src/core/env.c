@@ -770,23 +770,19 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
             }
             func = bt->next;
             break;
-        case brackets: {
-            af_Code *code = bt->next;
+        case brackets:
             func = NULL;
-            for (int i = 0; i < bt->block.elements; i++) {
+            for (af_Code *code = bt->next; code != NULL; code = getCodeNext(code)) {
                 if (isInfixFunc(code, env)) {
                     func = code;
                     break;
                 }
-                if ((code = getCodeNext(bt)) == NULL)
-                    break;
             }
             if (func == NULL) {
                 pushMessageDown(makeERRORMessage(CALL_ERROR, BRACKETS_FUNC_BODY_INFO, env), env);
                 return false;
             }
             break;
-        }
         case parentheses:
             func = NULL;  // 小括号则不在需要匹配
             break;
