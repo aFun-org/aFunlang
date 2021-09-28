@@ -177,7 +177,7 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
     activity->status = act_func_get;
     activity->func = func;
 
-    setActivityBtTop(bt_top, activity);
+    setActivityBtTop(bt_top, activity);  // 非NORMAL期间, bt_top被设定
     setActivityBtStart(bt_start, activity);
 
     activity->return_first = return_first;
@@ -194,7 +194,7 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     activity->var_list = makeVarSpaceList(belong->data->var_space);
     activity->var_list->next = makeVarSpaceList(protect);
 
-    setActivityBtTop(bt_top, activity);
+    setActivityBtTop(NULL, activity);  // top-activity直接就在normal, bt_top将不被设定
     setActivityBtStart(bt_start, activity);
 
     return activity;
@@ -268,6 +268,10 @@ static void freeAllActivity(af_Activity *activity) {
         activity = freeActivity(activity);
 }
 
+/*
+ * 函数名: clearActivity
+ * 目标: 尾调用优化时用于清理Activity.
+ */
 static void clearActivity(af_Activity *activity) {
     freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
     /* acl在runArgList之后就被释放了 */
@@ -278,9 +282,16 @@ static void clearActivity(af_Activity *activity) {
     activity->bt_start = NULL;
     activity->bt_next = NULL;
 
+    /* acl_start 在 setFuncActivityAddVar 时被释放 */
     activity->acl_start = NULL;
     activity->acl_done = NULL;
+
+    /* activity->fi 暂时不清理, 直到setFuncActivityAddVar时才清理 */
     activity->body_next = NULL;
+
+    /* mark在setFuncActivityToNormal被清理*/
+    /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
+    activity->mark = NULL;
     free(activity->file);
     activity->line = 0;
 }
@@ -693,10 +704,10 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
-        printf("Tail tone recursive optimization\n");
+        printf("Tail call optimization\n");
         clearActivity(env->activity);
-        env->activity->optimization = true;
         setActivityBtTop(bt, env->activity);
+        env->activity->optimization = true;
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
             env->activity->return_first = return_first;
     } else {
@@ -786,12 +797,12 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
             break;
     }
 
-    setActivityBtNext(next, env->activity);
+    setActivityBtNext(next, env->activity);  // 设置当前Activity的bt_next
 
-    newActivity(bt, next, false, env);
+    newActivity(bt, next, false, env);  // 添加新的Activity或尾调用优化
     setActivityBtStart(func, env->activity);
 
-    env->activity->call_type = env->activity->bt_top->block.type;
+    env->activity->call_type = env->activity->bt_top->block.type;  // newActivity时会设置bt_top
     env->activity->status = act_func_get;
     if (env->activity->call_type == parentheses) { // 对于类前缀调用, 已经获得func的实际值了
         if (parentheses_call == NULL) {
@@ -928,52 +939,48 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 bool setFuncActivityAddVar(af_Environment *env){
     obj_funcGetInfo *get_info = findAPI("obj_funcGetInfo", env->activity->func->data->api);
     obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", env->activity->func->data->api);
+    af_FuncInfo *fi = NULL;
 
     if (get_info == NULL) {
         pushMessageDown(makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_funcGetInfo), env), env);
         return false;
     }
 
-    if (env->activity->fi != NULL)
-        freeFuncInfo(env->activity->fi);  // 延迟到这里再释放, 主要是FuncBody中的bt可能会被使用
-    env->activity->fi = NULL;
-    env->activity->body_next = NULL;
-
-    if (!get_info(env->activity->func->data->id, env->activity->func, &env->activity->fi, env->activity->bt_top, env->activity->mark, env))
+    /* env->activity->fi可能还存储着旧的FuncInfo(尾调用优化), 因此不能直接保存到 env->activity->fi 中 */
+    if (!get_info(env->activity->func->data->id, env->activity->func, &fi, env->activity->bt_top, env->activity->mark, env))
         return false;
-    if (env->activity->fi == NULL) {
+    if (fi == NULL) {
         pushMessageDown(makeERRORMessage(API_RUN_ERROR, API_DONOT_GIVE(FuncInfo), env), env);
         return false;
     }
-    if (env->activity->fi->scope == super_pure_scope && env->activity->fi->scope == super_embedded) {
+    if (fi->scope == super_pure_scope && env->activity->fi->scope == super_embedded) {
         /* 超纯函数和超内嵌函数不得搭配使用 */
         pushMessageDown(makeERRORMessage(RUN_ERROR, PURE_EMBEDDED_INFO, env), env);
         return false;
     }
-    env->activity->body_next = env->activity->fi->body;
 
-    if (env->activity->fi->is_macro) {  // 是宏函数则保存变量空间
+    if (fi->is_macro) {  // 是宏函数则保存变量空间
         env->activity->macro_vsl = env->activity->var_list;
         env->activity->macro_vs_count = env->activity->new_vs_count;
-    } else if (env->activity->fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
+    } else if (fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
         if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);  // 释放失败
             return false;
         }
     }
 
-    if (env->activity->fi->scope == normal_scope) {  // 使用函数变量空间
+    if (fi->scope == normal_scope) {  // 使用函数变量空间
         env->activity->var_list = env->activity->func_var_list;
         env->activity->new_vs_count = 0;
-    } else if (env->activity->fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
+    } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
         env->activity->var_list = makeVarSpaceList(env->core->protect);
         env->activity->new_vs_count = 0;
-    } else if (env->activity->fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
+    } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
         env->activity->var_list = NULL;
         env->activity->new_vs_count = 0;
     }
 
-    if (env->activity->fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
+    if (fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
         /* 新层的变量空间应该属于belong而不是func */
         env->activity->var_list = pushNewVarList(env->activity->belong, env->activity->var_list, env);
         env->activity->new_vs_count++;
@@ -981,7 +988,7 @@ bool setFuncActivityAddVar(af_Environment *env){
 
     env->activity->func_var_list = NULL;
 
-    if (env->activity->fi->var_this && env->activity->belong != NULL) {
+    if (fi->var_this && env->activity->belong != NULL) {
         if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong,
                                    env->activity->var_list, env->activity->belong, env)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(this), env), env);
@@ -989,7 +996,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         }
     }
 
-    if (env->activity->fi->var_func && env->activity->func != NULL) {
+    if (fi->var_func && env->activity->func != NULL) {
         if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func,
                                    env->activity->var_list, env->activity->belong, env)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(func), env), env);
@@ -997,6 +1004,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         }
     }
 
+    /* 计算参数 */
     if (get_arg_list != NULL) {
         af_ArgList *al;
         if (!get_arg_list(env->activity->func->data->id, env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
@@ -1005,13 +1013,26 @@ bool setFuncActivityAddVar(af_Environment *env){
         freeAllArgList(al);
     }
 
-    if (env->activity->fi->embedded == protect_embedded)
+    if (fi->embedded == protect_embedded)
         env->activity->var_list->vs->is_protect = true;
 
+    /* ArgCodeList 在此处被清理 */
     freeAllArgCodeList(env->activity->acl_start);
     env->activity->acl_start = NULL;
     env->activity->acl_done = NULL;
 
+    /* 此处检查fi是否为NULL, 不为(通常为尾调用优化)则释放fi */
+    /* 旧的FuncBody延迟到此处才释放(freeFuncInfo释放FuncBody), 是因为获取函数参数的相关运算中可能会使用旧FuncBody中的代码 */
+    /* 因为调用函数的代码是在旧FuncBody中的, 因此参数计算的相关代码也可能在旧FuncBody中 */
+    /* 也就是说ArgCodeList, bt_top, bt_start中的代码可能是来自旧FuncBody的 */
+    /* 所以他们要延迟到现在才被释放 */
+    /* 而get_arg_list是最后一次使用旧FuncBody中的代码(bt_top), 因此此处可以释放 */
+    if (env->activity->fi != NULL)
+        freeFuncInfo(env->activity->fi);  // 延迟到这里再释放, 主要是FuncBody中的bt可能会被使用
+    env->activity->fi = fi;
+    env->activity->body_next = fi->body;
+
+    /* bt_top等的相关设定会在 setFuncActivityToNormal 中被进行 */
     if (setFuncActivityToNormal(env) == 0)
         return false;  // 运行结束, 且已写入msg
     return true;
@@ -1042,6 +1063,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
     int re;
     af_FuncBody *body = env->activity->body_next;
     env->activity->status = act_func_normal;
+    setActivityBtTop(NULL, env->activity);  // NORMAL期, bt_top将不被设定
     setActivityBtNext(NULL, env->activity);
 
     if (body == NULL)  // 已经没有下一步了 (原msg不释放)
@@ -1082,6 +1104,7 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
             break;
     }
 
+    /* 在最后一个aFunBody完毕后, mark被释放(因为此后不会再有函数需要使用Mark) */
     if (activity->body_next == NULL)  // 最后一个aFunBody
         freeMark(activity);
     return re;
@@ -1112,6 +1135,11 @@ static void freeMark(af_Activity *activity) {
     }
 }
 
+/*
+ * 函数名: popActivity
+ * 目标: 释放Activity
+ * 只有is_normal为false时才会检查释放mark
+ */
 void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_func || env->activity->type == act_top || env->activity->type == act_top_import) {
         if (msg != NULL && env->activity->return_first) {  // msg有内容, 并且设定了返回首位, 则清除msg内容, 并压入首位(压入的代码在下面)
@@ -1146,6 +1174,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         pushMessageDown(tmp, env);
     }
 
+    /* 正常情况下在执行完最后一个FuncBody后释放mark, 非正常情况(即最后一个FuncBody可能还没执行)则需要在此释放mark */
     if (!is_normal)
         freeMark(env->activity);  // 遇到非正常退出时, 释放`mark`
 

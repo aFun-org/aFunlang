@@ -907,7 +907,7 @@ int main() {
     }
 
 
-    {  // 尾调递归优化
+    {  // 尾调用优化
         printf("TAG B:\n");
         af_Code *bt1 = makeElementCode("data", ',', 0, "Tagb.aun");
         af_Code *bt2 = makeElementCode("object", 0, 1, NULL);
@@ -922,7 +922,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 尾调递归优化2
+    {  // 尾调用优化2
         printf("TAG C:\n");
         af_Code *bt1 = makeElementCode("data", ',', 0, "Tagc.aun");
 
@@ -983,7 +983,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 测试顺序执行 '(xxx) 【尾调递归优化】
+    {  // 测试顺序执行 '(xxx) 【尾调用优化】
         printf("TAG G:\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
@@ -997,7 +997,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 测试顺序执行 ,[xxx] 【尾调递归优化】
+    {  // 测试顺序执行 ,[xxx] 【尾调用优化】
         printf("TAG H:\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
@@ -1011,7 +1011,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 双层尾调递归优化 （函数内调用函数）
+    {  // 双层尾调用优化 （函数内调用函数）
         printf("TAG I:\n");
         af_Code *bt2 = makeElementCode("func3", 0, 1, NULL);
         af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, "Tagi.aun", NULL);
@@ -1050,7 +1050,7 @@ int main() {
         printf("\n");
     }
 
-    {  // 对象函数的调用 (尾调递归优化)
+    {  // 对象函数的调用 (尾调用优化)
         printf("TAG L:\n");
         af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagl.aun");
 

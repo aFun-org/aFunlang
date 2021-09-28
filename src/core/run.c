@@ -123,7 +123,7 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
         case 0:
             if (env->activity->type != act_top || code == NULL || code->path == NULL)
                 return false;
-            setActivityBtTop(code, env->activity);
+            setActivityBtTop(NULL, env->activity);  // 直接就在NORMAL期, bt_top不被设定
             setActivityBtStart(code, env->activity);
             break;
         case 1: {
