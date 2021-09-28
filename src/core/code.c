@@ -14,7 +14,7 @@ static af_Code *makeCode(char prefix, FileLine line, FilePath path);
 static af_Code *freeCode(af_Code *bt);
 
 /* Code 相关操作 */
-static int countElement(af_Code *element, CodeInt *elements, af_Code **next);
+static int countElement(af_Code *element, CodeUInt *elements, af_Code **next);
 
 /* Code IO函数 */
 static bool readCode(af_Code **bt, FILE *file);
@@ -26,8 +26,8 @@ struct af_BlockEnd {
     struct af_BlockEnd *next;
 };
 static bool checkElementData(char *data);
-static char *codeToStr_(af_Code *code, CodeInt *layer, struct af_BlockEnd **bn);
-static char *codeEndToStr(CodeInt code_end, CodeInt *layer, struct af_BlockEnd **bn);
+static char *codeToStr_(af_Code *code, LayerInt *layer, struct af_BlockEnd **bn);
+static char *codeEndToStr(CodeUInt code_end, LayerInt *layer, struct af_BlockEnd **bn);
 
 #define LAYER_ADD1(code) ((code)->type == code_block && (code)->block.elements != 0)
 
@@ -57,8 +57,8 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
  * 返回2 表示跳出了过多层级
  * 返回0 表示错误
  */
-static int countElement(af_Code *element, CodeInt *elements, af_Code **next) {
-    CodeInt layer = 0;  // layer 是相对于当前element的层级数, 可能为负数
+static int countElement(af_Code *element, CodeUInt *elements, af_Code **next) {
+    CodeUInt layer = 0;  // layer 是相对于当前element的层级数, 可能为负数
     af_Code *tmp = NULL;
     if (next == NULL)
         next = &tmp;
@@ -67,8 +67,9 @@ static int countElement(af_Code *element, CodeInt *elements, af_Code **next) {
         if (layer == 0)
             (*elements)++;
 
-        if (element->type == code_block)
+        if (LAYER_ADD1(element))
             layer++;
+
         if (layer - element->code_end < 0)
             return 2;
         else
@@ -84,7 +85,7 @@ static int countElement(af_Code *element, CodeInt *elements, af_Code **next) {
 af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, FileLine line, FilePath path, af_Code **next) {
     af_Code *bt = NULL;
     af_Code *tmp = NULL;  // 保存最后一个code的地址
-    CodeInt elements = 0;
+    CodeUInt elements = 0;
 
     if (next == NULL)
         next = &tmp;
@@ -153,7 +154,7 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
     af_Code *dest = NULL;
     af_Code **pdest = &dest;
 
-    CodeInt layer = 0;
+    CodeUInt layer = 0;
     for (NULL; base != NULL; base = base->next) {
         *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
@@ -213,17 +214,19 @@ af_Code *getCodeNext(af_Code *bt) {
     if (!LAYER_ADD1(bt))
         return bt->next;
 
-    CodeInt layer = 1;
+    CodeUInt layer = 1;
     bt = bt->next;  // 跳过第一个code_block
-    while (layer > 0) {
+    while (bt != NULL) {
         if (LAYER_ADD1(bt))
             layer++;
+        if (layer - bt->code_end == 0)  // layer为0表示迭代到该block的最后一个元素, 则该元素的下一个元素为该block的Next
+            return bt->next;
+        else if (layer - bt->code_end < 0)  // 当layer小于0时, 认为已经无next, 即连续跳出了多层
+            return NULL;
         layer = layer - bt->code_end;
         bt = bt->next;
     }
 
-    if (layer == 0)  // 当layer小于0时, 认为已经无next, 即连续跳出了多层
-        return bt;
     return NULL;
 }
 
@@ -297,7 +300,7 @@ static bool readCode(af_Code **bt, FILE *file) {
 
     *bt = makeCode((char)prefix, line, NULL);
     (*bt)->type = type;
-    (*bt)->code_end = (CodeInt)code_end;
+    (*bt)->code_end = (CodeUInt)code_end;
 
     switch (type) {
         case code_element:
@@ -309,7 +312,7 @@ static bool readCode(af_Code **bt, FILE *file) {
             Done(byteReadUint_8(file, &block_type));
             Done(byteReadUint_32(file,&elements));
             (*bt)->block.type = block_type;
-            (*bt)->block.elements = (CodeInt)elements;
+            (*bt)->block.elements = (CodeUInt)elements;
             break;
         }
         default:
@@ -367,7 +370,7 @@ static bool checkElementData(char *data) {
  *
  * bn中记录了开括号的顺序, 再打印闭括号时将按该顺序打印
  */
-static char *codeToStr_(af_Code *code, CodeInt *layer, struct af_BlockEnd **bn) {
+static char *codeToStr_(af_Code *code, LayerInt *layer, struct af_BlockEnd **bn) {
     char *re = charToStr(code->prefix);
     if (code->type == code_element) {
         if (checkElementData(code->element.data)) {  // 需要|xx xx|语法
@@ -421,7 +424,7 @@ static char *codeToStr_(af_Code *code, CodeInt *layer, struct af_BlockEnd **bn) 
  * 函数名: codeEndToStr
  * 目标: 转换闭括号为字符串
  */
-static char *codeEndToStr(CodeInt code_end, CodeInt *layer, struct af_BlockEnd **bn) {
+static char *codeEndToStr(CodeUInt code_end, LayerInt *layer, struct af_BlockEnd **bn) {
     char *re = NEW_STR(code_end);
     for (size_t i = 0; code_end > 0; code_end--, i++) {
         if (*bn == NULL)
@@ -444,7 +447,7 @@ static char *codeEndToStr(CodeInt code_end, CodeInt *layer, struct af_BlockEnd *
 char *codeToStr(af_Code *code, int n) {
     char *re = strCopy(NULL);
     struct af_BlockEnd *bn = NULL;
-    CodeInt layer = 0;
+    LayerInt layer = 0;
 
     for (NULL; code != NULL && layer >= 0 && (n > 0 || n == -1); code = code->next) {
         if (strlen(re) >= CODE_STR_MAX_SIZE) {
@@ -473,14 +476,15 @@ void printCode(af_Code *bt) {
         layer = layer - bt->code_end;
         switch (bt->type) {
             case code_element:
-                printf("element: [prefix (%c)] [end %ld] [data '%s']\n", bt->prefix, bt->code_end, bt->element.data);
+                printf("element: [prefix (%c)] [end %u] [data '%s']\n", bt->prefix, bt->code_end, bt->element.data);
                 break;
             case code_block:
-                layer++;
-                printf("code: [prefix (%c)] [end %ld] [type %c] [elements %ld]\n", bt->prefix, bt->code_end, bt->block.type, bt->block.elements);
+                if (LAYER_ADD1(bt))
+                    layer++;
+                printf("code: [prefix (%c)] [end %u] [type %c] [elements %u]\n", bt->prefix, bt->code_end, bt->block.type, bt->block.elements);
                 break;
             default:
-                printf("Unknown: [prefix (%c)] [end %ld] [type %d]\n", bt->prefix, bt->code_end, bt->type);
+                printf("Unknown: [prefix (%c)] [end %u] [type %d]\n", bt->prefix, bt->code_end, bt->type);
                 break;
         }
     }
@@ -500,7 +504,7 @@ char getCodePrefix(af_Code *code) {
     return code->prefix;
 }
 
-CodeInt getCodeEndCount(af_Code *code) {
+CodeUInt getCodeEndCount(af_Code *code) {
     return code->code_end;
 }
 
@@ -510,11 +514,11 @@ char *getCodeElementData(af_Code *code) {
     return code->element.data;
 }
 
-CodeInt getCodeElementCount(af_Code *code) {
+CodeUInt getCodeElementCount(af_Code *code) {
     if (!LAYER_ADD1(code))
         return 0;
 
-    CodeInt count;
+    CodeUInt count;
     if (countElement(code->next, &count, NULL) == 0)
         return 0;
     return count;

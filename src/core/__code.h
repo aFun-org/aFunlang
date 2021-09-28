@@ -11,14 +11,14 @@
 struct af_Code {  // 一个 Code 的结构体
     enum af_CodeType type;
     char prefix;  // 前缀
-    CodeInt code_end;  // 记录block的end
+    CodeUInt code_end;  // 记录block的end
     union {
         struct {
             char *data;
         } element;
 
         struct {
-            CodeInt elements;  // 元素个数 (主要作用是检查是否为空)
+            CodeUInt elements;  // 元素个数 (主要作用是检查是否为空)
             enum af_BlockType type;  // 括号类型
         } block;
     };

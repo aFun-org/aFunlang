@@ -6,8 +6,8 @@
 #define CODE_STR_MAX_SIZE (50)
 typedef struct af_Code af_Code;
 
-typedef long CodeInt;  // Code int
-typedef long CodeUint;  // Code uint  TODO-szh 在code结构体使用该函数
+typedef uint32_t CodeUInt;  // Code int
+typedef int64_t LayerInt;  // 只有当layer会小于0时使用
 
 enum af_CodeType {
     code_element = 0,
@@ -41,8 +41,8 @@ AFUN_CORE_EXPORT char *codeToStr(af_Code *code, int n);
 AFUN_CORE_EXPORT enum af_CodeType getCodeType(af_Code *code);
 AFUN_CORE_EXPORT enum af_BlockType getCodeBlockType(af_Code *code);
 AFUN_CORE_EXPORT char getCodePrefix(af_Code *code);
-AFUN_CORE_EXPORT CodeInt getCodeEndCount(af_Code *code);
+AFUN_CORE_EXPORT CodeUInt getCodeEndCount(af_Code *code);
 AFUN_CORE_EXPORT char *getCodeElementData(af_Code *code);
-AFUN_CORE_EXPORT CodeInt getCodeElementCount(af_Code *code);
+AFUN_CORE_EXPORT CodeUInt getCodeElementCount(af_Code *code);
 
 #endif //AFUN_BYTECODE
