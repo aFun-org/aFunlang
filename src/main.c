@@ -36,6 +36,7 @@ static int mainBuild(ff_FFlags *ff);
 extern const char *help_info;
 
 int main(int argc, char **argv) {
+    aFunInit();
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
     if (ff == NULL)
