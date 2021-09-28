@@ -1,7 +1,7 @@
-﻿#ifndef AFUN_AFUN_TOOL_H_
-#define AFUN_AFUN_TOOL_H_
+﻿#ifndef AFUN_RUNTIME_H_
+#define AFUN_RUNTIME_H_
 #include "aFunlang.h"
-#include "aFun_tool.h"
+#include "runtime.h"
 #include "__env.h"
 
 /*

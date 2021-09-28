@@ -3,7 +3,7 @@
 #include "aFunlangExport.h"
 #include "aFunCore.h"
 
-#include "aFun_tool.h"
+#include "runtime.h"
 
 AFUN_LANG_EXPORT void aFunInit();
 

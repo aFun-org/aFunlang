@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_AFUN_TOOL_H
-#define AFUN_AFUN_TOOL_H
+﻿#ifndef AFUN_RUNTIME_H
+#define AFUN_RUNTIME_H
 
 typedef struct APIFunc APIFunc;
 struct APIFunc {
@@ -49,8 +49,8 @@ struct TopMsgFunc {
     bool free_func_;  // func_是否需要释放
 };
 
-AFUN_LANG_EXPORT int aFunTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af_Environment *env);
-AFUN_LANG_EXPORT int aFunToolImport(char *name, af_Object **obj, af_Code **code, af_Environment *env);
+AFUN_LANG_EXPORT int runtimeTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af_Environment *env);
+AFUN_LANG_EXPORT int runtimeToolImport(char *name, af_Object **obj, af_Code **code, af_Environment *env);
 
 AFUN_LANG_EXPORT af_ObjectAPI *makeAPIFromList(const APIFunc api_list[]);
 AFUN_LANG_EXPORT void makeObjectFromList(const ObjectDefine obj_def[], af_Object *visitor, af_VarSpace *vs, af_Environment *env);
@@ -58,4 +58,4 @@ AFUN_LANG_EXPORT void makeLiteralRegexFromList(const LiteralFunc literal_list[],
 AFUN_LANG_EXPORT void makeTopMsgProcessFromList(const TopMsgFunc top_msg_list[], af_Environment *env);
 AFUN_LANG_EXPORT af_Inherit *makeInheritFromList(const InheritDefine inherit_list[], bool is_reverse);
 
-#endif //AFUN_AFUN_TOOL_H
+#endif //AFUN_RUNTIME_H

@@ -12,7 +12,7 @@ af_Environment *creatAFunEnviroment(void) {
     af_Environment *env = makeEnvironment(grt_count);
     af_Code *code;
 
-    aFunTool("base", &code, NULL, env->core->protect, env);
+    runtimeTool("base", &code, NULL, env->core->protect, env);
 
     if (code != NULL) {
         bool res = iterCode(code, 0, env);

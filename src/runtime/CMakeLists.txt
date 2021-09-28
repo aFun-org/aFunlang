@@ -4,7 +4,7 @@
 
 file(GLOB source_tool
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/aFunTool/*/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/*/*.c)
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
@@ -12,7 +12,7 @@ file(GLOB private_h
 
 file(GLOB private_tool_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/aFunTool/*/*.h)
+     ${CMAKE_CURRENT_LIST_DIR}/*/*.h)
 
 file(GLOB private_h_core
      LIST_DIRECTORIES FALSE

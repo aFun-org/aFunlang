@@ -1,6 +1,6 @@
-﻿#include "__aFun_tool.h"
+﻿#include "__runtime.h"
 #include "__global_obj.h"
-#include "__rt_tool.h"
+#include "runtime_tool.h"
 
 /* 数组为只读的内容 */
 static const ToolFunc global_tool_list[] = {
@@ -9,12 +9,12 @@ static const ToolFunc global_tool_list[] = {
 };
 
 /*
- * 函数名: aFunTool
+ * 函数名: runtimeTool
  * 目标: 调用指定内置包(tool)
  * 返回 (0)   执行正常
  * 返回 (1)  库不存在
  */
-int aFunTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
+int runtimeTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
     if (name == NULL || code == NULL || env == NULL || vs == NULL)
         return 1;
     *code = NULL;
@@ -30,14 +30,14 @@ int aFunTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af
 }
 
 /*
- * 函数名: aFunTool
+ * 函数名: runtimeToolImport
  * 目标: 生成vs, 调用指定内置包(tool)
  */
-int aFunToolImport(char *name, af_Object **obj, af_Code **code, af_Environment *env) {
+int runtimeToolImport(char *name, af_Object **obj, af_Code **code, af_Environment *env) {
     if (name == NULL || code == NULL || env == NULL || obj == NULL)
         return 1;
     *obj = makeGlobalObject(env);
-    return aFunTool(name, code, *obj, (*obj)->data->var_space, env);
+    return runtimeTool(name, code, *obj, (*obj)->data->var_space, env);
 }
 
 /*

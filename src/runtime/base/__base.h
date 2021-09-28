@@ -1,6 +1,6 @@
 ﻿#ifndef AFUN___BASE_H
 #define AFUN___BASE_H
-#include "__aFun_tool.h"
+#include "__runtime.h"
 #include "__env.h"
 #include "__var.h"
 
