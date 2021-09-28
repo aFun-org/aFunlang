@@ -740,7 +740,7 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     next = getCodeNext(bt);
-    if (bt->type != code_block || bt->block.elements == 0) {
+    if (bt->type != code_block || bt->block.is_empty) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
         return false;
     }
@@ -764,7 +764,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     next = getCodeNext(bt);
     switch (bt->block.type) {
         case curly:
-            if (bt->block.elements == 0) {
+            if (bt->block.is_empty) {
                 pushMessageDown(makeERRORMessage(CALL_ERROR, CURLY_FUNC_BODY_INFO, env), env);
                 return false;
             }

@@ -18,7 +18,7 @@ struct af_Code {  // 一个 Code 的结构体
         } element;
 
         struct {
-            CodeUInt elements;  // 元素个数 (主要作用是检查是否为空)
+            bool is_empty;
             enum af_BlockType type;  // 括号类型
         } block;
     };

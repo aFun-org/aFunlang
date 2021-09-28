@@ -29,8 +29,6 @@ static bool checkElementData(char *data);
 static char *codeToStr_(af_Code *code, LayerInt *layer, struct af_BlockEnd **bn);
 static char *codeEndToStr(CodeUInt code_end, LayerInt *layer, struct af_BlockEnd **bn);
 
-#define LAYER_ADD1(code) ((code)->type == code_block && (code)->block.elements != 0)
-
 static af_Code *makeCode(char prefix, FileLine line, FilePath path) {
     af_Code *bt = calloc(1, sizeof(af_Code));
     bt->line = line;
@@ -49,6 +47,10 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
     bt->element.data = strCopy(var);
     return bt;
 }
+
+/* 判断该code是否令layer需要加1 */
+/* 即判定是否有子元素 */
+#define LAYER_ADD1(code) ((code)->type == code_block && !(code)->block.is_empty)
 
 /*
  * 函数名: countElement
@@ -99,10 +101,11 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
     bt = makeCode(prefix, line, path);
     bt->type = code_block;
     bt->block.type = type;
-    bt->block.elements = elements;
     bt->next = element;
-    if (*next != NULL)
-        (*next)->code_end++;
+    if (elements == 0)
+        bt->block.is_empty = true;
+    else
+        (*next)->code_end++;  // 若 elements 不为 0, 则next指向最后一个元素
     return bt;
 }
 
@@ -130,7 +133,7 @@ af_Code *copyAllCode(af_Code *base, FilePath *path) {
                 (*pdest)->element.data = strCopy(base->element.data);
                 break;
             case code_block:
-                (*pdest)->block.elements = base->block.elements;
+                (*pdest)->block.is_empty = base->block.is_empty;
                 (*pdest)->block.type = base->block.type;
                 break;
             default:
@@ -163,7 +166,7 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
                 (*pdest)->element.data = strCopy(base->element.data);
                 break;
             case code_block:
-                (*pdest)->block.elements = base->block.elements;
+                (*pdest)->block.is_empty = base->block.is_empty;
                 (*pdest)->block.type = base->block.type;
                 break;
             default:
@@ -249,7 +252,7 @@ static bool writeCode(af_Code *bt, FILE *file) {
             break;
         case code_block:
             Done(byteWriteUint_8(file, bt->block.type));
-            Done(byteWriteUint_32(file, bt->block.elements));
+            Done(byteWriteUint_8(file, bt->block.is_empty));
             break;
         default:
             break;
@@ -308,11 +311,11 @@ static bool readCode(af_Code **bt, FILE *file) {
             break;
         case code_block: {
             uint8_t block_type;
-            uint32_t elements;
+            uint8_t is_empty;
             Done(byteReadUint_8(file, &block_type));
-            Done(byteReadUint_32(file,&elements));
+            Done(byteReadUint_8(file,&is_empty));
             (*bt)->block.type = block_type;
-            (*bt)->block.elements = (CodeUInt)elements;
+            (*bt)->block.is_empty = (CodeUInt)is_empty;
             break;
         }
         default:
@@ -379,7 +382,7 @@ static char *codeToStr_(af_Code *code, LayerInt *layer, struct af_BlockEnd **bn)
             re = strJoin(re, "| ", true, false);
         } else
             re = strJoin(re, code->element.data, true, false);
-    } else if (code->block.elements == 0) {
+    } else if (code->block.is_empty) {
         switch(code->block.type) {
             case parentheses:
                 re = strJoin(re, "()", true, false);
@@ -481,7 +484,7 @@ void printCode(af_Code *bt) {
             case code_block:
                 if (LAYER_ADD1(bt))
                     layer++;
-                printf("code: [prefix (%c)] [end %u] [type %c] [elements %u]\n", bt->prefix, bt->code_end, bt->block.type, bt->block.elements);
+                printf("code: [prefix (%c)] [end %u] [type %c] [empty %d]\n", bt->prefix, bt->code_end, bt->block.type, bt->block.is_empty);
                 break;
             default:
                 printf("Unknown: [prefix (%c)] [end %u] [type %d]\n", bt->prefix, bt->code_end, bt->type);
