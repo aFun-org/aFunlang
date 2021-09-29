@@ -617,7 +617,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     char prefix[PREFIX_SIZE + 1] = "";
     prefix[E_QUOTE] = '\'';
     prefix[B_EXEC] = '\'';
-    prefix[B_EXEC_FIRST] = ',';
+    prefix[B_EXEC_FIRST] = '$';
     setEnvVar(ev_sys_prefix, prefix, env);
 
     /* 设置NORMAL顶级处理器 */

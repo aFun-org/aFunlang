@@ -5,8 +5,8 @@
 #ifndef AFUN_PREFIX_MACRO_H
 #define AFUN_PREFIX_MACRO_H
 
-#define E_PREFIX ",`'"  /* element前缀 */
-#define B_PREFIX ",`'%^&<?>"  /* block前缀 */
+#define E_PREFIX "$`'"  /* element前缀 */
+#define B_PREFIX "$`'%^&<?>"  /* block前缀 */
 #define ALL_PREFIX B_PREFIX
 
 // 作为顶层代码，以及'()运行时

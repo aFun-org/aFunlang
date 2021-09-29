@@ -4,7 +4,7 @@
 #include "../../src/core/__code.h"
 
 int main() {
-    af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+    af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
     af_Code *bt2 = makeElementCode("var1", 0, 1, NULL);
 
     af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);

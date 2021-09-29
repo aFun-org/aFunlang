@@ -825,7 +825,7 @@ int main() {
     {  // 正常程序
         printf("TAG A:\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, NULL);
-        af_Code *bt2 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt2 = makeElementCode("data", '$', 0, "Unknown");
         connectCode(&bt1, bt2);
 
         af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
@@ -859,7 +859,7 @@ int main() {
 
     {  // 尾调用优化
         printf("TAG B:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
         af_Code *bt2 = makeElementCode("object", 0, 1, NULL);
         connectCode(&bt1, bt2);
 
@@ -874,7 +874,7 @@ int main() {
 
     {  // 尾调用优化2
         printf("TAG C:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
 
         iterCode(bt1, env);
         freeAllCode(bt1);
@@ -883,7 +883,7 @@ int main() {
 
     {  // 测试类前缀调用
         printf("TAG D:\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
         af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
         connectCode(&bt1, bt2);
 
@@ -923,7 +923,7 @@ int main() {
 
         connectCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
+        af_Code *bt5 = makeBlockCode(brackets, bt3, '$', 1, NULL, NULL);
 
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         connectCode(&bt5, bt6);
@@ -954,7 +954,7 @@ int main() {
 
         connectCode(&bt3, bt4);
 
-        af_Code *bt5 = makeBlockCode(brackets, bt3, ',', 1, NULL, NULL);
+        af_Code *bt5 = makeBlockCode(brackets, bt3, '$', 1, NULL, NULL);
 
         iterCode(bt5, env);
         freeAllCode(bt5);
@@ -1082,7 +1082,7 @@ int main() {
 
     {  // 测试错误 (无函数指定)
         printf("TAG F: ERROR\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
 
         af_Code *bt5 = makeBlockCode(curly, NULL, 0, 1, NULL, NULL);
         connectCode(&bt1, bt5);
@@ -1097,7 +1097,7 @@ int main() {
 
     {  // 测试错误 (object2 Var not found)
         printf("TAG G: ERROR\n");
-        af_Code *bt1 = makeElementCode("data", ',', 0, "Unknown");
+        af_Code *bt1 = makeElementCode("data", '$', 0, "Unknown");
         af_Code *bt2 = makeElementCode("object2", 0, 1, NULL);
 
         connectCode(&bt1, bt2);
