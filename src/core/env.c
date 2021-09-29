@@ -23,6 +23,11 @@ static void clearActivity(af_Activity *activity);
 static void freeMark(af_Activity *activity);
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
 
+/* ActivityTrackBack 创建与释放 */
+static af_ActivityTrackBack *makeActivityTrackBack(af_Activity *activity);
+static af_ActivityTrackBack *freeActivityTrackBack(af_ActivityTrackBack *atb);
+static void freeAllActivityTrackBack(af_ActivityTrackBack *atb);
+
 /* 环境变量 创建与释放 */
 static af_EnvVar *makeEnvVar(char *name, char *data);
 static af_EnvVar *freeEnvVar(af_EnvVar *var);
@@ -53,6 +58,7 @@ static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
 
 /* af_ErrorBacktracking 相关函数 */
 static char *getActivityInfoToBacktracking(af_Activity *activity);
+static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb);
 static void fprintfNote(FILE *file, char *note);
 
 /* 内置顶层消息处理器 */
@@ -166,6 +172,7 @@ static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, a
     activity->var_list = vsl;
     activity->new_vs_count = 0;
     activity->belong = belong;
+    activity->line = 1;
     return activity;
 }
 
@@ -215,8 +222,8 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
     activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
     activity->new_vs_count = 1;
 
-    activity->file = strCopy("aFun-gc.aun.sys");
-    activity->line = 0;
+    activity->file = strCopy("gc.aun.sys");
+    activity->line = 1;
     activity->dl = dl;
     activity->pdl = pdl;
     activity->dl_next = dl;
@@ -245,6 +252,7 @@ static af_Activity *freeActivity(af_Activity *activity) {
             freeFuncInfo(activity->fi);
         freeAllLiteralData(activity->ld);
 
+        freeAllActivityTrackBack(activity->tb);
         free(activity->import_mark);
     }
 
@@ -289,8 +297,54 @@ static void clearActivity(af_Activity *activity) {
     /* mark在setFuncActivityToNormal被清理*/
     /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
     activity->mark = NULL;
-    free(activity->file);
-    activity->line = 0;
+
+    /* file和line都遗留 */
+}
+
+/*
+ * 函数名: af_ActivityTrackBack
+ * 目标: 把 activity 上的内容转移到新的 af_ActivityTrackBack 上
+ */
+static af_ActivityTrackBack *makeActivityTrackBack(af_Activity *activity) {
+    af_ActivityTrackBack *atb = calloc(1, sizeof(af_ActivityTrackBack));
+#define EXCHANGE(name) (atb->name = activity->name)
+    EXCHANGE(file);
+    atb->file = strCopy(activity->file);
+    EXCHANGE(status);
+    EXCHANGE(line);
+    EXCHANGE(return_first);
+    EXCHANGE(run_in_func);
+    EXCHANGE(is_macro_call);
+    EXCHANGE(is_gc_call);
+    EXCHANGE(is_literal);
+    EXCHANGE(is_obj_func);
+    EXCHANGE(is_execution);
+    EXCHANGE(optimization);
+#undef EXCHANGE
+    return atb;
+}
+
+static af_ActivityTrackBack *freeActivityTrackBack(af_ActivityTrackBack *atb) {
+    af_ActivityTrackBack *next = atb->next;
+    free(atb->file);
+    free(atb);
+    return next;
+}
+
+static void freeAllActivityTrackBack(af_ActivityTrackBack *atb) {
+    while (atb != NULL)
+        atb = freeActivityTrackBack(atb);
+}
+
+/*
+ * 函数名: tailCallActivity
+ * 目标: 记录ActivityTrackBack然后清除Activity
+ */
+static void tailCallActivity(af_Activity *activity) {
+    af_ActivityTrackBack *atb = makeActivityTrackBack(activity);
+    atb->next = activity->tb;
+    activity->tb = atb;
+    clearActivity(activity);
 }
 
 /*
@@ -309,7 +363,7 @@ void setActivityBtTop(af_Code *bt_top, af_Activity *activity) {
             activity->file = strCopy(bt_top->path);
         }
     } else
-        activity->line = 0;
+        activity->line = 1;
 }
 
 /*
@@ -327,7 +381,7 @@ void setActivityBtStart(af_Code *bt_start, af_Activity *activity) {
             activity->file = strCopy(bt_start->path);
         }
     } else
-        activity->line = 0;
+        activity->line = 1;
 }
 
 /*
@@ -343,7 +397,7 @@ void setActivityBtNext(af_Code *bt_next, af_Activity *activity) {
             activity->file = strCopy(bt_next->path);
         }
     } else
-        activity->line = 0;
+        activity->line = 1;
 }
 
 /*
@@ -482,10 +536,22 @@ af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
     af_ErrorInfo *ei = makeErrorInfo(type, error, info, env->activity->line, env->activity->file);
     free(info);
 
+    for (af_ActivityTrackBack *atb = env->activity->tb; atb != NULL; atb = atb->next) {
+        info = getActivityTrackBackInfoToBacktracking(atb);
+        pushErrorBacktracking(atb->line, atb->file, info, ei);
+        free(info);
+    }
+
     for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev) {
         info = getActivityInfoToBacktracking(activity);
         pushErrorBacktracking(activity->line, activity->file, info, ei);
         free(info);
+
+        for (af_ActivityTrackBack *atb = activity->tb; atb != NULL; atb = atb->next) {
+            info = getActivityTrackBackInfoToBacktracking(atb);
+            pushErrorBacktracking(atb->line, atb->file, info, ei);
+            free(info);
+        }
     }
 
     af_Message *msg = makeMessage("ERROR", sizeof(af_ErrorInfo *));
@@ -702,7 +768,7 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
         printf("Tail call optimization\n");
-        clearActivity(env->activity);
+        tailCallActivity(env->activity);
         setActivityBtTop(bt, env->activity);
         env->activity->optimization = true;
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
@@ -840,7 +906,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     env->activity->macro_vs_count = 0;
     env->activity->is_macro_call = true;
 
-    clearActivity(env->activity);  /* 隐式调用不设置 bt_top */
+    tailCallActivity(env->activity);  /* 隐式调用不设置 bt_top */
     return setFuncActivityToArg(func, env);
 }
 
@@ -1358,6 +1424,48 @@ static char *getActivityInfoToBacktracking(af_Activity *activity){
         info = strJoin(info, "\nobject-function-call;", true, false);
 
     if (activity->optimization)
+        info = strJoin(info, "\ntail-call-optimization;", true, false);
+
+    return info;
+}
+
+static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb) {
+    char *info = "backtracking;";
+    if (atb->is_execution)
+        info = strJoin(info, "\nexecution-activity;", false, false);
+    else if (atb->is_gc_call)
+        info = strJoin(info, "\ngc-destruct-function-call-activity;", false, false);
+    else
+        info = strJoin(info, "\nfunction-call-activity;", false, false);
+
+    switch (atb->status) {
+        case act_func_get:
+            info = strJoin(info, "\nfunc-get;", true, false);
+            break;
+        case act_func_arg:
+            info = strJoin(info, "\nfunc-arg;", true, false);
+            if (atb->run_in_func)
+                info = strJoin(info, " run-in-function-var-space;", true, false);
+            break;
+        case act_func_normal:
+            info = strJoin(info, "\nrun-code;", true, false);
+            if (atb->return_first)
+                info = strJoin(info, " return-first-result;", true, false);
+            break;
+        default:
+            break;
+    }
+
+    if (atb->is_macro_call)
+        info = strJoin(info, "\nmacro-call;", true, false);
+
+    if (atb->is_literal)
+        info = strJoin(info, "\nliteral-call;", true, false);
+
+    if (atb->is_obj_func)
+        info = strJoin(info, "\nobject-function-call;", true, false);
+
+    if (atb->optimization)
         info = strJoin(info, "\ntail-call-optimization;", true, false);
 
     return info;

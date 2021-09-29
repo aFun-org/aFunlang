@@ -129,6 +129,8 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
         case 1: {
             if (env->activity->type != act_top)
                 return false;
+            env->activity->file = strCopy("top.aun.sys");
+
             char *name = getFileName(code->path);
             pushImportActivity(code, NULL, name, env);
             printf("name = %s\n", name);
@@ -136,6 +138,10 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
             break;
         }
         case 2:
+            if (env->activity->prev == NULL || env->activity->prev->type != act_top)
+                return false;
+            env->activity->file = strCopy("top-gc.aun.sys");
+
             if (env->activity->type == act_gc || !codeSemanticCheck(env->activity->bt_start) || env->activity->bt_next == NULL || code != NULL)
                 return false;
             break;

@@ -4,6 +4,7 @@
 
 typedef struct af_Core af_Core;
 typedef struct af_Activity af_Activity;
+typedef struct af_ActivityTrackBack af_ActivityTrackBack;
 typedef struct af_EnvVarSpace af_EnvVarSpace;
 typedef struct af_EnvVar af_EnvVar;
 typedef struct af_TopMsgProcess af_TopMsgProcess;
@@ -150,8 +151,29 @@ struct af_Activity {  // 活动记录器
 
             /* Import使用 */
             char *import_mark;
+
+            af_ActivityTrackBack *tb;
         };
     };
+};
+
+struct af_ActivityTrackBack {
+    /* 记录Activity尾调用优化的回溯信息 */
+    /* af_ActivityType不用记录, 因为必定是act_func */
+
+    FilePath file;
+    FileLine line;
+    enum af_ActivityStatus status;
+    bool return_first;
+    bool run_in_func;
+    bool is_macro_call;  // 宏函数隐式调用
+    bool is_gc_call;
+    bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
+    bool is_obj_func;  // 对象函数的调用
+    bool is_execution;
+    bool optimization;
+
+    struct af_ActivityTrackBack *next;
 };
 
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
