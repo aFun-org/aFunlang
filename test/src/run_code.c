@@ -373,7 +373,7 @@ int main() {
     aFunInit();
     printf("Hello World\n");
 
-    af_Environment *env = creatAFunEnviroment();
+    af_Environment *env = creatAFunEnviroment(0, NULL);
     if(!pushLiteralRegex("data.*", "func", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
         goto RETURN_1;
@@ -885,7 +885,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -901,7 +901,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -917,7 +917,7 @@ int main() {
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         pushCode(&bt2, bt5);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -926,7 +926,7 @@ int main() {
         printf("TAG C:\n");
         af_Code *bt1 = makeElementCode("data", '$', 0, "Tagc.aun");
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -944,7 +944,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -961,7 +961,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt5, env);
+        runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -978,7 +978,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt5, env);
+        runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -992,7 +992,7 @@ int main() {
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "Tagg.aun", NULL);
 
-        runCodeFromMemory(bt5, env);
+        runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -1006,7 +1006,7 @@ int main() {
 
         af_Code *bt5 = makeBlockCode(brackets, bt3, '$', 1, "Tagh.aun", NULL);
 
-        runCodeFromMemory(bt5, env);
+        runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
@@ -1023,7 +1023,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt3, env);
+        runCodeFromMemory(bt3, 0, env);
         freeAllCode(bt3);
         printf("\n");
     }
@@ -1034,7 +1034,7 @@ int main() {
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1045,7 +1045,7 @@ int main() {
         af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt2);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1054,7 +1054,7 @@ int main() {
         printf("TAG L:\n");
         af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagl.aun");
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1065,7 +1065,7 @@ int main() {
         af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagm.aun", NULL);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1081,7 +1081,7 @@ int main() {
         pushCode(&bt1, bt3);
         pushCode(&bt3, bt4);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1095,7 +1095,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1109,7 +1109,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1123,7 +1123,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1141,14 +1141,14 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemoryAsImport(bt1, env);
+        runCodeFromMemory(bt1, 1, env);
         freeAllCode(bt1);
         printf("\n");
     }
 
     {
         printf("TAG S: STRING\n");
-        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", NULL, env);
+        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", NULL, 1, env);
         printf("exit code = %d\n\n", exit_code);
     }
 
@@ -1172,7 +1172,7 @@ int main() {
 
         pushCode(&bt1, bt3);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1187,7 +1187,7 @@ int main() {
         af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt5, bt6);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1199,7 +1199,7 @@ int main() {
 
         pushCode(&bt1, bt2);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1212,7 +1212,7 @@ int main() {
 
         pushCode(&bt1, bt2);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }
@@ -1226,7 +1226,7 @@ int main() {
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
         pushCode(&bt1, bt3);
 
-        runCodeFromMemory(bt1, env);
+        runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
         printf("\n");
     }

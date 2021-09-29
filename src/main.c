@@ -8,14 +8,18 @@ ff_defArg(help, false)
                 ff_argRule('v', version, not, 'v')
 ff_endArg(help, false);
 
-ff_defArg(run, true)
+ff_selfProcessChild(run, true);
+
+ff_defArg(cl, false)
                 ff_argRule('e', eval, must, 'e')
                 ff_argRule('f', file, must, 'f')
                 ff_argRule('s', source, must, 's')
                 ff_argRule('b', byte, must, 'b')
                 ff_argRule(NUL, no-aub, not, 'a')
                 ff_argRule(NUL, no-cl, not, 'n')
-ff_endArg(run, true);
+                ff_argRule(NUL, no-import, not, 'o')
+                ff_argRule(NUL, import, not, 'i')
+ff_endArg(cl, false);
 
 ff_defArg(build, false)
                 ff_argRule('o', out, must, 'o')
@@ -24,7 +28,7 @@ ff_defArg(build, false)
 ff_endArg(build, false);
 
 // exe 是指可执行程序, 而非仅PE的可执行程序
-ff_childList(aFunlang_exe, ff_child(help), ff_child(run), ff_child(build));
+ff_childList(aFunlang_exe, ff_child(run), ff_child(help), ff_child(cl), ff_child(build));
 
 static const char *name = NULL;
 
@@ -32,6 +36,7 @@ static int mainHelp(ff_FFlags *ff);
 static void printVersion(void);
 static void printHelp(void);
 static int mainRun(ff_FFlags *ff);
+static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
 extern const char *help_info;
 
@@ -44,10 +49,12 @@ int main(int argc, char **argv) {
     char *child = ff_getChild(ff);
     name = *argv;  // 获取第一个参数为name
 
-    if (EQ_STR(child, "run"))
-        exit_code = mainRun(ff);
+    if (EQ_STR(child, "cl"))
+        exit_code = mainCL(ff);
     else if (EQ_STR(child, "build"))
         exit_code = mainBuild(ff);
+    else if (EQ_STR(child, "run"))
+        exit_code = mainRun(ff);
     else
         exit_code = mainHelp(ff);
 
@@ -114,11 +121,27 @@ out:
     return EXIT_SUCCESS;
 }
 
+static int mainRun(ff_FFlags *ff) {
+    int exit_code = 0;
+    char **argv = NULL;
+    int argc = ff_get_process_argv(&argv, ff);
+    if (argv == 0) {
+        fprintf(stderr, "There are not file to run.\n");
+        return 1;
+    }
+
+    af_Environment *env = creatAFunEnviroment(argc - 1, argv + 1);
+    exit_code = runCodeFromFile(argv[0], stderr, true, 0, env);
+    destructAFunEnvironment(env);
+    return exit_code;
+}
+
 static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_aub) {
     char *text = NULL;
     RunList *run_list = NULL;
     RunList **prl = &run_list;
     int mark;
+    bool import = true;
 
     *command_line = true;
     *save_aub = true;
@@ -127,22 +150,28 @@ static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_aub) {
         mark = ff_getopt(&text, ff);
         switch (mark) {
             case 'e':
-                prl = pushRunList(makeStringRunList(text), prl);
+                prl = pushRunList(makeStringRunList(text, import), prl);
                 break;
             case 'f':
-                prl = pushRunList(makeFileRunList(text), prl);
+                prl = pushRunList(makeFileRunList(text, import), prl);
                 break;
             case 's':
-                prl = pushRunList(makeFileSourceRunList(text), prl);
+                prl = pushRunList(makeFileSourceRunList(text, import), prl);
                 break;
             case 'b':
-                prl = pushRunList(makeFileByteRunList(text), prl);
+                prl = pushRunList(makeFileByteRunList(text, import), prl);
                 break;
             case 'n':
                 *command_line = false;
                 break;
             case 'a':
                 *save_aub = false;
+                break;
+            case 'o':
+                import = false;
+                break;
+            case 'i':
+                import = true;
                 break;
             case -1:
                 goto out;
@@ -155,12 +184,12 @@ static RunList *getRunList(ff_FFlags *ff, bool *command_line, bool *save_aub) {
     }
 
 out:
-    while (ff_getopt_wild(&text, ff))
-        prl = pushRunList(makeFileRunList(text), prl);
+    while (ff_getopt_wild_before(&text, ff))
+        prl = pushRunList(makeFileRunList(text, true), prl);
     return run_list;
 }
 
-static int mainRun(ff_FFlags *ff) {
+static int mainCL(ff_FFlags *ff) {
     bool command_line = true;
     bool save_aub = true;
     int exit_code;
@@ -172,7 +201,16 @@ static int mainRun(ff_FFlags *ff) {
         return EXIT_FAILURE;
     }
 
-    af_Environment *env = creatAFunEnviroment();
+    int argc = 0;
+    char *text;
+    while (ff_getopt_wild_after(&text, ff))
+        argc++;
+
+    char **argv = calloc(argc, sizeof(char *));
+    for (int i = 0; ff_getopt_wild_after(&text, ff); i++)
+        argv[i] = text;
+
+    af_Environment *env = creatAFunEnviroment(argc, argv);
     if (rl != NULL)
         exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
 

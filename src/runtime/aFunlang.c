@@ -9,9 +9,12 @@ void aFunInit() {
     aFunCoreInit();
 }
 
-af_Environment *creatAFunEnviroment(void) {
+af_Environment *creatAFunEnviroment(int argc, char **argv){
     af_Environment *env = makeEnvironment(grt_count);
     af_Code *code = NULL;
+
+    for(int i = 0; i < argc; i++)
+        printf("[aFunlang] Env-arg %d. %s\n", i, argv[i]);
 
     runtimeTool("base", &code, NULL, env->core->protect, env);
 
@@ -60,7 +63,7 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
  * 函数名: runCodeFromString
  * 目标: 运行字符串中的程序 (源码形式)
  */
-int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Environment *env) {
+int runCodeFromString(char *code, char *string_name, FILE *error_file, int mode, af_Environment *env){
     if (env == NULL || code == NULL)
         return -1;
 
@@ -70,14 +73,14 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Enviro
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByString(code, false, error_file);
-    return runCode_(string_name, parser, 1, NULL, error_file, env);
+    return runCode_(string_name, parser, mode, NULL, error_file, env);
 }
 
 /*
  * 函数名: runCodeFromFileSource
  * 目标: 运行文件中的程序 (源码形式)
  */
-int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePath save_path, af_Environment *env) {
+int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePath save_path, int mode, af_Environment *env){
     if (env == NULL || file == NULL)
         return -1;
 
@@ -100,7 +103,7 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
         save_path = NULL;
 
     af_Parser *parser = makeParserByFile(file, error_file);
-    int exit_code = runCode_(file, parser, 1, save_path, error_file, env);
+    int exit_code = runCode_(file, parser, mode, save_path, error_file, env);
     if (free_save_path)
         free(save_path);
     return exit_code;
@@ -127,19 +130,8 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
  * 函数名: runCodeFromMemory
  * 目标: 运行内存中的程序 (字节码形式)
  */
-int runCodeFromMemory(af_Code *code, af_Environment *env) {
-    bool res = iterCode(code, 0, env);
-    if (!res)
-        return env->core->exit_code;
-    return 0;
-}
-
-/*
- * 函数名: runCodeFromMemoryAsImport
- * 目标: 采用import的方式运行内存中程序 (字节码形式)
- */
-int runCodeFromMemoryAsImport(af_Code *code, af_Environment *env) {
-    bool res = iterCode(code, 1, env);
+int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
+    bool res = iterCode(code, mode, env);
     if (!res)
         return env->core->exit_code;
     return 0;
@@ -149,7 +141,7 @@ int runCodeFromMemoryAsImport(af_Code *code, af_Environment *env) {
  * 函数名: runCodeFromFileByte
  * 目标: 运行文件中的程序 (字节码形式)
  */
-int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
+int runCodeFromFileByte(FilePath file, FILE *error_file, int mode, af_Environment *env){
     if (env == NULL || file == NULL)
         return -1;
 
@@ -169,7 +161,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
         return -2;
     }
 
-    int exit_code = runCodeFromMemoryAsImport(code, env);
+    int exit_code = runCodeFromMemory(code, mode, env);
     freeAllCode(code);
     return exit_code;
 }
@@ -178,7 +170,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
  * 函数名: runCodeFromFileByte
  * 目标: 运行文件中的程序 (字节码/源码形式)
  */
-int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environment *env) {
+int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, int mode, af_Environment *env){
     if (env == NULL || file == NULL)
         return -1;
 
@@ -207,12 +199,12 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
 
     int exit_code;
     if (time_2 >= time_1) {
-        exit_code = runCodeFromFileByte(path_2, error_file, env);
+        exit_code = runCodeFromFileByte(path_2, error_file, mode, env);
         if (exit_code != 0)
             goto RUN_SOURCE_CODE;
     } else {
 RUN_SOURCE_CODE:
-        exit_code = runCodeFromFileSource(path_1, error_file, save_afb, path_2, env);
+        exit_code = runCodeFromFileSource(path_1, error_file, save_afb, path_2, mode, env);
     }
 
     free(path_1);

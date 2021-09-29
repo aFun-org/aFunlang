@@ -15,13 +15,14 @@ struct RunList {
         char *string;
     };
 
+    bool import;
     struct RunList *next;
 };
 
-RunList *makeFileRunList(FilePath file);
-RunList *makeFileByteRunList(FilePath file);
-RunList *makeFileSourceRunList(FilePath file);
-RunList *makeStringRunList(char *string);
+RunList *makeFileRunList(FilePath file, bool import);
+RunList *makeFileByteRunList(FilePath file, bool import);
+RunList *makeFileSourceRunList(FilePath file, bool import);
+RunList *makeStringRunList(char *string, bool import);
 void freeAllRunList(RunList *rl);
 RunList **pushRunList(RunList *rl, RunList **base);
 
