@@ -20,7 +20,7 @@ char const * const writeByteCodeError[5] = {
 };
 
 char const * const readByteCodeError[7] = {
-        "File write error.",  // 0
+        "File read error.",  // 0
         NULL,  // 无错误
         "File open error.",  // 2
         "The file is not an aFun Bytecode file.",  // 3
@@ -94,7 +94,6 @@ int readByteCode(af_Code **code, FilePath path) {
 
     if (!readAllCode(code, path, file)) {
         re = 5;
-        freeAllCode(*code);
         goto RETURN_;
     }
 

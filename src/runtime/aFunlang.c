@@ -166,7 +166,6 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
     int res = readByteCode(&code, file);
     if(res != 1) {
         fprintf(error_file, "Load bytecode file error [%s] [Load at %s].\n", readByteCodeError[res], file);
-        freeAllCode(code);
         return -2;
     }
 

@@ -269,6 +269,9 @@ bool writeAllCode(af_Code *bt, FILE *file) {
     if (bt == NULL || bt->path == NULL)
         return false;
 
+    if (!codeSemanticCheck(bt))
+        goto RETURN_FALSE;
+
     for (NULL; bt != NULL; bt = bt->next) {
         if (!writeCode(bt, file))
             goto RETURN_FALSE;
@@ -334,11 +337,16 @@ bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
             break;
     }
 
-    if (*base != NULL)
+    if (*base != NULL && path != NULL)
         (*base)->path = strCopy(path);
+
+    if (!codeSemanticCheck(*base))
+        goto RETURN_FALSE;
     return true;
 
 RETURN_FALSE:
+    freeAllCode(*bt);
+    *bt = NULL;
     return false;
 }
 
@@ -545,4 +553,41 @@ char *getCodeMD5(af_Code *code) {
     for(int i = 0; i < MD5_SIZE; i++)
         snprintf((char *)md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
     return md5str;
+}
+
+static bool codeElementCheck(const char *data) {
+    return data != NULL;
+}
+
+/*
+ * 函数名: codeSemanticCheck
+ * 目标: 检查code结构体是否符合语义
+ */
+bool codeSemanticCheck(af_Code *code) {
+    CodeUInt layer = 0;
+    if (code == NULL || code->path == NULL)
+        return false;
+
+    for (NULL; code != NULL; code = code->next) {
+        if (code->type != code_block && code->type != code_element)
+            return false;
+        if (code->type == code_element && !codeElementCheck(code->element.data))
+            return false;
+        if (code->type == code_block) {
+            if (code->block.type != parentheses &&
+                code->block.type != brackets && code->block.type != curly)
+                return false;
+            if (!code->block.is_empty && code->code_end != 0)  // 正常情况下, block的code_end为0, 但empty时除外
+                return false;
+        }
+        if (code->prefix != NUL && !strchr(ALL_PREFIX, code->prefix))
+            return false;
+        if (LAYER_ADD1(code))
+            layer++;
+        if (layer - code->code_end < 0)
+            return false;
+        layer -= code->code_end;
+    }
+
+    return true;
 }

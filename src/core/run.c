@@ -121,13 +121,13 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
 
     switch (mode) {
         case 0:
-            if (env->activity->type != act_top || code == NULL || code->path == NULL)
+            if (env->activity->type != act_top || !codeSemanticCheck(code))
                 return false;
             setActivityBtTop(NULL, env->activity);  // 直接就在NORMAL期, bt_top不被设定
             setActivityBtStart(code, env->activity);
             break;
         case 1: {
-            if (env->activity->type != act_top || code == NULL || code->path == NULL)
+            if (env->activity->type != act_top)
                 return false;
             char *name = getFileName(code->path);
             pushImportActivity(code, NULL, name, env);
@@ -136,7 +136,7 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
             break;
         }
         case 2:
-            if (env->activity->type == act_gc || env->activity->bt_next == NULL || code != NULL)
+            if (env->activity->type == act_gc || !codeSemanticCheck(env->activity->bt_start) || env->activity->bt_next == NULL || code != NULL)
                 return false;
             break;
         case 3:

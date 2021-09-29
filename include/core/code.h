@@ -45,4 +45,5 @@ AFUN_CORE_EXPORT CodeUInt getCodeEndCount(af_Code *code);
 AFUN_CORE_EXPORT char *getCodeElementData(af_Code *code);
 AFUN_CORE_EXPORT CodeUInt getCodeElementCount(af_Code *code);
 AFUN_CORE_EXPORT char *getCodeMD5(af_Code *code);
+AFUN_CORE_EXPORT bool codeSemanticCheck(af_Code *code);
 #endif //AFUN_BYTECODE
