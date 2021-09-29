@@ -1381,94 +1381,99 @@ void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInf
 }
 
 static char *getActivityInfoToBacktracking(af_Activity *activity){
-    char *info = NULL;
+    char info[512] = "";
+
+    /* strcat拼接的字符是可控的, 因此不需要使用安全函数 */
     if (activity->type == act_gc) {
-        info = strJoin(info, "gc-activity;", true, false);
-        return info;
+        strcat(info, "gc-activity;");
+        return strCopy(info);
     } else if (activity->type == act_top)
-        info = strJoin(info, "top-activity;", true, false);
+        strcat(info, "top-activity;");
     else if (activity->type == act_top_import)
-        info = strJoin(info, "top-import-activity;", true, false);
+        strcat(info, "top-import-activity;");
     else if (activity->is_execution)
-        info = strJoin(info, "execution-activity;", true, false);
+        strcat(info, "execution-activity;");
     else if (activity->is_gc_call)
-        info = strJoin(info, "gc-destruct-function-call-activity;", true, false);
+        strcat(info, "gc-destruct-function-call-activity;");
     else
-        info = strJoin(info, "function-call-activity;", true, false);
+        strcat(info, "function-call-activity;");
 
     switch (activity->status) {
         case act_func_get:
-            info = strJoin(info, "\nfunc-get;", true, false);
+            strcat(info, "\nfunc-get;");
             break;
         case act_func_arg:
-            info = strJoin(info, "\nfunc-arg;", true, false);
+            strcat(info, "\nfunc-arg;");
             if (activity->run_in_func)
-                info = strJoin(info, " run-in-function-var-space;", true, false);
+                strcat(info, " run-in-function-var-space;");
             break;
         case act_func_normal:
-            info = strJoin(info, "\nrun-code;", true, false);
+            strcat(info, "\nrun-code;");
             if (activity->return_first)
-                info = strJoin(info, " return-first-result;", true, false);
+                strcat(info, " return-first-result;");
             break;
         default:
             break;
     }
 
     if (activity->is_macro_call)
-        info = strJoin(info, "\nmacro-call;", true, false);
+        strcat(info, "\nmacro-call;");
 
     if (activity->is_literal)
-        info = strJoin(info, "\nliteral-call;", true, false);
+        strcat(info, "\nliteral-call;");
 
     if (activity->is_obj_func)
-        info = strJoin(info, "\nobject-function-call;", true, false);
+        strcat(info, "\nobject-function-call;");
 
     if (activity->optimization)
-        info = strJoin(info, "\ntail-call-optimization;", true, false);
+        strcat(info, "\ntail-call-optimization;");
 
-    return info;
+    return strCopy(info);
 }
 
 static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb) {
-    char *info = "backtracking;";
+    char info[512] = "backtracking;";
+
+    /* strcat拼接的字符是可控的, 因此不需要使用安全函数 */
     if (atb->is_execution)
-        info = strJoin(info, "\nexecution-activity;", false, false);
+        strcat(info, "\nexecution-activity;");
     else if (atb->is_gc_call)
-        info = strJoin(info, "\ngc-destruct-function-call-activity;", false, false);
+        strcat(info, "\ngc-destruct-function-call-activity;");
     else
-        info = strJoin(info, "\nfunction-call-activity;", false, false);
+        strcat(info, "\nfunction-call-activity;");
+
 
     switch (atb->status) {
         case act_func_get:
-            info = strJoin(info, "\nfunc-get;", true, false);
+            strcat(info, "\nfunc-get;");
             break;
         case act_func_arg:
-            info = strJoin(info, "\nfunc-arg;", true, false);
+            strcat(info, "\nfunc-arg;");
             if (atb->run_in_func)
-                info = strJoin(info, " run-in-function-var-space;", true, false);
+                strcat(info, " run-in-function-var-space;");
             break;
         case act_func_normal:
-            info = strJoin(info, "\nrun-code;", true, false);
+            strcat(info, "\nrun-code;");
             if (atb->return_first)
-                info = strJoin(info, " return-first-result;", true, false);
+                strcat(info, " return-first-result;");
             break;
         default:
             break;
     }
 
     if (atb->is_macro_call)
-        info = strJoin(info, "\nmacro-call;", true, false);
+        strcat(info, "\nmacro-call;");
 
     if (atb->is_literal)
-        info = strJoin(info, "\nliteral-call;", true, false);
+        strcat(info, "\nliteral-call;");
 
     if (atb->is_obj_func)
-        info = strJoin(info, "\nobject-function-call;", true, false);
+        strcat(info, "\nobject-function-call;");
 
     if (atb->optimization)
-        info = strJoin(info, "\ntail-call-optimization;", true, false);
+        strcat(info, "\ntail-call-optimization;");
 
-    return info;
+    return strCopy(info);
 }
 
 af_ImportInfo *makeImportInfo(char *mark, af_Object *obj) {
