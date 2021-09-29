@@ -265,12 +265,8 @@ static bool writeCode(af_Code *bt, FILE *file) {
  * 目标: 将Code写入字节码文件中
  * 备注: 写入字节码时不做语义检查, 在读取时最语义检查即可
  */
-bool writeAllCode(af_Code *bt, FilePath path) {
+bool writeAllCode(af_Code *bt, FILE *file) {
     if (bt == NULL || bt->path == NULL)
-        return false;
-
-    FILE *file = fopen(path, "wb");
-    if (file == NULL)
         return false;
 
     for (NULL; bt != NULL; bt = bt->next) {
@@ -282,11 +278,9 @@ bool writeAllCode(af_Code *bt, FilePath path) {
         Done(byteWriteUint_8(file, (bt->next == NULL)));  // 记录是否为最后一位
     }
 
-    fclose(file);
     return true;
 
 RETURN_FALSE:
-    fclose(file);
     return false;
 }
 
@@ -324,13 +318,9 @@ static bool readCode(af_Code **bt, FILE *file) {
     return true;
 }
 
-bool readAllCode(af_Code **bt, FilePath path) {
+bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
     af_Code **base = bt;
     *bt = NULL;
-
-    FILE *file = fopen(path, "rb");
-    if (file == NULL)
-        return false;
 
     for (NULL; true;bt = &((*bt)->next)) {
         if(!readCode(bt, file))
@@ -346,11 +336,9 @@ bool readAllCode(af_Code **bt, FilePath path) {
 
     if (*base != NULL)
         (*base)->path = strCopy(path);
-    fclose(file);
     return true;
 
 RETURN_FALSE:
-    fclose(file);
     return false;
 }
 
@@ -525,4 +513,36 @@ CodeUInt getCodeElementCount(af_Code *code) {
     if (countElement(code->next, &count, NULL) == 0)
         return 0;
     return count;
+}
+
+char *getCodeMD5(af_Code *code) {
+    char *md5str = calloc(MD5_STR_LEN + 1, sizeof(char));
+    char md5_value[MD5_SIZE];
+    MD5_CTX *md5 = MD5Init();
+
+    for (NULL; code != NULL; code = code->next) {
+        char *tmp = NULL;
+        char head[] = {code->type, code->prefix, 'x', 'x', NUL};
+        char tail[512] = {0};
+
+        if (code->prefix == NUL)
+            head[1] = '-';
+        if (code->type == code_block) {
+            head[2] = code->block.is_empty ? 'e' : 'n';
+            head[3] = code->block.type;
+        } else
+            tmp = strCopy(code->element.data);
+        snprintf(tail, 512, "%d:%d", code->code_end, code->line);
+        tmp = strJoin(head, tmp, false, true);
+        tmp = strJoin(tmp, tail, true, false);
+
+        MD5Update(md5, (unsigned char *)tmp, strlen((char *)tmp));
+        free(tmp);
+    }
+
+    MD5Final(md5, (unsigned char *)md5_value);
+
+    for(int i = 0; i < MD5_SIZE; i++)
+        snprintf((char *)md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
+    return md5str;
 }

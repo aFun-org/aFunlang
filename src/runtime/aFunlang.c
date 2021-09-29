@@ -2,7 +2,8 @@
 #include "aFunCore.h"
 #include "__env.h"
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
+static int
+runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env);
 
 void aFunInit() {
     aFunCoreInit();
@@ -10,7 +11,7 @@ void aFunInit() {
 
 af_Environment *creatAFunEnviroment(void) {
     af_Environment *env = makeEnvironment(grt_count);
-    af_Code *code;
+    af_Code *code = NULL;
 
     runtimeTool("base", &code, NULL, env->core->protect, env);
 
@@ -31,7 +32,7 @@ void destructAFunEnvironment(af_Environment *env) {
     freeEnvironment(env);
 }
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env){
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env){
     if (parser == NULL)
         return -1;
 
@@ -41,8 +42,11 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
         return -2;
 
     /* 写入文件 */
-    if (save_path != NULL)
-        writeAllCode(bt_code, save_path);
+    if (save_path != NULL) {
+        int res = writeByteCode(bt_code, save_path);
+        if (res != 1)
+            fprintf(error_file, "Save aFun Bytecode file error [%s] [save at %s].\n", writeByteCodeError[res], save_path);
+    }
 
     bool res = iterCode(bt_code, mode, env);
     freeAllCode(bt_code);
@@ -66,7 +70,7 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, af_Enviro
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByString(code, false, error_file);
-    return runCode_(string_name, parser, 1, NULL, env);
+    return runCode_(string_name, parser, 1, NULL, error_file, env);
 }
 
 /*
@@ -96,7 +100,7 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
         save_path = NULL;
 
     af_Parser *parser = makeParserByFile(file, error_file);
-    int exit_code = runCode_(file, parser, 1, save_path, env);
+    int exit_code = runCode_(file, parser, 1, save_path, error_file, env);
     if (free_save_path)
         free(save_path);
     return exit_code;
@@ -116,7 +120,7 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
     if (error_file == NULL)
         error_file = stderr;
     af_Parser *parser = makeParserByStdin(error_file);
-    return runCode_(name, parser, 0, NULL, env);
+    return runCode_(name, parser, 0, NULL, error_file, env);
 }
 
 /*
@@ -158,8 +162,10 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, af_Environment *env) {
         return -2;
     }
 
-    af_Code *code;
-    if(!readAllCode(&code, file)) {
+    af_Code *code = NULL;
+    int res = readByteCode(&code, file);
+    if(res != 1) {
+        fprintf(error_file, "Load bytecode file error [%s] [Load at %s].\n", readByteCodeError[res], file);
         freeAllCode(code);
         return -2;
     }
@@ -201,10 +207,14 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, af_Environme
     }
 
     int exit_code;
-    if (time_2 >= time_1)
+    if (time_2 >= time_1) {
         exit_code = runCodeFromFileByte(path_2, error_file, env);
-    else
+        if (exit_code != 0)
+            goto RUN_SOURCE_CODE;
+    } else {
+RUN_SOURCE_CODE:
         exit_code = runCodeFromFileSource(path_1, error_file, save_afb, path_2, env);
+    }
 
     free(path_1);
     free(path_2);
@@ -240,11 +250,11 @@ int buildFile(FilePath out, FilePath in, FILE *error_file) {
     if (code == NULL)
         return -2;
 
-    bool res = writeAllCode(code, out);
+    int res = writeByteCode(code, out);
     freeAllCode(code);
 
-    if (!res) {
-        fprintf(error_file, "Build error.\n");
+    if (res != 1) {
+        fprintf(error_file, "Build error [%s] [Build %s].\n", writeByteCodeError[res], in);
         return -3;
     }
 

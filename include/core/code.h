@@ -10,8 +10,8 @@ typedef uint32_t CodeUInt;  // Code int
 typedef int64_t LayerInt;  // 只有当layer会小于0时使用
 
 enum af_CodeType {
-    code_element = 0,
-    code_block,  // 括号
+    code_element = 'e',
+    code_block = 'm',  // 括号
 };
 
 /* 括号类型 */
@@ -31,8 +31,8 @@ AFUN_CORE_EXPORT void freeAllCode(af_Code *bt);
 AFUN_CORE_EXPORT af_Code *pushCode(af_Code **base, af_Code *next);
 AFUN_CORE_EXPORT af_Code *copyAllCode(af_Code *base, FilePath *path);
 AFUN_CORE_EXPORT af_Code *copyCode(af_Code *base, FilePath *path);
-AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FilePath path);
-AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FilePath path);
+AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FILE *file);
+AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FilePath path, FILE *file);
 
 /* 代码块 属性访问 */
 AFUN_CORE_EXPORT af_Code *getCodeNext(af_Code *bt);
@@ -44,5 +44,5 @@ AFUN_CORE_EXPORT char getCodePrefix(af_Code *code);
 AFUN_CORE_EXPORT CodeUInt getCodeEndCount(af_Code *code);
 AFUN_CORE_EXPORT char *getCodeElementData(af_Code *code);
 AFUN_CORE_EXPORT CodeUInt getCodeElementCount(af_Code *code);
-
+AFUN_CORE_EXPORT char *getCodeMD5(af_Code *code);
 #endif //AFUN_BYTECODE

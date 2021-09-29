@@ -16,13 +16,13 @@ int main() {
     af_Code *bt5 = makeBlockCode(parentheses, bt3, 0, 1, NULL, NULL);
     pushCode(&bt2, bt5);
 
-    if(!writeAllCode(bt1, "test.aub")) {
+    if(writeByteCode(bt1, "test.aub") != 1) {
         fprintf(stderr, "Write test.aub error.\n");
         return EXIT_FAILURE;
     }
 
     af_Code *get;
-    if(!readAllCode(&get, "test.aub")) {
+    if(readByteCode(&get, "test.aub") != 1) {
         fprintf(stderr, "Read test.aub error.\n");
         return EXIT_FAILURE;
     }

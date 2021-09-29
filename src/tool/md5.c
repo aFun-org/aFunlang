@@ -15,11 +15,6 @@ struct MD5_CTX {
     unsigned char buffer[64];
 };
 
-typedef struct MD5_CTX MD5_CTX;
-
-static void MD5Init(MD5_CTX *context);
-static void MD5Update(MD5_CTX *context,unsigned char *input,unsigned int input_len);
-static void MD5Final(MD5_CTX *context,unsigned char digest[16]);
 static void MD5Transform(unsigned int state[4],unsigned char block[64]);
 static void MD5Encode(unsigned char *output,const unsigned int *input,unsigned int len);
 static void MD5Decode(unsigned int *output,const unsigned char *input,unsigned int len);
@@ -31,16 +26,18 @@ unsigned char PADDING[] = {
                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         };
 
-static void MD5Init(MD5_CTX *context) {
+MD5_CTX *MD5Init(void) {
+    MD5_CTX *context = calloc(1, sizeof(MD5_CTX));
     context->count[0] = 0;
     context->count[1] = 0;
     context->state[0] = 0x67452301;
     context->state[1] = 0xEFCDAB89;
     context->state[2] = 0x98BADCFE;
     context->state[3] = 0x10325476;
+    return context;
 }
 
-static void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len) {
+void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len) {
     unsigned int i;
     unsigned int index;
     unsigned int part_len;
@@ -67,7 +64,7 @@ static void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input
     memcpy(&context->buffer[index], &input[i], input_len - i);
 }
 
-static void MD5Final(MD5_CTX *context, unsigned char digest[16]) {
+void MD5Final(MD5_CTX *context, unsigned char digest[16]) {
     unsigned int index;
     unsigned int pad_len;
     unsigned char bits[8];
@@ -78,6 +75,7 @@ static void MD5Final(MD5_CTX *context, unsigned char digest[16]) {
     MD5Update(context, PADDING, pad_len);
     MD5Update(context, bits, 8);
     MD5Encode(digest, context->state, 16);
+    free(context);
 }
 
 static void MD5Encode(unsigned char *output,const unsigned int *input, unsigned int len) {
@@ -196,22 +194,21 @@ char *getFileMd5(const char *path) {
     unsigned long ret;
     unsigned char data[READ_DATA_SIZE];
     unsigned char md5_value[MD5_SIZE];
-    MD5_CTX md5;
 
     if ((fd = fopen(path, "rb")) == NULL)
         return NULL;
 
     char *md5str = calloc(MD5_STRING, sizeof(char));
-    MD5Init(&md5);
+    MD5_CTX *md5 = MD5Init();
     while (1) {
         ret = fread(data, 1, READ_DATA_SIZE, fd);
-        MD5Update(&md5, data, ret);
+        MD5Update(md5, data, ret);
         if (ret < READ_DATA_SIZE)
             break;
     }
 
     fclose(fd);
-    MD5Final(&md5, md5_value);
+    MD5Final(md5, md5_value);
 
     for(int i = 0; i < MD5_SIZE; i++)
         snprintf(md5str + i * 2, 2 + 1, "%02x", md5_value[i]);

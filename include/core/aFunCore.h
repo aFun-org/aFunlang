@@ -13,6 +13,7 @@
 #include "core_init.h"
 #include "run.h"
 #include "code.h"
+#include "bytecode.h"
 #include "env.h"
 #include "gc.h"
 #include "func.h"
