@@ -33,6 +33,7 @@ static struct LogFactory {
     bool init;  // 是否已经初始化
 
     FILE *log;  // 记录文件输出的位置
+    FILE *csv;
     LogFactoryPrintConsole print_console;  // 输出到终端、
 
     Logger sys_log;
@@ -54,15 +55,17 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     if (strlen(path) >= 218)  // 路径过长
         return 0;
 
-    char log_path[1024] = {0};
-    char log_base[1024] = {0};
+    char log_path[218] = {0};
+    char csv_path[218] = {0};
+    char log_base[218] = {0};
     long pid = getpid();  // 获取进程ID
 
     time_t t;
     char *ti = getTime(&t);
 
-    snprintf(log_path, 1024, "%s%ld-%ld.log", path, pid, t);
-    snprintf(log_base, 1024, "%s-base.log", path);
+    snprintf(log_path, 218, "%s%ld-%ld.log", path, pid, t);
+    snprintf(csv_path, 218, "%s%ld-%ld.csv", path, pid, t);
+    snprintf(log_base, 218, "%s-base.log", path);
 
     FILE *base = fopen(log_base, "a");
     if (base == NULL)
@@ -76,11 +79,21 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     fclose(base);
     free(ti);
 
-    log_factory.log = fopen(log_path, "a");
-    if (log_factory.log == NULL)
-        log_factory.log = fopen(log_path, "w");
+    log_factory.log = fopen(log_path, "w");
     if (log_factory.log == NULL)
         return 0;
+
+    log_factory.csv = fopen(csv_path, "w");
+    if (log_factory.csv == NULL)
+        return 0;
+
+#define CSV_FORMAT "%s,%s,%ld,%s,%ld,%s,%d,%s,'%s'\n"
+#define CSV_TITLE  "Level,Logger,TID,Data,Timestamp,File,Line,Function,Log\n"
+    fprintf(log_factory.csv, CSV_TITLE);  // 设置 cvs 标题
+    fflush(log_factory.csv);
+    printf("FFFF\n");
+#undef CSV_TITLE
+
     log_factory.print_console = print_console;
     log_factory.init = true;
     atexit(destructLogSystem_at_exit);
@@ -162,6 +175,11 @@ static int writeLog_(Logger *logger, LogLevel level, char *file, int line, char 
         fflush(log_factory.log);
     }
 
+    if (log_factory.csv != NULL) {
+        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], logger->id, tid, ti, t, file, line, func, tmp);
+        fflush(log_factory.csv);
+    }
+
     switch (log_factory.print_console) {
         case log_pc_all:
             if (level < log_warning) {
@@ -195,6 +213,7 @@ static int writeLog_(Logger *logger, LogLevel level, char *file, int line, char 
     free(ti);
 #undef FORMAT
 #undef FORMAT_SHORT
+#undef CSV_FORMAT
     return 0;
 }
 
