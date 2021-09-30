@@ -20,7 +20,7 @@ int main() {
 }
 
 void test1(void) {
-    af_Parser *parser = makeParserByString(str, false, stderr);
+    af_Parser *parser = makeParserByString(str, false);
     af_Code *code = parserCode("test1.aun", parser);
     freeParser(parser);
     freeAllCode(code);
@@ -40,7 +40,7 @@ void test2(void) {
     }
     fclose(file);
 
-    af_Parser *parser = makeParserByFile(path, stderr);
+    af_Parser *parser = makeParserByFile(path);
     af_Code *code = parserCode("test2.aun", parser);
     printCode(code);
     freeParser(parser);

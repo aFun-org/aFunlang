@@ -2,7 +2,7 @@
 #include "__aFunlang.h"
 #include "__env.h"
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env);
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
 static bool aFunInit_mark = false;
 
 bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf, LogLevel level) {
@@ -51,7 +51,7 @@ void destructAFunEnvironment(af_Environment *env) {
     freeEnvironment(env);
 }
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env){
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env){
     if (parser == NULL)
         return -1;
 
@@ -64,7 +64,7 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
     if (save_path != NULL) {
         int res = writeByteCode(bt_code, save_path);
         if (res != 1)
-            fprintf(error_file, "Save aFun Bytecode file error [%s] [save at %s].\n", writeByteCodeError[res], save_path);
+            writeErrorLog(aFunCoreLogger, "Save aFun Bytecode file error [%s] [save at %s].", writeByteCodeError[res], save_path);
     }
 
     bool res = iterCode(bt_code, mode, env);
@@ -79,33 +79,28 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
  * 函数名: runCodeFromString
  * 目标: 运行字符串中的程序 (源码形式)
  */
-int runCodeFromString(char *code, char *string_name, FILE *error_file, int mode, af_Environment *env){
+int runCodeFromString(char *code, char *string_name, int mode, af_Environment *env){
     if (env == NULL || code == NULL || !aFunInit_mark)
         return -1;
 
     if (string_name == NULL)
         string_name = "string-code.aun";
 
-    if (error_file == NULL)
-        error_file = stderr;
-    af_Parser *parser = makeParserByString(code, false, error_file);
-    return runCode_(string_name, parser, mode, NULL, error_file, env);
+    af_Parser *parser = makeParserByString(code, false);
+    return runCode_(string_name, parser, mode, NULL, env);
 }
 
 /*
  * 函数名: runCodeFromFileSource
  * 目标: 运行文件中的程序 (源码形式)
  */
-int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePath save_path, int mode, af_Environment *env){
+int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int mode, af_Environment *env){
     if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
-    if (error_file == NULL)
-        error_file = stderr;
-
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aun", sufix)) {
-        fprintf(error_file, "Is not .aun file[%s].\n", (sufix == NULL ? "" : sufix));
+        writeErrorLog(aFunCoreLogger, "Is not .aun file[%s].", (sufix == NULL ? "" : sufix));
         return -2;
     }
 
@@ -118,8 +113,8 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
     } else if (!save_afb)
         save_path = NULL;
 
-    af_Parser *parser = makeParserByFile(file, error_file);
-    int exit_code = runCode_(file, parser, mode, save_path, error_file, env);
+    af_Parser *parser = makeParserByFile(file);
+    int exit_code = runCode_(file, parser, mode, save_path, env);
     if (free_save_path)
         free(save_path);
     return exit_code;
@@ -129,17 +124,15 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
  * 函数名: runCodeFromStdin
  * 目标: 运行stdin的程序 (源码形式)
  */
-int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
+int runCodeFromStdin(char *name, af_Environment *env){
     if (env == NULL || feof(stdin) || ferror(stdin) || !aFunInit_mark)
         return -1;
 
     if (name == NULL)
         name = "sys-stdin.aun";
 
-    if (error_file == NULL)
-        error_file = stderr;
-    af_Parser *parser = makeParserByStdin(error_file);
-    return runCode_(name, parser, 0, NULL, error_file, env);
+    af_Parser *parser = makeParserByStdin();
+    return runCode_(name, parser, 0, NULL, env);
 }
 
 /*
@@ -160,23 +153,20 @@ int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
  * 函数名: runCodeFromFileByte
  * 目标: 运行文件中的程序 (字节码形式)
  */
-int runCodeFromFileByte(FilePath file, FILE *error_file, int mode, af_Environment *env){
+int runCodeFromFileByte(FilePath file, int mode, af_Environment *env){
     if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
-    if (error_file == NULL)
-        error_file = stderr;
-
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aub", sufix)) {
-        fprintf(error_file, "Is not .aub file[%s].\n", (sufix == NULL ? "" : sufix));
+        writeErrorLog(aFunCoreLogger, "Is not .aub file[%s].", (sufix == NULL ? "" : sufix));
         return -2;
     }
 
     af_Code *code = NULL;
     int res = readByteCode(&code, file);
     if(res != 1) {
-        fprintf(error_file, "Load bytecode file error [%s] [Load at %s].\n", readByteCodeError[res], file);
+        writeErrorLog(aFunCoreLogger, "Load bytecode file error [%s] [Load at %s].", readByteCodeError[res], file);
         return -2;
     }
 
@@ -189,16 +179,13 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, int mode, af_Environmen
  * 函数名: runCodeFromFileByte
  * 目标: 运行文件中的程序 (字节码/源码形式)
  */
-int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, int mode, af_Environment *env){
+int runCodeFromFile(FilePath file, bool save_afb, int mode, af_Environment *env){
     if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
-    if (error_file == NULL)
-        error_file = stderr;
-
     char *sufix = getFileSurfix(file);
     if (sufix != NULL && !EQ_STR(".aun", sufix) && !EQ_STR(".aub", sufix)) {  // 不是源文件, 字节码文件或无后缀文件
-        fprintf(error_file, "Is not .aun/.aub file[%s].\n", sufix);
+        writeErrorLog(aFunCoreLogger, "Is not .aun/.aub file[%s].", sufix);
         return -2;
     }
 
@@ -210,7 +197,7 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, int mode, af
     time_t time_2 = getFileMTime(path_2);
 
     if (time_1 == 0 && time_2 == 0) {
-        fprintf(error_file, "File not exists [%s].\n", file);
+        writeErrorLog(aFunCoreLogger, "File not exists [%s].", file);
         free(path_1);
         free(path_2);
         return -3;
@@ -218,12 +205,12 @@ int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, int mode, af
 
     int exit_code;
     if (time_2 >= time_1) {
-        exit_code = runCodeFromFileByte(path_2, error_file, mode, env);
+        exit_code = runCodeFromFileByte(path_2, mode, env);
         if (exit_code != 0)
             goto RUN_SOURCE_CODE;
     } else {
 RUN_SOURCE_CODE:
-        exit_code = runCodeFromFileSource(path_1, error_file, save_afb, path_2, mode, env);
+        exit_code = runCodeFromFileSource(path_1, save_afb, path_2, mode, env);
     }
 
     free(path_1);
@@ -235,26 +222,23 @@ RUN_SOURCE_CODE:
  * 函数名: buildFile
  * 目标: 生成字节码文件
  */
-int buildFile(FilePath out, FilePath in, FILE *error_file) {
+int buildFile(FilePath out, FilePath in){
     if (out == NULL || in == NULL || !aFunInit_mark)
         return -1;
-
-    if (error_file == NULL)
-        error_file = stderr;
 
     char *suffix_in = getFileSurfix(in);
     char *suffix_out = getFileSurfix(out);
     if (suffix_in == NULL || !EQ_STR(".aun", suffix_in)) {  // 不是源文件
-        fprintf(error_file, "Input file is not .aun file[%s].\n", (suffix_in == NULL ? "" : suffix_in));
+        writeErrorLog(aFunCoreLogger, "Input file is not .aun file[%s].", (suffix_in == NULL ? "" : suffix_in));
         return -2;
     }
 
     if (suffix_out == NULL || !EQ_STR(".aub", suffix_out)) {  // 不是字节码文件
-        fprintf(error_file, "Output file is not .aub file[%s].\n", (suffix_out == NULL ? "" : suffix_out));
+        writeErrorLog(aFunCoreLogger, "Output file is not .aub file[%s].", (suffix_out == NULL ? "" : suffix_out));
         return -2;
     }
 
-    af_Parser *parser = makeParserByFile(in, error_file);
+    af_Parser *parser = makeParserByFile(in);
     af_Code *code = parserCode(in, parser);
     freeParser(parser);
     if (code == NULL)
@@ -264,7 +248,7 @@ int buildFile(FilePath out, FilePath in, FILE *error_file) {
     freeAllCode(code);
 
     if (res != 1) {
-        fprintf(error_file, "Build error [%s] [Build %s].\n", writeByteCodeError[res], in);
+        writeErrorLog(aFunCoreLogger, "Build error [%s] [Build %s].", writeByteCodeError[res], in);
         return -3;
     }
 

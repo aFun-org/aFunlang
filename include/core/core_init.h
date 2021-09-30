@@ -6,6 +6,7 @@
 #include "tool.h"
 
 #ifdef aFunWIN32
+#pragma warning(disable : 5105)
 #include "Windows.h"
 #endif
 

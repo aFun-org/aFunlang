@@ -65,16 +65,16 @@ int runCodeFromRunList(RunList *run_list, RunList **bak, bool save_afb, af_Envir
         int mode = run_list->import ? 1 : 0;
         switch (run_list->type) {
             case rl_string:
-                exit_code = runCodeFromString(run_list->string, "command-line-eval", stderr, mode, env);
+                exit_code = runCodeFromString(run_list->string, "command-line-eval", mode, env);
                 break;
             case rl_file:
-                exit_code = runCodeFromFile(run_list->file, stderr, save_afb, mode, env);
+                exit_code = runCodeFromFile(run_list->file, save_afb, mode, env);
                 break;
             case rl_file_b:
-                exit_code = runCodeFromFileByte(run_list->file, stderr, mode, env);
+                exit_code = runCodeFromFileByte(run_list->file, mode, env);
                 break;
             case rl_file_s:
-                exit_code = runCodeFromFileSource(run_list->file, stderr, save_afb, NULL, mode, env);
+                exit_code = runCodeFromFileSource(run_list->file, save_afb, NULL, mode, env);
                 break;
             default:
                 break;

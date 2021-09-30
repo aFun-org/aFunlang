@@ -165,10 +165,10 @@ static int writeLog_(Logger *logger, LogLevel level, char *file, int line, char 
     switch (log_factory.print_console) {
         case log_pc_all:
             if (level < log_warning) {
-                fprintf(stdout, FORMAT, LogLevelNameLong[level], logger->id, tid, ti, t, file, line, func, tmp);
+                fprintf(stdout, FORMAT_SHORT, LogLevelNameLong[level], logger->id, tmp);
                 fflush(stdout);
             } else if (log_factory.print_console) {
-                fprintf(stderr, FORMAT, LogLevelNameLong[level], logger->id, tid, ti, t, file, line, func, tmp);
+                fprintf(stderr, FORMAT_SHORT, LogLevelNameLong[level], logger->id, tmp);
                 fflush(stderr);
             }
             break;

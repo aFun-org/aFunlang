@@ -12,13 +12,11 @@ static void freeLexical(af_Lexical *lex);
 static af_Syntactic *makeSyntactic(void);
 static void freeSyntactic(af_Syntactic *syntactic);
 
-af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size,
-                      FILE *error) {
+af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size){
     af_Parser *parser = calloc(1, sizeof(af_Parser));
     parser->reader = makeReader(read_func, destruct_func, data_size);
     parser->lexical = makeLexical();
     parser->syntactic = makeSyntactic();
-    parser->error = error;
     return parser;
 }
 
@@ -77,10 +75,10 @@ static void destructFunc(struct readerDataString *data) {
         free(data->str);
 }
 
-af_Parser *makeParserByString(char *str, bool free_str, FILE *error) {
+af_Parser *makeParserByString(char *str, bool free_str){
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncString, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFunc, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
     ((struct readerDataString *)parser->reader->data)->str = str;
     ((struct readerDataString *)parser->reader->data)->free_str = free_str;
     ((struct readerDataString *)parser->reader->data)->len = strlen(str);
@@ -103,17 +101,16 @@ static void destructFile(struct readerDataFile *data) {
         fclose(data->file);
 }
 
-af_Parser *makeParserByFile(FilePath path, FILE *error) {
+af_Parser *makeParserByFile(FilePath path){
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        if (error != NULL)
-            fprintf(error, "File open error: %s\n", strerror(errno));
+        writeErrorLog(aFunCoreLogger, "File open error: %s", strerror(errno));
         return NULL;
     }
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncFile, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFile, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
     ((struct readerDataFile *)parser->reader->data)->file = file;
     initParser(parser);
     FREE_SYMBOL(read_func);
@@ -147,13 +144,13 @@ static void destructStdin(struct readerDataFile *data) {
     // 什么都不用做
 }
 
-af_Parser *makeParserByStdin(FILE *error) {
+af_Parser *makeParserByStdin(){
     if (ferror(stdin))
         clearerr(stdin);
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString), error);
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

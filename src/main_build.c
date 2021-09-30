@@ -18,7 +18,7 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
     }
 
     writeErrorLog(aFunlangLogger, "File (%s) will be build. (%s)", in, out);
-    return buildFile(out, in, stderr);
+    return buildFile(out, in);
 }
 
 int buildFileToPath(FilePath path, FilePath in, bool force) {

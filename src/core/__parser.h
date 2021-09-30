@@ -40,7 +40,6 @@ struct af_Parser {
     struct af_Lexical *lexical;
     struct af_Syntactic *syntactic;
 
-    FILE *error;
     bool is_error;  // Parser遇到错误
 };
 

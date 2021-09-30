@@ -54,6 +54,9 @@ else()
     wi_set_install_dir_quiet(NAMES aFunlang)  # 设置安装路径
 endif()
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_LOG})  # 安装log输出的目录
+file(TO_NATIVE_PATH ${INSTALL_LOG} _INSTALL_LOG_NATIVE)
+string(REPLACE "\\" "\\\\" INSTALL_LOG_NATIVE ${_INSTALL_LOG_NATIVE})  # 转义
+unset(_INSTALL_LOG_NATIVE)
 
 include(info)
 include(filename)
@@ -73,7 +76,7 @@ set(base_compile_definitions
     aFunMajorVersion=${PROJECT_VERSION_MAJOR}
     aFunMinorVersion=${PROJECT_VERSION_MINOR}
     aFunPatchVersion=${PROJECT_VERSION_PATCH}
-    aFunLogDir="${INSTALL_LOG}")  # 默认的预定义宏
+    aFunLogDir="${INSTALL_LOG_NATIVE}")  # 默认的预定义宏
 
 if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)

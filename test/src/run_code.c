@@ -1155,7 +1155,7 @@ int main(int argc, char **argv) {
 
     {
         printf("TAG S: STRING\n");
-        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", NULL, 1, env);
+        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", 1, env);
         printf("exit code = %d\n\n", exit_code);
     }
 

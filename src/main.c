@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
 
     char *log = strJoin(base_name, SEP aFunLogDir SEP, false, false);
-    bool re = aFunInit(log, log_pc_w, &main_buf, log_debug);
+    bool re = aFunInit(log, log_pc_all, &main_buf, log_debug);
     free(log);
 
     if (!re) {
@@ -165,7 +165,7 @@ static int mainRun(ff_FFlags *ff) {
     }
 
     af_Environment *env = creatAFunEnviroment(argc - 1, argv + 1);
-    exit_code = runCodeFromFile(argv[0], stderr, true, 0, env);
+    exit_code = runCodeFromFile(argv[0], true, 0, env);
     destructAFunEnvironment(env);
     return exit_code;
 }
@@ -251,7 +251,7 @@ static int mainCL(ff_FFlags *ff) {
     if (command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
         do
-            exit_code = runCodeFromStdin("stdin", stderr, env);
+            exit_code = runCodeFromStdin("stdin", env);
         while (isCoreExit(env) != 1);
     }
 

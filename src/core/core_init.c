@@ -23,7 +23,7 @@ bool aFunCoreInit(char *log_dir, LogFactoryPrintConsole print_console, bool fe, 
     char *log = strJoin(log_dir, "aFunlang-", false, false);
     bool re = initLogSystem(log, print_console);
     free(log);
-    if (re != 1)
+    if (re == 0)
         return false;
 
     initLogger(aFunCoreLogger, "aFunlang-core", level);

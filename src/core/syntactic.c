@@ -5,16 +5,12 @@
 #include "parserl_warning_error.h"
 
 static void printSyntacticError(char *info, af_Parser *parser) {
-    if (parser->error == NULL)
-        return;
-    fprintf(parser->error, "[Syntactic-Error] %s\n", info);
+    writeErrorLog(aFunCoreLogger, "[Syntactic] %s", info);
     parser->is_error = true;
 }
 
 static void printSyntacticWarning(char *info, af_Parser *parser) {
-    if (parser->error == NULL)
-        return;
-    fprintf(parser->error, "[Syntactic-Warning] %s\n", info);
+    writeWarningLog(aFunCoreLogger, "[Syntactic] %s", info);
 }
 
 static bool getToken(af_Parser *parser) {
