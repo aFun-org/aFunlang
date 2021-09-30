@@ -5,7 +5,7 @@
 
 #include "runtime.h"
 
-AFUN_LANG_EXPORT void aFunInit();
+AFUN_LANG_EXPORT bool aFunInit(void);
 
 AFUN_LANG_EXPORT af_Environment *creatAFunEnviroment(int argc, char **argv);
 AFUN_LANG_EXPORT void destructAFunEnvironment(af_Environment *env);

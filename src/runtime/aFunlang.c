@@ -5,8 +5,8 @@
 static int
 runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env);
 
-void aFunInit() {
-    aFunCoreInit();
+bool aFunInit(void) {
+    return aFunCoreInit();
 }
 
 af_Environment *creatAFunEnviroment(int argc, char **argv){

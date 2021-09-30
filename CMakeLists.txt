@@ -23,11 +23,23 @@ set(CMAKE_C_VISIBILITY_PRESET "hidden")  # 默认所有符号不可见
 include(CheckCCompilerFlag)
 check_c_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
 if (fpic_work)
-    list(APPEND CMAKE_C_FLAGS "-fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
 if (MSVC)
     set(CMAKE_GNUtoMS TRUE)
+
+    check_c_compiler_flag("/utf-8" utf8_work)
+    if (NOT utf8_work)
+        message(FATAL_ERROR "The msvc not support utf-8")
+    endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+else()
+    check_c_compiler_flag("-fexec-charset=UTF-8" utf8_work)
+    if (NOT utf8_work)
+        message(FATAL_ERROR "The compiler not support utf-8")
+    endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
 endif()
 
 # 相关参数
@@ -59,6 +71,11 @@ set(base_compile_definitions
     aFunMajorVersion=${PROJECT_VERSION_MAJOR}
     aFunMinorVersion=${PROJECT_VERSION_MINOR}
     aFunPatchVersion=${PROJECT_VERSION_PATCH})  # 默认的预定义宏
+
+if (WIN32 OR CYGWIN)
+    list(APPEND base_compile_definitions aFunWIN32=1)
+endif()
+
 add_compile_definitions(${base_compile_definitions})
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
