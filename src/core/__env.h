@@ -55,6 +55,7 @@ struct af_Core {  // 解释器核心
     af_EnvVar *gc_runtime;
     af_EnvVar *prefix;
     af_EnvVar *exit_code_;  // 退出代码
+    af_EnvVar *argc;  // 参数个数
 };
 
 struct af_Message {

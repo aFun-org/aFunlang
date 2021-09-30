@@ -82,6 +82,7 @@ static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
     core->gc_max = setEnvVarNumber_(ev_gcmax, DEFAULT_GC_COUNT_MAX, env);
     core->gc_count = setEnvVarNumber_(ev_gccount, 0, env);
     core->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
+    core->argc = setEnvVarNumber_(ev_argc, 0, env);
 
     core->status = core_creat;
     core->protect = makeVarSpaceByCore(NULL, 3, 3, 3, core);

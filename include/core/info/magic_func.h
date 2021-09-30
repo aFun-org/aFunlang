@@ -13,12 +13,14 @@
 
 
 /* 内置环境变量 */
-#define SYS_NAME(job) ("sys-" #job)
+#define SYS_NAME(job) "sys-" #job
 
 #define ev_sys_prefix SYS_NAME(prefix)
 #define ev_grt SYS_NAME(grt)
 #define ev_gcmax SYS_NAME(gc-max)
 #define ev_gccount SYS_NAME(gc-count)
 #define ev_exit_code SYS_NAME(exit-code)
+#define ev_argc SYS_NAME(argc)
+#define ev_argvx_prefix SYS_NAME(argv)
 
 #endif //AFUN_MAGIC_FUNC_H

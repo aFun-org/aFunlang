@@ -1,5 +1,5 @@
-﻿#include "__aFunlang.h"
-#include "aFunCore.h"
+﻿#include "aFunCore.h"
+#include "__aFunlang.h"
 #include "__env.h"
 
 static int
@@ -15,6 +15,13 @@ af_Environment *creatAFunEnviroment(int argc, char **argv){
 
     for(int i = 0; i < argc; i++)
         printf("[aFunlang] Env-arg %d. %s\n", i, argv[i]);
+
+    env->core->argc->num = argc;
+    for (int i = 0; i < argc; i++) {
+        char tmp[512] = {0};
+        snprintf(tmp, 512, ev_argvx_prefix "%d", i);
+        setEnvVarData(tmp, argv[i], env);
+    }
 
     runtimeTool("base", &code, NULL, env->core->protect, env);
 
