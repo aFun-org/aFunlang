@@ -94,9 +94,9 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
  * 目标: 检查是否该运行gc, 若是则返回true并运行gc, 否则返回false
  */
 static bool checkRunGC(af_Environment *env) {
-    if (env->core->gc_run == grt_always ||
-        env->core->gc_run == grt_count && env->core->gc_count >= env->core->gc_count_max) {
-        env->core->gc_count = 0;  // 清零
+    if (env->core->gc_runtime->num == grt_always ||
+        env->core->gc_runtime->num == grt_count && env->core->gc_count->num >= env->core->gc_max->num) {
+        env->core->gc_count->num = 0;  // 清零
         gc_RunGC(env);
         return true;
     }

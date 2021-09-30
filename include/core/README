@@ -218,7 +218,7 @@ af_ErrorInfo 描述错误信息
 * popMessageUp
 * pushMessageDown
 * popMessageDown
-* setEnvVar
+* setEnvVarData
 * addTopMsgProcess
 * pushLiteralRegex
 * fprintfErrorInfo
@@ -238,7 +238,7 @@ af_ErrorInfo 描述错误信息
 * getBelong
 * getActivityFile
 * getActivityLine
-* findEnvVar
+* findEnvVarData
 * getMsgNormalData
 * getMsgErrorInfo
 * getMsgImportInfo

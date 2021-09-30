@@ -54,7 +54,7 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
     bool res = iterCode(bt_code, mode, env);
     freeAllCode(bt_code);
     if (!res)
-        return env->core->exit_code;
+        return env->core->exit_code_->num;
     return 0;
 }
 
@@ -133,7 +133,7 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
 int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
     bool res = iterCode(code, mode, env);
     if (!res)
-        return env->core->exit_code;
+        return env->core->exit_code_->num;
     return 0;
 }
 

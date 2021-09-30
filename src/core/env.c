@@ -4,7 +4,7 @@
 #include "__run.h"
 
 /* Core 创建和释放 */
-static af_Core *makeCore(enum GcRunTime grt);
+static af_Core *makeCore(enum GcRunTime grt, af_Environment *env);
 static void freeCore(af_Environment *env);
 
 /* Activity 创建和释放 */
@@ -29,7 +29,7 @@ static af_ActivityTrackBack *freeActivityTrackBack(af_ActivityTrackBack *atb);
 static void freeAllActivityTrackBack(af_ActivityTrackBack *atb);
 
 /* 环境变量 创建与释放 */
-static af_EnvVar *makeEnvVar(char *name, char *data);
+static af_EnvVar *makeEnvVar(char *name);
 static af_EnvVar *freeEnvVar(af_EnvVar *var);
 static void freeAllEnvVar(af_EnvVar *var);
 static void freeEnvVarSpace(af_EnvVarSpace *evs);
@@ -69,12 +69,22 @@ static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env);
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
 
-static af_Core *makeCore(enum GcRunTime grt) {
+static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
     af_Core *core = calloc(1, sizeof(af_Core));
+
+    /* 设置默认prefix */
+    char prefix[PREFIX_SIZE + 1] = "";
+    prefix[E_QUOTE] = '\'';
+    prefix[B_EXEC] = '\'';
+    prefix[B_EXEC_FIRST] = '$';
+    core->prefix = setEnvVarData_(ev_sys_prefix, prefix, env);
+    core->gc_runtime = setEnvVarNumber_(ev_grt, grt, env);
+    core->gc_max = setEnvVarNumber_(ev_gcmax, DEFAULT_GC_COUNT_MAX, env);
+    core->gc_count = setEnvVarNumber_(ev_gccount, 0, env);
+    core->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
+
     core->status = core_creat;
     core->protect = makeVarSpaceByCore(NULL, 3, 3, 3, core);
-    core->gc_run = grt;
-    core->gc_count_max = DEFAULT_GC_COUNT_MAX;
     return core;
 }
 
@@ -93,7 +103,7 @@ static void freeCore(af_Environment *env) {
 char setPrefix(size_t name, char prefix, af_Environment *env) {
     if (name >= PREFIX_SIZE)
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
-    char *prefix_ = findEnvVar(ev_sys_prefix, env);
+    char *prefix_ = env->core->prefix->data;
     if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE)
         return '-';
     switch (name) {
@@ -118,7 +128,7 @@ char getPrefix(size_t name, af_Environment *env) {
     if (name >= PREFIX_SIZE)
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
 
-    char *prefix = findEnvVar(ev_sys_prefix, env);
+    char *prefix = env->core->prefix->data;
     if (prefix == NULL || strlen(prefix) < PREFIX_SIZE)
         return '-';
     return prefix[name];
@@ -155,13 +165,13 @@ void setCoreStop(af_Environment *env) {
 
 void setCoreExit(int exit_code, af_Environment *env) {
     env->core->status = core_exit;
-    env->core->exit_code = exit_code;
+    env->core->exit_code_->num = exit_code;
 }
 
 void setCoreNormal(af_Environment *env) {
     if (env->core->status == core_exit || env->core->status == core_stop) {
         env->core->status = core_normal;
-        env->core->exit_code = 0;
+        env->core->exit_code_->num = 0;
     }
 }
 
@@ -574,10 +584,9 @@ af_Message *makeIMPORTMessage(char *mark, af_Object *obj) {
     return msg;
 }
 
-static af_EnvVar *makeEnvVar(char *name, char *data) {
+static af_EnvVar *makeEnvVar(char *name) {
     af_EnvVar *var = calloc(1, sizeof(af_EnvVar));
     var->name = strCopy(name);
-    var->data = strCopy(data);
     return var;
 }
 
@@ -605,7 +614,7 @@ static void freeEnvVarSpace(af_EnvVarSpace *evs) {
     free(evs);
 }
 
-void setEnvVar(char *name, char *data, af_Environment *env) {
+af_EnvVar *setEnvVarData_(char *name, char *data, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
     af_EnvVar **pvar = &env->esv->var[index];
     env->esv->count++;
@@ -613,20 +622,59 @@ void setEnvVar(char *name, char *data, af_Environment *env) {
         if (EQ_STR((*pvar)->name, name)) {
             free((*pvar)->data);
             (*pvar)->data = strCopy(data);
-            return;
+            return *pvar;
         }
     }
 
-    *pvar = makeEnvVar(name, data);
+    *pvar = makeEnvVar(name);
+    (*pvar)->data = strCopy(data);
+    return *pvar;
 }
 
-char *findEnvVar(char *name, af_Environment *env) {
+af_EnvVar *setEnvVarNumber_(char *name, int32_t data, af_Environment *env) {
+    time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
+    af_EnvVar **pvar = &env->esv->var[index];
+    env->esv->count++;
+    for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
+        if (EQ_STR((*pvar)->name, name)) {
+            free((*pvar)->data);
+            (*pvar)->num = data;
+            return *pvar;
+        }
+    }
+
+    *pvar = makeEnvVar(name);
+    (*pvar)->num = data;
+    return *pvar;
+}
+
+void setEnvVarData(char *name, char *data, af_Environment *env) {
+    setEnvVarData_(name, data, env);
+}
+
+void setEnvVarNumber(char *name, int32_t data, af_Environment *env) {
+    setEnvVarNumber_(name, data, env);
+}
+
+char *findEnvVarData(char *name, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
     af_EnvVar **pvar = &env->esv->var[index];
 
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
         if (EQ_STR((*pvar)->name, name))
             return (*pvar)->data;
+    }
+
+    return NULL;
+}
+
+int32_t *findEnvVarNumber(char *name, af_Environment *env) {
+    time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
+    af_EnvVar **pvar = &env->esv->var[index];
+
+    for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
+        if (EQ_STR((*pvar)->name, name))
+            return &(*pvar)->num;  // 返回指针, NULL表示没找到
     }
 
     return NULL;
@@ -673,18 +721,11 @@ static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(1, sizeof(af_Environment));
-    env->core = makeCore(grt);
     env->esv = makeEnvVarSpace();
+    env->core = makeCore(grt, env);
     /* 生成global对象 */
     env->core->global = makeGlobalObject(env);
     addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->core->global, env), env);
-
-    /* 设置默认prefix */
-    char prefix[PREFIX_SIZE + 1] = "";
-    prefix[E_QUOTE] = '\'';
-    prefix[B_EXEC] = '\'';
-    prefix[B_EXEC_FIRST] = '$';
-    setEnvVar(ev_sys_prefix, prefix, env);
 
     /* 设置NORMAL顶级处理器 */
     DLC_SYMBOL(TopMsgProcessFunc) func1 = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
@@ -1492,24 +1533,24 @@ void freeImportInfo(af_ImportInfo *ii) {
     free(ii);
 }
 
-void setGcMax(size_t max, af_Environment *env) {
-    env->core->gc_count_max = max;
+void setGcMax(int32_t max, af_Environment *env) {
+    env->core->gc_max->num = max;
 }
 
 void setGcRun(enum GcRunTime grt, af_Environment *env) {
-    env->core->gc_run = grt;
+    env->core->gc_runtime->num = grt;
 }
 
-size_t getGcCount(af_Environment *env) {
-    return env->core->gc_count;
+int32_t getGcCount(af_Environment *env) {
+    return env->core->gc_count->num;
 }
 
-size_t getGcMax(af_Environment *env) {
-    return env->core->gc_count_max;
+int32_t getGcMax(af_Environment *env) {
+    return env->core->gc_max->num;
 }
 
 enum GcRunTime getGcRun(af_Environment *env) {
-    return env->core->gc_run;
+    return env->core->gc_runtime->num;
 }
 
 af_Object *getCoreGlobal(af_Environment *env) {

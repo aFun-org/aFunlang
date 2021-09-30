@@ -45,7 +45,7 @@ void freeImportInfo(af_ImportInfo *ii);
 
 /* 运行环境 相关操作 */
 AFUN_CORE_EXPORT void enableEnvironment(af_Environment *env);
-AFUN_CORE_EXPORT void setGcMax(size_t max, af_Environment *env);
+AFUN_CORE_EXPORT void setGcMax(int32_t max, af_Environment *env);
 AFUN_CORE_EXPORT void setGcRun(enum GcRunTime grt, af_Environment *env);
 AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreStop(af_Environment *env);
@@ -62,7 +62,8 @@ AFUN_CORE_EXPORT af_Message *popMessageDown(char *type, af_Environment *env);
 AFUN_CORE_EXPORT af_Message *getFirstMessage(af_Environment *env);
 
 /* 环境变量 相关操作 */
-AFUN_CORE_EXPORT void setEnvVar(char *name, char *data, af_Environment *env);
+AFUN_CORE_EXPORT void setEnvVarData(char *name, char *data, af_Environment *env);
+AFUN_CORE_EXPORT void setEnvVarNumber(char *name, int32_t data, af_Environment *env);
 
 /* 顶层消息处理器 相关操作 */
 AFUN_CORE_EXPORT bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
@@ -77,14 +78,14 @@ AFUN_CORE_EXPORT void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei);
 AFUN_CORE_EXPORT void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);
 
 /* 环境变量 属性访问 */
-AFUN_CORE_EXPORT char *findEnvVar(char *name, af_Environment *env);
+AFUN_CORE_EXPORT char *findEnvVarData(char *name, af_Environment *env);
 
 /* 运行环境 属性访问 */
 AFUN_CORE_EXPORT char getPrefix(size_t name, af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getBaseObject(char *name, af_Environment *env);
 AFUN_CORE_EXPORT af_VarSpace *getProtectVarSpace(af_Environment *env);
-AFUN_CORE_EXPORT size_t getGcCount(af_Environment *env);
-AFUN_CORE_EXPORT size_t getGcMax(af_Environment *env);
+AFUN_CORE_EXPORT int32_t getGcCount(af_Environment *env);
+AFUN_CORE_EXPORT int32_t getGcMax(af_Environment *env);
 AFUN_CORE_EXPORT enum GcRunTime getGcRun(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getCoreGlobal(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getGlobal(af_Environment *env);

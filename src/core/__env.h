@@ -39,9 +39,6 @@ struct af_Core {  // 解释器核心
     struct af_Object *gc_Object;
     struct af_Var *gc_Var;
     struct af_VarSpace *gc_VarSpace;
-    size_t gc_count;  // gc量计数
-    size_t gc_count_max;  // gc计数最大值
-    enum GcRunTime gc_run;
 
     /* 基本对象信息 */
     struct af_Object *global;  // 顶级属对象
@@ -52,8 +49,12 @@ struct af_Core {  // 解释器核心
     /* 字面量基本信息 */
     af_LiteralRegex *lr;
 
-    /* exit */
-    int exit_code;  // 退出代码
+    /* 数据 */
+    af_EnvVar *gc_count;
+    af_EnvVar *gc_max;
+    af_EnvVar *gc_runtime;
+    af_EnvVar *prefix;
+    af_EnvVar *exit_code_;  // 退出代码
 };
 
 struct af_Message {
@@ -188,6 +189,7 @@ struct af_TopMsgProcess {  // 顶层msg处理器
 struct af_EnvVar {  // 环境变量
     char *name;
     char *data;
+    int32_t num;  // 可以同时记录字符串和数字
     struct af_EnvVar *next;
 };
 
@@ -270,4 +272,8 @@ AFUN_CORE_NO_EXPORT void freeAllMessage(af_Message *msg);
 
 /* 消息管理函数 */
 AFUN_CORE_NO_EXPORT void connectMessage(af_Message **base, af_Message *msg);
+
+/* 环境变量管理函数 */
+AFUN_CORE_NO_EXPORT af_EnvVar *setEnvVarNumber_(char *name, int32_t data, af_Environment *env);
+AFUN_CORE_NO_EXPORT af_EnvVar *setEnvVarData_(char *name, char *data, af_Environment *env);
 #endif //AFUN_ENV_H_
