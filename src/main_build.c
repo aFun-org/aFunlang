@@ -1,4 +1,5 @@
 ﻿#include "aFun.h"
+#include "main_build.h"
 
 int buildFileOutput(FilePath out, FilePath in, bool force) {
     if (!force) {
@@ -6,17 +7,17 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
         time_t time_2 = getFileMTime(out);
 
         if (time_1 == 0 && time_2 == 0) {
-            fprintf(stderr, "File not exists [%s].", in);
+            writeErrorLog(aFunlangLogger, "File not exists [%s].", in);
             return -1;
         }
 
         if (time_2 >= time_1) {
-            fprintf(stdout, "[aFunlang] Source already build (%s), use --force to build again.\n", in);
+            writeErrorLog(aFunlangLogger, "Source already build (%s), use --force to build again.", in);
             return 0;
         }
     }
 
-    fprintf(stdout, "[aFunlang] File (%s) will be build. (%s)\n", in, out);
+    writeErrorLog(aFunlangLogger, "File (%s) will be build. (%s)", in, out);
     return buildFile(out, in, stderr);
 }
 

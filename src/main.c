@@ -118,7 +118,7 @@ static void printHelp(void) {
  * 目标: 打印参数错误信息
  */
 static void printError(ff_FFlags *ff) {
-    fprintf(stderr, "[aFunlang] Command line argument error (%s)\n", ff_getChild(ff));
+    writeErrorLog(aFunlangLogger, "Command line argument error (%s).", ff_getChild(ff));
     printHelp();
 }
 
@@ -160,7 +160,7 @@ static int mainRun(ff_FFlags *ff) {
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
     if (argv == 0) {
-        fprintf(stderr, "There are not file to run.\n");
+        writeErrorLog(aFunlangLogger, "There are not file to run.");
         return 1;
     }
 
@@ -230,7 +230,7 @@ static int mainCL(ff_FFlags *ff) {
     RunList *rl = getRunList(ff, &command_line, &save_aub);
 
     if (rl == NULL && !command_line) {
-        fprintf(stderr, "[aFunlang] There are not code to run.\n");
+        writeErrorLog(aFunlangLogger, "There are not code to run.");
         printError(ff);
         return EXIT_FAILURE;
     }
@@ -273,14 +273,14 @@ static int mainBuild(ff_FFlags *ff) {
         switch (mark) {
             case 'o':
                 if (path != NULL) {
-                    fprintf(stderr, "[aFunlang] Argument conflict (out, path).\n");
+                    writeErrorLog(aFunlangLogger, "Argument conflict (out, path).");
                     goto error;
                 }
                 out_put = text;
                 break;
             case 'p':
                 if (out_put != NULL) {
-                    fprintf(stderr, "[aFunlang] Argument conflict (out, path).\n");
+                    writeErrorLog(aFunlangLogger, "Argument conflict (out, path).");
                     goto error;
                 }
                 path = text;
@@ -301,14 +301,14 @@ out:
 
         /* 如果没有参数 */
         if (!ff_getopt_wild(&text, ff)) {
-            fprintf(stderr, "[aFunlang] There are not source file to build.\n");
+            writeErrorLog(aFunlangLogger, "There are not source file to build.");
             goto error;
         } else
             in = text;
 
         /* 如果还有第二个参数 */
         if (ff_getopt_wild(&text, ff)) {
-            fprintf(stderr, "[aFunlang] There are too many source file to build. (Do not use --out option)\n");
+            writeErrorLog(aFunlangLogger, "There are too many source file to build. (Do not use --out option).");
             goto error;
         }
 

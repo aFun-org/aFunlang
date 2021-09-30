@@ -62,7 +62,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     freeAllLiteralData(env->activity->ld);
     env->activity->ld = NULL;
     env->activity->is_literal = false;
-    printf("Literal %p\n", obj);
+    writeInfoLog(aFunCoreLogger, "Literal %p", obj);
     return true;
 }
 
@@ -133,7 +133,7 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
 
             char *name = getFileName(code->path);
             pushImportActivity(code, NULL, name, env);
-            printf("name = %s\n", name);
+            writeInfoLog(aFunCoreLogger, "Top-Import name = %s", name);
             free(name);
             break;
         }
@@ -212,7 +212,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
 
     pushMessageDown(makeNORMALMessage(obj), env);
     setActivityBtNext(env->activity->bt_next->next, env->activity);
-    printf("Get Variable %s : %p\n", code->element.data, obj);
+    writeInfoLog(aFunCoreLogger, "Get Variable %s : %p", code->element.data, obj);
     return false;
 }
 

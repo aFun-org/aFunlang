@@ -23,7 +23,7 @@ af_Environment *creatAFunEnviroment(int argc, char **argv){
     af_Code *code = NULL;
 
     for(int i = 0; i < argc; i++)
-        printf("[aFunlang] Env-arg %d. %s\n", i, argv[i]);
+        writeInfoLog(aFunCoreLogger, "[aFunlang] Env-arg %d. %s", i, argv[i]);
 
     env->core->argc->num = argc;
     for (int i = 0; i < argc; i++) {

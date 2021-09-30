@@ -315,7 +315,7 @@ static void freeValue(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
         if (!od->gc.info.reachable) {
-            printf("- gc free ObjectData: %p\n", od);
+            writeInfoLog(aFunCoreLogger, "- gc free ObjectData: %p", od);
             freeObjectData(od, env);
         }
     }
@@ -323,7 +323,7 @@ static void freeValue(af_Environment *env) {
     for (af_Object *obj = env->core->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
         if (!obj->gc.info.reachable) {
-            printf("- gc free Object: %p\n", obj);
+            writeInfoLog(aFunCoreLogger, "- gc free Object: %p", obj);
             freeObjectByCore(obj, env->core);
         }
     }
@@ -331,7 +331,7 @@ static void freeValue(af_Environment *env) {
     for (af_VarSpace *vs = env->core->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
         if (!vs->gc.info.reachable) {
-            printf("- gc free VarSpace: %p\n", vs);
+            writeInfoLog(aFunCoreLogger, "- gc free VarSpace: %p", vs);
             freeVarSpaceByCore(vs, env->core);
         }
     }
@@ -339,7 +339,7 @@ static void freeValue(af_Environment *env) {
     for (af_Var *var = env->core->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
         if (!var->gc.info.reachable) {
-            printf("- gc free Var: %p\n", var);
+            writeInfoLog(aFunCoreLogger, "- gc free Var: %p", var);
             freeVarByCore(var, env->core);
         }
     }
@@ -415,42 +415,38 @@ void gc_freeAllValue(af_Environment *env) {
 
 void printGCByCode(af_Core *core) {
     bool success = true;
-    printf("GC ObjectData:\n");
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od->gc.info.reference != 0) {
-            printf("########## ########## ");
+            writeWarningLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
             success = false;
-        }
-        printf("af_ObjectData(%p) Reference: %d\n", od, od->gc.info.reference);
+        } else
+            writeInfoLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
     }
 
-    printf("GC Object:\n");
     for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (obj->gc.info.reference != 0) {
-            printf("########## ########## ");
+            writeWarningLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
             success = false;
-        }
-        printf("af_Object(%p->%p) Reference: %d\n", obj, obj->data, obj->gc.info.reference);
+        } else
+            writeInfoLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
     }
 
-    printf("GC VarSpace:\n");
     for (af_VarSpace *vs = core->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
         if (vs->gc.info.reference != 0) {
-            printf("########## ########## ");
+            writeWarningLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
             success = false;
-        }
-        printf("af_VarSpace(%p) Reference: %d\n", vs, vs->gc.info.reference);
+        } else
+            writeInfoLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
     }
 
-    printf("GC Var:\n");
     for (af_Var *var = core->gc_Var; var != NULL; var = var->gc.next) {
         if (var->gc.info.reference != 0) {
-            printf("########## ########## ");
+            writeWarningLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
             success = false;
-        }
-        printf("af_Var(%p) Reference: %d\n", var, var->gc.info.reference);
+        } else
+            writeInfoLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
     }
 
     if (!success)
-        printf("gc warning.\n");
+        writeWarningLog(aFunCoreLogger, "gc warning.");
 }

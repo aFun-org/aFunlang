@@ -683,17 +683,17 @@ int32_t *findEnvVarNumber(char *name, af_Environment *env) {
 
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        fprintf(stderr, "NORMAL msg: %p error\n", msg->msg);
+        writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
     if (!is_gc)
-        printf("NORMAL Point: %p\n", *(af_Object **)msg->msg);
+        writeInfoLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
-        printf("ERROR msg: %p error\n", msg->msg);
+        writeErrorLog(aFunCoreLogger, "ERROR msg: %p error", msg->msg);
         return;
     }
     if (!is_gc)
@@ -703,20 +703,20 @@ static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
 
 static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ImportInfo **)msg->msg == NULL) {
-        printf("IMPORT msg: %p error\n", msg->msg);
+        writeErrorLog(aFunCoreLogger, "IMPORT msg: %p error", msg->msg);
         return;
     }
     af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
     if (ii->obj == NULL) {
-        printf("IMPORT msg: %p do not get obj\n", msg->msg);
+        writeInfoLog(aFunCoreLogger, "IMPORT msg: %p do not get obj", msg->msg);
         return;
     }
 
     if (ii->mark != NULL) {
         makeVarToProtectVarSpace(ii->mark, 3, 3, 3, ii->obj, env);
-        printf("IMPORT point: [%s] %p \n", ii->mark, ii->obj);
+        writeInfoLog(aFunCoreLogger, "IMPORT point: [%s] %p", ii->mark, ii->obj);
     } else
-        printf("IMPORT point: <no-name> %p \n", ii->obj);
+        writeInfoLog(aFunCoreLogger, "IMPORT point: <no-name> %p", ii->obj);
     freeImportInfo(ii);
 }
 
@@ -762,7 +762,7 @@ void freeEnvironment(af_Environment *env) {
     freeAllTopMsgProcess(env->process);
 
     if (!res)
-        printf("iterDestruct Error\n");
+        writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
     free(env);
 }
 
@@ -809,7 +809,7 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
-        printf("Tail call optimization\n");
+        writeInfoLog(aFunCoreLogger, "Tail call optimization");
         tailCallActivity(env->activity);
         setActivityBtTop(bt, env->activity);
         env->activity->optimization = true;
@@ -848,6 +848,8 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     next = getCodeNext(bt);
+    writeInfoLog(aFunCoreLogger, "Run execution");
+
     if (bt->type != code_block || bt->block.is_empty) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
         return false;
@@ -869,6 +871,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Object *parentheses_call = env->activity->parentheses_call;
     env->activity->parentheses_call = NULL;
 
+    writeInfoLog(aFunCoreLogger, "Run func");
     next = getCodeNext(bt);
     switch (bt->block.type) {
         case curly:
@@ -918,6 +921,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
+    writeInfoLog(aFunCoreLogger, "Run literal");
     newActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
     pushLiteralData(strCopy(data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
@@ -927,6 +931,7 @@ bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environmen
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
+    writeInfoLog(aFunCoreLogger, "Run variable");
     newActivity(bt, bt->next, false, env);
     env->activity->is_obj_func = true;
     return setFuncActivityToArg(func, env);
@@ -936,7 +941,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* Macro是隐式调用, bt不移动 */
     /* 沿用activity */
 
-    printf("Run macro\n");
+    writeInfoLog(aFunCoreLogger, "Run macro");
     if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) { // 释放外部变量空间
         env->activity->new_vs_count = 0;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
