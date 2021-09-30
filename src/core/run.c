@@ -436,9 +436,9 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 if (env->activity->return_first && env->activity->return_obj == NULL)  // 设置return_first
                     env->activity->return_obj = *(af_Object **)msg->msg;
                 break;
-            case -1:  // 非正常但可处理 [已经放回]
+            case -1:  // NORMAL模式下, 非正常但可处理 [已经放回]
             default:
-                assert(env->activity->status == act_func_normal);
+                assertErrorLog(env->activity->status == act_func_normal, aFunCoreLogger, "");
                 break;
         }
 
