@@ -38,6 +38,7 @@ foreach(tgt IN LISTS aFunList)
     target_include_directories(${tgt} PRIVATE ${PROJECT_SOURCE_DIR}/include)
     get_target_property(tmp ${tgt} COMPILE_DEFINITIONS)
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${include_h}")
+    define_FILENAME(${tgt})
 endforeach()
 
 set(AFUN_LIBRARY "aFunCore" CACHE STRING "Assign core to aFun")

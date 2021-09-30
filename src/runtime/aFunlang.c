@@ -2,14 +2,23 @@
 #include "__aFunlang.h"
 #include "__env.h"
 
-static int
-runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env);
+static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, FILE *error_file, af_Environment *env);
+static bool aFunInit_mark = false;
 
-bool aFunInit(void) {
-    return aFunCoreInit();
+bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf, LogLevel level) {
+    if (aFunInit_mark)
+        return false;
+
+    aFunInit_mark = aFunCoreInit(log_dir, print_console, true, true, buf, level);
+    if (aFunInit_mark)
+        writeInfoLog(aFunCoreLogger, "aFun-base-runtime Init success");
+    return aFunInit_mark;
 }
 
 af_Environment *creatAFunEnviroment(int argc, char **argv){
+    if (!aFunInit_mark)
+        return NULL;
+
     af_Environment *env = makeEnvironment(grt_count);
     af_Code *code = NULL;
 
@@ -71,7 +80,7 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
  * 目标: 运行字符串中的程序 (源码形式)
  */
 int runCodeFromString(char *code, char *string_name, FILE *error_file, int mode, af_Environment *env){
-    if (env == NULL || code == NULL)
+    if (env == NULL || code == NULL || !aFunInit_mark)
         return -1;
 
     if (string_name == NULL)
@@ -88,7 +97,7 @@ int runCodeFromString(char *code, char *string_name, FILE *error_file, int mode,
  * 目标: 运行文件中的程序 (源码形式)
  */
 int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePath save_path, int mode, af_Environment *env){
-    if (env == NULL || file == NULL)
+    if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
     if (error_file == NULL)
@@ -121,7 +130,7 @@ int runCodeFromFileSource(FilePath file, FILE *error_file, bool save_afb, FilePa
  * 目标: 运行stdin的程序 (源码形式)
  */
 int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
-    if (env == NULL || feof(stdin) || ferror(stdin))
+    if (env == NULL || feof(stdin) || ferror(stdin) || !aFunInit_mark)
         return -1;
 
     if (name == NULL)
@@ -138,6 +147,9 @@ int runCodeFromStdin(char *name, FILE *error_file, af_Environment *env) {
  * 目标: 运行内存中的程序 (字节码形式)
  */
 int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
+    if (!aFunInit_mark)
+        return -1;
+
     bool res = iterCode(code, mode, env);
     if (!res)
         return env->core->exit_code_->num;
@@ -149,7 +161,7 @@ int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
  * 目标: 运行文件中的程序 (字节码形式)
  */
 int runCodeFromFileByte(FilePath file, FILE *error_file, int mode, af_Environment *env){
-    if (env == NULL || file == NULL)
+    if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
     if (error_file == NULL)
@@ -178,7 +190,7 @@ int runCodeFromFileByte(FilePath file, FILE *error_file, int mode, af_Environmen
  * 目标: 运行文件中的程序 (字节码/源码形式)
  */
 int runCodeFromFile(FilePath file, FILE *error_file, bool save_afb, int mode, af_Environment *env){
-    if (env == NULL || file == NULL)
+    if (env == NULL || file == NULL || !aFunInit_mark)
         return -1;
 
     if (error_file == NULL)
@@ -224,7 +236,7 @@ RUN_SOURCE_CODE:
  * 目标: 生成字节码文件
  */
 int buildFile(FilePath out, FilePath in, FILE *error_file) {
-    if (out == NULL || in == NULL)
+    if (out == NULL || in == NULL || !aFunInit_mark)
         return -1;
 
     if (error_file == NULL)

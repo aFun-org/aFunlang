@@ -2,18 +2,22 @@
 #define AFUN_PATH_H
 
 /* 路径工具 */
-#ifdef __linux__
-
-#define SEP "/"
-#define SEP_CH '/'
-#define SHARED_MARK ".so"
-
-#else
+#ifdef WIN32
 
 #define SEP "\\"
 #define SEP_CH '\\'
-#define SHARED_MARK ".dll"
 
+#else
+
+#define SEP "/"
+#define SEP_CH '/'
+
+#endif
+
+#ifdef aFunWIN32
+#define SHARED_MARK ".dll"
+#else
+#define SHARED_MARK ".so"
 #endif
 
 #endif //AFUN_PATH_H

@@ -20,3 +20,22 @@ void safeSleep(double ms) {
         d_time = now - start;
     } while (d_time < ms_t);
 }
+
+/*
+ * 函数名: getTime
+ * 目标: 格式化输出时间
+ * 注意: 该函数不可以使用log模块
+ */
+char *getTime(time_t *t) {
+    time_t tmp;
+    if (t == NULL)
+        t = &tmp;
+
+    struct tm *lt;
+    time (t);  // 获取时间戳
+    lt = localtime (t);  // 转为时间结构
+    char time_str[100];
+    snprintf(time_str, 100, "%d/%d/%d %d:%d:%d",
+             lt->tm_year+1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    return strCopy(time_str);
+}

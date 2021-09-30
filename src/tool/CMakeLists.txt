@@ -40,6 +40,7 @@ foreach(tgt tool-shared tool-static)
     if(_build_mem)
         target_compile_definitions(${tgt} PUBLIC BUILD_MEM=1)
     endif()
+    define_FILENAME(${tgt})
 endforeach()
 
 set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFunTool")

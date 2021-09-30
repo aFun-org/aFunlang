@@ -1,5 +1,7 @@
 ﻿#include <stdio.h>
+#include <stdlib.h>
 #include "aFun.h"
+#include "main.h"
 #include "main_run.h"
 #include "main_build.h"
 
@@ -40,11 +42,39 @@ static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
 extern const char *help_info;
 
+char *base_name = NULL;
+static Logger aFunlangLogger_;
+Logger *aFunlangLogger = &aFunlangLogger_;
+
+void freeBaseName(void) {
+    free(base_name);
+}
+
 int main(int argc, char **argv) {
-    if (!aFunInit()) {
+    jmp_buf main_buf;
+    base_name = getExedir(*argv, 1);
+    if (base_name == NULL)
+        goto INIT_ERROR;
+    atexit(freeBaseName);
+
+    if (setjmp(main_buf) == 1)
+        return EXIT_FAILURE;
+
+    char *log = strJoin(base_name, SEP aFunLogDir SEP, false, false);
+    bool re = aFunInit(log, log_pc_w, &main_buf, log_debug);
+    free(log);
+
+    if (!re) {
+INIT_ERROR:
         fprintf(stderr, "aFunlang init error.");
         return EXIT_FAILURE;
     }
+
+    initLogger(aFunlangLogger, "aFunlang-exe", log_debug);
+    aFunlangLogger->process_send_error = true;
+    aFunlangLogger->process_fatal_error = true;
+    aFunlangLogger->buf = &main_buf;
+    writeInfoLog(aFunlangLogger, "aFunlang-exe init success.");
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);

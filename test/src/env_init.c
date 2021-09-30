@@ -2,7 +2,7 @@
 #include "aFun.h"
 
 int main() {
-    aFunCoreInit();
+    aFunCoreInit("env_init-", log_pc_all, false, false, NULL, log_debug);
 
     af_Environment *env = makeEnvironment(grt_always);
     enableEnvironment(env);

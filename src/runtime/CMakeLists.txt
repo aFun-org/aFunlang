@@ -52,6 +52,7 @@ foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
                                    $<BUILD_INTERFACE:${build_include_runtime}>
                                    $<INSTALL_INTERFACE:${install_include_runtime}>)
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
+    define_FILENAME(${tgt})
 endforeach()
 
 set_target_properties(aFun-xx-libs PROPERTIES OUTPUT_NAME "aFun-xx")

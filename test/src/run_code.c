@@ -369,9 +369,16 @@ bool infixFunc(char *id, af_Object *obj) {
     return true;
 }
 
-int main() {
-    aFunInit();
-    printf("Hello World\n");
+int main(int argc, char **argv) {
+    char *base_name_ = getExedir(*argv, 1);
+
+    char *log = strJoin(base_name_, SEP aFunLogDir SEP, false, false);
+    bool re = aFunInit(log, log_pc_all, NULL, log_debug);
+    free(log);
+    free(base_name_);
+
+    if (!re)
+        exit(EXIT_FAILURE);
 
     af_Environment *env = creatAFunEnviroment(0, NULL);
     if(!pushLiteralRegex("data.*", "func", true, env)) {

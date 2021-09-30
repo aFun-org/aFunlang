@@ -7,7 +7,10 @@
 #include "tool.h"
 #include <locale.h>
 
-bool aFunCoreInit(void) {
+static Logger aFunCoreLogger_;
+Logger *aFunCoreLogger = &aFunCoreLogger_;
+
+bool aFunCoreInit(char *log_dir, LogFactoryPrintConsole print_console, bool fe, bool se, jmp_buf *buf, LogLevel level) {
     getEndian();
     if (setlocale(LC_ALL, "") == NULL)
         return false;
@@ -15,6 +18,19 @@ bool aFunCoreInit(void) {
     if(!SetConsoleOutputCP(65001))  // 设置windows代码页为utf-8编码
         return false;
 #endif
-    printf("try 中文\n");
+    if (log_dir == NULL)
+        return false;
+    char *log = strJoin(log_dir, "aFunlang-", false, false);
+    bool re = initLogSystem(log, print_console);
+    free(log);
+    if (re != 1)
+        return false;
+
+    initLogger(aFunCoreLogger, "aFunlang-core", level);
+    aFunCoreLogger->process_send_error = fe;
+    aFunCoreLogger->process_fatal_error = se;
+    aFunCoreLogger->buf = buf;
+
+    writeInfoLog(aFunCoreLogger, "aFunCore init success");
     return true;
 }

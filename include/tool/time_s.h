@@ -4,5 +4,5 @@
 
 /* 时间工具 */
 AFUN_TOOL_EXPORT void safeSleep(double ms);
-
+AFUN_TOOL_EXPORT char *getTime(time_t *t);
 #endif //AFUN_TIME_H

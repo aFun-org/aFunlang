@@ -8,6 +8,7 @@ foreach(src IN LISTS src_list)
     set_target_properties(${file_name}
                           PROPERTIES OUTPUT_NAME "test_${file_name}")
     target_compile_definitions(${file_name} PRIVATE IN_CTEST)
+    define_FILENAME(${file_name})
     unset(file_name)
 endforeach()
 

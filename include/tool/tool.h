@@ -21,6 +21,7 @@
 #include "sig.h"
 #include "str.h"
 #include "time_s.h"
+#include "log.h"
 
 #include "fflags.h"
 

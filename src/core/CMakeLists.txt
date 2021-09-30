@@ -47,6 +47,7 @@ foreach(tgt core-shared-t core-shared-s core-static-s)
     set_target_properties(${tgt} PROPERTIES
                           PUBLIC_HEADER "${public_h_build}"
                           PRIVATE_HEADER "${private_h}")  # PRIVATE_HEADER私有头文件, 可以用于高级开发
+    define_FILENAME(${tgt})
 endforeach()
 
 set_target_properties(core-shared-t PROPERTIES OUTPUT_NAME "aFunCore-t")

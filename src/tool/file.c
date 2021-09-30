@@ -7,6 +7,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "tool.h"
 
 #ifndef S_ISREG
@@ -98,6 +101,24 @@ char *getFileNameWithPath(char *path_1){
     return res;
 }
 
+char *getFilePath(char *path_1, int dep){
+    char *slash = NULL;  // 后缀名.所在的字符的指针
+    char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
+    char *res;
+
+    if (path[STR_LEN(path) - 1] == SEP_CH)  // 若路径的最后一个字符为SEP, 则忽略此SEP
+        path[STR_LEN(path) - 1] = NUL;
+
+    for (NULL; dep > 0; dep--) {
+        if ((slash = strrchr(path, SEP_CH)) != NULL)
+            *slash = NUL;
+    }
+
+    res = strCopy(path);
+    free(path);
+    return res;
+}
+
 /*
  * 函数名: getFileSurfix
  * 目标: 获取文件后缀 (不会生成新字符串)
@@ -134,7 +155,6 @@ char *fileNameToVar(char *name, bool need_free){
  * 函数名: findPath
  * 目标: 转换路径为合法路径（相对路径->绝对路径, 绝对路径保持不变）
  */
-#include "stdio.h"
 char *findPath(char *path, char *env, bool need_free){
     assert(env[STR_LEN(env) - 1] == SEP_CH);  // env 必须以 SEP 结尾
 #ifdef __linux
@@ -148,4 +168,14 @@ char *findPath(char *path, char *env, bool need_free){
     } else {
         return path;
     }
+}
+
+/*
+ * 函数名: 获取可执行程序目录
+ * dep表示从可执行程序往回跳出的层数
+ */
+char *getExedir(char *pgm, int dep) {
+    if (pgm == NULL)
+        return NULL;
+    return getFilePath(pgm, dep + 1);
 }

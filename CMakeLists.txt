@@ -53,8 +53,10 @@ if (_print_dir)
 else()
     wi_set_install_dir_quiet(NAMES aFunlang)  # 设置安装路径
 endif()
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_LOG})  # 安装log输出的目录
 
 include(info)
+include(filename)
 
 # CMake对象属性的初始化值的相关设定
 set(CMAKE_INSTALL_RPATH
@@ -70,7 +72,8 @@ set(base_compile_definitions
     compilerID="${CMAKE_C_COMPILER_ID}"
     aFunMajorVersion=${PROJECT_VERSION_MAJOR}
     aFunMinorVersion=${PROJECT_VERSION_MINOR}
-    aFunPatchVersion=${PROJECT_VERSION_PATCH})  # 默认的预定义宏
+    aFunPatchVersion=${PROJECT_VERSION_PATCH}
+    aFunLogDir="${INSTALL_LOG}")  # 默认的预定义宏
 
 if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)
@@ -137,6 +140,8 @@ install(FILES
         ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfig.cmake
         ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
         DESTINATION ${INSTALL_CMAKEDIR})
+
+install(CODE "file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_LOG})")  # 创建log目录
 
 set(BUILD_TEST FALSE CACHE BOOL "Enable run test program")
 set(_build_test ${BUILD_TEST})

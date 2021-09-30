@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_MAIN_RUN_H_
 #define AFUN_MAIN_RUN_H_
+#include "main.h"
 
 typedef struct RunList RunList;
 struct RunList {
