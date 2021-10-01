@@ -15,7 +15,7 @@ bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf,
     return aFunInit_mark;
 }
 
-af_Environment *creatAFunEnviroment(int argc, char **argv){
+af_Environment *creatAFunEnvironment(int argc, char **argv){
     if (!aFunInit_mark)
         return NULL;
 

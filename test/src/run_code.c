@@ -380,7 +380,7 @@ int main(int argc, char **argv) {
     if (!re)
         exit(EXIT_FAILURE);
 
-    af_Environment *env = creatAFunEnviroment(0, NULL);
+    af_Environment *env = creatAFunEnvironment(0, NULL);
     if(!pushLiteralRegex("data.*", "func", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
         goto RETURN_1;

@@ -164,7 +164,7 @@ static int mainRun(ff_FFlags *ff) {
         return 1;
     }
 
-    af_Environment *env = creatAFunEnviroment(argc - 1, argv + 1);
+    af_Environment *env = creatAFunEnvironment(argc - 1, argv + 1);
     exit_code = runCodeFromFile(argv[0], true, 0, env);
     destructAFunEnvironment(env);
     return exit_code;
@@ -244,7 +244,7 @@ static int mainCL(ff_FFlags *ff) {
     for (int i = 0; ff_getopt_wild_after(&text, ff); i++)
         argv[i] = text;
 
-    af_Environment *env = creatAFunEnviroment(argc, argv);
+    af_Environment *env = creatAFunEnvironment(argc, argv);
     if (rl != NULL)
         exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
 
