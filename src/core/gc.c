@@ -413,7 +413,7 @@ void gc_freeAllValue(af_Environment *env) {
     }
 }
 
-void printGCByCode(af_Core *core) {
+void printGCByCore(af_Core *core) {
     bool success = true;
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od->gc.info.reference != 0) {

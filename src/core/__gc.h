@@ -120,7 +120,7 @@ AFUN_CORE_NO_EXPORT pgc_DestructList checkAllDestruct(af_Environment *env, pgc_D
 AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */
-AFUN_CORE_NO_EXPORT void printGCByCode(af_Core *core);
+AFUN_CORE_NO_EXPORT void printGCByCore(af_Core *core);
 
 /* gc_DestructList 释放函数*/
 AFUN_CORE_NO_EXPORT void freeAllDestructList(gc_DestructList *dl);

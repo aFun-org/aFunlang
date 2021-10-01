@@ -95,7 +95,7 @@ static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
  * 因为gc_freeAllValue需要env作为参数, 故使用env作为freeCore的参数
  */
 static void freeCore(af_Environment *env) {
-    printGCByCode(env->core);
+    printGCByCore(env->core);
     gc_freeAllValue(env);
     freeAllLiteralRegex(env->core->lr);
     free(env->core);
