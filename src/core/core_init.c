@@ -20,7 +20,7 @@ bool aFunCoreInit(char *log_dir, LogFactoryPrintConsole print_console, bool fe, 
 #endif
     if (log_dir == NULL)
         return false;
-    char *log = strJoin(log_dir, "aFunlang-", false, false);
+    char *log = strJoin(log_dir, "aFunlang", false, false);
     bool re = initLogSystem(log, print_console);
     free(log);
     if (re == 0)

@@ -179,3 +179,13 @@ char *getExedir(char *pgm, int dep) {
         return NULL;
     return getFilePath(pgm, dep + 1);
 }
+
+uintmax_t getFileSize(char *path) {
+    struct stat statbuf;
+    int ret;
+    ret = stat(path, &statbuf);
+    if(ret != 0)
+        return 0;  // 获取失败。
+    return (uintmax_t)statbuf.st_size;  // 返回文件大小
+
+}

@@ -3,8 +3,9 @@
  * 目标: 日志系统对aFun的API
  * 注意: 因为tool模块需要使用log系统, 因此log系统尽量少点依赖tool模块, 避免造成死循环
  * 仅依赖:
- * time_s.h 中 getTime
+ * time_s.h 中 getTime -> strCopy
  * mem.h 中 free
+ * file.h 中 getFileSize
  */
 
 #include <stdio.h>
@@ -15,6 +16,7 @@
 #include "mem.h"
 #include "log.h"
 #include "time_s.h"
+#include "file.h"
 
 #if aFunWIN32
 #include <windows.h>
@@ -31,6 +33,7 @@
 
 static struct LogFactory {
     bool init;  // 是否已经初始化
+    long pid;
 
     FILE *log;  // 记录文件输出的位置
     FILE *csv;
@@ -57,41 +60,30 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
 
     char log_path[218] = {0};
     char csv_path[218] = {0};
-    char log_base[218] = {0};
-    long pid = getpid();  // 获取进程ID
+    log_factory.pid = getpid();  // 获取进程ID
+    char *ti = getTime(NULL, "%Y-%m-%d%z");
 
-    time_t t;
-    char *ti = getTime(&t);
+    snprintf(log_path, 218, "%s-%s.log", path, ti);
+    snprintf(csv_path, 218, "%s-%s.csv", path, ti);
 
-    snprintf(log_path, 218, "%s%ld-%ld.log", path, pid, t);
-    snprintf(csv_path, 218, "%s%ld-%ld.csv", path, pid, t);
-    snprintf(log_base, 218, "%s-base.log", path);
+    uintmax_t log_size = getFileSize(log_path);
+    uintmax_t csv_size = getFileSize(csv_path);
+    bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
-    FILE *base = fopen(log_base, "a");
-    if (base == NULL)
-        base = fopen(log_path, "w");
-    if (base == NULL) {
-        free(ti);
-        return 0;
-    }
-
-    fprintf(base, "%s  %s\n", ti, log_path);
-    fclose(base);
-    free(ti);
-
-    log_factory.log = fopen(log_path, "w");
+    log_factory.log = fopen(log_path, "a");
     if (log_factory.log == NULL)
         return 0;
 
-    log_factory.csv = fopen(csv_path, "w");
+    log_factory.csv = fopen(csv_path, "a");
     if (log_factory.csv == NULL)
         return 0;
 
-#define CSV_FORMAT "%s,%s,%ld,%s,%ld,%s,%d,%s,'%s'\n"
-#define CSV_TITLE  "Level,Logger,TID,Data,Timestamp,File,Line,Function,Log\n"
-    fprintf(log_factory.csv, CSV_TITLE);  // 设置 cvs 标题
-    fflush(log_factory.csv);
-    printf("FFFF\n");
+#define CSV_FORMAT "%s,%s,%ld,%ld,%s,%ld,%s,%d,%s,%s\n"
+#define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
+    if (csv_head_write) {
+        fprintf(log_factory.csv, CSV_TITLE);  // 设置 cvs 标题
+        fflush(log_factory.csv);
+    }
 #undef CSV_TITLE
 
     log_factory.print_console = print_console;
@@ -101,7 +93,9 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
     log_factory.sys_log.process_fatal_error = true;
     log_factory.sys_log.process_send_error = false;
-    writeInfoLog(NULL, "Log system init success.");
+    writeInfoLog(NULL, "Log system init success");
+    writeInfoLog(NULL, "Log .log size %lld", log_size);
+    writeInfoLog(NULL, "Log .csv size %lld", csv_size);
     log_factory.sys_log.level = log_error;
     return 1;
 }
@@ -109,16 +103,24 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
 static void destructLogSystem_at_exit(void) {
     if (!log_factory.init)
         return;
+    log_factory.sys_log.level = log_debug;
+    writeInfoLog(NULL, "Log system init destruct by atexit.");
     fclose(log_factory.log);
+    fclose(log_factory.csv);
     log_factory.log = NULL;
+    log_factory.csv = NULL;
     log_factory.init = false;
 }
 
 int destructLogSystem(void) {
     if (!log_factory.init)
         return 2;
+    log_factory.sys_log.level = log_debug;
+    writeInfoLog(NULL, "Log system init destruct by user.");
     fclose(log_factory.log);
+    fclose(log_factory.csv);
     log_factory.log = NULL;
+    log_factory.csv = NULL;
     log_factory.init = false;
     return 1;
 }
@@ -159,9 +161,9 @@ static int writeLog_(Logger *logger, LogLevel level, char *file, int line, char 
 
     // 输出 head 信息
     time_t t = 0;
-    char *ti = getTime(&t);
+    char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
 
-#define FORMAT "%s/[%s] %ld {%s %ld} (%s:%d at %s) : '%s'\n"
+#define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s'\n"
 #define FORMAT_SHORT "%s[%s] : %s\n"
     long tid = gettid();
 
@@ -171,12 +173,11 @@ static int writeLog_(Logger *logger, LogLevel level, char *file, int line, char 
 
     /* 写入文件日志 */
     if (log_factory.log != NULL) {
-        fprintf(log_factory.log, FORMAT, LogLevelName[level], logger->id, tid, ti, t, file, line, func, tmp);
+        fprintf(log_factory.log, FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
         fflush(log_factory.log);
     }
-
     if (log_factory.csv != NULL) {
-        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], logger->id, tid, ti, t, file, line, func, tmp);
+        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
         fflush(log_factory.csv);
     }
 

@@ -11,7 +11,7 @@ bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf,
 
     aFunInit_mark = aFunCoreInit(log_dir, print_console, true, true, buf, level);
     if (aFunInit_mark)
-        writeInfoLog(aFunCoreLogger, "aFun-base-runtime Init success");
+        writeInfoLog(aFunCoreLogger, "aFun-runtime Init success");
     return aFunInit_mark;
 }
 

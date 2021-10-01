@@ -26,7 +26,7 @@ void safeSleep(double ms) {
  * 目标: 格式化输出时间
  * 注意: 该函数不可以使用log模块
  */
-char *getTime(time_t *t) {
+char *getTime(time_t *t, char *format) {
     time_t tmp;
     if (t == NULL)
         t = &tmp;
@@ -35,7 +35,6 @@ char *getTime(time_t *t) {
     time (t);  // 获取时间戳
     lt = localtime (t);  // 转为时间结构
     char time_str[100];
-    snprintf(time_str, 100, "%d/%d/%d %d:%d:%d",
-             lt->tm_year+1900, lt->tm_mon, lt->tm_mday, lt->tm_hour, lt->tm_min, lt->tm_sec);
+    strftime(time_str, 100, format, lt);
     return strCopy(time_str);
 }

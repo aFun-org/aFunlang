@@ -7,6 +7,7 @@
 #define AFUN_MEM_H
 
 #include <stdlib.h>
+#include "log.h"
 #define free(p) ((((p)!=NULL) ? (free(p), NULL) : NULL), (p)=NULL)  // free不是可选的宏
 
 #if BUILD_MEM
@@ -15,8 +16,9 @@
 static void *safeCalloc(size_t n, size_t size);
 static void *safeCalloc(size_t n, size_t size) {
     void *re = calloc(n, size);
-    if (re == NULL)
-        exit(1);
+    if (re == NULL) {
+        writeFatalErrorLog(NULL, EXIT_FAILURE, "The calloc error.");
+    }
     return re;
 }
 
