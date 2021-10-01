@@ -683,17 +683,17 @@ int32_t *findEnvVarNumber(char *name, af_Environment *env) {
 
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, log_default, "NORMAL msg: %p error", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
     if (!is_gc)
-        writeInfoLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
+        writeInfoLog(aFunCoreLogger, log_default, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, "ERROR msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, log_default, "ERROR msg: %p error", msg->msg);
         return;
     }
     if (!is_gc)
@@ -703,20 +703,20 @@ static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
 
 static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ImportInfo **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, "IMPORT msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, log_default, "IMPORT msg: %p error", msg->msg);
         return;
     }
     af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
     if (ii->obj == NULL) {
-        writeInfoLog(aFunCoreLogger, "IMPORT msg: %p do not get obj", msg->msg);
+        writeInfoLog(aFunCoreLogger, log_default, "IMPORT msg: %p do not get obj", msg->msg);
         return;
     }
 
     if (ii->mark != NULL) {
         makeVarToProtectVarSpace(ii->mark, 3, 3, 3, ii->obj, env);
-        writeInfoLog(aFunCoreLogger, "IMPORT point: [%s] %p", ii->mark, ii->obj);
+        writeInfoLog(aFunCoreLogger, log_default, "IMPORT point: [%s] %p", ii->mark, ii->obj);
     } else
-        writeInfoLog(aFunCoreLogger, "IMPORT point: <no-name> %p", ii->obj);
+        writeInfoLog(aFunCoreLogger, log_default, "IMPORT point: <no-name> %p", ii->obj);
     freeImportInfo(ii);
 }
 
@@ -762,7 +762,7 @@ void freeEnvironment(af_Environment *env) {
     freeAllTopMsgProcess(env->process);
 
     if (!res)
-        writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
+        writeErrorLog(aFunCoreLogger, log_default, "Run iterDestruct error.");
     free(env);
 }
 
@@ -809,7 +809,7 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
     if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
-        writeInfoLog(aFunCoreLogger, "Tail call optimization");
+        writeInfoLog(aFunCoreLogger, log_default, "Tail call optimization");
         tailCallActivity(env->activity);
         setActivityBtTop(bt, env->activity);
         env->activity->optimization = true;
@@ -848,7 +848,7 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     next = getCodeNext(bt);
-    writeInfoLog(aFunCoreLogger, "Run execution");
+    writeInfoLog(aFunCoreLogger, log_default, "Run execution");
 
     if (bt->type != code_block || bt->block.is_empty) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
@@ -871,7 +871,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Object *parentheses_call = env->activity->parentheses_call;
     env->activity->parentheses_call = NULL;
 
-    writeInfoLog(aFunCoreLogger, "Run func");
+    writeInfoLog(aFunCoreLogger, log_default, "Run func");
     next = getCodeNext(bt);
     switch (bt->block.type) {
         case curly:
@@ -921,7 +921,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
-    writeInfoLog(aFunCoreLogger, "Run literal");
+    writeInfoLog(aFunCoreLogger, log_default, "Run literal");
     newActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
     pushLiteralData(strCopy(data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
@@ -931,7 +931,7 @@ bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environmen
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
-    writeInfoLog(aFunCoreLogger, "Run variable");
+    writeInfoLog(aFunCoreLogger, log_default, "Run variable");
     newActivity(bt, bt->next, false, env);
     env->activity->is_obj_func = true;
     return setFuncActivityToArg(func, env);
@@ -941,7 +941,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* Macro是隐式调用, bt不移动 */
     /* 沿用activity */
 
-    writeInfoLog(aFunCoreLogger, "Run macro");
+    writeInfoLog(aFunCoreLogger, log_default, "Run macro");
     if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) { // 释放外部变量空间
         env->activity->new_vs_count = 0;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);

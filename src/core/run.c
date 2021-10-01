@@ -1,5 +1,4 @@
-﻿#include <assert.h>
-#include "aFunCore.h"
+﻿#include "aFunCore.h"
 
 #include "__run.h"
 #include "__env.h"
@@ -62,7 +61,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     freeAllLiteralData(env->activity->ld);
     env->activity->ld = NULL;
     env->activity->is_literal = false;
-    writeInfoLog(aFunCoreLogger, "Literal %p", obj);
+    writeInfoLog(aFunCoreLogger, log_default, "Literal %p", obj);
     return true;
 }
 
@@ -133,7 +132,7 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
 
             char *name = getFileName(code->path);
             pushImportActivity(code, NULL, name, env);
-            writeInfoLog(aFunCoreLogger, "Top-Import name = %s", name);
+            writeInfoLog(aFunCoreLogger, log_default, "Top-Import name = %s", name);
             free(name);
             break;
         }
@@ -212,7 +211,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
 
     pushMessageDown(makeNORMALMessage(obj), env);
     setActivityBtNext(env->activity->bt_next->next, env->activity);
-    writeInfoLog(aFunCoreLogger, "Get Variable %s : %p", code->element.data, obj);
+    writeInfoLog(aFunCoreLogger, log_default, "Get Variable %s : %p", code->element.data, obj);
     return false;
 }
 
@@ -438,7 +437,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 break;
             case -1:  // NORMAL模式下, 非正常但可处理 [已经放回]
             default:
-                assertErrorLog(env->activity->status == act_func_normal, aFunCoreLogger, "");
+                assertErrorLog(env->activity->status == act_func_normal, aFunCoreLogger, log_default, "");
                 break;
         }
 

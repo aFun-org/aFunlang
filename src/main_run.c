@@ -81,7 +81,7 @@ int runCodeFromRunList(RunList *run_list, RunList **bak, bool save_afb, af_Envir
         }
 
         if (isCoreExit(env) == 1) {
-            writeErrorLog(aFunlangLogger, "aFun core exit, exit_code = %d", exit_code);
+            writeErrorLog(aFunlangLogger, log_default, "aFun core exit, exit_code = %d", exit_code);
             break;
         }
     }

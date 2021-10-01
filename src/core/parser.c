@@ -104,7 +104,7 @@ static void destructFile(struct readerDataFile *data) {
 af_Parser *makeParserByFile(FilePath path){
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        writeErrorLog(aFunCoreLogger, "File open error: %s", strerror(errno));
+        writeErrorLog(aFunCoreLogger, log_default, "File open error: %s", strerror(errno));
         return NULL;
     }
 

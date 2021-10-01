@@ -7,17 +7,17 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
         time_t time_2 = getFileMTime(out);
 
         if (time_1 == 0 && time_2 == 0) {
-            writeErrorLog(aFunlangLogger, "File not exists [%s].", in);
+            writeErrorLog(aFunlangLogger, log_default, "File not exists [%s].", in);
             return -1;
         }
 
         if (time_2 >= time_1) {
-            writeErrorLog(aFunlangLogger, "Source already build (%s), use --force to build again.", in);
+            writeErrorLog(aFunlangLogger, log_default, "Source already build (%s), use --force to build again.", in);
             return 0;
         }
     }
 
-    writeErrorLog(aFunlangLogger, "File (%s) will be build. (%s)", in, out);
+    writeErrorLog(aFunlangLogger, log_default, "File (%s) will be build. (%s)", in, out);
     return buildFile(out, in);
 }
 

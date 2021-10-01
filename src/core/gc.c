@@ -315,7 +315,7 @@ static void freeValue(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
         if (!od->gc.info.reachable) {
-            writeInfoLog(aFunCoreLogger, "- gc free ObjectData: %p", od);
+            writeInfoLog(aFunCoreLogger, log_default, "- gc free ObjectData: %p", od);
             freeObjectData(od, env);
         }
     }
@@ -323,7 +323,7 @@ static void freeValue(af_Environment *env) {
     for (af_Object *obj = env->core->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
         if (!obj->gc.info.reachable) {
-            writeInfoLog(aFunCoreLogger, "- gc free Object: %p", obj);
+            writeInfoLog(aFunCoreLogger, log_default, "- gc free Object: %p", obj);
             freeObjectByCore(obj, env->core);
         }
     }
@@ -331,7 +331,7 @@ static void freeValue(af_Environment *env) {
     for (af_VarSpace *vs = env->core->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
         if (!vs->gc.info.reachable) {
-            writeInfoLog(aFunCoreLogger, "- gc free VarSpace: %p", vs);
+            writeInfoLog(aFunCoreLogger, log_default, "- gc free VarSpace: %p", vs);
             freeVarSpaceByCore(vs, env->core);
         }
     }
@@ -339,7 +339,7 @@ static void freeValue(af_Environment *env) {
     for (af_Var *var = env->core->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
         if (!var->gc.info.reachable) {
-            writeInfoLog(aFunCoreLogger, "- gc free Var: %p", var);
+            writeInfoLog(aFunCoreLogger, log_default, "- gc free Var: %p", var);
             freeVarByCore(var, env->core);
         }
     }
@@ -417,36 +417,36 @@ void printGCByCore(af_Core *core) {
     bool success = true;
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, log_default, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
             success = false;
         } else
-            writeInfoLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
+            writeInfoLog(aFunCoreLogger, log_default, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
     }
 
     for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (obj->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, log_default, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
             success = false;
         } else
-            writeInfoLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
+            writeInfoLog(aFunCoreLogger, log_default, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
     }
 
     for (af_VarSpace *vs = core->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
         if (vs->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, log_default, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
             success = false;
         } else
-            writeInfoLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
+            writeInfoLog(aFunCoreLogger, log_default, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
     }
 
     for (af_Var *var = core->gc_Var; var != NULL; var = var->gc.next) {
         if (var->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, log_default, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
             success = false;
         } else
-            writeInfoLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
+            writeInfoLog(aFunCoreLogger, log_default, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
     }
 
     if (!success)
-        writeWarningLog(aFunCoreLogger, "gc warning.");
+        writeWarningLog(aFunCoreLogger, log_default, "gc warning.");
 }

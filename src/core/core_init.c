@@ -31,6 +31,6 @@ bool aFunCoreInit(char *log_dir, LogFactoryPrintConsole print_console, bool fe, 
     aFunCoreLogger->process_fatal_error = se;
     aFunCoreLogger->buf = buf;
 
-    writeInfoLog(aFunCoreLogger, "aFunCore init success");
+    writeInfoLog(aFunCoreLogger, log_default, "aFunCore init success");
     return true;
 }

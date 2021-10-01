@@ -8,12 +8,12 @@
 #include "parserl_warning_error.h"
 
 static void printLexicalError(char *info, af_Parser *parser) {
-    writeErrorLog(aFunCoreLogger, "[Lexical] %s", info);
+    writeErrorLog(aFunCoreLogger, log_default, "[Lexical] %s", info);
     parser->is_error = true;
 }
 
 static void printLexicalWarning(char *info, af_Parser *parser) {
-    writeWarningLog(aFunCoreLogger, "[Lexical] %s", info);
+    writeWarningLog(aFunCoreLogger, log_default, "[Lexical] %s", info);
 }
 
 static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parser *parser) {
