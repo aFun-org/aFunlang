@@ -51,11 +51,9 @@ char *readWord(size_t del_index, af_Reader *reader) {
     memcpy(re, reader->buf, del_index);  // 复制旧字符串
     memmove(reader->buf, reader->buf + del_index, reader->buf_size - del_index + 1);  // +1是为了涵盖NUL
     if (!reader->read_end) { // 没到尾部, 则写入数据
-        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, del_index);
+        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, del_index, &reader->read_end);
         if (len > del_index)
             len = del_index;
-        else if (len < del_index)
-            reader->read_end = true;
         *(write + len) = NUL;
     }
 
@@ -79,11 +77,9 @@ char getChar(af_Reader *reader) {
     char *new_buf = NEW_STR(reader->buf_size + NEW_BUF_SIZE);
     memcpy(new_buf, reader->buf, reader->buf_size);
 
-    size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE);
+    size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &reader->read_end);
     if (len > NEW_BUF_SIZE)
         len = NEW_BUF_SIZE;
-    else if (len < NEW_BUF_SIZE)
-        reader->read_end = true;
     *(new_buf + reader->buf_size + len + 1) = NUL;
 
     free(reader->buf);

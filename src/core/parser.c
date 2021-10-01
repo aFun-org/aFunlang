@@ -59,12 +59,14 @@ struct readerDataString {
     size_t len;
 };
 
-static size_t readFuncString(struct readerDataString *data, char *dest, size_t len) {
+static size_t readFuncString(struct readerDataString *data, char *dest, size_t len, bool *read_end) {
     if (data->index == data->len)  // 读取到末尾
         return 0;
 
-    if (data->index + len > data->len)  // 超出长度范围
+    if (data->index + len > data->len) {  // 超出长度范围
         len = data->len - data->index;
+        *read_end = true;
+    }
     memcpy(dest, data->str + data->index, len);
     data->index += len;
     return len;
@@ -92,8 +94,11 @@ struct readerDataFile {
     FILE *file;
 };
 
-static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len) {
-    return fread(dest, sizeof(char), len, data->file);
+static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, bool *read_end) {
+    size_t len_r =  fread(dest, sizeof(char), len, data->file);
+    if (feof(data->file))
+        *read_end = true;
+    return len_r;
 }
 
 static void destructFile(struct readerDataFile *data) {
@@ -118,29 +123,43 @@ af_Parser *makeParserByFile(FilePath path){
     return parser;
 }
 
-static size_t readFuncStdin(struct readerDataFile *data, char *dest, size_t len) {
-    size_t read_size = 0;
-    printf(">>> ");
-    while (1) {
-        /* 检查是否只输入了回车符 */
-        /* 若是则结束循环 */
-        int ch = getc(stdin);
-        if (ch == '\n' || ch == EOF)
-            break;
-        ungetc(ch, stdin);
+struct readerDataStdin {
+    bool no_first;
+    bool read_continue;  /* 上一次的内容没有读取完毕 */
+};
 
-        if (fgets(dest, (int)((len - read_size) + 1), stdin) == NULL)  // + 1 是因为len不包含NUL的位置
-            break;
-        read_size += strlen(dest);
-        if (read_size == len)
-            break;
-        dest += strlen(dest);  // 移动的NUL的位置
-        printf("... ");
+static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
+    if (!data->read_continue) {
+        if (data->no_first)
+            printf("... ");
+        else
+            printf(">>> ");
+
+        int ch = getc(stdin);
+        if (ch == '\n' || ch == EOF) {
+            /* 读取结束 */
+            *read_end = true;
+            return false;
+        }
+
+        ungetc(ch, stdin);
     }
-    return read_size;
+
+    data->no_first = false;
+    data->read_continue = false;
+
+    if (fgets(dest, (int)(len + 1), stdin) == NULL) {  // + 1 是因为len不包含NUL的位置
+        *read_end = true;
+        return 0;
+    }
+
+    if (strchr(dest, '\n') == NULL)  // 未找到 \n 代表还没读取完
+        data->read_continue = true;
+
+    return strlen(dest);
 }
 
-static void destructStdin(struct readerDataFile *data) {
+static void destructStdin(struct readerDataStdin *data) {
     // 什么都不用做
 }
 
@@ -150,7 +169,7 @@ af_Parser *makeParserByStdin(){
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
+    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataStdin));
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

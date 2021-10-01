@@ -4,7 +4,7 @@
 /* 测试程序, 直接调用内部函数 */
 typedef struct af_Reader af_Reader;
 
-typedef size_t readerFunc(void *data, char *dest, size_t len);
+typedef size_t readerFunc(void *data, char *dest, size_t len, bool *is_end);
 DEFINE_DLC_SYMBOL(readerFunc);
 
 typedef void destructReaderFunc(void *data);

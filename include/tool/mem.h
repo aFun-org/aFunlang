@@ -22,7 +22,8 @@ static void *safeCalloc(size_t n, size_t size) {
     return re;
 }
 
-#define calloc(n, size) (safeCalloc(n, size))
+#define calloc_bak(n, size) (safeCalloc(n, size))  /* 备份 */
+#define calloc calloc_bak
 
 #endif
 #endif  // AFUN_MEM_H

@@ -2,7 +2,7 @@
 #define AFUN_READER_H
 #include "tool.h"
 
-typedef size_t readerFunc(void *data, char *dest, size_t len);
+typedef size_t readerFunc(void *data, char *dest, size_t len, bool *is_end);
 DEFINE_DLC_SYMBOL(readerFunc);
 
 typedef void destructReaderFunc(void *data);
