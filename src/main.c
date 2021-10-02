@@ -40,7 +40,8 @@ static void printHelp(void);
 static int mainRun(ff_FFlags *ff);
 static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
-extern const char *help_info;
+
+extern const char *const help_info;
 
 char *base_path = NULL;
 char *log_path = NULL;

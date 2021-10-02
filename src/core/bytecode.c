@@ -41,7 +41,7 @@ int writeByteCode(af_Code *code, FilePath path) {
     FILE *file = fopen(path, "wb");
     if (file == NULL) {
         re = 2;
-        goto RETURN_;
+        goto RETURN_2;
     }
 
     Done(byteWriteStr(file, HEAD));
@@ -54,8 +54,9 @@ int writeByteCode(af_Code *code, FilePath path) {
         goto RETURN_;
     }
 
-
 RETURN_:
+    fclose(file);
+RETURN_2:
     free(md5);
     return re;
 }
