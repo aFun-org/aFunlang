@@ -85,11 +85,3 @@ set(fflags_lib FFlags::fflags)
 install(DIRECTORY "${fflags_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")  # 安装fflags.h
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindFFlags.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
 cfep_install(FFlags PREFIX ${deps_install_dir})
-
-# 安装 cygwin1.dll
-if (CYGWIN)
-    wi_find_cygwin1()
-    wi_copy_import(TARGETS CYGWIN::cygwin1)
-    wi_build_import(TARGETS CYGWIN::cygwin1)
-    wi_install_import(TARGETS CYGWIN::cygwin1)
-endif()
