@@ -92,7 +92,6 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     log_factory.print_console = print_console;
     log_factory.init = true;
     atexit(destructLogSystem_at_exit);
-    at_quick_exit(destructLogSystem_at_exit);
 
     initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
     log_factory.sys_log.process_fatal_error = true;
@@ -282,10 +281,8 @@ int writeFatalErrorLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, in
     va_start(ap, format);
     int re = writeLog_(logger, pc, log_fatal_error, file, line, func, format, ap);
     if (logger->process_fatal_error) {
-        if (logger->exit_type == 1)
+        if (logger->exit_type == 0)
             abort();
-        else if (logger->exit_type == 0)
-            quick_exit(exit_code);
         else
             exit(exit_code);
     }

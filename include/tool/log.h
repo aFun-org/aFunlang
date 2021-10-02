@@ -35,7 +35,7 @@ struct Logger {
     bool process_send_error;  // 若为false则send_error转换为error
     bool process_fatal_error;  // 若为false则fatal_error转换为error
     jmp_buf *buf;
-    int exit_type;  // 0-quick_exit 1-abort 其他值则为exit
+    int exit_type;    // 0-abort 其他值则为exit
 };
 typedef struct Logger Logger;
 
