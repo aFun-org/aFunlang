@@ -82,6 +82,14 @@ if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)
 endif()
 
+if (WIN32 AND NOT CYGWIN)
+    list(APPEND base_compile_definitions aFunWIN32_NO_CYGWIN=1)
+endif()
+
+if (CYGWIN)
+    list(APPEND base_compile_definitions aFunCYGWIN=1)
+endif()
+
 add_compile_definitions(${base_compile_definitions})
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖

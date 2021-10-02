@@ -6,6 +6,7 @@
  * time_s.h 中 getTime -> strCopy
  * mem.h 中 free
  * file.h 中 getFileSize
+ * stdio_.h
  */
 
 #include <stdio.h>
@@ -17,11 +18,13 @@
 #include "log.h"
 #include "time_s.h"
 #include "file.h"
+#include "stdio_.h"
 
-#if aFunWIN32
+#ifdef aFunWIN32
 #include <windows.h>
 #define getpid() (long)GetCurrentProcessId()
 #define gettid() (long)GetCurrentThreadId()
+// cygwin没有syscall.h, 因此需要依赖 windows 的 api
 #else
 #include <unistd.h>
 #include "sys/syscall.h"
@@ -151,8 +154,7 @@ static const char *LogLevelNameLong[] = {
         "*FATAL ERROR*",  // fatal_error 5
 };
 
-static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, char *file, int line, char *func, char *format,
-          va_list ap){
+static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
     if (logger->level > level)
         return 2;
     if (!log_factory.init || log_factory.log == NULL)
@@ -182,26 +184,27 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
         fflush(log_factory.csv);
     }
 
+#define STD_BUF_SIZE (strlen(tmp) + 1024)
     if (pc != log_print_no_console) {
         switch (log_factory.print_console) {
             case log_pc_all:
                 if (level < log_warning) {
-                    fprintf(stdout, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
                     fflush(stdout);
                 } else if (log_factory.print_console) {
-                    fprintf(stderr, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
                     fflush(stderr);
                 }
                 break;
             case log_pc_w:
                 if (level >= log_warning) { // warning的内容一定会被打印
-                    fprintf(stderr, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
                     fflush(stderr);
                 }
                 break;
             case log_pc_e:
                 if (level >= log_error) {  // warning的内容一定会被打印
-                    fprintf(stderr, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
                     fflush(stderr);
                 }
                 break;
@@ -211,6 +214,7 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
                 break;
         }
     }
+#undef STD_BUF_SIZE
 
     free(ti);
 #undef FORMAT

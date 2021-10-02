@@ -7,6 +7,13 @@
 #include "__parser.h"
 #include "parserl_warning_error.h"
 
+#ifndef isascii
+#define isascii (((c) & ~0x7f) == 0)
+#endif
+
+#define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || ch == ','))  /* 被忽略的符号 */
+#define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
+
 static void printLexicalError(char *info, af_Parser *parser) {
     writeErrorLog(aFunCoreLogger, log_default, "[Lexical] %s", info);
     parser->is_error = true;
@@ -47,9 +54,9 @@ static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parse
  *     -> ] -> [lex_rb] # return -1
  *     -> } -> [lex_rc] # return -1
  *     -> ; -> (lex_comment_before)
- *     -> iscntrl(ch) || isspace(ch) || , -> [lex_space]
+ *     -> isignore(ch) -> [lex_space]
  *     -> | -> (lex_element_long)
- *     -> isgraph(ch) -> [lex_element]
+ *     -> iselement(ch) -> [lex_element]
  */
 
 static int doneBegin(char ch, af_Parser *parser) {
@@ -101,13 +108,13 @@ static int doneBegin(char ch, af_Parser *parser) {
     } else if (ch == ';') {
         parser->lexical->status = lex_comment_before;
         return 1;
-    } else if (iscntrl(ch) || isspace(ch) || ch == ',') {  // 空白符或控制字符被忽略
+    } else if (isignore(ch)) {  // 空白符或控制字符被忽略
         setLexicalLast(lex_space, TK_SPACE, parser);
         return 1;
     } else if (ch == '|') {
         parser->lexical->status = lex_element_long;
         return 1;
-    } else if (isgraph(ch)) {  // 除空格外的可见字符
+    } else if (iselement(ch)) {  // 除空格外的可见字符
         setLexicalLast(lex_element_short, TK_ELEMENT_SHORT, parser);
         return 1;
     }
@@ -284,11 +291,11 @@ static int doneElementLongEnd(char ch, af_Parser *parser) {
 /*
  * 状态机图:
  * [lex_element_short]
- *      -> !strchr("!@#([{}]);,", ch) && isgraph(ch) -> (lex_element_short)
+ *      -> !strchr("!@#([{}]);,", ch) && iselement(ch) -> (lex_element_short)
  *      -> other -> (lex_element_short) # return -1
  */
 static int doneElementShort(char ch, af_Parser *parser) {
-    if (!strchr("!@#([{}]);,", ch) && isgraph(ch)) {  // 除空格外的可见字符 (不包括NUL)
+    if (!strchr("!@#([{}]);,", ch) && iselement(ch)) {  // 除空格外的可见字符 (不包括NUL)
         setLexicalLast(lex_element_short, TK_ELEMENT_SHORT, parser);
         return 1;
     }
@@ -299,11 +306,11 @@ static int doneElementShort(char ch, af_Parser *parser) {
 /*
  * 状态机图:
  * [lex_space]
- *      -> ch != NUL && (iscntrl(ch) || isspace(ch)) || , -> (lex_space)
+ *      -> ch != NUL && isignore(ch) -> (lex_space)
  *      -> other -> (lex_space) # return -1
  */
 static int doneSpace(char ch, af_Parser *parser) {
-    if (ch != NUL && (iscntrl(ch) || isspace(ch)) || ch == ',') {
+    if (ch != NUL && isignore(ch)) {
         setLexicalLast(lex_space, TK_SPACE, parser);
         return 1;
     }
@@ -331,7 +338,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
 
     while (1) {
         char ch = getChar(parser->reader);
-        if (iscntrl(ch) && !isspace(ch) && ch != NUL)
+        if (isascii(ch) && iscntrl(ch) && !isspace(ch) && ch != NUL)  // ascii 控制字符
             printLexicalWarning(INCULDE_CONTROL(base), parser);
 
         switch (parser->lexical->status) {

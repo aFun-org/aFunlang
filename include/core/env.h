@@ -73,6 +73,8 @@ AFUN_CORE_EXPORT bool pushLiteralRegex(char *pattern, char *func, bool in_protec
 
 /* ErrorInfo 相关操作 */
 AFUN_CORE_EXPORT void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei);
+AFUN_CORE_EXPORT void fprintfErrorInfoStderr(af_ErrorInfo *ei);
+AFUN_CORE_EXPORT void fprintfErrorInfoStdout(af_ErrorInfo *ei);
 
 /* ErrorBacktracking 相关操作 */
 AFUN_CORE_EXPORT void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);

@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 
     if (!re) {
 INIT_ERROR:
-        fprintf(stderr, "aFunlang init error.");
+        printf_stderr(0, "aFunlang init error.");
         return EXIT_FAILURE;
     }
 
@@ -97,20 +97,20 @@ INIT_ERROR:
 }
 
 static void printVersion(void) {
-    printf("aFunlang at %s\n", name);
-    printf("version: " aFunVersion "\n");
-    printf(aFunDescription "\n");
+    printf_stdout(0, "aFunlang at %s\n", name);
+    printf_stdout(0, "version: " aFunVersion "\n");
+    printf_stdout(strlen(aFunDescription), aFunDescription "\n");
 }
 
 static void printWelcomeInfo(void) {
-    printf("\naFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n");
-    printf("["compilerID"] on "systemName"\n");
-    printf("(Enter the aFun code to run in the top activity)\n");
+    printf_stdout(0, "\naFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n");
+    printf_stdout(0, "["compilerID"] on "systemName"\n");
+    printf_stdout(0, "(Enter the aFun code to run in the top activity)\n");
 }
 
 static void printHelp(void) {
-    printf("aFunlang Usage:\n");
-    printf("%s\n", help_info);
+    printf_stdout(0, "aFunlang Usage:\n");
+    printf_stdout(strlen(help_info), "%s\n", help_info);
 }
 
 /*

@@ -11,6 +11,7 @@
 #include "macro.h"
 #include "aFunToolExport.h"
 
+#include "stdio_.h"
 #include "btye.h"
 #include "dlc.h"
 #include "file.h"

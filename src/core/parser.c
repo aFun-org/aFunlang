@@ -5,7 +5,6 @@
 
 #include "aFunCore.h"
 #include "__parser.h"
-#include <errno.h>
 
 static af_Lexical *makeLexical(void);
 static void freeLexical(af_Lexical *lex);
@@ -109,7 +108,7 @@ static void destructFile(struct readerDataFile *data) {
 af_Parser *makeParserByFile(FilePath path){
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        writeErrorLog(aFunCoreLogger, log_default, "File open error: %s", strerror(errno));
+        writeErrorLog(aFunCoreLogger, log_default, "File open error: %s", file);
         return NULL;
     }
 
@@ -125,42 +124,50 @@ af_Parser *makeParserByFile(FilePath path){
 
 struct readerDataStdin {
     bool no_first;
-    bool read_continue;  /* 上一次的内容没有读取完毕 */
+
+    char *data;
+    size_t index;
+    size_t len;
 };
 
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
-    if (!data->read_continue) {
+    if (data->index == data->len) {  // 读取内容
         if (data->no_first)
             printf("... ");
         else
             printf(">>> ");
+        data->no_first = true;
+
+        free(data->data);
 
         int ch = getc(stdin);
         if (ch == '\n' || ch == EOF) {
             /* 读取结束 */
             *read_end = true;
-            return false;
+            return 0;
         }
 
         ungetc(ch, stdin);
+
+        if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
+            writeErrorLog(aFunCoreLogger, log_default, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
+            *read_end = true;
+            return 0;
+        }
+
+        data->index = 0;
+        data->len = strlen(data->data);
     }
 
-    data->no_first = false;
-    data->read_continue = false;
-
-    if (fgets(dest, (int)(len + 1), stdin) == NULL) {  // + 1 是因为len不包含NUL的位置
-        *read_end = true;
-        return 0;
-    }
-
-    if (strchr(dest, '\n') == NULL)  // 未找到 \n 代表还没读取完
-        data->read_continue = true;
-
-    return strlen(dest);
+    if (data->index + len > data->len)  // 超出长度范围
+        len = data->len - data->index;
+    memcpy(dest, data->data + data->index, len);
+    data->index += len;
+    return len;
 }
 
 static void destructStdin(struct readerDataStdin *data) {
-    // 什么都不用做
+    free(data->data);
 }
 
 af_Parser *makeParserByStdin(){

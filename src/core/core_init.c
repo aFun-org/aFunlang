@@ -14,10 +14,6 @@ bool aFunCoreInit(char *log_dir, LogFactoryPrintConsole print_console, bool fe, 
     getEndian();
     if (setlocale(LC_ALL, "") == NULL)
         return false;
-#ifdef aFunWIN32
-    if(!SetConsoleOutputCP(65001))  // 设置windows代码页为utf-8编码
-        return false;
-#endif
     if (log_dir == NULL)
         return false;
     char *log = strJoin(log_dir, "aFunlang", false, false);

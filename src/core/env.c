@@ -60,6 +60,8 @@ static void freeAllErrorBacktracking(af_ErrorBacktracking *ebt);
 static char *getActivityInfoToBacktracking(af_Activity *activity);
 static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb);
 static void fprintfNote(FILE *file, char *note);
+static void fprintfNoteStderr(char *note);
+static void fprintfNoteStdout(char *note);
 
 /* 内置顶层消息处理器 */
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
@@ -697,7 +699,7 @@ static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
         return;
     }
     if (!is_gc)
-        fprintfErrorInfo(stdout, *(af_ErrorInfo **)msg->msg);
+        fprintfErrorInfoStdout(*(af_ErrorInfo **)msg->msg);  // TODO-szh 获取EnvVar, 设定输出的位置 (stdout/stderr)
     freeErrorInfo(*(af_ErrorInfo **)msg->msg);
 }
 
@@ -1393,6 +1395,56 @@ void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
     }
     fprintf(file, "%s: \"%s\"\n", ei->error_type, ei->error);
     fflush(file);
+}
+
+static void fprintfNoteStderr(char *note) {
+    char *ent = NULL;
+    while(true) {
+        ent = strchr(note, '\n');
+        if (ent != NULL)
+            *ent = NUL;
+        printf_stderr(0, "   #note %s\n", note);
+        if (ent == NULL)  // 意味着是最后一部分`note`
+            break;
+        *ent = '\n';
+        note = ent + 1;
+    }
+}
+
+void fprintfErrorInfoStderr(af_ErrorInfo *ei) {
+    printf_stderr(0, "Error Traceback (most recent call last):\n");
+    for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next) {
+        printf_stderr(0, "  File \"%s\", line %d\n", ebt->file, ebt->line);
+        if (ebt->note != NULL)
+            fprintfNoteStderr(ebt->note);
+    }
+    printf_stderr(0, "%s: \"%s\"\n", ei->error_type, ei->error);
+    fflush(stderr);
+}
+
+static void fprintfNoteStdout(char *note) {
+    char *ent = NULL;
+    while(true) {
+        ent = strchr(note, '\n');
+        if (ent != NULL)
+            *ent = NUL;
+        printf_stdout(0, "   #note %s\n", note);
+        if (ent == NULL)  // 意味着是最后一部分`note`
+            break;
+        *ent = '\n';
+        note = ent + 1;
+    }
+}
+
+void fprintfErrorInfoStdout(af_ErrorInfo *ei) {
+    printf_stdout(0, "Error Traceback (most recent call last):\n");
+    for (af_ErrorBacktracking *ebt = ei->track; ebt != NULL; ebt = ebt->next) {
+        printf_stdout(0, "  File \"%s\", line %d\n", ebt->file, ebt->line);
+        if (ebt->note != NULL)
+            fprintfNoteStdout(ebt->note);
+    }
+    printf_stdout(0, "%s: \"%s\"\n", ei->error_type, ei->error);
+    fflush(stdout);
 }
 
 static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file, char *note) {

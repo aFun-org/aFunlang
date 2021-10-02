@@ -465,7 +465,7 @@ char *codeToStr(af_Code *code, int n) {
 
 static void printLayerSpace(size_t layer) {
     for (size_t i = 0; i < layer; i++)
-        printf("    ");
+        fputs("    ", stdout);
 }
 
 void printCode(af_Code *bt) {

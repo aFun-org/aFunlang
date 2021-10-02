@@ -8,6 +8,8 @@
 #define SYNTACTIC_MAX_DEEP (1000)
 typedef struct af_Parser af_Parser;
 
+#define STDIN_MAX_SIZE (1024)
+
 /* Parser 创建与释放 */
 AFUN_CORE_EXPORT af_Parser *
 makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);

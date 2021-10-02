@@ -26,6 +26,7 @@ static void strDestruct(char *id, af_Object *obj, ObjectString *data, af_Environ
 static void strLiteral(char *id, af_Object *obj, ObjectString *data, char *str, af_Environment *env) {
     if (!EQ_STR(id, string_id) || data->str != NULL)
         return;
+    writeDebugLog(aFunCoreLogger, log_default, "strLiteral str = %s, %d", str, strlen(str));
     data->str = NEW_STR(STR_LEN(str) - 2);  // 取出两个引号
     memcpy(data->str, str + 1, (STR_LEN(str) - 2) * sizeof(char));
 }
