@@ -58,7 +58,6 @@ file(TO_NATIVE_PATH ${INSTALL_LOG} _INSTALL_LOG_NATIVE)
 string(REPLACE "\\" "\\\\" INSTALL_LOG_NATIVE ${_INSTALL_LOG_NATIVE})  # 转义
 unset(_INSTALL_LOG_NATIVE)
 
-include(info)
 include(filename)
 
 # CMake对象属性的初始化值的相关设定
@@ -160,3 +159,5 @@ if (_build_test)
     enable_testing()
 endif()
 add_subdirectory(test)  # test的相关内容仍会被构建
+
+include(info)

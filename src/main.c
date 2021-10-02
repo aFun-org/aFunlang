@@ -159,7 +159,7 @@ static int mainRun(ff_FFlags *ff) {
     int exit_code = 0;
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
-    if (argv == 0) {
+    if (argc == 0) {
         writeErrorLog(aFunlangLogger, log_default, "There are not file to run.");
         return 1;
     }
