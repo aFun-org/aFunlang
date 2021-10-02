@@ -42,29 +42,28 @@ static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
 extern const char *help_info;
 
-char *base_name = NULL;
+char *base_path = NULL;
+char *log_path = NULL;
 static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
 
 void freeBaseName(void) {
-    free(base_name);
+    free(base_path);
+    free(log_path);
 }
 
 int main(int argc, char **argv) {
     jmp_buf main_buf;
-    base_name = getExedir(*argv, 1);
-    if (base_name == NULL)
+    base_path = getExedir(*argv, 1);
+    if (base_path == NULL)
         goto INIT_ERROR;
+    log_path = strJoin(base_path, SEP aFunLogDir SEP, false, false);
     atexit(freeBaseName);
 
     if (setjmp(main_buf) == 1)
         return EXIT_FAILURE;
 
-    char *log = strJoin(base_name, SEP aFunLogDir SEP, false, false);
-    bool re = aFunInit(log, log_pc_all, &main_buf, log_debug);
-    free(log);
-
-    if (!re) {
+    if (!aFunInit(log_path, log_pc_all, &main_buf, log_debug)) {
 INIT_ERROR:
         printf_stderr(0, "aFunlang init error.");
         return EXIT_FAILURE;
@@ -156,7 +155,7 @@ out:
 }
 
 static int mainRun(ff_FFlags *ff) {
-    int exit_code = 0;
+    int exit_code;
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
     if (argc == 0) {
