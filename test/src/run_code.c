@@ -370,13 +370,7 @@ bool infixFunc(char *id, af_Object *obj) {
 }
 
 int main(int argc, char **argv) {
-    char *base_name_ = getExedir(*argv, 1);
-
-    char *log = strJoin(base_name_, SEP aFunLogDir SEP, false, false);
-    printf("log = %s\n", log);
-    bool re = aFunInit(log, log_pc_all, NULL, log_debug);
-    free(log);
-    free(base_name_);
+    bool re = aFunInit("", log_pc_all, NULL, log_debug);
 
     if (!re) {
         printf("re = %d\n", re);
