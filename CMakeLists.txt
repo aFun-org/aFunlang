@@ -26,9 +26,11 @@ if (fpic_work)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
 
+include(CheckSymbolExists)
+check_symbol_exists(quick_exit "stdlib.h" HAVE_QUICK_EXIT)  # base_compile_definitions 时使用
+
 if (MSVC)
     set(CMAKE_GNUtoMS TRUE)
-
     check_c_compiler_flag("/utf-8" utf8_work)
     if (NOT utf8_work)
         message(FATAL_ERROR "The msvc not support utf-8")
@@ -87,6 +89,10 @@ endif()
 
 if (CYGWIN)
     list(APPEND base_compile_definitions aFunCYGWIN=1)
+endif()
+
+if (NOT HAVE_QUICK_EXIT)
+    list(APPEND base_compile_definitions quick_exit=exit "at_quick_exit=(void)")
 endif()
 
 add_compile_definitions(${base_compile_definitions})

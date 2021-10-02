@@ -92,6 +92,7 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     log_factory.print_console = print_console;
     log_factory.init = true;
     atexit(destructLogSystem_at_exit);
+    at_quick_exit(destructLogSystem_at_exit);
 
     initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
     log_factory.sys_log.process_fatal_error = true;
@@ -107,7 +108,7 @@ static void destructLogSystem_at_exit(void) {
     if (!log_factory.init)
         return;
     log_factory.sys_log.level = log_debug;
-    writeInfoLog(NULL, log_default, "Log system init destruct by atexit.");
+    writeInfoLog(NULL, log_default, "Log system destruct by exit.");
     fclose(log_factory.log);
     fclose(log_factory.csv);
     log_factory.log = NULL;
@@ -119,7 +120,7 @@ int destructLogSystem(void) {
     if (!log_factory.init)
         return 2;
     log_factory.sys_log.level = log_debug;
-    writeInfoLog(NULL, log_default, "Log system init destruct by user.");
+    writeInfoLog(NULL, log_default, "Log system destruct by user.");
     fclose(log_factory.log);
     fclose(log_factory.csv);
     log_factory.log = NULL;
@@ -265,8 +266,11 @@ int writeSendErrorLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, int
     int re = writeLog_(logger, pc, log_send_error, file, line, func, format, ap);
     if (logger->process_send_error) {
         jmp_buf *buf = logger->buf;
-        initLogger(logger, NULL, 0);  // 清零
-        longjmp(*buf, 1);
+        if (buf != NULL) {
+            initLogger(logger, NULL, 0);  // 清零
+            longjmp(*buf, 1);
+        } else
+            exit(EXIT_FAILURE);
     }
     return re;
 }
@@ -277,7 +281,13 @@ int writeFatalErrorLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, in
     va_list ap;
     va_start(ap, format);
     int re = writeLog_(logger, pc, log_fatal_error, file, line, func, format, ap);
-    if (logger->process_fatal_error)
-        exit(exit_code);
+    if (logger->process_fatal_error) {
+        if (logger->exit_type == 1)
+            abort();
+        else if (logger->exit_type == 0)
+            quick_exit(exit_code);
+        else
+            exit(exit_code);
+    }
     return re;
 }
