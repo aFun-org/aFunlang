@@ -1,4 +1,4 @@
-HELP_INFO = r'''[option]
+help_info = r'''[option]
    help
        -v Show    version info
        -h Show    help page
