@@ -20,7 +20,7 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
     }
 
     writeInfoLog(aFunlangLogger, "Build %s, %s",  in, out);
-    printf_stdout(0, "Source will be build (%s -> %s)\n", HT_aFunGetText(build_file, "Source will be build"), in, out);
+    printf_stdout(0, "%s (%s -> %s)\n", HT_aFunGetText(build_file, "Source will be build"), in, out);
     return buildFile(out, in);
 }
 
