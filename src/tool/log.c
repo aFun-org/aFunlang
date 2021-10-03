@@ -64,10 +64,11 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     char log_path[218] = {0};
     char csv_path[218] = {0};
     log_factory.pid = getpid();  // 获取进程ID
-    char *ti = getTime(NULL, "%Y-%m-%d%z");
 
+    char *ti = getTime(NULL, "%Y-%m-%d%z");
     snprintf(log_path, 218, "%s-%s.log", path, ti);
     snprintf(csv_path, 218, "%s-%s.csv", path, ti);
+    free(ti);
 
     uintmax_t log_size = getFileSize(log_path);
     uintmax_t csv_size = getFileSize(csv_path);
