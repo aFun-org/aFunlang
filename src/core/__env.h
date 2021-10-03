@@ -28,7 +28,7 @@ typedef uint16_t ActivityCount;
 struct af_Core {  // 解释器核心
     enum af_CoreStatus {
         core_creat = 0,
-        core_init,  // 执行.i.af
+        core_init,  // 执行初始化程序
         core_normal,  // 正常执行
         core_stop,  // 当前运算退出
         core_exit,  // 解释器退出

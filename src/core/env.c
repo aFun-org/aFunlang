@@ -685,17 +685,17 @@ int32_t *findEnvVarNumber(char *name, af_Environment *env) {
 
 static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, log_d, "NORMAL msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
     if (!is_gc)
-        writeDebugLog(aFunCoreLogger, log_d, "NORMAL Point: %p", *(af_Object **)msg->msg);
+        writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
 static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, log_d, "ERROR msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, "ERROR msg: %p error", msg->msg);
         return;
     }
     if (!is_gc)
@@ -705,20 +705,20 @@ static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
 
 static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
     if (msg->msg == NULL || *(af_ImportInfo **)msg->msg == NULL) {
-        writeErrorLog(aFunCoreLogger, log_d, "IMPORT msg: %p error", msg->msg);
+        writeErrorLog(aFunCoreLogger, "IMPORT msg: %p error", msg->msg);
         return;
     }
     af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
     if (ii->obj == NULL) {
-        writeDebugLog(aFunCoreLogger, log_d, "IMPORT msg: %p do not get obj", msg->msg);
+        writeErrorLog(aFunCoreLogger, "IMPORT msg: %p do not get obj", msg->msg);
         return;
     }
 
     if (ii->mark != NULL) {
         makeVarToProtectVarSpace(ii->mark, 3, 3, 3, ii->obj, env);
-        writeDebugLog(aFunCoreLogger, log_d, "IMPORT point: [%s] %p", ii->mark, ii->obj);
+        writeDebugLog(aFunCoreLogger, "IMPORT point: [%s] %p", ii->mark, ii->obj);
     } else
-        writeDebugLog(aFunCoreLogger, log_d, "IMPORT point: <no-name> %p", ii->obj);
+        writeDebugLog(aFunCoreLogger, "IMPORT point: <no-name> %p", ii->obj);
     freeImportInfo(ii);
 }
 
@@ -764,7 +764,7 @@ void freeEnvironment(af_Environment *env) {
     freeAllTopMsgProcess(env->process);
 
     if (!res)
-        writeErrorLog(aFunCoreLogger, log_d, "Run iterDestruct error.");
+        writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
     free(env);
 }
 

@@ -15,12 +15,12 @@
 #define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
 
 static void printLexicalError(char *info, af_Parser *parser) {
-    writeErrorLog(aFunCoreLogger, log_d, "[Lexical] %s", info);
+    writeErrorLog(aFunCoreLogger, "[Lexical] %s", info);
     parser->is_error = true;
 }
 
 static void printLexicalWarning(char *info, af_Parser *parser) {
-    writeWarningLog(aFunCoreLogger, log_d, "[Lexical] %s", info);
+    writeWarningLog(aFunCoreLogger, "[Lexical] %s", info);
 }
 
 static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parser *parser) {

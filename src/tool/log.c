@@ -40,7 +40,6 @@ static struct LogFactory {
 
     FILE *log;  // 记录文件输出的位置
     FILE *csv;
-    LogFactoryPrintConsole print_console;  // 输出到终端、
 
     Logger sys_log;
 } log_factory = {.init=false};
@@ -55,7 +54,7 @@ static void destructLogSystem_at_exit(void);
  * 2 表示已经初始化
  * 0 表示初始化失败
  */
-int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
+int initLogSystem(FilePath path) {
     if (log_factory.init)
         return 2;
     if (strlen(path) >= 218)  // 路径过长
@@ -90,16 +89,15 @@ int initLogSystem(FilePath path, LogFactoryPrintConsole print_console) {
     }
 #undef CSV_TITLE
 
-    log_factory.print_console = print_console;
     log_factory.init = true;
     atexit(destructLogSystem_at_exit);
 
     initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
     log_factory.sys_log.process_fatal_error = true;
     log_factory.sys_log.process_send_error = false;
-    writeDebugLog(NULL, log_d, "Log system init success");
-    writeDebugLog(NULL, log_d, "Log .log size %lld", log_size);
-    writeDebugLog(NULL, log_d, "Log .csv size %lld", csv_size);
+    writeDebugLog(NULL, "Log system init success");
+    writeDebugLog(NULL, "Log .log size %lld", log_size);
+    writeDebugLog(NULL, "Log .csv size %lld", csv_size);
     log_factory.sys_log.level = log_error;
     return 1;
 }
@@ -108,7 +106,7 @@ static void destructLogSystem_at_exit(void) {
     if (!log_factory.init)
         return;
     log_factory.sys_log.level = log_debug;
-    writeDebugLog(NULL, log_d, "Log system destruct by exit.");
+    writeDebugLog(NULL, "Log system destruct by exit.");
     fclose(log_factory.log);
     fclose(log_factory.csv);
     log_factory.log = NULL;
@@ -120,7 +118,7 @@ int destructLogSystem(void) {
     if (!log_factory.init)
         return 2;
     log_factory.sys_log.level = log_debug;
-    writeDebugLog(NULL, log_d, "Log system destruct by user.");
+    writeDebugLog(NULL, "Log system destruct by user.");
     fclose(log_factory.log);
     fclose(log_factory.csv);
     log_factory.log = NULL;
@@ -157,7 +155,7 @@ static const char *LogLevelNameLong[] = {
         "*FATAL ERROR*",  // fatal_error 6
 };
 
-static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
+static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
     if (logger->level > level)
         return 2;
     if (!log_factory.init || log_factory.log == NULL)
@@ -170,7 +168,6 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
     char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
 
 #define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s'\n"
-#define FORMAT_SHORT "%s(%s:%d) : %s\n"
     long tid = gettid();
 
     char tmp[2048] = {0};
@@ -178,50 +175,30 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
     va_end(ap);
 
     /* 写入文件日志 */
-    if (pc != log_c && log_factory.log != NULL) {
+    if (log_factory.log != NULL) {
         fprintf(log_factory.log, FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
         fflush(log_factory.log);
     }
-    if (pc != log_c && log_factory.csv != NULL) {
+    if (log_factory.csv != NULL) {
         fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
         fflush(log_factory.csv);
     }
 
+#define FORMAT_SHORT "%s(%s:%d) : %s\n"
 #define STD_BUF_SIZE (strlen(tmp) + 1024)
-    if (pc != log_n) {
-        switch (log_factory.print_console) {
-            case log_pc_all:
-                if (level < log_warning) {
-                    printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-                    fflush(stdout);
-                } else if (log_factory.print_console) {
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-                    fflush(stderr);
-                }
-                break;
-            case log_pc_w:
-                if (level >= log_warning) { // warning的内容一定会被打印
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-                    fflush(stderr);
-                }
-                break;
-            case log_pc_e:
-                if (level >= log_error) {  // warning的内容一定会被打印
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-                    fflush(stderr);
-                }
-                break;
-
-            case log_pc_quite:
-            default:
-                break;
+    if (pc) {
+        if (level < log_warning) {
+            printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
+            fflush(stdout);
+        } else {
+            printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
+            fflush(stderr);
         }
     }
+#undef FORMAT_SHORT
 #undef STD_BUF_SIZE
-
     free(ti);
 #undef FORMAT
-#undef FORMAT_SHORT
 #undef CSV_FORMAT
     return 0;
 }
@@ -229,44 +206,52 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
 #define CHECK_LOGGER() do {if (logger == NULL) {logger = &(log_factory.sys_log);} \
                            if (logger == NULL || logger->id == NULL) return -1;} while(0)
 
+#ifdef aFunDEBUG
+#define INFO_PRINT_CONSOLE true
+#else
+#define INFO_PRINT_CONSOLE false
+#endif
+
 int writeTrackLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#ifdef aFunDEBUG
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, log_n, log_track, file, line, func, format, ap);
+    return writeLog_(logger, false, log_track, file, line, func, format, ap);
+#endif
 }
 
-int writeDebugLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, int line, char *func, char *format, ...) {
+int writeDebugLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, pc, log_debug, file, line, func, format, ap);
+    return writeLog_(logger, INFO_PRINT_CONSOLE, log_debug, file, line, func, format, ap);
 }
 
-int writeInfoLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, int line, char *func, char *format, ...) {
+int writeInfoLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, pc, log_info, file, line, func, format, ap);
+    return writeLog_(logger, INFO_PRINT_CONSOLE, log_info, file, line, func, format, ap);
 }
 
-int writeWarningLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, int line, char *func, char *format, ...) {
+int writeWarningLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, pc, log_warning, file, line, func, format, ap);
+    return writeLog_(logger, INFO_PRINT_CONSOLE, log_warning, file, line, func, format, ap);
 }
 
-int writeErrorLog_(Logger *logger, LogLoggerPrintConsole pc, char *file, int line, char *func, char *format, ...) {
+int writeErrorLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, pc, log_error, file, line, func, format, ap);
+    return writeLog_(logger, INFO_PRINT_CONSOLE, log_error, file, line, func, format, ap);
 }
 
 int writeSendErrorLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
@@ -274,7 +259,7 @@ int writeSendErrorLog_(Logger *logger, char *file, int line, char *func, char *f
 
     va_list ap;
     va_start(ap, format);
-    int re = writeLog_(logger, log_d, log_send_error, file, line, func, format, ap);
+    int re = writeLog_(logger, true, log_send_error, file, line, func, format, ap);
     if (logger->process_send_error) {
         jmp_buf *buf = logger->buf;
         if (buf != NULL) {
@@ -291,8 +276,8 @@ int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int ex
 
     va_list ap;
     va_start(ap, format);
-    int re = writeLog_(logger, log_d, log_fatal_error, file, line, func, format, ap);
-    if (logger->process_fatal_error) {
+    int re = writeLog_(logger, true, log_fatal_error, file, line, func, format, ap);
+    if (logger->process_fatal_error) {  // TODO-szh 去除该设定, 强制退出
         if (logger->exit_type == 0)
             abort();
         else

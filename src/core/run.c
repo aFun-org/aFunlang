@@ -61,7 +61,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     freeAllLiteralData(env->activity->ld);
     env->activity->ld = NULL;
     env->activity->is_literal = false;
-    writeDebugLog(aFunCoreLogger, log_d, "Literal %p", obj);
+    writeTrackLog(aFunCoreLogger, "Literal %p", obj);
     return true;
 }
 
@@ -182,6 +182,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             return false;
         }
 
+        writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, var->vn->obj);
         return pushLiteralActivity(code, code->element.data, var->vn->obj, env);
     }
 
@@ -210,7 +211,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
 
     pushMessageDown(makeNORMALMessage(obj), env);
     setActivityBtNext(env->activity->bt_next->next, env->activity);
-    writeDebugLog(aFunCoreLogger, log_d, "Get Variable %s : %p", code->element.data, obj);
+    writeTrackLog(aFunCoreLogger, "Get variable %s : %p", code->element.data, obj);
     return false;
 }
 
@@ -436,7 +437,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 break;
             case -1:  // NORMAL模式下, 非正常但可处理 [已经放回]
             default:
-                assertErrorLog(env->activity->status == act_func_normal, aFunCoreLogger, log_d, "");
+                assertErrorLog(env->activity->status == act_func_normal, aFunCoreLogger, "");
                 break;
         }
 

@@ -8,7 +8,6 @@ typedef struct aFunInitInfo aFunInitInfo;
 struct aFunInitInfo {
     char *base_dir;
 
-    LogFactoryPrintConsole pc;
     jmp_buf *buf;
     LogLevel level;
 };

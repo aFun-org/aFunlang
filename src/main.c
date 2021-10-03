@@ -60,9 +60,13 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
 
     aFunInitInfo info = {.base_dir=base_path,
+#ifdef aFunDEBUG
                          .level=log_track,
+#else
+                         .level=log_info,
+#endif
                          .buf=&main_buf,
-                         .pc=log_pc_all};
+    };
 
     if (!aFunInit(&info)) {
 INIT_ERROR:
@@ -74,7 +78,7 @@ INIT_ERROR:
     aFunlangLogger->process_send_error = true;
     aFunlangLogger->process_fatal_error = true;
     aFunlangLogger->buf = &main_buf;
-    writeDebugLog(aFunlangLogger, log_d, "aFunlang-exe init success");
+    writeDebugLog(aFunlangLogger, "aFunlang-exe init success");
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
@@ -105,7 +109,7 @@ static void printVersion(void) {
 }
 
 static void printWelcomeInfo(void) {
-    printf_stdout(0, "\naFunlang " aFunVersion " %s (" __DATE__ ", " __TIME__ ")\n", HT_getText(CL_N, "CommandLine"));
+    printf_stdout(0, "aFunlang " aFunVersion " %s (" __DATE__ ", " __TIME__ ")\n", HT_getText(CL_N, "CommandLine"));
     fputs_stdout("["compilerID"] on "systemName"\n");
     printf_stdout(0, "(%s)\n", HT_getText(CL_TIPS, "Enter the aFun code to run in the top activity"));
 }
@@ -120,7 +124,8 @@ static void printHelp(void) {
  * 目标: 打印参数错误信息
  */
 static void printError(ff_FFlags *ff) {
-    writeErrorLog(aFunlangLogger, log_d, "%s (%s).", HT_getText(CL_ERROR, "Command line argument error"), ff_getChild(ff));
+    writeErrorLog(aFunlangLogger, "%s argument error", ff_getChild(ff));
+    printf_stdout(0, "%s (%s)\n", HT_getText(CL_ERROR, "Command line argument error"), ff_getChild(ff));
     printHelp();
 }
 
@@ -161,19 +166,26 @@ static int mainRun(ff_FFlags *ff) {
     int exit_code;
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
+    af_Environment *env;
+
     if (argc == 0) {
-        writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_FILE, "There are not file to run"));
-        return 1;
+        /* 进入命令行模式 */
+        env = creatAFunEnvironment(0, NULL);
+        printWelcomeInfo();
+        do
+            exit_code = runCodeFromStdin("stdin", env);
+        while (isCoreExit(env) != 1);
+    } else {
+        env = creatAFunEnvironment(argc - 1, argv + 1);
+        exit_code = runCodeFromFile(argv[0], true, 0, env);
+        destructAFunEnvironment(env);
     }
 
-    af_Environment *env = creatAFunEnvironment(argc - 1, argv + 1);
-    exit_code = runCodeFromFile(argv[0], true, 0, env);
-    destructAFunEnvironment(env);
-
     if (exit_code != 0)
-        writeErrorLog(aFunlangLogger, log_d, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+        writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     else
-        writeInfoLog(aFunlangLogger, log_d, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+        writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
+    printf_stderr(0, "aFun %s: %d\n", HT_getText(RUN_Exitcode_N, "exit code"), exit_code);
 
     return exit_code;
 }
@@ -238,7 +250,8 @@ static int mainCL(ff_FFlags *ff) {
     RunList *rl = getRunList(ff, &command_line, &save_aub);
 
     if (rl == NULL && !command_line) {
-        writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_FILE, ""));
+        writeErrorLog(aFunlangLogger, "CL not file to run");
+        printf_stderr(0, "%s\n", HT_getText(NOT_FILE, "There are not file run"));
         return EXIT_FAILURE;
     }
 
@@ -260,12 +273,13 @@ static int mainCL(ff_FFlags *ff) {
         do
             exit_code = runCodeFromStdin("stdin", env);
         while (isCoreExit(env) != 1);
-
-        if (exit_code != 0)
-            writeErrorLog(aFunlangLogger, log_d, "aFun command line %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
-        else
-            writeInfoLog(aFunlangLogger, log_d, "aFun command line %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
     }
+
+    if (exit_code != 0)
+        writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
+    else
+        writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
+    printf_stderr(0, "aFun %s: %d\n", HT_getText(RUN_Exitcode_N, "exit code"), exit_code);
 
     destructAFunEnvironment(env);
     freeAllRunList(rl);
@@ -285,14 +299,16 @@ static int mainBuild(ff_FFlags *ff) {
         switch (mark) {
             case 'o':
                 if (path != NULL) {
-                    writeErrorLog(aFunlangLogger, log_d, HT_getText(ARG_CONFLICT, "Argument conflict (out, path)"));
+                    writeErrorLog(aFunlangLogger, "Build argument conflict");
+                    printf_stderr(0, "%s\n", HT_getText(ARG_CONFLICT, "Argument conflict (out, path)"));
                     goto error;
                 }
                 out_put = text;
                 break;
             case 'p':
                 if (out_put != NULL) {
-                    writeErrorLog(aFunlangLogger, log_d, HT_getText(ARG_CONFLICT, ""));
+                    writeErrorLog(aFunlangLogger, "Build argument conflict");
+                    printf_stderr(0, "%s\n", HT_getText(ARG_CONFLICT, ""));
                     goto error;
                 }
                 path = text;
@@ -313,14 +329,16 @@ out:
 
         /* 如果没有参数 */
         if (!ff_getopt_wild(&text, ff)) {
-            writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_BUILD_SRC, "There are not source file to build"));
+            writeErrorLog(aFunlangLogger, "Build not source file");
+            printf_stderr(0, "%s\n", HT_getText(NOT_BUILD_SRC, "There are not source file to build"));
             goto error;
         } else
             in = text;
 
         /* 如果还有第二个参数 */
         if (ff_getopt_wild(&text, ff)) {
-            writeErrorLog(aFunlangLogger, log_d, HT_getText(MANY_BUILD_SRC, "There are too many source file to build. (Do not use --out option)"));
+            writeErrorLog(aFunlangLogger, "Build too many source file");
+            printf_stderr(0, "%s\n", HT_getText(MANY_BUILD_SRC, "There are too many source file to build. (Do not use --out option)"));
             goto error;
         }
 

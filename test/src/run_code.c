@@ -378,15 +378,16 @@ int main(int argc, char **argv) {
     if (setjmp(main_buf) == 1)
         return EXIT_FAILURE;
 
-    aFunInitInfo info = {.base_dir=base_path,
+    aFunInitInfo info = {
+            .base_dir=base_path,
             .level=log_debug,
-            .buf=&main_buf,
-            .pc=log_pc_all};
+            .buf=&main_buf
+    };
 
     if (!aFunInit(&info)) {
 INIT_ERROR:
         free(base_path);
-        printf_stderr(0, "aFunlang init error.");
+        printf_stderr(0, "aFunlang init error\n");
         return EXIT_FAILURE;
     } else
         free(base_path);

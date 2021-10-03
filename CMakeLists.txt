@@ -19,6 +19,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(VISIBILITY_INLINES_HIDDEN TRUE)  # 默认内联函数不可见
 set(CMAKE_C_VISIBILITY_PRESET "hidden")  # 默认所有符号不可见
 
+set(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Build type")
+
 # 系统检查
 include(CheckCCompilerFlag)
 check_c_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
@@ -90,6 +92,10 @@ endif()
 
 if (CYGWIN)
     list(APPEND base_compile_definitions aFunCYGWIN=1)
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    list(APPEND base_compile_definitions aFunDEBUG=1)
 endif()
 
 add_compile_definitions(${base_compile_definitions})

@@ -79,14 +79,6 @@ int runCodeFromRunList(RunList *run_list, RunList **bak, bool save_afb, af_Envir
             default:
                 break;
         }
-
-        if (isCoreExit(env) == 1) {
-            if (exit_code != 0)
-                writeErrorLog(aFunlangLogger, log_d, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, "exit"), HT_getText(RUN_Exitcode_N, "exit code"), exit_code);
-            else
-                writeInfoLog(aFunlangLogger, log_d, "aFun %s, %s code = %d", HT_getText(RUN_Exit_N, "exit"), HT_getText(RUN_Exitcode_N, "exit code"), exit_code);
-            break;
-        }
     }
 
     if (bak != NULL)

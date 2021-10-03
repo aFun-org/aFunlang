@@ -417,7 +417,7 @@ void printGCByCore(af_Core *core) {
     bool success = true;
     for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, log_d, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
             success = false;
         } else
             writeTrackLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
@@ -425,7 +425,7 @@ void printGCByCore(af_Core *core) {
 
     for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (obj->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, log_d, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
             success = false;
         } else
             writeTrackLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
@@ -433,7 +433,7 @@ void printGCByCore(af_Core *core) {
 
     for (af_VarSpace *vs = core->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
         if (vs->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, log_d, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
             success = false;
         } else
             writeTrackLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
@@ -441,12 +441,12 @@ void printGCByCore(af_Core *core) {
 
     for (af_Var *var = core->gc_Var; var != NULL; var = var->gc.next) {
         if (var->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, log_d, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
             success = false;
         } else
             writeTrackLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
     }
 
     if (!success)
-        writeWarningLog(aFunCoreLogger, log_d, "gc warning.");
+        writeWarningLog(aFunCoreLogger, "gc warning.");
 }
