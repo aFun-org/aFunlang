@@ -26,8 +26,6 @@ typedef enum LogFactoryPrintConsole LogFactoryPrintConsole;
 struct Logger {
     char *id;
     LogLevel level;
-    bool process_send_error;  // 若为false则send_error转换为error
-    bool process_fatal_error;  // 若为false则fatal_error转换为error
     jmp_buf *buf;
     int exit_type;    // 0-abort 其他值则为exit
 };

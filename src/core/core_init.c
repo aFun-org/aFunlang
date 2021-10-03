@@ -23,8 +23,6 @@ static void destructCoreExit(void) {
 bool aFunCoreInit(aFunCoreInitInfo *info) {
     if (info == NULL) {
         static aFunCoreInitInfo info_default = {.base_dir=".",
-                                                .fe=true,
-                                                .se=true,
                                                 .buf=NULL,
                                                 .level=log_info};
         info = &info_default;
@@ -48,8 +46,6 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
         return false;
 
     initLogger(aFunCoreLogger, "aFunlang-core", info->level);
-    aFunCoreLogger->process_send_error = info->fe;
-    aFunCoreLogger->process_fatal_error = info->se;
     aFunCoreLogger->buf = info->buf;
 
     writeDebugLog(aFunCoreLogger, "aFunCore init success");

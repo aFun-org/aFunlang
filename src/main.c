@@ -75,8 +75,6 @@ INIT_ERROR:
     }
 
     initLogger(aFunlangLogger, "aFunlang-exe", info.level);
-    aFunlangLogger->process_send_error = true;
-    aFunlangLogger->process_fatal_error = true;
     aFunlangLogger->buf = &main_buf;
     writeDebugLog(aFunlangLogger, "aFunlang-exe init success");
 

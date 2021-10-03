@@ -93,8 +93,6 @@ int initLogSystem(FilePath path) {
     atexit(destructLogSystem_at_exit);
 
     initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
-    log_factory.sys_log.process_fatal_error = true;
-    log_factory.sys_log.process_send_error = false;
     writeDebugLog(NULL, "Log system init success");
     writeDebugLog(NULL, "Log .log size %lld", log_size);
     writeDebugLog(NULL, "Log .csv size %lld", csv_size);
@@ -259,16 +257,14 @@ int writeSendErrorLog_(Logger *logger, char *file, int line, char *func, char *f
 
     va_list ap;
     va_start(ap, format);
-    int re = writeLog_(logger, true, log_send_error, file, line, func, format, ap);
-    if (logger->process_send_error) {
-        jmp_buf *buf = logger->buf;
-        if (buf != NULL) {
-            initLogger(logger, NULL, 0);  // 清零
-            longjmp(*buf, 1);
-        } else
-            exit(EXIT_FAILURE);
-    }
-    return re;
+    jmp_buf *buf = logger->buf;
+
+    writeLog_(logger, true, log_send_error, file, line, func, format, ap);
+    if (buf != NULL) {
+        initLogger(logger, NULL, 0);  // 清零
+        longjmp(*buf, 1);
+    } else
+        exit(EXIT_FAILURE);
 }
 
 int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int exit_code, char *format, ...) {
@@ -276,12 +272,10 @@ int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int ex
 
     va_list ap;
     va_start(ap, format);
-    int re = writeLog_(logger, true, log_fatal_error, file, line, func, format, ap);
-    if (logger->process_fatal_error) {  // TODO-szh 去除该设定, 强制退出
-        if (logger->exit_type == 0)
-            abort();
-        else
-            exit(exit_code);
-    }
-    return re;
+    writeLog_(logger, true, log_fatal_error, file, line, func, format, ap);
+
+    if (logger->exit_type == 0)
+        abort();
+    else
+        exit(exit_code);
 }

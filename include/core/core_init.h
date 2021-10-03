@@ -9,8 +9,6 @@ typedef struct aFunCoreInitInfo aFunCoreInitInfo;
 struct aFunCoreInitInfo {
     char *base_dir;
 
-    bool fe;
-    bool se;
     jmp_buf *buf;
     LogLevel level;
 };

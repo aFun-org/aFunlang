@@ -19,8 +19,6 @@ bool aFunInit(aFunInitInfo *info) {
     }
 
     aFunCoreInitInfo core_info = {.base_dir=info->base_dir,
-                                  .fe=true,
-                                  .se=true,
                                   .buf=info->buf,
                                   .level=info->level};
 
