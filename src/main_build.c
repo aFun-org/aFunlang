@@ -8,19 +8,19 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
 
         if (time_1 == 0 && time_2 == 0) {
             writeErrorLog(aFunlangLogger, "Source not exists: %s", in);
-            printf_stderr(0, "%s [%s]\n", HT_getText(build_src_not_exists_e, "Source not exists"), in);
+            printf_stderr(0, "%s [%s]\n", HT_aFunGetText(build_src_not_exists_e, "Source not exists"), in);
             return -1;
         }
 
         if (time_2 >= time_1) {
             writeWarningLog(aFunlangLogger, "Source already build %s", in);
-            printf_stderr("%s (%s), %s\n", HT_getText(build_src_already, "Source already build"), in, HT_getText(build_use_f, "use --force to build again"));
+            printf_stderr("%s (%s), %s\n", HT_aFunGetText(build_src_already, "Source already build"), in, HT_aFunGetText(build_use_f, "use --force to build again"));
             return 0;
         }
     }
 
     writeInfoLog(aFunlangLogger, "Build %s, %s",  in, out);
-    printf_stdout("Source will be build (%s -> %s)\n", HT_getText(build_file, "Source will be build"), in, out);
+    printf_stdout("Source will be build (%s -> %s)\n", HT_aFunGetText(build_file, "Source will be build"), in, out);
     return buildFile(out, in);
 }
 

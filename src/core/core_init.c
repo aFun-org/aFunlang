@@ -64,12 +64,12 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
         writeDebugLog(aFunCoreLogger, "LANG = %s", LANG);
 
         char *LANG_lib = strJoin(lang_path, LANG, false, false);
-        if (HT_initGetText(LANG_lib) == 0)
+        if (HT_initaFunGetText(LANG_lib) == 0)
             writeDebugLog(aFunCoreLogger, "aFunCore lang init: %s", LANG_lib);
         free(LANG_lib);
         fclose(LANG_file);
     } else
-        HT_initGetText(NULL);
+        HT_initaFunGetText(NULL);
     free(LANG_path);
 
     return true;

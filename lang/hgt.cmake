@@ -6,6 +6,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/hgt)
 to_native_path(${hgt_dir} hgt_dir_n)
 to_native_path(${CMAKE_CURRENT_LIST_DIR}/tr tr_n)
 to_native_path(${CMAKE_SOURCE_DIR}/src src_n)
+set(hgt_name aFun)
 
 set(HGT_COMMAND
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/hgt.py"
@@ -13,6 +14,7 @@ set(HGT_COMMAND
     baseHTExport
     BASEHT_EXPORT
     ${tr_n}
+    ${hgt_name}
     ${src_n})
 
 unset(hgt_dir_n)
@@ -36,8 +38,8 @@ endif()
 
 add_library(hgt-base SHARED)
 target_sources(hgt-base
-               PRIVATE ${hgt_dir}/_ht.c
-               PUBLIC $<BUILD_INTERFACE:${hgt_dir}/_ht.h> $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/_ht.h>)
+               PRIVATE ${hgt_dir}/${hgt_name}_ht.c
+               PUBLIC $<BUILD_INTERFACE:${hgt_dir}/${hgt_name}_ht.h> $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${hgt_name}_ht.h>)
 target_link_libraries(hgt-base ${dlfcn_lib})
 add_dependencies(hgt-base hgt)
 set(hgt-lib hgt-base)
@@ -48,7 +50,7 @@ generate_export_header(hgt-base EXPORT_FILE_NAME "${hgt_dir}/baseHTExport.h" BAS
 target_include_directories(hgt-base PUBLIC
                            $<BUILD_INTERFACE:${hgt_dir}>
                            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
-set_target_properties(hgt-base PROPERTIES PUBLIC_HEADER "${hgt_dir}/_ht.h")
+set_target_properties(hgt-base PROPERTIES PUBLIC_HEADER "${hgt_dir}/${hgt_name}_ht.h")
 
 install(TARGETS hgt-base
         EXPORT aFunlang
@@ -87,3 +89,5 @@ add_custom_command(TARGET hgt-zh_cn
                    COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_NAME:hgt-zh_cn>" ">>" "LANG"
                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}"
                    COMMENT "Creat file ${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}/LANG")
+
+unset(hgt-name)
