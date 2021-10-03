@@ -182,7 +182,7 @@ static int mainRun(ff_FFlags *ff) {
         writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     else
         writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
-    printf_stderr(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
+    printf_stdout(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
 
     return exit_code;
 }
@@ -276,7 +276,7 @@ static int mainCL(ff_FFlags *ff) {
         writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     else
         writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
-    printf_stderr(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
+    printf_stdout(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
 
     destructAFunEnvironment(env);
     freeAllRunList(rl);

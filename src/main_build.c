@@ -14,13 +14,13 @@ int buildFileOutput(FilePath out, FilePath in, bool force) {
 
         if (time_2 >= time_1) {
             writeWarningLog(aFunlangLogger, "Source already build %s", in);
-            printf_stderr("%s (%s), %s\n", HT_aFunGetText(build_src_already, "Source already build"), in, HT_aFunGetText(build_use_f, "use --force to build again"));
+            printf_stderr(0, "%s (%s), %s\n", HT_aFunGetText(build_src_already, "Source already build"), in, HT_aFunGetText(build_use_f, "use --force to build again"));
             return 0;
         }
     }
 
     writeInfoLog(aFunlangLogger, "Build %s, %s",  in, out);
-    printf_stdout("Source will be build (%s -> %s)\n", HT_aFunGetText(build_file, "Source will be build"), in, out);
+    printf_stdout(0, "Source will be build (%s -> %s)\n", HT_aFunGetText(build_file, "Source will be build"), in, out);
     return buildFile(out, in);
 }
 
