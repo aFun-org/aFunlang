@@ -113,7 +113,7 @@ static void printWelcomeInfo(void) {
 
 static void printHelp(void) {
     printf_stdout(0, "aFunlang %s:\n", HT_getText(usage_n, "Usage"));
-    printf_stdout(0, "%s\n", HT_getText(help_info, ""));
+    printf_stdout(0, "%s\n", HT_getText(help_info, "<base-tr>"));
 }
 
 /*
