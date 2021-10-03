@@ -55,7 +55,7 @@ else()
     wi_set_install_dir_quiet(NAMES aFunlang)  # 设置安装路径
 endif()
 
-to_native_path(${INSTALL_LOG} INSTALL_LOGDIR_NATIVE)
+to_native_path(${INSTALL_LOGDIR} INSTALL_LOGDIR_NATIVE)
 to_native_path(${INSTALL_LOCALSTATEDIR} INSTALL_LOCALSTATEDIR_NATIVE)
 to_native_path(${INSTALL_LANGDIR} INSTALL_LANGDIR_NATIVE)
 
@@ -160,7 +160,7 @@ function(install_directory dir)
     install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
 endfunction()
 
-install_directory(${INSTALL_LOG})
+install_directory(${INSTALL_LOGDIR})
 install_directory(${INSTALL_LOCALSTATEDIR})
 install_directory(${INSTALL_LANGDIR})
 
