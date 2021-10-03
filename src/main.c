@@ -280,6 +280,7 @@ static int mainCL(ff_FFlags *ff) {
 
     destructAFunEnvironment(env);
     freeAllRunList(rl);
+    free(argv);
     return exit_code;
 }
 
