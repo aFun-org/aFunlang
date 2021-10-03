@@ -250,13 +250,13 @@ int buildFile(FilePath out, FilePath in){
     char *suffix_out = getFileSurfix(out);
     if (suffix_in == NULL || !EQ_STR(".aun", suffix_in)) {  // 不是源文件
         writeErrorLog(aFunCoreLogger, "Input not .aun %s", (suffix_in == NULL ? "" : suffix_in));
-        printf_stderr("%s: %s\n", HT_aFunGetText(build_in_aun_e, "Input file is not .aun file"), (suffix_in == NULL ? "" : suffix_in));
+        printf_stderr(0, "%s: %s\n", HT_aFunGetText(build_in_aun_e, "Input file is not .aun file"), (suffix_in == NULL ? "" : suffix_in));
         return -2;
     }
 
     if (suffix_out == NULL || !EQ_STR(".aub", suffix_out)) {  // 不是字节码文件
         writeErrorLog(aFunCoreLogger, "Output not .aub %s", (suffix_out == NULL ? "" : suffix_out));
-        printf_stderr("%s: %s\n", HT_aFunGetText(build_out_aub_e, "Output file is not .aub file"), (suffix_out == NULL ? "" : suffix_out));
+        printf_stderr(0, "%s: %s\n", HT_aFunGetText(build_out_aub_e, "Output file is not .aub file"), (suffix_out == NULL ? "" : suffix_out));
         return -2;
     }
 
