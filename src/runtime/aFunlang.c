@@ -10,7 +10,7 @@ bool aFunInit(aFunInitInfo *info) {
         return false;
 
     if (info == NULL) {
-        static aFunInitInfo info_default = {.base_dir="",
+        static aFunInitInfo info_default = {.base_dir=".",
                                             .pc=log_pc_all,
                                             .buf=NULL,
                                             .level=log_info};

@@ -370,12 +370,27 @@ bool infixFunc(char *id, af_Object *obj) {
 }
 
 int main(int argc, char **argv) {
-    bool re = aFunInit(NULL);
+    jmp_buf main_buf;
+    char *base_path = getExedir(*argv, 1);
+    if (base_path == NULL)
+        goto INIT_ERROR;
 
-    if (!re) {
-        printf("re = %d\n", re);
-        exit(EXIT_FAILURE);
-    }
+    if (setjmp(main_buf) == 1)
+        return EXIT_FAILURE;
+
+    aFunInitInfo info = {.base_dir=base_path,
+            .level=log_debug,
+            .buf=&main_buf,
+            .pc=log_pc_all};
+
+    if (!aFunInit(&info)) {
+INIT_ERROR:
+        free(base_path);
+        printf_stderr(0, "aFunlang init error.");
+        return EXIT_FAILURE;
+    } else
+        free(base_path);
+
 
     af_Environment *env = creatAFunEnvironment(0, NULL);
     if(!pushLiteralRegex("data.*", "func", true, env)) {

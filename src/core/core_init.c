@@ -22,7 +22,7 @@ static void destructCoreExit(void) {
 
 bool aFunCoreInit(aFunCoreInitInfo *info) {
     if (info == NULL) {
-        static aFunCoreInitInfo info_default = {.base_dir="",
+        static aFunCoreInitInfo info_default = {.base_dir=".",
                                                 .pc=log_pc_all,
                                                 .fe=true,
                                                 .se=true,
