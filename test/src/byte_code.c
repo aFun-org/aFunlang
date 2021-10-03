@@ -24,7 +24,7 @@ int main() {
 
     af_Code *get = NULL;
     if((re = readByteCode(&get, "test.aub")) != 1) {
-        fprintf(stderr, "Read test.aub error[%d] %s.\n", re);
+        fprintf(stderr, "Read test.aub error[%d].\n", re);
         return EXIT_FAILURE;
     }
 

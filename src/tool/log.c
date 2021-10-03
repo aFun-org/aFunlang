@@ -167,7 +167,7 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
     char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
 
 #define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s'\n"
-#define FORMAT_SHORT "%s[%s] (%s:%d at %s) : %s\n"
+#define FORMAT_SHORT "%s(%s:%d) : %s\n"
     long tid = gettid();
 
     char tmp[2048] = {0};
@@ -189,22 +189,22 @@ static int writeLog_(Logger *logger, LogLoggerPrintConsole pc, LogLevel level, c
         switch (log_factory.print_console) {
             case log_pc_all:
                 if (level < log_warning) {
-                    printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
                     fflush(stdout);
                 } else if (log_factory.print_console) {
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
                     fflush(stderr);
                 }
                 break;
             case log_pc_w:
                 if (level >= log_warning) { // warning的内容一定会被打印
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
                     fflush(stderr);
                 }
                 break;
             case log_pc_e:
                 if (level >= log_error) {  // warning的内容一定会被打印
-                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], logger->id, file, line, func, tmp);
+                    printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
                     fflush(stderr);
                 }
                 break;

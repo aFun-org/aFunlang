@@ -370,7 +370,7 @@ bool infixFunc(char *id, af_Object *obj) {
 }
 
 int main(int argc, char **argv) {
-    bool re = aFunInit("", log_pc_all, NULL, log_debug);
+    bool re = aFunInit(NULL);
 
     if (!re) {
         printf("re = %d\n", re);

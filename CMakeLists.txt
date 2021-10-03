@@ -45,6 +45,8 @@ endif()
 set(PRINT_DIR_INFO ON CACHE BOOL "Print install and build dirs info.")
 set(_print_dir ${PRINT_DIR_INFO})
 
+include(tool)
+
 include(CFEP)  # 搜索CFEP.cmake
 if (_print_dir)
     set(PRINT_DIR_INFO OFF CACHE BOOL "Print install and build dirs info." FORCE)
@@ -52,10 +54,10 @@ if (_print_dir)
 else()
     wi_set_install_dir_quiet(NAMES aFunlang)  # 设置安装路径
 endif()
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_LOG})  # 安装log输出的目录
-file(TO_NATIVE_PATH ${INSTALL_LOG} _INSTALL_LOG_NATIVE)
-string(REPLACE "\\" "\\\\" INSTALL_LOG_NATIVE ${_INSTALL_LOG_NATIVE})  # 转义
-unset(_INSTALL_LOG_NATIVE)
+
+to_native_path(${INSTALL_LOG} INSTALL_LOGDIR_NATIVE)
+to_native_path(${INSTALL_LOCALSTATEDIR} INSTALL_LOCALSTATEDIR_NATIVE)
+to_native_path(${INSTALL_LANGDIR} INSTALL_LANGDIR_NATIVE)
 
 include(filename)
 
@@ -74,7 +76,9 @@ set(base_compile_definitions
     aFunMajorVersion=${PROJECT_VERSION_MAJOR}
     aFunMinorVersion=${PROJECT_VERSION_MINOR}
     aFunPatchVersion=${PROJECT_VERSION_PATCH}
-    aFunLogDir="${INSTALL_LOG_NATIVE}")  # 默认的预定义宏
+    aFunLogDir="${INSTALL_LOGDIR_NATIVE}"
+    aFunVarLibDir="${INSTALL_LOCALSTATEDIR_NATIVE}"
+    aFunLangDir="${INSTALL_LANGDIR_NATIVE}")  # 默认的预定义宏
 
 if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)
@@ -91,6 +95,7 @@ endif()
 add_compile_definitions(${base_compile_definitions})
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
+include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
 add_subdirectory(src)
 include(aFunHeader)
 
@@ -150,7 +155,14 @@ install(FILES
         ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
         DESTINATION ${INSTALL_CMAKEDIR})
 
-install(CODE "file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${INSTALL_LOG})")  # 创建log目录
+function(install_directory dir)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
+    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
+endfunction()
+
+install_directory(${INSTALL_LOG})
+install_directory(${INSTALL_LOCALSTATEDIR})
+install_directory(${INSTALL_LANGDIR})
 
 set(BUILD_TEST FALSE CACHE BOOL "Enable run test program")
 set(_build_test ${BUILD_TEST})

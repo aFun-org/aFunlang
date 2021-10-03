@@ -2,10 +2,18 @@
 #define AFUN_AFUNLANG_H
 #include "aFunlangExport.h"
 #include "aFunCore.h"
-
 #include "runtime.h"
 
-AFUN_LANG_EXPORT bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf, LogLevel level);
+typedef struct aFunInitInfo aFunInitInfo;
+struct aFunInitInfo {
+    char *base_dir;
+
+    LogFactoryPrintConsole pc;
+    jmp_buf *buf;
+    LogLevel level;
+};
+
+AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
 
 AFUN_LANG_EXPORT af_Environment *creatAFunEnvironment(int argc, char **argv);
 AFUN_LANG_EXPORT void destructAFunEnvironment(af_Environment *env);

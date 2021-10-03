@@ -41,16 +41,12 @@ static int mainRun(ff_FFlags *ff);
 static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
 
-extern const char *const help_info;
-
 char *base_path = NULL;
-char *log_path = NULL;
 static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
 
 void freeBaseName(void) {
     free(base_path);
-    free(log_path);
 }
 
 int main(int argc, char **argv) {
@@ -58,13 +54,17 @@ int main(int argc, char **argv) {
     base_path = getExedir(*argv, 1);
     if (base_path == NULL)
         goto INIT_ERROR;
-    log_path = strJoin(base_path, SEP aFunLogDir SEP, false, false);
     atexit(freeBaseName);
 
     if (setjmp(main_buf) == 1)
         return EXIT_FAILURE;
 
-    if (!aFunInit(log_path, log_pc_all, &main_buf, log_debug)) {
+    aFunInitInfo info = {.base_dir=base_path,
+                         .level=log_debug,
+                         .buf=&main_buf,
+                         .pc=log_pc_all};
+
+    if (!aFunInit(&info)) {
 INIT_ERROR:
         printf_stderr(0, "aFunlang init error.");
         return EXIT_FAILURE;
@@ -99,7 +99,7 @@ INIT_ERROR:
 static void printVersion(void) {
     printf_stdout(0, "aFunlang at %s\n", name);
     printf_stdout(0, "version: " aFunVersion "\n");
-    printf_stdout(strlen(aFunDescription), aFunDescription "\n");
+    fputs_stdout(aFunDescription "\n");
 }
 
 static void printWelcomeInfo(void) {
@@ -110,7 +110,7 @@ static void printWelcomeInfo(void) {
 
 static void printHelp(void) {
     printf_stdout(0, "aFunlang Usage:\n");
-    printf_stdout(strlen(help_info), "%s\n", help_info);
+    printf_stdout(strlen(HT_getText(HELP_INFO, "<base-tr>")), "%s\n", HT_getText(HELP_INFO, ""));
 }
 
 /*

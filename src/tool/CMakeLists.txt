@@ -34,7 +34,7 @@ foreach(tgt tool-shared tool-static)
     target_include_directories(${tgt} PUBLIC
                                $<BUILD_INTERFACE:${build_include_tool}>
                                $<INSTALL_INTERFACE:${install_include_tool}>)
-    target_link_libraries(${tgt} PUBLIC ${dlfcn_lib} ${pcre2_lib} ${fflags_lib})
+    target_link_libraries(${tgt} PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib})
     set_target_properties(${tgt} PROPERTIES
                           PUBLIC_HEADER "${public_h_build}")
     if(_build_mem)

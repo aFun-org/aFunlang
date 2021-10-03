@@ -5,11 +5,26 @@
 static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
 static bool aFunInit_mark = false;
 
-bool aFunInit(char *log_dir, LogFactoryPrintConsole print_console, jmp_buf *buf, LogLevel level) {
+bool aFunInit(aFunInitInfo *info) {
     if (aFunInit_mark)
         return false;
 
-    aFunInit_mark = aFunCoreInit(log_dir, print_console, true, true, buf, level);
+    if (info == NULL) {
+        static aFunInitInfo info_default = {.base_dir="",
+                                            .pc=log_pc_all,
+                                            .buf=NULL,
+                                            .level=log_info};
+        info = &info_default;
+    }
+
+    aFunCoreInitInfo core_info = {.base_dir=info->base_dir,
+                                  .fe=true,
+                                  .se=true,
+                                  .pc=info->pc,
+                                  .buf=info->buf,
+                                  .level=info->level};
+
+    aFunInit_mark = aFunCoreInit(&core_info);
     if (aFunInit_mark)
         writeInfoLog(aFunCoreLogger, log_default, "aFun-runtime Init success");
     return aFunInit_mark;
