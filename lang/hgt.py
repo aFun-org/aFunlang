@@ -94,7 +94,7 @@ with open(os.path.join(output_dir, f"_ht.c"), "w", encoding="utf-8") as fc:
 
         fh.write(f"#include \"{export_h}.h\"\n")
         fc.write(f"#include \"_ht.h\"\n")
-        fh.write("#define HT_getText(name, ...) (HT_TEXT_ ## name)\n")
+        fh.write("#define HT_getText(name, ...) ((char *)(HT_TEXT_ ## name))\n")
         fh.write(f"{export} int HT_initGetText(char *lang);\n")
         fc.write("#undef HT_getText\n")
 
