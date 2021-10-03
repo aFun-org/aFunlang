@@ -108,7 +108,7 @@ static void destructFile(struct readerDataFile *data) {
 af_Parser *makeParserByFile(FilePath path){
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        writeErrorLog(aFunCoreLogger, log_default, "File open error: %s", file);
+        writeErrorLog(aFunCoreLogger, log_d, "File open error: %s", file);
         return NULL;
     }
 
@@ -150,7 +150,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         ungetc(ch, stdin);
 
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
-            writeErrorLog(aFunCoreLogger, log_default, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
+            writeErrorLog(aFunCoreLogger, log_d, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
             *read_end = true;
             return 0;
         }

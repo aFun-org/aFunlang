@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
 
     aFunInitInfo info = {.base_dir=base_path,
-                         .level=log_debug,
+                         .level=log_track,
                          .buf=&main_buf,
                          .pc=log_pc_all};
 
@@ -70,11 +70,11 @@ INIT_ERROR:
         return EXIT_FAILURE;
     }
 
-    initLogger(aFunlangLogger, "aFunlang-exe", log_debug);
+    initLogger(aFunlangLogger, "aFunlang-exe", info.level);
     aFunlangLogger->process_send_error = true;
     aFunlangLogger->process_fatal_error = true;
     aFunlangLogger->buf = &main_buf;
-    writeInfoLog(aFunlangLogger, log_default, "aFunlang-exe init success.");
+    writeDebugLog(aFunlangLogger, log_d, "aFunlang-exe init success");
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
@@ -97,10 +97,11 @@ INIT_ERROR:
 }
 
 static void printVersion(void) {
-    printf_stdout(0, "aFunlang at %s\n", name);
+    /* Version的显示不被翻译, 因为它通常还需要被其他程序读取而进行处理, 必须保证一致性 */
+    printf_stdout(0, "aFunlang at  %s\n", name);
     printf_stdout(0, "aFunlang dir %s\n", base_path);
-    printf_stdout(0, "%s: " aFunVersion "\n", HT_getText(VERSION_N, "version"));
-    fputs_stdout(aFunDescription "\n");
+    fputs_stdout("version: " aFunVersion "\n");
+    fputs_stdout(aFunDescription"\n");
 }
 
 static void printWelcomeInfo(void) {
@@ -119,7 +120,7 @@ static void printHelp(void) {
  * 目标: 打印参数错误信息
  */
 static void printError(ff_FFlags *ff) {
-    writeErrorLog(aFunlangLogger, log_default, "%s (%s).", HT_getText(CL_ERROR, "Command line argument error"), ff_getChild(ff));
+    writeErrorLog(aFunlangLogger, log_d, "%s (%s).", HT_getText(CL_ERROR, "Command line argument error"), ff_getChild(ff));
     printHelp();
 }
 
@@ -161,7 +162,7 @@ static int mainRun(ff_FFlags *ff) {
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
     if (argc == 0) {
-        writeErrorLog(aFunlangLogger, log_default, HT_getText(NOT_FILE, "There are not file to run"));
+        writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_FILE, "There are not file to run"));
         return 1;
     }
 
@@ -170,9 +171,9 @@ static int mainRun(ff_FFlags *ff) {
     destructAFunEnvironment(env);
 
     if (exit_code != 0)
-        writeErrorLog(aFunlangLogger, log_default, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+        writeErrorLog(aFunlangLogger, log_d, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
     else
-        writeInfoLog(aFunlangLogger, log_default, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+        writeInfoLog(aFunlangLogger, log_d, "aFun %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
 
     return exit_code;
 }
@@ -237,7 +238,7 @@ static int mainCL(ff_FFlags *ff) {
     RunList *rl = getRunList(ff, &command_line, &save_aub);
 
     if (rl == NULL && !command_line) {
-        writeErrorLog(aFunlangLogger, log_default, HT_getText(NOT_FILE, ""));
+        writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_FILE, ""));
         return EXIT_FAILURE;
     }
 
@@ -261,9 +262,9 @@ static int mainCL(ff_FFlags *ff) {
         while (isCoreExit(env) != 1);
 
         if (exit_code != 0)
-            writeErrorLog(aFunlangLogger, log_default, "aFun cl %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+            writeErrorLog(aFunlangLogger, log_d, "aFun command line %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
         else
-            writeInfoLog(aFunlangLogger, log_default, "aFun cl %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
+            writeInfoLog(aFunlangLogger, log_d, "aFun command line %s, %s = %d", HT_getText(RUN_Exit_N, ""), HT_getText(RUN_Exitcode_N, ""), exit_code);
     }
 
     destructAFunEnvironment(env);
@@ -284,14 +285,14 @@ static int mainBuild(ff_FFlags *ff) {
         switch (mark) {
             case 'o':
                 if (path != NULL) {
-                    writeErrorLog(aFunlangLogger, log_default, HT_getText(ARG_CONFLICT, "Argument conflict (out, path)"));
+                    writeErrorLog(aFunlangLogger, log_d, HT_getText(ARG_CONFLICT, "Argument conflict (out, path)"));
                     goto error;
                 }
                 out_put = text;
                 break;
             case 'p':
                 if (out_put != NULL) {
-                    writeErrorLog(aFunlangLogger, log_default, HT_getText(ARG_CONFLICT, ""));
+                    writeErrorLog(aFunlangLogger, log_d, HT_getText(ARG_CONFLICT, ""));
                     goto error;
                 }
                 path = text;
@@ -312,14 +313,14 @@ out:
 
         /* 如果没有参数 */
         if (!ff_getopt_wild(&text, ff)) {
-            writeErrorLog(aFunlangLogger, log_default, HT_getText(NOT_BUILD_SRC, "There are not source file to build"));
+            writeErrorLog(aFunlangLogger, log_d, HT_getText(NOT_BUILD_SRC, "There are not source file to build"));
             goto error;
         } else
             in = text;
 
         /* 如果还有第二个参数 */
         if (ff_getopt_wild(&text, ff)) {
-            writeErrorLog(aFunlangLogger, log_default, HT_getText(MANY_BUILD_SRC, "There are too many source file to build. (Do not use --out option)"));
+            writeErrorLog(aFunlangLogger, log_d, HT_getText(MANY_BUILD_SRC, "There are too many source file to build. (Do not use --out option)"));
             goto error;
         }
 

@@ -16,9 +16,8 @@
 static void *safeCalloc(size_t n, size_t size);
 static void *safeCalloc(size_t n, size_t size) {
     void *re = calloc(n, size);
-    if (re == NULL) {
-        writeFatalErrorLog(NULL, log_default, EXIT_FAILURE, "The calloc error.");
-    }
+    if (re == NULL)
+        writeFatalErrorLog(NULL, EXIT_FAILURE, "The memory error");
     return re;
 }
 

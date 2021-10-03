@@ -26,7 +26,7 @@ bool aFunInit(aFunInitInfo *info) {
 
     aFunInit_mark = aFunCoreInit(&core_info);
     if (aFunInit_mark)
-        writeInfoLog(aFunCoreLogger, log_default, "aFun-runtime Init success");
+        writeDebugLog(aFunCoreLogger, log_d, "aFun-runtime Init success");
     return aFunInit_mark;
 }
 
@@ -38,7 +38,7 @@ af_Environment *creatAFunEnvironment(int argc, char **argv){
     af_Code *code = NULL;
 
     for(int i = 0; i < argc; i++)
-        writeInfoLog(aFunCoreLogger, log_default, "[aFunlang] Env-arg %d. %s", i, argv[i]);
+        writeDebugLog(aFunCoreLogger, log_d, "[aFunlang] Env-arg %d. %s", i, argv[i]);
 
     env->core->argc->num = argc;
     for (int i = 0; i < argc; i++) {
@@ -79,7 +79,7 @@ static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_pa
     if (save_path != NULL) {
         int res = writeByteCode(bt_code, save_path);
         if (res != 1)
-            writeErrorLog(aFunCoreLogger, log_default, "%s [%s -> %s]", HT_getText(RUN_SAVE_ERROR, "Save aFun Bytecode file error"), writeByteCodeError[res], save_path);
+            writeErrorLog(aFunCoreLogger, log_d, "%s [%s -> %s]", HT_getText(RUN_SAVE_ERROR, "Save aFun Bytecode file error"), writeByteCodeError[res], save_path);
     }
 
     bool res = iterCode(bt_code, mode, env);
@@ -115,7 +115,7 @@ int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int 
 
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aun", sufix)) {
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s]", HT_getText(RUN_NOT_AUN, "There is not .aun file"), (sufix == NULL ? "" : sufix));
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s]", HT_getText(RUN_NOT_AUN, "There is not .aun file"), (sufix == NULL ? "" : sufix));
         return -2;
     }
 
@@ -174,14 +174,14 @@ int runCodeFromFileByte(FilePath file, int mode, af_Environment *env){
 
     char *sufix = getFileSurfix(file);
     if (sufix == NULL || !EQ_STR(".aub", sufix)) {
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s].", HT_getText(RUN_NOT_AUB, "There is not .aub file"), (sufix == NULL ? "" : sufix));
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s].", HT_getText(RUN_NOT_AUB, "There is not .aub file"), (sufix == NULL ? "" : sufix));
         return -2;
     }
 
     af_Code *code = NULL;
     int res = readByteCode(&code, file);
     if(res != 1) {
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s: %s].", HT_getText(LOAD_BT_ERROR, "Load bytecode file error"), file, readByteCodeError[res]);
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s: %s].", HT_getText(LOAD_BT_ERROR, "Load bytecode file error"), file, readByteCodeError[res]);
         return -2;
     }
 
@@ -200,7 +200,7 @@ int runCodeFromFile(FilePath file, bool save_afb, int mode, af_Environment *env)
 
     char *sufix = getFileSurfix(file);
     if (sufix != NULL && !EQ_STR(".aun", sufix) && !EQ_STR(".aub", sufix)) {  // 不是源文件, 字节码文件或无后缀文件
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s].", HT_getText(RUN_NOT_AUN_AUB, "There is not .aun/.aub file"), sufix);
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s].", HT_getText(RUN_NOT_AUN_AUB, "There is not .aun/.aub file"), sufix);
         return -2;
     }
 
@@ -212,7 +212,7 @@ int runCodeFromFile(FilePath file, bool save_afb, int mode, af_Environment *env)
     time_t time_2 = getFileMTime(path_2);
 
     if (time_1 == 0 && time_2 == 0) {
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s].", HT_getText(NOT_RUN_FILE_EXISITS, "File not exists"), file);
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s].", HT_getText(NOT_RUN_FILE_EXISITS, "File not exists"), file);
         free(path_1);
         free(path_2);
         return -3;
@@ -244,12 +244,12 @@ int buildFile(FilePath out, FilePath in){
     char *suffix_in = getFileSurfix(in);
     char *suffix_out = getFileSurfix(out);
     if (suffix_in == NULL || !EQ_STR(".aun", suffix_in)) {  // 不是源文件
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s]", HT_getText(BUILD_IN_AUN, "Input file is not .aun file"), (suffix_in == NULL ? "" : suffix_in));
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s]", HT_getText(BUILD_IN_AUN, "Input file is not .aun file"), (suffix_in == NULL ? "" : suffix_in));
         return -2;
     }
 
     if (suffix_out == NULL || !EQ_STR(".aub", suffix_out)) {  // 不是字节码文件
-        writeErrorLog(aFunCoreLogger, log_default, "[%s]", HT_getText(BUILD_OUT_AUB, "Output file is not .aub file"), (suffix_out == NULL ? "" : suffix_out));
+        writeErrorLog(aFunCoreLogger, log_d, "[%s]", HT_getText(BUILD_OUT_AUB, "Output file is not .aub file"), (suffix_out == NULL ? "" : suffix_out));
         return -2;
     }
 
@@ -263,7 +263,7 @@ int buildFile(FilePath out, FilePath in){
     freeAllCode(code);
 
     if (res != 1) {
-        writeErrorLog(aFunCoreLogger, log_default, "%s[%s: %s]", HT_getText(BUILD_ERROR_N, "Build error"), in, writeByteCodeError[res]);
+        writeErrorLog(aFunCoreLogger, log_d, "%s[%s: %s]", HT_getText(BUILD_ERROR_N, "Build error"), in, writeByteCodeError[res]);
         return -3;
     }
 
