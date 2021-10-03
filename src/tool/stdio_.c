@@ -10,6 +10,9 @@
 #include "tool.h"
 
 #ifdef aFunWIN32_NO_CYGWIN
+#ifdef _MSC_VER
+#pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
+#endif
 #include <Windows.h>
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
