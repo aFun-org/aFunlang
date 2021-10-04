@@ -14,4 +14,5 @@ AFUN_TOOL_EXPORT char *fileNameToVar(char *name, bool need_free);
 AFUN_TOOL_EXPORT char *findPath(char *path, char *env, bool need_free);
 AFUN_TOOL_EXPORT char *getExedir(char *pgm, int dep);
 AFUN_TOOL_EXPORT uintmax_t getFileSize(char *path);
+AFUN_TOOL_EXPORT bool isCharUTF8(char *str);
 #endif //AFUN_FILE_H

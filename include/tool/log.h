@@ -67,5 +67,7 @@ AFUN_TOOL_EXPORT int writeFatalErrorLog_(Logger *logger, char *file, int line, c
 #define assertInfoLog(c, logger, ...) ((c) || writeInfoLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #define assertWarningLog(c, logger, ...) ((c) || writeWarningLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #define assertErrorLog(c, logger, ...) ((c) || writeErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define assertSendErrorLog(c, logger, ...) ((c) || writeSendErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define assertFatalErrorLog(c, logger, exit_code, ...) ((c) || writeFatalErrorLog(logger, exit_code, "Assert " #c " error : " __VA_ARGS__))
 
 #endif //AFUN_LOG_H

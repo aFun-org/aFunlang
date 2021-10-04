@@ -382,6 +382,9 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
 
         if (re == -1) {
             char *word = readWord(parser->lexical->last, parser->reader);
+            if (word == NULL)
+                goto ERROR;
+
             tt = parser->lexical->token;
 
             if (tt == TK_ELEMENT_SHORT || tt == TK_PREFIX)
@@ -425,6 +428,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
             parser->lexical->last = 0;
             continue;
         } else if (re == -2 || re == -3) {
+ERROR:
             tt = TK_ERROR;
             *text = NULL;
             parser->lexical->is_error = true;

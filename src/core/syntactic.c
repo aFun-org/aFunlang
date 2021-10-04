@@ -42,6 +42,11 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
         case TK_ELEMENT_SHORT:
         case TK_ELEMENT_LONG:
             re = makeElementCode(parser->syntactic->text, prefix, parser->reader->line, NULL);
+            if (re == NULL) {
+                writeErrorLog(aFunCoreLogger, "Creat element code error: %s", parser->syntactic->text);
+                freeAllCode(code_list);
+                return NULL;
+            }
             free(parser->syntactic->text);
             break;
         case TK_LP:

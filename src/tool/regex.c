@@ -8,6 +8,9 @@
 char regex_error[REGEX_ERROR_SIZE];
 
 af_Regex *makeRegex(char *pattern) {
+    if (!isCharUTF8(pattern))
+        return NULL;
+
     int error_code;
     size_t erroroffset;
     pcre2_code *re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, NULL);
@@ -39,6 +42,9 @@ void freeRegex(af_Regex *rg) {
  * 返回 (>0) - 失败
  */
 int matchRegex(char *subject, af_Regex *rg) {
+    if (!isCharUTF8(subject))
+        return 0;
+
     PCRE2_SPTR sub = (PCRE2_SPTR)subject;
     PCRE2_SIZE sub_len = strlen(subject);
     pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(rg->re, NULL);

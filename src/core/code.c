@@ -42,6 +42,9 @@ af_Code *makeElementCode(char *var, char prefix, FileLine line, FilePath path) {
     if (prefix != NUL && strchr(E_PREFIX, prefix) == NULL)
         prefix = NUL;
 
+    if (!isCharUTF8(var))
+        return NULL;
+
     af_Code *bt = makeCode(prefix, line, path);
     bt->type = code_element;
     bt->element.data = strCopy(var);
@@ -555,8 +558,11 @@ char *getCodeMD5(af_Code *code) {
     return md5str;
 }
 
-static bool codeElementCheck(const char *data) {
-    return data != NULL;
+static bool codeElementCheck(char *data) {
+    if (data == NULL)
+        return false;
+
+    return isCharUTF8(data);
 }
 
 /*

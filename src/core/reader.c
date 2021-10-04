@@ -1,4 +1,5 @@
-﻿#include "__reader.h"
+﻿#include "core_init.h"
+#include "__reader.h"
 
 af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size) {
     af_Reader *reader = calloc(1, sizeof(af_Reader));
@@ -61,6 +62,12 @@ char *readWord(size_t del_index, af_Reader *reader) {
     for (char *tmp = re; *tmp != NUL; tmp ++) {
         if (*tmp == '\n')
             reader->line++;
+    }
+
+    if (!isCharUTF8(re)) {
+        free(re);
+        writeErrorLog(aFunCoreLogger, "Is not utf-8");
+        return NULL;
     }
 
     return re;
