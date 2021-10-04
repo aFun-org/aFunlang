@@ -6,10 +6,9 @@
 #include "aFunToolExport.h"
 
 typedef struct af_Regex af_Regex;
-extern char regex_error[REGEX_ERROR_SIZE];
 
-AFUN_TOOL_EXPORT af_Regex *makeRegex(char *pattern);
+AFUN_TOOL_EXPORT af_Regex *makeRegex(char *pattern, char **error);
 AFUN_TOOL_EXPORT void freeRegex(af_Regex *rg);
-AFUN_TOOL_EXPORT int matchRegex(char *subject, af_Regex *rg);
+AFUN_TOOL_EXPORT int matchRegex(char *subject, af_Regex *rg, char **error);
 
 #endif //AFUN_REGEX

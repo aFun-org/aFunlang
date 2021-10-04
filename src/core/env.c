@@ -1304,7 +1304,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
 }
 
 static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_protect) {
-    af_Regex *rg = makeRegex(pattern);
+    af_Regex *rg = makeRegex(pattern, NULL);
     if (rg == NULL)
         return NULL;
 
@@ -1344,7 +1344,7 @@ bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment
  */
 bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {
     for (af_LiteralRegex *lr = env->core->lr; lr != NULL; lr = lr->next) {
-        if (matchRegex(literal, lr->rg) == 1) {
+        if (matchRegex(literal, lr->rg, NULL) == 1) {
             if (func != NULL)
                 *func = lr->func;  // 不使用复制
             if (in_protect != NULL)
