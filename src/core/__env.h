@@ -132,7 +132,7 @@ struct af_Activity {  // 活动记录器
 
             /* 函数调用: 宏函数*/
             bool is_macro_call;  // 宏函数隐式调用
-            struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl
+            struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl (即调用函数时的外部VarLis)
             ActivityCount macro_vs_count;
 
             /* 函数调用: 析构函数 在错误回溯时使用, 是个标记*/
@@ -154,7 +154,7 @@ struct af_Activity {  // 活动记录器
             /* Import使用 */
             char *import_mark;
 
-            af_ActivityTrackBack *tb;
+            struct af_ActivityTrackBack *tb;
         };
     };
 };

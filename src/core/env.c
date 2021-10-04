@@ -1070,22 +1070,23 @@ bool setFuncActivityAddVar(af_Environment *env){
     if (fi->is_macro) {  // 是宏函数则保存变量空间
         env->activity->macro_vsl = env->activity->var_list;
         env->activity->macro_vs_count = env->activity->new_vs_count;
-    } else if (fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
-        if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
+        env->activity->new_vs_count = 0;
+    }
+
+    if (fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
+        if (env->activity->new_vs_count != 0 && !freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);  // 释放失败
             return false;
         }
-    }
 
-    if (fi->scope == normal_scope) {  // 使用函数变量空间
-        env->activity->var_list = env->activity->func_var_list;
         env->activity->new_vs_count = 0;
-    } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
-        env->activity->var_list = makeVarSpaceList(env->core->protect);
-        env->activity->new_vs_count = 0;
-    } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
-        env->activity->var_list = NULL;
-        env->activity->new_vs_count = 0;
+        if (fi->scope == normal_scope)  // 使用函数变量空间
+            env->activity->var_list = env->activity->func_var_list;
+        else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
+            env->activity->var_list = makeVarSpaceList(env->core->protect);
+            env->activity->new_vs_count = 1;
+        } else if (fi->scope == super_pure_scope)  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
+            env->activity->var_list = NULL;
     }
 
     if (fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
