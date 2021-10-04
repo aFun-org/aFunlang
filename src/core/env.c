@@ -42,6 +42,14 @@ static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
 /* 顶层消息处理器 处理函数 */
 static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env);
 
+/* 守护器 创建与释放 */
+static af_Guardian *makeGuardian(char *type, DLC_SYMBOL(GuardianFunc) func);
+static af_Guardian *freeGuardian(af_Guardian *gd);
+static void freeAllGuardian(af_Guardian *gd);
+
+/* 守护器 处理函数 */
+static af_Guardian *findGuardian(char *type, af_Environment *env);
+
 /* LiteralData 创建与释放 */
 static af_LiteralDataList *makeLiteralDataList(char *data);
 static af_LiteralDataList *freeLiteralData_Pri(af_LiteralDataList *ld);
@@ -767,6 +775,7 @@ void freeEnvironment(af_Environment *env) {
     freeCore(env);
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
+    freeAllGuardian(env->guardian);
 
     if (!res)
         writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
@@ -802,8 +811,7 @@ static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env) 
     return NULL;
 }
 
-bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
-                      af_Environment *env) {
+bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env) {
     af_TopMsgProcess *mp = findTopMsgProcessFunc(type, env);
     if (mp != NULL)
         return false;
@@ -812,6 +820,59 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func,
     mp->next = env->process;
     env->process = mp;
     return true;
+}
+
+static af_Guardian *makeGuardian(char *type, DLC_SYMBOL(GuardianFunc) func) {
+    af_Guardian *gd = calloc(1, sizeof(af_Guardian));
+    gd->type = strCopy(type);
+    gd->func = COPY_SYMBOL(func, GuardianFunc);
+    return gd;
+}
+
+static af_Guardian *freeGuardian(af_Guardian *gd) {
+    af_Guardian *next = gd->next;
+    free(gd->type);
+    FREE_SYMBOL(gd->func);
+    free(gd);
+    return next;
+}
+
+static void freeAllGuardian(af_Guardian *gd) {
+    while (gd != NULL)
+        gd = freeGuardian(gd);
+}
+
+static af_Guardian *findGuardian(char *type, af_Environment *env) {
+    af_Guardian *gd = env->guardian;
+    for (NULL; gd != NULL; gd = gd->next) {
+        if (EQ_STR(type, gd->type))
+            return gd;
+    }
+    return NULL;
+}
+
+bool addGuardian(char *type, DLC_SYMBOL(GuardianFunc) func,
+                 af_Environment *env) {
+    af_Guardian *gd = findGuardian(type, env);
+    if (gd != NULL)
+        return false;
+
+    gd = makeGuardian(type, func);
+    gd->next = env->guardian;
+    env->guardian = gd;
+    return true;
+}
+
+bool popGuardian(char *type, af_Environment *env) {
+    af_Guardian **gd = &env->guardian;
+    for (NULL; *gd != NULL; gd = &((*gd)->next)) {
+        if (EQ_STR(type, (*gd)->type)) {
+            *gd = freeGuardian(*gd);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){

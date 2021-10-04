@@ -8,6 +8,7 @@ typedef struct af_ActivityTrackBack af_ActivityTrackBack;
 typedef struct af_EnvVarSpace af_EnvVarSpace;
 typedef struct af_EnvVar af_EnvVar;
 typedef struct af_TopMsgProcess af_TopMsgProcess;
+typedef struct af_Guardian af_Guardian;
 typedef struct af_LiteralDataList af_LiteralDataList;
 typedef struct af_LiteralRegex af_LiteralRegex;
 typedef struct af_ErrorBacktracking af_ErrorBacktracking;
@@ -182,10 +183,19 @@ struct af_ActivityTrackBack {
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
+typedef void GuardianFunc(af_Message *msg, af_Environment *env);
+NEW_DLC_SYMBOL(GuardianFunc, GuardianFunc);
+
 struct af_TopMsgProcess {  // 顶层msg处理器
     char *type;
     DLC_SYMBOL(TopMsgProcessFunc) func;
     struct af_TopMsgProcess *next;
+};
+
+struct af_Guardian {  // 守护器
+    char *type;
+    DLC_SYMBOL(GuardianFunc) func;
+    struct af_Guardian *next;
 };
 
 struct af_EnvVar {  // 环境变量
@@ -205,6 +215,7 @@ struct af_Environment {  // 运行环境
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
+    struct af_Guardian *guardian;
     bool in_run;
 };
 

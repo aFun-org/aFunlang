@@ -17,10 +17,12 @@ static bool checkRunGC(af_Environment *env);
 static int checkMsg(af_Message *msg, af_Environment *env);
 bool checkNormalEnd(af_Message *msg, af_Environment *env);
 static bool checkGetArgEnd(af_Message *msg, af_Environment *env);
+static bool checkStop(af_Environment *env);
 
 /* Code 执行函数 */
 static bool codeElement(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
+static void runGuardian(af_Environment *env);
 
 /*
  * 函数名: checkInMsgType
@@ -230,6 +232,11 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
         return pushFuncActivity(env->activity->bt_next, env);
 }
 
+static void runGuardian(af_Environment *env) {
+    for (af_Guardian *gd = env->guardian; gd != NULL; gd = gd->next) {
+        GET_SYMBOL(gd->func)(env->activity->msg_down, env);
+    }
+}
 
 /*
  * 函数名: getTopMsg
@@ -371,7 +378,6 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
 
         /* 检查gc机制 */
         checkRunGC(env);
-
         if (env->activity->type == act_gc) {
             if (env->activity->dl_next == NULL)
                 popActivity(true, NULL, env);  // 结束运行
@@ -424,6 +430,9 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
 
         if (pass_msg)
             continue;  // 后面的代码不再运行
+
+        /* 执行守护器 */
+        runGuardian(env);
 
         /* 处理msg */
         af_Message *msg = getTopMsg(env);
