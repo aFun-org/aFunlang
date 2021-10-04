@@ -165,7 +165,7 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
     time_t t = 0;
     char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
 
-#define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s'\n"
+#define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s' \n"
     long tid = gettid();
 
     char tmp[2048] = {0};
@@ -182,7 +182,7 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
         fflush(log_factory.csv);
     }
 
-#define FORMAT_SHORT "%s(%s:%d) : %s\n"
+#define FORMAT_SHORT "\r* %s(%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
 #define STD_BUF_SIZE (strlen(tmp) + 1024)
     if (pc) {
         if (level < log_warning) {

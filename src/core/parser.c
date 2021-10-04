@@ -157,9 +157,9 @@ struct readerDataStdin {
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
     if (data->index == data->len) {  // 读取内容
         if (data->no_first)
-            printf("... ");
+            printf("\r.... ");
         else
-            printf(">>> ");
+            printf("\r>>>> ");
         data->no_first = true;
 
         free(data->data);
