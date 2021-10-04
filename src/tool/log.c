@@ -274,7 +274,7 @@ int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int ex
     va_start(ap, format);
     writeLog_(logger, true, log_fatal_error, file, line, func, format, ap);
 
-    if (logger->exit_type == 0)
+    if (exit_code == EXIT_SUCCESS)
         abort();
     else
         exit(exit_code);

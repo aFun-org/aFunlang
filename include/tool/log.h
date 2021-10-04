@@ -27,7 +27,6 @@ struct Logger {
     char *id;
     LogLevel level;
     jmp_buf *buf;
-    int exit_type;    // 0-abort 其他值则为exit
 };
 typedef struct Logger Logger;
 
