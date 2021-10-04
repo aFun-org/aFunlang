@@ -234,7 +234,8 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
 
 static void runGuardian(af_Environment *env) {
     for (af_Guardian *gd = env->guardian; gd != NULL; gd = gd->next) {
-        GET_SYMBOL(gd->func)(env->activity->msg_down, env);
+        if (gd->always || !env->activity->is_guard)  // guardian被标记为一直执行, 或者非is_guard模式
+            GET_SYMBOL(gd->func)(env->activity->msg_down, env);
     }
 }
 

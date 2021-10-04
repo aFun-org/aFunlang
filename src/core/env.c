@@ -17,9 +17,10 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeActivityTop(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
-static void clearActivity(af_Activity *activity);
 
 /* Activity 相关处理函数 */
+static void clearActivity(af_Activity *activity);
+static void pushActivity(af_Activity *activity, af_Environment *env);
 static void freeMark(af_Activity *activity);
 static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
 
@@ -43,7 +44,7 @@ static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
 static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env);
 
 /* 守护器 创建与释放 */
-static af_Guardian *makeGuardian(char *type, DLC_SYMBOL(GuardianFunc) func);
+static af_Guardian *makeGuardian(char *type, bool always, DLC_SYMBOL(GuardianFunc) func);
 static af_Guardian *freeGuardian(af_Guardian *gd);
 static void freeAllGuardian(af_Guardian *gd);
 
@@ -249,6 +250,7 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
     activity->dl = dl;
     activity->pdl = pdl;
     activity->dl_next = dl;
+    activity->is_guard = true;
     return activity;
 }
 
@@ -294,6 +296,14 @@ static void freeActivityTop(af_Activity *activity) {
 static void freeAllActivity(af_Activity *activity) {
     while (activity != NULL)
         activity = freeActivity(activity);
+}
+
+static void pushActivity(af_Activity *activity, af_Environment *env) {
+    if (env->activity->is_guard)
+        activity->is_guard = true;
+
+    activity->prev = env->activity;
+    env->activity = activity;
 }
 
 /*
@@ -822,9 +832,10 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environ
     return true;
 }
 
-static af_Guardian *makeGuardian(char *type, DLC_SYMBOL(GuardianFunc) func) {
+static af_Guardian *makeGuardian(char *type, bool always, DLC_SYMBOL(GuardianFunc) func) {
     af_Guardian *gd = calloc(1, sizeof(af_Guardian));
     gd->type = strCopy(type);
+    gd->always = always;
     gd->func = COPY_SYMBOL(func, GuardianFunc);
     return gd;
 }
@@ -851,13 +862,12 @@ static af_Guardian *findGuardian(char *type, af_Environment *env) {
     return NULL;
 }
 
-bool addGuardian(char *type, DLC_SYMBOL(GuardianFunc) func,
-                 af_Environment *env) {
+bool addGuardian(char *type, bool always, DLC_SYMBOL(GuardianFunc) func, af_Environment *env) {
     af_Guardian *gd = findGuardian(type, env);
     if (gd != NULL)
         return false;
 
-    gd = makeGuardian(type, func);
+    gd = makeGuardian(type, always, func);
     gd->next = env->guardian;
     env->guardian = gd;
     return true;
@@ -887,8 +897,7 @@ static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_
         af_Activity *activity = makeFuncActivity(bt, NULL, return_first, env->activity->msg_up,
                                                  env->activity->var_list, env->activity->belong,
                                                  env->activity->func);
-        activity->prev = env->activity;
-        env->activity = activity;
+        pushActivity(activity, env);
     }
 }
 
@@ -1038,9 +1047,7 @@ void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *
 
     /* gc Activity 可能创建为顶层 activity, 故信息不能继承上一级(可能没有上一级) */
     af_Activity *activity = makeGcActivity(dl, pdl, env);
-
-    activity->prev = env->activity;
-    env->activity = activity;
+    pushActivity(activity, env);
 }
 
 bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment *env) {
@@ -1055,8 +1062,7 @@ bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment
         return false;
 
     af_Activity *activity = makeTopImportActivity(bt, bt, env->core->protect, *obj, mark);
-    activity->prev = env->activity;
-    env->activity = activity;
+    pushActivity(activity, env);
     return true;
 }
 
@@ -1066,9 +1072,8 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
     /* 隐式调用不设置 bt_top */
     af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
                                              env->activity->var_list, env->activity->belong, NULL);
-    activity->prev = env->activity;
-    env->activity = activity;
-    env->activity->is_gc_call = true;
+    activity->is_gc_call = true;
+    pushActivity(activity, env);
     return setFuncActivityToArg(dl->func, env);
 }
 

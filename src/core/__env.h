@@ -94,6 +94,8 @@ struct af_Activity {  // 活动记录器
     FilePath file;
     FileLine line;
 
+    bool is_guard;  // 当为true时将不执行守护器
+
     union {
         struct {  // 仅gc使用
             struct gc_DestructList *dl;
@@ -195,6 +197,7 @@ struct af_TopMsgProcess {  // 顶层msg处理器
 struct af_Guardian {  // 守护器
     char *type;
     DLC_SYMBOL(GuardianFunc) func;
+    bool always;
     struct af_Guardian *next;
 };
 
