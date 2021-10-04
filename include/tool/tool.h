@@ -19,7 +19,6 @@
 #include "md5.h"
 #include "path.h"
 #include "regex.h"
-#include "sig.h"
 #include "str.h"
 #include "time_s.h"
 #include "log.h"
