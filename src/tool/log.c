@@ -204,78 +204,87 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
 #define CHECK_LOGGER() do {if (logger == NULL) {logger = &(log_factory.sys_log);} \
                            if (logger == NULL || logger->id == NULL) return -1;} while(0)
 
-#ifdef aFunDEBUG
-#define INFO_PRINT_CONSOLE true
-#else
-#define INFO_PRINT_CONSOLE false
-#endif
-
 int writeTrackLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
-#ifdef aFunDEBUG
+#if aFunWriteTrack
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, false, log_track, file, line, func, format, ap);
+    return writeLog_(logger, aFunConsoleTrack, log_track, file, line, func, format, ap);
 #endif
 }
 
 int writeDebugLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#if aFunWriteDebug
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, INFO_PRINT_CONSOLE, log_debug, file, line, func, format, ap);
+    return writeLog_(logger, aFunConsoleDebug, log_debug, file, line, func, format, ap);
+#endif
 }
 
 int writeInfoLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#if aFunWriteInfo
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, INFO_PRINT_CONSOLE, log_info, file, line, func, format, ap);
+    return writeLog_(logger, aFunConsoleInfo, log_info, file, line, func, format, ap);
+#endif
 }
 
 int writeWarningLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#if !aFunIgnoreWarning
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, INFO_PRINT_CONSOLE, log_warning, file, line, func, format, ap);
+    return writeLog_(logger, aFunConsoleWarning, log_warning, file, line, func, format, ap);
+#endif
 }
 
 int writeErrorLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#if !aFunIgnoreError
     CHECK_LOGGER();
 
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, INFO_PRINT_CONSOLE, log_error, file, line, func, format, ap);
+    return writeLog_(logger, aFunConsoleError, log_error, file, line, func, format, ap);
+#endif
 }
 
 int writeSendErrorLog_(Logger *logger, char *file, int line, char *func, char *format, ...) {
+#ifndef aFunOFFAllLog
     CHECK_LOGGER();
-
+#if !aFunIgnoreSendError
     va_list ap;
     va_start(ap, format);
     jmp_buf *buf = logger->buf;
+    writeLog_(logger, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
+#endif
 
-    writeLog_(logger, true, log_send_error, file, line, func, format, ap);
     if (buf != NULL) {
         initLogger(logger, NULL, 0);  // 清零
         longjmp(*buf, 1);
     } else
         exit(EXIT_FAILURE);
+#endif
 }
 
 int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int exit_code, char *format, ...) {
+#ifndef aFunOFFAllLog
     CHECK_LOGGER();
 
+#if !aFunIgnoreFatal
     va_list ap;
     va_start(ap, format);
-    writeLog_(logger, true, log_fatal_error, file, line, func, format, ap);
+    writeLog_(logger, aFunConsoleFatalError, log_fatal_error, file, line, func, format, ap);
+#endif
 
     if (exit_code == EXIT_SUCCESS)
         abort();
     else
         exit(exit_code);
+#endif
 }
