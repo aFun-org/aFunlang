@@ -56,6 +56,7 @@ struct af_Core {  // 解释器核心
     af_EnvVar *prefix;
     af_EnvVar *exit_code_;  // 退出代码
     af_EnvVar *argc;  // 参数个数
+    af_EnvVar *error_std;  // Error输出的位置 0-stdout 其他-stderr
 };
 
 struct af_Message {
@@ -178,7 +179,7 @@ struct af_ActivityTrackBack {
     struct af_ActivityTrackBack *next;
 };
 
-typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
 struct af_TopMsgProcess {  // 顶层msg处理器
@@ -266,7 +267,7 @@ AFUN_CORE_NO_EXPORT void pushLiteralData(char *data, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env);
 
 /* 顶层消息处理器 处理函数 */
-AFUN_CORE_NO_EXPORT void runTopMessageProcess(bool is_gc, af_Environment *env);
+AFUN_CORE_NO_EXPORT void runTopMessageProcess(bool is_top, af_Environment *env);
 
 /* 消息 创建与释放 */
 AFUN_CORE_NO_EXPORT void freeAllMessage(af_Message *msg);

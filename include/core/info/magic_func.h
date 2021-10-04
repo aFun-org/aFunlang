@@ -22,5 +22,6 @@
 #define ev_exit_code SYS_NAME(exit-code)
 #define ev_argc SYS_NAME(argc)
 #define ev_argvx_prefix SYS_NAME(argv)
+#define ev_error_std SYS_NAME(error-std)
 
 #endif //AFUN_MAGIC_FUNC_H

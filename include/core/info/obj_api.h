@@ -20,7 +20,7 @@
 typedef void objectAPIFunc();  // 位于object.h (所有Object API函数指针都转换为该类型存储, 注: 具体调用类型参见下文)
 
 /* 顶层信号处理器函数 */
-typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);  // 位于env.h
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);  // 位于env.h
 
 /* 回调C函数 */
 typedef struct CallFuncInfo CallFuncInfo;

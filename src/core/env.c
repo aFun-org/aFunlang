@@ -64,9 +64,9 @@ static void fprintfNoteStderr(char *note);
 static void fprintfNoteStdout(char *note);
 
 /* 内置顶层消息处理器 */
-static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env);
-static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env);
-static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env);
+static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
+static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env);
+static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env);
 
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
@@ -85,6 +85,7 @@ static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
     core->gc_count = setEnvVarNumber_(ev_gccount, 0, env);
     core->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
     core->argc = setEnvVarNumber_(ev_argc, 0, env);
+    core->error_std = setEnvVarNumber_(ev_error_std, 0, env);
 
     core->status = core_creat;
     core->protect = makeVarSpaceByCore(NULL, 3, 3, 3, core);
@@ -683,27 +684,31 @@ int32_t *findEnvVarNumber(char *name, af_Environment *env) {
     return NULL;
 }
 
-static void mp_NORMAL(af_Message *msg, bool is_gc, af_Environment *env) {
+static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env) {
     if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
         writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
         return;
     }
     gc_delReference(*(af_Object **)msg->msg);
-    if (!is_gc)
+    if (is_top)
         writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
-static void mp_ERROR(af_Message *msg, bool is_gc, af_Environment *env) {
+static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
         writeErrorLog(aFunCoreLogger, "ERROR msg: %p error", msg->msg);
         return;
     }
-    if (!is_gc)
-        fprintfErrorInfoStdout(*(af_ErrorInfo **)msg->msg);  // TODO-szh 获取EnvVar, 设定输出的位置 (stdout/stderr)
+    if (is_top) {
+        if (env->core->error_std->num == 0)
+            fprintfErrorInfoStdout(*(af_ErrorInfo **) msg->msg);
+        else
+            fprintfErrorInfoStderr(*(af_ErrorInfo **) msg->msg);
+    }
     freeErrorInfo(*(af_ErrorInfo **)msg->msg);
 }
 
-static void mp_IMPORT(af_Message *msg, bool is_gc, af_Environment *env) {
+static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env) {
     if (msg->msg == NULL || *(af_ImportInfo **)msg->msg == NULL) {
         writeErrorLog(aFunCoreLogger, "IMPORT msg: %p error", msg->msg);
         return;
@@ -1223,12 +1228,12 @@ int setFuncActivityToNormal(af_Environment *env){  // 获取函数的函数体
  * 函数名: runTopMessageProcess
  * 目标: 运行顶层信息处理器
  */
-void runTopMessageProcess(bool is_gc, af_Environment *env) {
+void runTopMessageProcess(bool is_top, af_Environment *env) {
     af_Message **pmsg = &env->activity->msg_down;
     while (*pmsg != NULL) {
         af_TopMsgProcess *mp = findTopMsgProcessFunc((*pmsg)->type, env);
         if (mp != NULL) {
-            GET_SYMBOL(mp->func)(*pmsg, is_gc, env);
+            GET_SYMBOL(mp->func)(*pmsg, is_top, env);
             *pmsg = freeMessage(*pmsg);
         } else
             pmsg = &((*pmsg)->next);
@@ -1288,7 +1293,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         freeMark(env->activity);  // 遇到非正常退出时, 释放`mark`
 
     if (env->activity->type == act_top || env->activity->type == act_gc) // 顶层或gc层
-        runTopMessageProcess((env->activity->type == act_gc), env);
+        runTopMessageProcess((env->activity->type == act_top), env);
     else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
         env->activity->prev->msg_down = env->activity->msg_down;
@@ -1700,4 +1705,8 @@ int isCoreExit(af_Environment *env) {
     else if (env->core->status == core_stop)
         return -1;
     return 0;
+}
+
+bool getErrorStd(af_Environment *env) {
+    return env->core->error_std->num;  // true-stderr, false-stdout
 }

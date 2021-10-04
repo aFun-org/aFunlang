@@ -10,7 +10,7 @@ typedef struct af_ErrorInfo af_ErrorInfo;
 typedef struct af_ImportInfo af_ImportInfo;
 
 /* 顶层消息处理器的处理函数 DLC */
-typedef void TopMsgProcessFunc(af_Message *msg, bool is_gc, af_Environment *env);
+typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
 enum GcRunTime {
@@ -96,6 +96,7 @@ AFUN_CORE_EXPORT FilePath getActivityFile(af_Environment *env);
 AFUN_CORE_EXPORT FileLine getActivityLine(af_Environment *env);
 AFUN_CORE_EXPORT af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env);
 AFUN_CORE_EXPORT int isCoreExit(af_Environment *env);
+AFUN_CORE_EXPORT bool getErrorStd(af_Environment *env);
 
 /* 消息 属性访问 */
 AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg);
