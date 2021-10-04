@@ -53,24 +53,27 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     writeDebugLog(aFunCoreLogger, "aFunCore var/lib path: %s", varlib_path);
     writeDebugLog(aFunCoreLogger, "aFunCore lang path: %s", lang_path);
 
-    char LANG[100] = {0};
-    char *LANG_path = strJoin(lang_path, "LANG", false, false);
+    char LANG_path[218] = {0};
+    snprintf(LANG_path, 218, "%sLANG", lang_path);
+
     FILE *LANG_file = fopen(LANG_path, "r");
     writeDebugLog(aFunCoreLogger, "LANG_path = %s", LANG_path);
     if (LANG_file != NULL) {
+        char LANG[100] = {0};
         fgets(LANG, 100, LANG_file);
         if (LANG[strlen(LANG) - 1] == '\n')
             LANG[strlen(LANG) - 1] = NUL;  // 去除`\n`
         writeDebugLog(aFunCoreLogger, "LANG = %s", LANG);
 
-        char *LANG_lib = strJoin(lang_path, LANG, false, false);
+        char LANG_lib[218] = {0};
+        snprintf(LANG_lib, 218, "%s" SHARED_PREFIX "%s" SHARED_SUFFIX, lang_path, LANG);
         if (HT_initaFunGetText(LANG_lib) == 0)
-            writeDebugLog(aFunCoreLogger, "aFunCore lang init: %s", LANG_lib);
-        free(LANG_lib);
+            writeDebugLog(aFunCoreLogger, "aFunCore lang init success: %s", LANG_lib);
+        else
+            writeDebugLog(aFunCoreLogger, "aFunCore lang init failed: %s", LANG_lib);
         fclose(LANG_file);
     } else
         HT_initaFunGetText(NULL);
-    free(LANG_path);
 
     return true;
 }

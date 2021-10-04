@@ -80,7 +80,12 @@ set(base_compile_definitions
     aFunPatchVersion=${PROJECT_VERSION_PATCH}
     aFunLogDir="${INSTALL_LOGDIR_NATIVE}"
     aFunVarLibDir="${INSTALL_LOCALSTATEDIR_NATIVE}"
-    aFunLangDir="${INSTALL_LANGDIR_NATIVE}")  # 默认的预定义宏
+    aFunLangDir="${INSTALL_LANGDIR_NATIVE}"
+    aFunSharePrefix="${CMAKE_SHARED_LIBRARY_PREFIX}"
+    aFunShareSuffix="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+    aFunStaticPrefix="${CMAKE_STATIC_LIBRARY_PREFIX}"
+    aFunStaticSuffix="${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    aFunExeSuffix="${CMAKE_EXECUTABLE_SUFFIX}")  # 默认的预定义宏
 
 if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)

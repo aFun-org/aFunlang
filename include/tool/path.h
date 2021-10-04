@@ -2,7 +2,7 @@
 #define AFUN_PATH_H
 
 /* 路径工具 */
-#ifdef WIN32
+#ifdef aFunWIN32_NO_CYGWIN
 
 #define SEP "\\"
 #define SEP_CH '\\'
@@ -14,10 +14,12 @@
 
 #endif
 
-#ifdef aFunWIN32
-#define SHARED_MARK ".dll"
-#else
-#define SHARED_MARK ".so"
-#endif
+#define SHARED_PREFIX aFunSharePrefix
+#define SHARED_SUFFIX aFunShareSuffix
+
+#define STATIC_PREFIX aFunStaticPrefix
+#define STATIC_SUFFIX aFunStaticSuffix
+
+#define EXE_SUFFIX aFunExeSuffix
 
 #endif //AFUN_PATH_H

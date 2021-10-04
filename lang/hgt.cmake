@@ -86,7 +86,7 @@ endfunction()
 build_lang()  # 使用函数防止 CMAKE_RUNTIME_OUTPUT_DIRECTORY 影响外部
 
 add_custom_command(TARGET hgt-zh_cn
-                   COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_NAME:hgt-zh_cn>" ">>" "LANG"
+                   COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_BASE_NAME:hgt-zh_cn>" ">>" "LANG"
                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}"
                    COMMENT "Creat file ${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}/LANG")
 
