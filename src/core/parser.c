@@ -91,9 +91,32 @@ af_Parser *makeParserByString(char *str, bool free_str){
 
 struct readerDataFile {
     FILE *file;
+    bool no_first;
 };
 
 static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, bool *read_end) {
+    if (!data->no_first) {
+        data->no_first = true;
+        char ch;
+        if (fread(&ch, sizeof(char), 1, data->file) != 1) {
+            *read_end = true;
+            return 0;
+        }
+
+        if (ch == (char)0xEF) {
+            /* 处理BOM编码 */
+            char ch_[2];
+            if (fread(ch_, sizeof(char), 2, data->file) != 2 || ch_[0] != (char)0xBB || ch_[1] != (char)0xBF) {
+                *read_end = true;
+                return 0;
+            }
+            writeTrackLog(aFunCoreLogger, "Parser utf-8 with BOM");
+        } else {
+            ungetc(ch, data->file);
+            writeTrackLog(aFunCoreLogger, "Parser utf-8 without BOM");
+        }
+    }
+
     size_t len_r =  fread(dest, sizeof(char), len, data->file);
     if (feof(data->file))
         *read_end = true;
@@ -108,9 +131,10 @@ static void destructFile(struct readerDataFile *data) {
 af_Parser *makeParserByFile(FilePath path){
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        writeErrorLog(aFunCoreLogger, "File open error: %s", file);
+        writeErrorLog(aFunCoreLogger, "File open error: %s", path);
         return NULL;
-    }
+    } else
+        writeTrackLog(aFunCoreLogger, "File: %s", path);
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncFile, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFile, destructReaderFunc);
