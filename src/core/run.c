@@ -235,7 +235,7 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
 static void runGuardian(af_Environment *env) {
     for (af_Guardian *gd = env->guardian; gd != NULL; gd = gd->next) {
         if (gd->always || !env->activity->is_guard)  // guardian被标记为一直执行, 或者非is_guard模式
-            GET_SYMBOL(gd->func)(env->activity->msg_down, env);
+            GET_SYMBOL(gd->func)(env->activity->is_guard, env);
     }
 }
 
@@ -353,6 +353,10 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     if (!iterCodeInit(code, mode, env))
         return false;
 
+    bool re = true;
+    af_SignalInfo si;
+    aFunSignalInit(&si);
+
     /*
      * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
      * 为什么会有这个问题: top-Activity只有在bt_next=NULL时被pop, 而循环也是在bt_next=NULL时可能被退出
@@ -374,8 +378,10 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     /* 必须位于act_top, 且无next, 并且无msg处理才退出执行 */
     while (env->activity->type != act_top || env->activity->bt_next != NULL || env->activity->process_msg_first != 0) {
         /* 检查是否需要退出执行 */
-        if (checkStop(env))
-            goto RETURN_FALSE;
+        if (checkStop(env)) {
+            re = false;
+            goto RETURN;
+        }
 
         /* 检查gc机制 */
         checkRunGC(env);
@@ -476,12 +482,10 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
         }
     }
 
+RETURN:
+    aFunSignalRecover(&si);
     env->in_run = false;
-    return true;
-
-RETURN_FALSE:
-    env->in_run = false;
-    return false;
+    return re;
 }
 
 /*

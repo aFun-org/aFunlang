@@ -37,4 +37,10 @@
 #define API_RUN_ERROR "API-Run-Error"
 #define API_DONOT_GIVE(name) ("Object API don't give: " #name)
 
+#define SIGNAL_EXCEPTION "SIGNAL-Exception"
+#define SIGNAL_INT  "SIGINT;"
+#define SIGNAL_TERM "SIGTERM;"
+#define SIGNAL_U1   "SIGU1;"
+#define SIGNAL_U2   "SIGU2;"
+
 #endif //AFUN_RUNTIME_ERROR_H

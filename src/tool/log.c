@@ -74,8 +74,10 @@ int initLogSystem(FilePath path) {
     bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
     log_factory.log = fopen(log_path, "a");
-    if (log_factory.log == NULL)
+    if (log_factory.log == NULL) {
+        printf("log_path = %s\n", log_path);
         return 0;
+    }
 
     log_factory.csv = fopen(csv_path, "a");
     if (log_factory.csv == NULL)

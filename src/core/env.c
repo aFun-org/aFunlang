@@ -77,6 +77,10 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env);
 
+/* 内置守护器 */
+static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env);
+static void guardian_Signal(bool is_guard, af_Environment *env);
+
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
 
@@ -745,6 +749,56 @@ static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env) {
     freeImportInfo(ii);
 }
 
+static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env) {
+    bool re = aFunGetSignal(signum);
+    if (!re)
+        return false;
+    int32_t *p_cfg = findEnvVarNumber(sigcfg, env);
+    int32_t cfg = 0;
+    if (p_cfg != NULL)
+        cfg = *p_cfg;
+
+    if (cfg == 0) {  // 诱发错误
+        strncat(err, sigerr, 218);
+        setEnvVarNumber(sig, 0, env);
+    } else if (cfg == 1) {  // 设置环境变量
+        setEnvVarNumber(sig, 1, env);
+    } else  // 忽略
+        setEnvVarNumber(sig, 0, env);
+
+    writeDebugLog(aFunCoreLogger, "Get %s as cfg %d", sig, cfg);
+    return true;
+}
+
+static void guardian_Signal(bool is_guard, af_Environment *env) {
+    char error_msg[218] = {NUL};
+    checkSignal(SIGINT, ev_sigint, ev_sigint_cfg, SIGNAL_INT, error_msg, env);
+    checkSignal(SIGTERM, ev_sigterm, ev_sigterm_cfg, SIGNAL_TERM, error_msg, env);
+#if (defined SIGUSR1 && defined SIGUSR2)
+    checkSignal(SIGUSR1, ev_sigu1, ev_sigu1_cfg, SIGNAL_U1, error_msg, env);
+    checkSignal(SIGUSR2, ev_sigu2, ev_sigu2_cfg, SIGNAL_U2, error_msg, env);
+#endif
+
+    if (*error_msg != NUL) {
+        // error_msg 有内容写入, 需要处理
+        if (env->activity->msg_down != NULL) {
+            af_Message *msg;
+            if (EQ_STR("NORMAL", env->activity->msg_down->type)) {
+                msg = getFirstMessage(env);
+                gc_delReference(*(af_Object **)msg->msg);
+                freeMessage(msg);
+            } else if (EQ_STR("ERROR", env->activity->msg_down->type)) {
+                msg = getFirstMessage(env);
+                freeErrorInfo(*(af_ErrorInfo **)msg->msg);
+                freeMessage(msg);
+            }
+        }
+
+        pushMessageDown(makeERRORMessage(SIGNAL_EXCEPTION, error_msg, env), env);
+    }
+
+}
+
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(1, sizeof(af_Environment));
     env->esv = makeEnvVarSpace();
@@ -765,6 +819,11 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     DLC_SYMBOL(TopMsgProcessFunc) func3 = MAKE_SYMBOL(mp_IMPORT, TopMsgProcessFunc);
     addTopMsgProcess("IMPORT", func3, env);
     FREE_SYMBOL(func3);
+
+    /* 设置守护器 */
+    DLC_SYMBOL(GuardianFunc) func4 = MAKE_SYMBOL(guardian_Signal, GuardianFunc);
+    addGuardian("SIGNAL", false, func4, env);
+    FREE_SYMBOL(func4);
 
     env->core->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->core->protect, env->core->global);

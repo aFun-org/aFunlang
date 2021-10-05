@@ -13,7 +13,7 @@ typedef struct af_ImportInfo af_ImportInfo;
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
-typedef void GuardianFunc(af_Message *msg, af_Environment *env);
+typedef void GuardianFunc(bool is_guard, af_Environment *env);
 DEFINE_DLC_SYMBOL(GuardianFunc);
 
 enum GcRunTime {

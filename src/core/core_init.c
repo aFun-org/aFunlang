@@ -4,6 +4,7 @@
  */
 
 #include "core_init.h"
+#include "sig.h"
 #include "tool.h"
 #include <locale.h>
 
@@ -74,6 +75,5 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
         fclose(LANG_file);
     } else
         HT_initaFunGetText(NULL);
-
     return true;
 }

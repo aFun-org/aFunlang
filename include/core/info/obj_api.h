@@ -23,7 +23,7 @@ typedef void objectAPIFunc();  // 位于object.h (所有Object API函数指针�
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);  // 位于env.h
 
 /* 守护器处理函数 */
-typedef void GuardianFunc(af_Message *msg, af_Environment *env);
+typedef void GuardianFunc(bool is_guard, af_Environment *env);
 
 /* 回调C函数 */
 typedef struct CallFuncInfo CallFuncInfo;

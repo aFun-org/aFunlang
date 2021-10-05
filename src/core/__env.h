@@ -185,7 +185,7 @@ struct af_ActivityTrackBack {
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
-typedef void GuardianFunc(af_Message *msg, af_Environment *env);
+typedef void GuardianFunc(bool is_guard, af_Environment *env);
 NEW_DLC_SYMBOL(GuardianFunc, GuardianFunc);
 
 struct af_TopMsgProcess {  // 顶层msg处理器
