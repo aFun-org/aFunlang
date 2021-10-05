@@ -117,6 +117,7 @@ AFUN_CORE_NO_EXPORT GcCount gc_getObjectDataReference(af_ObjectData *obj);
 /* gc 操控函数 : gc的启动由解释器完全管理 */
 AFUN_CORE_NO_EXPORT void gc_RunGC(af_Environment *env);
 AFUN_CORE_NO_EXPORT pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl);
+AFUN_CORE_NO_EXPORT void gc_freeAllValueData(af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */

@@ -67,6 +67,7 @@ AFUN_CORE_NO_EXPORT void freeObject(af_Object *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od);
 
 /* ObjectData 释放函数 */
+AFUN_CORE_NO_EXPORT void freeObjectDataData(af_ObjectData *od, af_Environment *env);
 AFUN_CORE_NO_EXPORT void freeObjectData(af_ObjectData *od, af_Environment *env);
 
 /* Object 释放函数 */

@@ -112,9 +112,10 @@ static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
  * 因为gc_freeAllValue需要env作为参数, 故使用env作为freeCore的参数
  */
 static void freeCore(af_Environment *env) {
-    printGCByCore(env->core);
-    gc_freeAllValue(env);
     freeAllLiteralRegex(env->core->lr);
+    gc_freeAllValueData(env);  // 先释放ObjectData的void *data
+    printGCByCore(env->core);
+    gc_freeAllValue(env);  // 再完全释放Object
     free(env->core);
 }
 
@@ -842,10 +843,10 @@ void freeEnvironment(af_Environment *env) {
         res = iterDestruct(10, env);
 
     freeAllActivity(env->activity);
-    freeCore(env);
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
     freeAllGuardian(env->guardian);
+    freeCore(env);  // core最后释放, 因为Object等需要最后释放
 
     if (!res)
         writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");

@@ -391,6 +391,12 @@ pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl) {
     return pdl;
 }
 
+void gc_freeAllValueData(af_Environment *env) {
+    for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
+        freeObjectDataData(od, env);
+    }
+}
+
 void gc_freeAllValue(af_Environment *env) {
     for (af_ObjectData *od = env->core->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;

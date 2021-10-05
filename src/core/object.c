@@ -96,6 +96,21 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
 }
 
 /*
+ * 函数名: freeObjectDataData
+ * 目标: 释放ObjectData的void *data, 仅GC函数可用
+ * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
+ */
+void freeObjectDataData(af_ObjectData *od, af_Environment *env) {
+    if (od->size == 0)
+        return;
+    obj_destructData *func = findAPI("obj_destructData", od->api);
+    if (func != NULL)
+        func(od->id, od->base, od->data, env);
+    od->size = 0;
+    free(od->data);
+}
+
+/*
  * 函数名: freeObjectData
  * 目标: 释放ObjectData, 仅GC函数可用
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
