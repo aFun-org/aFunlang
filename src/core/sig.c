@@ -1,4 +1,5 @@
 ﻿#include "aFunCore.h"
+#include "__sig.h"
 
 static volatile sig_atomic_t sig_int = 0;  // SIGINT (Windows & *nix)
 static volatile sig_atomic_t sig_term = 0;  // SIGTERM (*nix)

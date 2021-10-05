@@ -11,7 +11,6 @@
 #include "runtime_error.h"
 
 #include "core_init.h"
-#include "sig.h"
 #include "run.h"
 #include "code.h"
 #include "bytecode.h"

@@ -4,7 +4,7 @@
  */
 
 #include "core_init.h"
-#include "sig.h"
+#include "__sig.h"
 #include "tool.h"
 #include <locale.h>
 

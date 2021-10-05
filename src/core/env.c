@@ -2,6 +2,7 @@
 #include "__env.h"
 #include "__global_obj.h"
 #include "__run.h"
+#include "__sig.h"
 
 /* Core 创建和释放 */
 static af_Core *makeCore(enum GcRunTime grt, af_Environment *env);
