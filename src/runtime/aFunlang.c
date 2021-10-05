@@ -141,7 +141,7 @@ int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int 
  * 目标: 运行stdin的程序 (源码形式)
  */
 int runCodeFromStdin(char *name, af_Environment *env){
-    if (env == NULL || feof(stdin) || ferror(stdin) || !aFunInit_mark)
+    if (env == NULL || ferror(stdin) || feof(stdin) || !aFunInit_mark)  // ferror在feof前执行
         return -1;
 
     if (name == NULL)

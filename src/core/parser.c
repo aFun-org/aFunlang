@@ -118,7 +118,7 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
     }
 
     size_t len_r =  fread(dest, sizeof(char), len, data->file);
-    if (feof(data->file))
+    if (ferror(data->file) || feof(data->file))  // ferror在feof前执行
         *read_end = true;
     return len_r;
 }
