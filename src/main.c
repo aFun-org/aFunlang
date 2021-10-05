@@ -50,7 +50,7 @@ void freeBaseName(void) {
 
 int main(int argc, char **argv) {
     jmp_buf main_buf;
-    base_path = getExedir(*argv, 1);
+    base_path = getExedir(1);
     if (base_path == NULL)
         goto INIT_ERROR;
     atexit(freeBaseName);

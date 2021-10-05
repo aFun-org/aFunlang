@@ -10,6 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef aFunWIN32_NO_CYGWIN
+#pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "tool.h"
 
 #ifndef S_ISREG
@@ -174,10 +181,18 @@ char *findPath(char *path, char *env, bool need_free){
  * 函数名: 获取可执行程序目录
  * dep表示从可执行程序往回跳出的层数
  */
-char *getExedir(char *pgm, int dep) {
-    if (pgm == NULL)
+char *getExedir(int dep) {
+    char exepath[218] = {0};
+#ifdef aFunWIN32_NO_CYGWIN
+    DWORD ret = GetModuleFileNameA(NULL, exepath, 217);  // 预留一位给NUL
+    if (ret == 0 || STR_LEN(exepath) == 0)
         return NULL;
-    return getFilePath(pgm, dep + 1);
+#else
+    ssize_t ret =  readlink("/proc/self/exe", exepath, 217);  // 预留一位给NUL
+    if (ret == -1 || STR_LEN(exepath) == 0)
+        return NULL;
+#endif
+    return getFilePath(exepath, dep + 1);
 }
 
 uintmax_t getFileSize(char *path) {

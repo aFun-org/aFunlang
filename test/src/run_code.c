@@ -371,7 +371,7 @@ bool infixFunc(char *id, af_Object *obj) {
 
 int main(int argc, char **argv) {
     jmp_buf main_buf;
-    char *base_path = getExedir(*argv, 1);
+    char *base_path = getExedir(1);
     if (base_path == NULL)
         goto INIT_ERROR;
 
