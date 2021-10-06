@@ -1486,9 +1486,11 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (!is_normal)
         freeMark(env->activity);  // 遇到非正常退出时, 释放`mark`
 
-    if (env->activity->type == act_top || env->activity->type == act_gc || env->activity->type == act_guardian) // 顶层或gc/guardian层
+    if (env->activity->type == act_top || env->activity->type == act_gc || env->activity->type == act_guardian) {// 顶层或gc/guardian层
         runTopMessageProcess((env->activity->type == act_top), env);
-    else {
+        if (env->activity->type == act_guardian)
+            env->activity->prev->process_msg_first++;  // guardian开始处理时, 已经在原activity中有msg了, 所以要先处理
+    } else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
         env->activity->prev->msg_down = env->activity->msg_down;
         env->activity->msg_down = NULL;

@@ -5,39 +5,125 @@
 #include "__env.h"
 
 /* gc 操控函数 */
-#define GC_FUNC_DEFINED(type) \
-void gc_add##type(af_##type *obj, af_Environment *env) { \
-    obj->gc.prev = NULL; \
-    if (env->core->gc_##type != NULL) { \
-        env->core->gc_##type->gc.prev = obj; \
-    }                             \
-    obj->gc.next = env->core->gc_##type; \
-    env->core->gc_##type = obj;  \
-    env->core->gc_count->num++;  \
-} \
-void gc_add##type##ByCore(af_##type *obj, af_Core *core) { \
-if (obj->gc.next != NULL || obj->gc.prev != NULL) {return;} \
-obj->gc.prev = NULL; \
-obj->gc.next = core->gc_##type; \
-core->gc_##type = obj;        \
-core->gc_count->num++;  \
-} \
-void gc_add##type##Reference(af_##type *obj) { \
-    obj->gc.info.reference++; \
-} \
-void gc_del##type##Reference(af_##type *obj) { \
-    obj->gc.info.reference--; \
-} \
-GcCount gc_get##type##Reference(af_##type *obj) { \
-    return obj->gc.info.reference; \
+
+void gc_addObjectData(af_ObjectData *obj, af_Environment *env){
+    obj->gc.prev = ((void *) 0);
+    if (env->core->gc_ObjectData != ((void *) 0))
+        env->core->gc_ObjectData->gc.prev = obj;
+    obj->gc.next = env->core->gc_ObjectData;
+    env->core->gc_ObjectData = obj;
+    env->core->gc_count->num++;
 }
 
-GC_FUNC_DEFINED(ObjectData)
-GC_FUNC_DEFINED(Object)
-GC_FUNC_DEFINED(Var)
-GC_FUNC_DEFINED(VarSpace)
+void gc_addObjectDataByCore(af_ObjectData *obj, af_Core *core){
+    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
+        return;
+    obj->gc.prev = ((void *) 0);
+    obj->gc.next = core->gc_ObjectData;
+    core->gc_ObjectData = obj;
+    core->gc_count->num++;
+}
 
-#undef GC_FUNC_DEFINED
+void gc_addObjectDataReference(af_ObjectData *obj){
+    obj->gc.info.reference++;
+}
+
+void gc_delObjectDataReference(af_ObjectData *obj){
+    obj->gc.info.reference--;
+}
+
+GcCount gc_getObjectDataReference(af_ObjectData *obj){
+    return obj->gc.info.reference;
+}
+
+void gc_addObject(af_Object *obj, af_Environment *env){
+    obj->gc.prev = ((void *) 0);
+    if (env->core->gc_Object != ((void *) 0))
+        env->core->gc_Object->gc.prev = obj;
+    obj->gc.next = env->core->gc_Object;
+    env->core->gc_Object = obj;
+    env->core->gc_count->num++;
+}
+
+void gc_addObjectByCore(af_Object *obj, af_Core *core){
+    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
+        return;
+    obj->gc.prev = ((void *) 0);
+    obj->gc.next = core->gc_Object;
+    core->gc_Object = obj;
+    core->gc_count->num++;
+}
+
+void gc_addObjectReference(af_Object *obj){
+    obj->gc.info.reference++;
+}
+
+void gc_delObjectReference(af_Object *obj){
+    obj->gc.info.reference--;
+}
+
+GcCount gc_getObjectReference(af_Object *obj){
+    return obj->gc.info.reference;
+}
+
+void gc_addVar(af_Var *obj, af_Environment *env) {
+    obj->gc.prev = ((void *) 0);
+    if (env->core->gc_Var != ((void *) 0))
+        env->core->gc_Var->gc.prev = obj;
+    obj->gc.next = env->core->gc_Var;
+    env->core->gc_Var = obj;
+    env->core->gc_count->num++;
+}
+
+void gc_addVarByCore(af_Var *obj, af_Core *core) {
+    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
+        return;
+    obj->gc.prev = ((void *) 0);
+    obj->gc.next = core->gc_Var;
+    core->gc_Var = obj;
+    core->gc_count->num++;
+}
+
+void gc_addVarReference(af_Var *obj) {
+    obj->gc.info.reference++;
+}
+
+void gc_delVarReference(af_Var *obj) {
+    obj->gc.info.reference--;
+}
+
+GcCount gc_getVarReference(af_Var *obj) {
+    return obj->gc.info.reference;
+}
+
+void gc_addVarSpace(af_VarSpace *obj, af_Environment *env){
+    obj->gc.prev = ((void *) 0);
+    if (env->core->gc_VarSpace != ((void *) 0)) { env->core->gc_VarSpace->gc.prev = obj; }
+    obj->gc.next = env->core->gc_VarSpace;
+    env->core->gc_VarSpace = obj;
+    env->core->gc_count->num++;
+}
+
+void gc_addVarSpaceByCore(af_VarSpace *obj, af_Core *core) {
+    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
+        return;
+    obj->gc.prev = ((void *) 0);
+    obj->gc.next = core->gc_VarSpace;
+    core->gc_VarSpace = obj;
+    core->gc_count->num++;
+}
+
+void gc_addVarSpaceReference(af_VarSpace *obj) {
+    obj->gc.info.reference++;
+}
+
+void gc_delVarSpaceReference(af_VarSpace *obj) {
+    obj->gc.info.reference--;
+}
+
+GcCount gc_getVarSpaceReference(af_VarSpace *obj) {
+    return obj->gc.info.reference;
+}
 
 /* gc_DestructList 函数 */
 /* gc_DestructList 创建与释放 */

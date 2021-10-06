@@ -369,6 +369,25 @@ bool infixFunc(char *id, af_Object *obj) {
     return true;
 }
 
+struct GDData {
+    af_Object *func;
+    bool no_first;
+};
+
+af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Environment *env) {
+    if (data->no_first)
+        return NULL;
+
+    af_GuardianList *gd = NULL;
+    data->no_first = true;
+    pushGuardianList(data->func, &gd);
+    return gd;
+}
+
+void gd_destruct(char *type, struct GDData *data, af_Environment *env) {
+    gc_delReference(data->func);
+}
+
 int main(int argc, char **argv) {
     jmp_buf main_buf;
     char *base_path = getExedir(1);
@@ -430,6 +449,8 @@ INIT_ERROR:
         printf("object(%p)\n", obj);
     }
 
+    af_Object *af_func = NULL;
+
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
@@ -473,6 +494,7 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
+        af_func = obj;
         printf("func(%p)\n", obj);
     }
 
@@ -1180,6 +1202,27 @@ INIT_ERROR:
         getc(stdin);
     }
 #endif
+
+    {
+        DLC_SYMBOL(GuardianFunc) func = MAKE_SYMBOL(gd_func, GuardianFunc);
+        DLC_SYMBOL(GuardianDestruct) des = MAKE_SYMBOL(gd_destruct, GuardianDestruct);
+        struct GDData *data = NULL;
+        addGuardian("test", false, sizeof(struct GDData), func, des, (void **) &data, env);
+        data->func = af_func;
+        gc_addReference(af_func);
+        FREE_SYMBOL(func);
+        FREE_SYMBOL(des);
+
+        printf("TAG U:\n");
+        af_Code *bt1 = makeElementCode("str", 0, 1, "TagU.aun");
+        af_Code *bt2 = makeElementCode("global", 0, 1, "TagU.aun");
+
+        pushCode(&bt1, bt2);
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        bool re = popGuardian("test", env);
+        printf("popGuardian: %d\n\n", re);
+    }
 
     /* 错误用例 */
 

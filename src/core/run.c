@@ -404,9 +404,9 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 pushDestructActivity(env->activity->dl_next, env);
             continue;
         } else if (env->activity->type == act_guardian) {
-            if (env->activity->dl_next == NULL)
+            if (env->activity->gl_next == NULL) {
                 popActivity(true, NULL, env);  // 结束运行
-            else
+            } else
                 pushGuadianFuncActivity(env->activity->gl_next, env);
             continue;
         }
