@@ -13,8 +13,11 @@ typedef struct af_ImportInfo af_ImportInfo;
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 DEFINE_DLC_SYMBOL(TopMsgProcessFunc);
 
-typedef void GuardianFunc(bool is_guard, af_Environment *env);
+typedef void GuardianFunc(char *type, bool is_guard, void *data, af_Environment *env);
 DEFINE_DLC_SYMBOL(GuardianFunc);
+
+typedef void GuardianDestruct(char *type, void *data, af_Environment *env);
+DEFINE_DLC_SYMBOL(GuardianDestruct);
 
 enum GcRunTime {
     grt_always = 0,  // 总是运行
@@ -72,7 +75,8 @@ AFUN_CORE_EXPORT void setEnvVarNumber(char *name, int32_t data, af_Environment *
 AFUN_CORE_EXPORT bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
 
 /* 顶层消息处理器 相关操作 */
-AFUN_CORE_EXPORT bool addGuardian(char *type, bool always, DLC_SYMBOL(GuardianFunc) func, af_Environment *env);
+AFUN_CORE_EXPORT bool addGuardian(char *type, bool always, size_t size, DLC_SYMBOL(GuardianFunc) func,
+                                  DLC_SYMBOL(GuardianDestruct) destruct, void **pdata, af_Environment *env);
 AFUN_CORE_EXPORT bool popGuardian(char *type, af_Environment *env);
 
 /* LiteralRegex 相关操作 */

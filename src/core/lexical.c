@@ -11,7 +11,7 @@
 #define isascii (((c) & ~0x7f) == 0)
 #endif
 
-#define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || ch == ','))  /* 被忽略的符号 */
+#define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || (ch) == ','))  /* 被忽略的符号 */
 #define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
 
 static void printLexicalError(char *info, af_Parser *parser) {
