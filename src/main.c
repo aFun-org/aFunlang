@@ -188,6 +188,7 @@ static int mainRun(ff_FFlags *ff) {
             }
             exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
         } while (isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
+        destructAFunEnvironment(env);
     } else {
         env = creatAFunEnvironment(argc - 1, argv + 1);
         exit_code = runCodeFromFile(argv[0], true, 0, env);

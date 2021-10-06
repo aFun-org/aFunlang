@@ -181,7 +181,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
             return 0;
         }
 
-        fungec_stdin(ch);
+        fungetc_stdin(ch);
 
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
             writeErrorLog(aFunCoreLogger, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
@@ -190,7 +190,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         }
 
         data->index = 0;
-        data->len = strlen(data->data);
+        data->len = STR_LEN(data->data);
     }
 
     if (data->index + len > data->len)  // 超出长度范围

@@ -23,7 +23,6 @@ struct af_Reader {
     size_t data_size;
 
     char *buf;
-    char *buf_end;  // buf的尾部位置[NUL的位置]
     size_t buf_size;  // buf的长度-1
     char *read;
     bool read_end;

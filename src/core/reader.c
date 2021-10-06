@@ -10,8 +10,7 @@ af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReade
     reader->data_size = data_size;
 
     reader->buf = NEW_STR(DEFAULT_BUF_SIZE);
-    reader->buf_size = DEFAULT_BUF_SIZE;
-    reader->buf_end = reader->buf + DEFAULT_BUF_SIZE;  // 执行buf[DEFAULT_BUF_SIZE], 即NUL
+    reader->buf_size = DEFAULT_BUF_SIZE;  // buf_size 不包括NUL
     reader->read = reader->buf;
     return reader;
 }
@@ -42,7 +41,6 @@ void *getReaderData(af_Reader *reader) {
 
 char *readWord(size_t del_index, af_Reader *reader) {
     char *re;
-    char *write = reader->buf_end - del_index;  // 数据写入的位置
     reader->read = reader->buf;  // 重置指针
 
     if (del_index == 0)
@@ -51,10 +49,13 @@ char *readWord(size_t del_index, af_Reader *reader) {
     re = NEW_STR(del_index);
     memcpy(re, reader->buf, del_index);  // 复制旧字符串
     memmove(reader->buf, reader->buf + del_index, reader->buf_size - del_index + 1);  // +1是为了涵盖NUL
+
     if (!reader->read_end) { // 没到尾部, 则写入数据
-        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, del_index, &reader->read_end);
-        if (len > del_index)
-            len = del_index;
+        char *write = reader->buf + STR_LEN(reader->buf);  // 数据写入的位置
+        size_t len_ = reader->buf_size - STR_LEN(reader->buf);
+        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, len_, &reader->read_end);
+        if (len > len_)
+            len = len_;
         *(write + len) = NUL;
     }
 
@@ -87,12 +88,11 @@ char getChar(af_Reader *reader) {
     size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &reader->read_end);
     if (len > NEW_BUF_SIZE)
         len = NEW_BUF_SIZE;
-    *(new_buf + reader->buf_size + len + 1) = NUL;
+    *(new_buf + reader->buf_size + len) = NUL;
 
     free(reader->buf);
     reader->buf = new_buf;
     reader->buf_size = reader->buf_size + NEW_BUF_SIZE;
-    reader->buf_end = reader->buf + reader->buf_size;
     reader->read = reader->buf + reader->buf_size - NEW_BUF_SIZE;
 
     ch = *(reader->read);

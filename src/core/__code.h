@@ -29,5 +29,4 @@ struct af_Code {  // 一个 Code 的结构体
     struct af_Code *next;
 };
 
-AFUN_CORE_NO_EXPORT void printCode(af_Code *bt);
 #endif //AFUN_BYTECODE_H_

@@ -66,7 +66,7 @@ int fgetchar_stdin(void) {
     return ch;
 }
 
-int fungec_stdin(int ch) {
+int fungetc_stdin(int ch) {
     int re = ungetc(ch, stdin);
     stdin_empty = false;
     return re;
