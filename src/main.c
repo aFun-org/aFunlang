@@ -180,9 +180,14 @@ static int mainRun(ff_FFlags *ff) {
         /* 进入命令行模式 */
         env = creatAFunEnvironment(0, NULL);
         printWelcomeInfo();
-        do
+        do {
+            if (CLEAR_FERROR(stdin) || feof(stdin)) {
+                writeErrorLog(aFunlangLogger, "stdin error/eof");
+                exit_code = -1;
+                break;
+            }
             exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
-        while (isCoreExit(env) != 1);
+        } while (isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
     } else {
         env = creatAFunEnvironment(argc - 1, argv + 1);
         exit_code = runCodeFromFile(argv[0], true, 0, env);
@@ -278,9 +283,14 @@ static int mainCL(ff_FFlags *ff) {
 
     if (command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
-        do
+        do {
+            if (CLEAR_FERROR(stdin) || feof(stdin)) {
+                writeErrorLog(aFunlangLogger, "stdin error/eof");
+                exit_code = -1;
+                break;
+            }
             exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
-        while (isCoreExit(env) != 1);
+        } while (isCoreExit(env) != 1);
     }
 
     if (exit_code != 0)

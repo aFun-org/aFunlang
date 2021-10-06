@@ -5,6 +5,8 @@
 AFUN_TOOL_EXPORT int fgets_stdin(char **dest, int len);
 AFUN_TOOL_EXPORT bool checkStdin(void);
 
+#define CLEAR_FERROR(file) (ferror(file) && (clearerr(file), ferror(file)))  /* 出现错误后尝试修复, 并再次检查 */
+
 #ifdef aFunWIN32_NO_CYGWIN
 AFUN_TOOL_EXPORT int fgetchar_stdin(void);
 AFUN_TOOL_EXPORT int fungec_stdin(int ch);

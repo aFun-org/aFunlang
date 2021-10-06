@@ -159,25 +159,33 @@ int fgets_stdin(char **dest, int len) {
  * 目标: 检查stdin缓冲区是否有内容
  * 有内容则返回true
  * 无内容则返回false
+ *
+ * 参考自: https://gist.github.com/SuperH-0630/a4190b89d21c349a8d6882ca71453ae6
  */
-bool checkStdin(void) {
+bool checkStdin(void){
+    bool re = false;
+
     struct termios oldt, newt;
-    int ch;
-    int oldf;
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
     newt.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+
+    int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-    if(ch != EOF) {
+
+    int ch = fgetc(stdin);
+    CLEAR_FERROR(stdin);
+
+    if (ch != EOF) {
         ungetc(ch, stdin);
-        return 1;
+        re = true;
     }
-    return 0;
+
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
+    return re;
 }
 
 #endif

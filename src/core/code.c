@@ -278,7 +278,8 @@ bool writeAllCode(af_Code *bt, FILE *file) {
     for (NULL; bt != NULL; bt = bt->next) {
         if (!writeCode(bt, file))
             goto RETURN_FALSE;
-        if (ferror(stdin))
+
+        if (CLEAR_FERROR(stdin))
             goto RETURN_FALSE;
 
         Done(byteWriteUint_8(file, (bt->next == NULL)));  // 记录是否为最后一位
@@ -331,7 +332,7 @@ bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
     for (NULL; true;bt = &((*bt)->next)) {
         if(!readCode(bt, file))
             goto RETURN_FALSE;
-        if (ferror(stdin))
+        if (CLEAR_FERROR(stdin))
             goto RETURN_FALSE;
 
         uint8_t last;

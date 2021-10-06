@@ -160,8 +160,7 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
         return 2;
     if (!log_factory.init || log_factory.log == NULL)
         return 1;
-    if (ferror(log_factory.log))
-        clearerr(log_factory.log);
+    CLEAR_FERROR(log_factory.log);
 
     // 输出 head 信息
     time_t t = 0;
