@@ -273,7 +273,7 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
 
         plist = reachableVarSpaceList(activity->var_list, plist);
 
-        if (activity->type == act_gc)  // gc不执行接下来的检查
+        if (activity->type == act_gc || activity->type == act_guardian)  // gc不执行接下来的检查
             continue;
 
         if (activity->func != NULL)

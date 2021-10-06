@@ -22,7 +22,7 @@ static bool checkStop(af_Environment *env);
 /* Code 执行函数 */
 static bool codeElement(af_Code *code, af_Environment *env);
 static bool codeBlock(af_Code *code, af_Environment *env);
-static void runGuardian(af_Environment *env);
+static bool runGuardian(af_Environment *env);
 
 /*
  * 函数名: checkInMsgType
@@ -232,11 +232,23 @@ static bool codeBlock(af_Code *code, af_Environment *env) {
         return pushFuncActivity(env->activity->bt_next, env);
 }
 
-static void runGuardian(af_Environment *env) {
+static bool runGuardian(af_Environment *env) {
+    af_GuardianList *gl = NULL;
+    af_GuardianList **pgl = &gl;
     for (af_Guardian *gd = env->guardian; gd != NULL; gd = gd->next) {
-        if (gd->always || !env->activity->is_guard)  // guardian被标记为一直执行, 或者非is_guard模式
-            GET_SYMBOL(gd->func)(gd->type, env->activity->is_guard, gd->data, env);
+        if (gd->always || !env->activity->is_guard) { // guardian被标记为一直执行, 或者非is_guard模式
+            af_GuardianList *new = GET_SYMBOL(gd->func)(gd->type, env->activity->is_guard, gd->data, env);
+            if (new != NULL)
+                pgl = contectGuardianList(new, pgl);
+        }
     }
+
+    if (gl != NULL) {
+        pushGuardianActivity(gl, pgl, env);
+        return true;
+    }
+
+    return false;
 }
 
 /*
@@ -391,6 +403,12 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
             else
                 pushDestructActivity(env->activity->dl_next, env);
             continue;
+        } else if (env->activity->type == act_guardian) {
+            if (env->activity->dl_next == NULL)
+                popActivity(true, NULL, env);  // 结束运行
+            else
+                pushGuadianFuncActivity(env->activity->gl_next, env);
+            continue;
         }
 
         /* 切换执行的var_list */
@@ -439,7 +457,8 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
             continue;  // 后面的代码不再运行
 
         /* 执行守护器 */
-        runGuardian(env);
+        if (runGuardian(env))
+            continue;  // 需要执行守护器
 
         /* 处理msg */
         af_Message *msg = getTopMsg(env);

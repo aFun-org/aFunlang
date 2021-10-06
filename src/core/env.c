@@ -15,6 +15,7 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
 static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
 static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark);
 static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
+static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
 static af_Activity *freeActivity(af_Activity *activity);
 static void freeActivityTop(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
@@ -73,6 +74,11 @@ static void fprintfNote(FILE *file, char *note);
 static void fprintfNoteStderr(char *note);
 static void fprintfNoteStdout(char *note);
 
+/* af_GuardianList 创建与释放 */
+static af_GuardianList *makeGuardianList(af_Object *func);
+static af_GuardianList *freeGuardianList(af_GuardianList *gl);
+static void freeAllGuardianList(af_GuardianList *gl);
+
 /* 内置顶层消息处理器 */
 static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env);
@@ -80,7 +86,7 @@ static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env);
 
 /* 内置守护器 */
 static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env);
-static void guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env);
+static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env);
 
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
@@ -260,6 +266,22 @@ static af_Activity *makeGcActivity(gc_DestructList *dl, gc_DestructList **pdl, a
     return activity;
 }
 
+static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env) {
+    af_Activity *activity = makeActivity(NULL, NULL, env->core->global);
+    activity->type = act_guardian;
+
+    activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
+    activity->new_vs_count = 1;
+
+    activity->file = strCopy("guardian.aun.sys");
+    activity->line = 1;
+    activity->gl = gl;
+    activity->pgl = pgl;
+    activity->gl_next = gl;
+    activity->is_guard = true;
+    return activity;
+}
+
 static af_Activity *freeActivity(af_Activity *activity) {
     af_Activity *prev = activity->prev;
 
@@ -272,6 +294,9 @@ static af_Activity *freeActivity(af_Activity *activity) {
     if (activity->type == act_gc) {
         if (activity->dl != NULL)
             freeAllDestructList(activity->dl);
+    } else if (activity->type == act_guardian) {
+        if (activity->gl != NULL)
+            freeAllGuardianList(activity->gl);
     } else {
         // vsl 是引用自 var_list和func_var_list的 故不释放
         // func_var_list 是引用自函数的 故不释放
@@ -772,7 +797,7 @@ static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char 
     return true;
 }
 
-static void guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env) {
+static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env) {
     char error_msg[218] = {NUL};
     checkSignal(SIGINT, ev_sigint, ev_sigint_cfg, SIGNAL_INT, error_msg, env);
     checkSignal(SIGTERM, ev_sigterm, ev_sigterm_cfg, SIGNAL_TERM, error_msg, env);
@@ -798,7 +823,7 @@ static void guardian_Signal(char *type, bool is_guard, void *data, af_Environmen
 
         pushMessageDown(makeERRORMessage(SIGNAL_EXCEPTION, error_msg, env), env);
     }
-
+    return NULL;
 }
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
@@ -1126,6 +1151,22 @@ void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *
     pushActivity(activity, env);
 }
 
+void pushGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env) {
+    for (af_Activity *tmp = env->activity; tmp != NULL; tmp = tmp->prev) {
+        if (tmp->type == act_guardian) {
+            *(tmp->pgl) = gl;
+            tmp->pgl = pgl;
+            if (tmp->gl_next == NULL)  // 原dl_next已经运行到末端
+                tmp->gl_next = gl;
+            return;
+        }
+    }
+
+    /* gc Activity 可能创建为顶层 activity, 故信息不能继承上一级(可能没有上一级) */
+    af_Activity *activity = makeGuardianActivity(gl, pgl, env);
+    pushActivity(activity, env);
+}
+
 bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment *env) {
     af_Object *tmp = NULL;
     if (obj == NULL)
@@ -1151,6 +1192,17 @@ bool pushDestructActivity(gc_DestructList *dl, af_Environment *env) {
     activity->is_gc_call = true;
     pushActivity(activity, env);
     return setFuncActivityToArg(dl->func, env);
+}
+
+bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env) {
+    env->activity->gl_next = gl->next;
+
+    /* 隐式调用不设置 bt_top */
+    af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
+                                             env->activity->var_list, env->activity->belong, NULL);
+    activity->is_guard_call = true;
+    pushActivity(activity, env);
+    return setFuncActivityToArg(gl->func, env);
 }
 
 void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env) {
@@ -1434,7 +1486,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (!is_normal)
         freeMark(env->activity);  // 遇到非正常退出时, 释放`mark`
 
-    if (env->activity->type == act_top || env->activity->type == act_gc) // 顶层或gc层
+    if (env->activity->type == act_top || env->activity->type == act_gc || env->activity->type == act_guardian) // 顶层或gc/guardian层
         runTopMessageProcess((env->activity->type == act_top), env);
     else {
         connectMessage(&(env->activity->msg_down), env->activity->prev->msg_down);
@@ -1634,6 +1686,9 @@ static char *getActivityInfoToBacktracking(af_Activity *activity){
     if (activity->type == act_gc) {
         strcat(info, "gc-activity;");
         return strCopy(info);
+    } else if (activity->type == act_guardian) {
+        strcat(info, "guardian-activity;");
+        return strCopy(info);
     } else if (activity->type == act_top)
         strcat(info, "top-activity;");
     else if (activity->type == act_top_import)
@@ -1739,6 +1794,39 @@ void freeImportInfo(af_ImportInfo *ii) {
     free(ii);
 }
 
+static af_GuardianList *makeGuardianList(af_Object *func) {
+    af_GuardianList *gl = calloc(1, sizeof(af_GuardianList));
+    gl->func = func;
+    gc_addReference(gl->func);
+    return gl;
+}
+
+static af_GuardianList *freeGuardianList(af_GuardianList *gl) {
+    af_GuardianList *next = gl->next;
+    gc_delReference(gl->func);
+    free(gl);
+    return next;
+}
+
+static void freeAllGuardianList(af_GuardianList *gl) {
+    while (gl != NULL)
+        gl = freeGuardianList(gl);
+}
+
+af_GuardianList **pushGuardianList(af_Object *func, af_GuardianList **pgl) {
+    *pgl = makeGuardianList(func);
+    return &((*pgl)->next);
+}
+
+af_GuardianList **contectGuardianList(af_GuardianList *new, af_GuardianList **base) {
+    while ((*base) != NULL)
+        base = &((*base)->next);
+    *base = new;
+    while ((*base) != NULL)
+        base = &((*base)->next);
+    return base;
+}
+
 void setGcMax(int32_t max, af_Environment *env) {
     env->core->gc_max->num = max;
 }
@@ -1835,7 +1923,7 @@ af_Object *getImportObject(af_ImportInfo *ii) {
 }
 
 af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
-    if (env->activity->type == act_gc)
+    if (env->activity->type == act_gc || env->activity->type == act_guardian)
         return env->activity->var_list;
     else
         return env->activity->vsl;

@@ -72,6 +72,11 @@ struct af_LiteralDataList {
     struct af_LiteralDataList *next;
 };
 
+struct af_GuardianList {
+    struct af_Object *func;
+    struct af_GuardianList *next;
+};
+
 struct af_Activity {  // 活动记录器
     struct af_Activity *prev;  // 上一个活动记录器
 
@@ -80,6 +85,7 @@ struct af_Activity {  // 活动记录器
         act_func,  /* 函数调用 */
         act_top_import,  /* 导入 运算结束后global进入msg反 */
         act_gc,  /* gc机制 只存在一层 */
+        act_guardian,  /* 守护器 */
     } type;
 
     struct af_Object *belong;  // 属对象 (belong通常为func的belong)
@@ -101,6 +107,12 @@ struct af_Activity {  // 活动记录器
             struct gc_DestructList *dl;
             struct gc_DestructList **pdl;  // 执行dl的最末端
             struct gc_DestructList *dl_next;  // dl执行的位置
+        };
+
+        struct {  // 仅守护器使用
+            struct af_GuardianList *gl;
+            struct af_GuardianList **pgl;  // 执行gl的最末端
+            struct af_GuardianList *gl_next;  // gl执行的位置
         };
 
         struct {  // gc以外的其他内容使用
@@ -141,6 +153,7 @@ struct af_Activity {  // 活动记录器
 
             /* 函数调用: 析构函数 在错误回溯时使用, 是个标记*/
             bool is_gc_call;
+            bool is_guard_call;
 
             /* 字面量 */
             bool is_literal;  // 处于字面量运算 意味着函数调用结束后会调用指定API
@@ -185,7 +198,7 @@ struct af_ActivityTrackBack {
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
 NEW_DLC_SYMBOL(TopMsgProcessFunc, TopMsgProcessFunc);
 
-typedef void GuardianFunc(char *type, bool is_guard, void *data, af_Environment *env);
+typedef af_GuardianList *GuardianFunc(char *type, bool is_guard, void *data, af_Environment *env);
 NEW_DLC_SYMBOL(GuardianFunc, GuardianFunc);
 
 typedef void GuardianDestruct(char *type, void *data, af_Environment *env);
@@ -264,7 +277,9 @@ AFUN_CORE_NO_EXPORT void popActivity(bool is_normal, af_Message *msg, af_Environ
 
 /* 运行时Activity设置函数 (设置Activity) */
 AFUN_CORE_NO_EXPORT bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env);
 AFUN_CORE_NO_EXPORT void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
+AFUN_CORE_NO_EXPORT void pushGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushMacroFuncActivity(af_Object *func, af_Environment *env);
@@ -298,4 +313,8 @@ AFUN_CORE_NO_EXPORT void connectMessage(af_Message **base, af_Message *msg);
 /* 环境变量管理函数 */
 AFUN_CORE_NO_EXPORT af_EnvVar *setEnvVarNumber_(char *name, int32_t data, af_Environment *env);
 AFUN_CORE_NO_EXPORT af_EnvVar *setEnvVarData_(char *name, char *data, af_Environment *env);
+
+/* af_GuardianList管理函数 */
+AFUN_CORE_NO_EXPORT af_GuardianList **contectGuardianList(af_GuardianList *new, af_GuardianList **base);
+
 #endif //AFUN_ENV_H_
