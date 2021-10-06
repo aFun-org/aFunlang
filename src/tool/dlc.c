@@ -75,6 +75,21 @@ static bool freeLibary_(struct DlcHandle *dlc, bool f) {
     return true;
 }
 
+static bool freeLibary_Exit(struct DlcHandle *dlc) {
+    if (dlc->last == NULL)
+        dlc_l = dlc->next;
+    else
+        dlc->last->next = dlc->next;
+
+    /* atexit函数中不使用dlclose */
+
+    if (dlc->next != NULL)
+        dlc->next->last = dlc->last;
+
+    free(dlc);
+    return true;
+}
+
 static void blindSymbol(struct DlcSymbol_ *ds, struct DlcHandle *dlc) {
     if (ds->dlc != NULL)
         ds->dlc->link--;
@@ -136,5 +151,5 @@ void freeSymbol_(struct DlcSymbol_ *symbol) {
 
 void dlcExit(void) {
     while (dlc_l != NULL)
-        freeLibary_(dlc_l, true);
+        freeLibary_Exit(dlc_l);
 }
