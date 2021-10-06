@@ -165,7 +165,6 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         data->no_first = true;
         free(data->data);
 
-#if aFunWIN32_NO_CYGWIN
         while (!checkStdin()) {  // 无内容则一直循环等到
             /* 检查信号中断 */
             if (data->interrupt != NULL && data->interrupt()) {  // 设置了中断函数, 并且该函数返回0
@@ -174,7 +173,6 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
                 return 0;
             }
         }
-#endif
 
         int ch = fgetchar_stdin();
         if (ch == '\n' || ch == EOF) {
