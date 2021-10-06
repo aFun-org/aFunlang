@@ -3,8 +3,12 @@
 #include <stdio.h>
 
 AFUN_TOOL_EXPORT int fgets_stdin(char **dest, int len);
+AFUN_TOOL_EXPORT bool checkStdin(void);
 
 #ifdef aFunWIN32_NO_CYGWIN
+AFUN_TOOL_EXPORT int fgetchar_stdin(void);
+AFUN_TOOL_EXPORT int fungec_stdin(int ch);
+
 AFUN_TOOL_EXPORT int fputs_stdout(char *str);
 AFUN_TOOL_EXPORT int fputs_stderr(char *str);
 
@@ -14,6 +18,9 @@ AFUN_TOOL_EXPORT size_t printf_stdout(size_t buf_len, char *format, ...);
 AFUN_TOOL_EXPORT size_t printf_stderr(size_t buf_len, char *format, ...);
 
 #else
+#define fgetchar_stdin() fgetc(stdin)
+#define fungec_stdin(ch) ungetc((ch), stdin)
+
 #define fputs_stdout(str) fputs((str), stdout)
 #define fputs_stderr(str) fputs((str), stderr)
 

@@ -148,6 +148,7 @@ af_Parser *makeParserByFile(FilePath path){
 
 struct readerDataStdin {
     bool no_first;
+    bool (*interrupt)(void);  // 中断函数
 
     char *data;
     size_t index;
@@ -157,21 +158,32 @@ struct readerDataStdin {
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
     if (data->index == data->len) {  // 读取内容
         if (data->no_first)
-            printf("\r.... ");
+            fputs("\r.... ", stdout);
         else
-            printf("\r>>>> ");
+            fputs("\r>>>> ", stdout);
+        fflush(stdout);
         data->no_first = true;
-
         free(data->data);
 
-        int ch = getc(stdin);
+#if aFunWIN32_NO_CYGWIN
+        while (!checkStdin()) {  // 无内容则一直循环等到
+            /* 检查信号中断 */
+            if (data->interrupt != NULL && data->interrupt()) {  // 设置了中断函数, 并且该函数返回0
+                printf("\rInterrupt\n");
+                *read_end = true;
+                return 0;
+            }
+        }
+#endif
+
+        int ch = fgetchar_stdin();
         if (ch == '\n' || ch == EOF) {
             /* 读取结束 */
             *read_end = true;
             return 0;
         }
 
-        ungetc(ch, stdin);
+        fungec_stdin(ch);
 
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
             writeErrorLog(aFunCoreLogger, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
@@ -194,13 +206,14 @@ static void destructStdin(struct readerDataStdin *data) {
     free(data->data);
 }
 
-af_Parser *makeParserByStdin(){
+af_Parser *makeParserByStdin(ParserStdinInterruptFunc *interrupt){
     if (ferror(stdin))
         clearerr(stdin);
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
     af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataStdin));
+    ((struct readerDataStdin *)parser->reader->data)->interrupt = interrupt;
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

@@ -3,6 +3,7 @@
 #include "aFun.h"
 #include "main_run.h"
 #include "main_build.h"
+#include "main_signal.h"
 
 ff_defArg(help, false)
                 ff_argRule('h', help, not, 'h')
@@ -36,6 +37,7 @@ static const char *name = NULL;
 static int mainHelp(ff_FFlags *ff);
 static void printVersion(void);
 static void printHelp(void);
+static bool stdin_interrupt(void);
 static int mainRun(ff_FFlags *ff);
 static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
@@ -76,6 +78,8 @@ INIT_ERROR:
     initLogger(aFunlangLogger, "aFunlang-exe", info.level);
     aFunlangLogger->buf = &main_buf;
     writeDebugLog(aFunlangLogger, "aFunlang-exe init success");
+
+    signalInit();
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
@@ -159,6 +163,13 @@ out:
     return EXIT_SUCCESS;
 }
 
+static bool stdin_interrupt(void) {
+    bool re = getSignal();
+    if (re)
+        writeInfoLog(aFunlangLogger, "Signal Interrupt");
+    return re;
+}
+
 static int mainRun(ff_FFlags *ff) {
     int exit_code;
     char **argv = NULL;
@@ -170,7 +181,7 @@ static int mainRun(ff_FFlags *ff) {
         env = creatAFunEnvironment(0, NULL);
         printWelcomeInfo();
         do
-            exit_code = runCodeFromStdin("stdin", env);
+            exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
         while (isCoreExit(env) != 1);
     } else {
         env = creatAFunEnvironment(argc - 1, argv + 1);
@@ -268,7 +279,7 @@ static int mainCL(ff_FFlags *ff) {
     if (command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
         do
-            exit_code = runCodeFromStdin("stdin", env);
+            exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
         while (isCoreExit(env) != 1);
     }
 

@@ -13,9 +13,12 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif
+#include <conio.h>
 #include <Windows.h>
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
+
+static bool stdin_empty = true;  // stdin读取内容遇到 \n, 用于检测stdin是否为空
 
 static int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
     if (str == NULL || dest == NULL)
@@ -47,7 +50,38 @@ int fgets_stdin(char **dest, int len) {
     UINT code_page = GetConsoleCP();
     if (fgets(wstr, len, stdin) != NULL)
         re = convertMultiByte(dest, wstr, code_page, CP_UTF8);
+    if (strchr(wstr, '\n') != NULL)
+        stdin_empty = true;  // 没有读取到\n说明stdin还有内容
+    else
+        stdin_empty = false;  // 没有读取到\n说明stdin还有内容
     return re;
+}
+
+int fgetchar_stdin(void) {
+    int ch = getc(stdin);
+    if (ch == '\n')
+        stdin_empty = true;
+    else
+        stdin_empty = false;
+    return ch;
+}
+
+int fungec_stdin(int ch) {
+    int re = ungetc(ch, stdin);
+    stdin_empty = false;
+    return re;
+}
+
+/*
+ * 函数名: checkStdin
+ * 目标: 检查stdin缓冲区是否有内容
+ * 有内容则返回true
+ * 无内容则返回false
+ */
+bool checkStdin(void) {
+    if (!stdin_empty)
+        return true;
+    return _kbhit();
 }
 
 static int fputs_std_(char *str, FILE *std) {
@@ -107,6 +141,10 @@ size_t printf_stderr(size_t buf_len, char *format, ...) {
 }
 
 #else
+#include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
+
 // 用于Linux平台的IO函数
 // 默认Linux平台均使用utf-8
 
@@ -115,6 +153,31 @@ int fgets_stdin(char **dest, int len) {
     if (fgets(*dest, len, stdin) == NULL)
         return 0;
     return 1;
+}
+/*
+ * 函数名: checkStdin
+ * 目标: 检查stdin缓冲区是否有内容
+ * 有内容则返回true
+ * 无内容则返回false
+ */
+bool checkStdin(void) {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+    return 0;
 }
 
 #endif
