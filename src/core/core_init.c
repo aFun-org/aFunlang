@@ -49,22 +49,20 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     initLogger(aFunCoreLogger, "aFunlang-core", info->level);
     aFunCoreLogger->buf = info->buf;
 
-    writeDebugLog(aFunCoreLogger, "aFunCore init success");
     writeDebugLog(aFunCoreLogger, "aFunCore log path: %s", log_path);
-    writeDebugLog(aFunCoreLogger, "aFunCore var/lib path: %s", varlib_path);
+    writeDebugLog(aFunCoreLogger, "aFunCore var.lib path: %s", varlib_path);
     writeDebugLog(aFunCoreLogger, "aFunCore lang path: %s", lang_path);
 
     char LANG_path[218] = {0};
     snprintf(LANG_path, 218, "%sLANG", lang_path);
 
     FILE *LANG_file = fopen(LANG_path, "r");
-    writeDebugLog(aFunCoreLogger, "LANG_path = %s", LANG_path);
     if (LANG_file != NULL) {
         char LANG[100] = {0};
         fgets(LANG, 100, LANG_file);
         if (LANG[strlen(LANG) - 1] == '\n')
             LANG[strlen(LANG) - 1] = NUL;  // 去除`\n`
-        writeDebugLog(aFunCoreLogger, "LANG = %s", LANG);
+        writeDebugLog(aFunCoreLogger, "language = %s", LANG);
 
         char LANG_lib[218] = {0};
         snprintf(LANG_lib, 218, "%s" SHARED_PREFIX "%s" SHARED_SUFFIX, lang_path, LANG);
@@ -75,5 +73,6 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
         fclose(LANG_file);
     } else
         HT_initaFunGetText(NULL);
+    writeDebugLog(aFunCoreLogger, "aFunCore init success");
     return true;
 }
