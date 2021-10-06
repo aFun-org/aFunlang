@@ -135,10 +135,6 @@ with open(os.path.join(output_dir, f"{base_name}_ht.py"), "w", encoding="utf-8")
 #include "stdlib.h"
 static void *handle = NULL;
 
-static void destructExit(void) {{
-    dlclose(handle);
-}}
-
 int HT_init{base_name}GetText(char *lang) {{
     if (lang == NULL || handle != NULL)
         return 2;
@@ -146,7 +142,6 @@ int HT_init{base_name}GetText(char *lang) {{
     handle = dlopen(lang, RTLD_NOW);
     if (handle == NULL)
         return 1;
-    atexit(destructExit);
     char **tmp;\n\n''')
 
             for i in flat_list:
