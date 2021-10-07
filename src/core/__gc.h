@@ -8,7 +8,6 @@ typedef struct GC_Object GC_Object;
 typedef struct GC_ObjectData GC_ObjectData;
 typedef struct af_GcList af_GcList;
 typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
-typedef struct gc_DestructList gc_DestructList, **pgc_DestructList;
 
 #define GC_FREE_EXCHANGE(obj, Type, Core) do { \
 {if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
@@ -70,12 +69,6 @@ struct gc_Analyzed {
     struct gc_Analyzed *next;
 };
 
-struct gc_DestructList {
-    struct af_Object *obj;
-    struct af_Object *func;
-    struct gc_DestructList *next;
-};
-
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
 #ifdef core_shared_t_EXPORTS
 #undef gc_addReference
@@ -115,16 +108,13 @@ AFUN_CORE_NO_EXPORT void gc_delObjectDataReference(af_ObjectData *obj);
 AFUN_CORE_NO_EXPORT GcCount gc_getObjectDataReference(af_ObjectData *obj);
 
 /* gc 操控函数 : gc的启动由解释器完全管理 */
-AFUN_CORE_NO_EXPORT void gc_RunGC(af_Environment *env);
-AFUN_CORE_NO_EXPORT pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl);
+AFUN_CORE_NO_EXPORT af_GuardianList *gc_RunGC(af_Environment *env);
+AFUN_CORE_NO_EXPORT paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl);
 AFUN_CORE_NO_EXPORT void gc_freeAllValueData(af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */
 AFUN_CORE_NO_EXPORT void printGCByCore(af_Core *core);
-
-/* gc_DestructList 释放函数*/
-AFUN_CORE_NO_EXPORT void freeAllDestructList(gc_DestructList *dl);
 
 /* gc 运行时函数 */
 AFUN_CORE_NO_EXPORT void resetGC(af_Environment *env);

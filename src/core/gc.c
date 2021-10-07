@@ -125,41 +125,6 @@ GcCount gc_getVarSpaceReference(af_VarSpace *obj) {
     return obj->gc.info.reference;
 }
 
-/* gc_DestructList 函数 */
-/* gc_DestructList 创建与释放 */
-static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func);
-static gc_DestructList *freeDestructList(gc_DestructList *dl);
-
-/* gc_DestructList 相关操作 */
-static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl);
-
-static gc_DestructList *makeDestructList(af_ObjectData *od, af_Object *func) {
-    gc_DestructList *dl = calloc(1, sizeof(gc_DestructList));
-    dl->obj = od->base;
-    dl->func = func;
-    gc_addReference(dl->obj);
-    gc_addReference(dl->func);
-    return dl;
-}
-
-static gc_DestructList *freeDestructList(gc_DestructList *dl) {
-    gc_DestructList *next = dl->next;
-    gc_delReference(dl->obj);
-    gc_delReference(dl->func);
-    free(dl);
-    return next;
-}
-
-void freeAllDestructList(gc_DestructList *dl) {
-    while (dl != NULL)
-        dl = freeDestructList(dl);
-}
-
-static pgc_DestructList pushDestructList(af_ObjectData *od, af_Object *func, pgc_DestructList pdl) {
-    *pdl = makeDestructList(od, func);
-    return &((*pdl)->next);
-}
-
 /* gcList 函数 */
 /* gcList 创建与释放 */
 static af_GcList *freeGcList(af_GcList *gl);
@@ -227,7 +192,7 @@ static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
 static void freeValue(af_Environment *env);
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
 static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
-static pgc_Analyzed checkDestruct(af_Environment *env, pgc_DestructList *pdl, pgc_Analyzed plist);
+static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pdl, pgc_Analyzed plist);
 static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 
 // 使用 gc_Analyzed 目的是令可达性分析程序不需要使用递归
@@ -359,7 +324,7 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
 
         plist = reachableVarSpaceList(activity->var_list, plist);
 
-        if (activity->type == act_gc || activity->type == act_guardian)  // gc不执行接下来的检查
+        if (activity->type == act_guardian)  // gc不执行接下来的检查
             continue;
 
         if (activity->func != NULL)
@@ -431,50 +396,50 @@ static void freeValue(af_Environment *env) {
     }
 }
 
-static pgc_Analyzed checkDestruct(af_Environment *env, pgc_DestructList *pdl, pgc_Analyzed plist) {
+static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed plist) {
     for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.info.reachable && !od->gc.done_destruct) {
             af_Object *func = findObjectAttributesByObjectData(mg_gc_destruct, NULL, od);
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;
-            *pdl = pushDestructList(od, func, *pdl);
+            printf("od->base = %p\n", od->base);
+            *pgl = pushGuardianList(od->base, func, *pgl);
             plist = reachableObjectData(od, plist);
         }
     }
     return plist;
 }
 
-void gc_RunGC(af_Environment *env) {
+af_GuardianList *gc_RunGC(af_Environment *env) {
     gc_Analyzed *analyzed = NULL;
-    gc_DestructList *dl = NULL;
+    af_GuardianList *gl = NULL;
     pgc_Analyzed plist = &analyzed;
-    pgc_DestructList pdl = &dl;
+    paf_GuardianList pgl = &gl;
     resetGC(env);
 
     plist = iterLinker(env->core, plist);  // 临时量分析 (临时量都是通过reference标记的)
     plist = reachable(env->activity, plist);
     plist = checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
-    plist = checkDestruct(env, &pdl, plist);  // 在检查析构
+    plist = checkDestruct(env, &pgl, plist);  // 在检查析构
     checkAnalyzed(analyzed, plist);  // 在处理 checkDestruct 时产生的新引用
 
     freeValue(env);
     freeAllAnalyzed(analyzed);
-    if (dl != NULL)
-        pushGCActivity(dl, pdl, env);
+    return gl;
 }
 
-pgc_DestructList checkAllDestruct(af_Environment *env, pgc_DestructList pdl) {
+paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
     for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.done_destruct) {
             af_Object *func = findObjectAttributesByObjectData(mg_gc_destruct, NULL, od);
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;
-            pdl = pushDestructList(od, func, pdl);
+            pgl = pushGuardianList(od->base, func, pgl);
         }
     }
-    return pdl;
+    return pgl;
 }
 
 void gc_freeAllValueData(af_Environment *env) {

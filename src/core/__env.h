@@ -73,6 +73,7 @@ struct af_LiteralDataList {
 };
 
 struct af_GuardianList {
+    struct af_Object *obj;
     struct af_Object *func;
     struct af_GuardianList *next;
 };
@@ -84,7 +85,6 @@ struct af_Activity {  // 活动记录器
         act_top = 0,  /* 顶层 永远存在第一层 */
         act_func,  /* 函数调用 */
         act_top_import,  /* 导入 运算结束后global进入msg反 */
-        act_gc,  /* gc机制 只存在一层 */
         act_guardian,  /* 守护器 */
     } type;
 
@@ -103,12 +103,6 @@ struct af_Activity {  // 活动记录器
     bool is_guard;  // 当为true时将不执行守护器
 
     union {
-        struct {  // 仅gc使用
-            struct gc_DestructList *dl;
-            struct gc_DestructList **pdl;  // 执行dl的最末端
-            struct gc_DestructList *dl_next;  // dl执行的位置
-        };
-
         struct {  // 仅守护器使用
             struct af_GuardianList *gl;
             struct af_GuardianList **pgl;  // 执行gl的最末端
@@ -276,9 +270,7 @@ AFUN_CORE_NO_EXPORT bool pushFuncActivity(af_Code *bt, af_Environment *env);
 AFUN_CORE_NO_EXPORT void popActivity(bool is_normal, af_Message *msg, af_Environment *env);
 
 /* 运行时Activity设置函数 (设置Activity) */
-AFUN_CORE_NO_EXPORT bool pushDestructActivity(gc_DestructList *dl, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env);
-AFUN_CORE_NO_EXPORT void pushGCActivity(gc_DestructList *dl, gc_DestructList **pdl, af_Environment *env);
 AFUN_CORE_NO_EXPORT void pushGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env);
 AFUN_CORE_NO_EXPORT bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env);

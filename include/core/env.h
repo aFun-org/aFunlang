@@ -8,7 +8,7 @@ typedef struct af_Environment af_Environment;
 typedef struct af_Message af_Message;
 typedef struct af_ErrorInfo af_ErrorInfo;
 typedef struct af_ImportInfo af_ImportInfo;
-typedef struct af_GuardianList af_GuardianList;
+typedef struct af_GuardianList af_GuardianList, **paf_GuardianList;
 
 /* 顶层消息处理器的处理函数 DLC */
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);
@@ -92,7 +92,7 @@ AFUN_CORE_EXPORT void fprintfErrorInfoStdout(af_ErrorInfo *ei);
 AFUN_CORE_EXPORT void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);
 
 /* GuardianList 相关操作 */
-af_GuardianList **pushGuardianList(af_Object *func, af_GuardianList **pgl);
+af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl);
 
 /* 环境变量 属性访问 */
 AFUN_CORE_EXPORT char *findEnvVarData(char *name, af_Environment *env);

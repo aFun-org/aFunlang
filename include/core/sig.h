@@ -1,6 +1,6 @@
 ﻿#ifndef AFUN_SIG_H
 #define AFUN_SIG_H
-
+#include <signal.h>
 #include "aFunCoreExport.h"
 
 struct af_SignalInfo {

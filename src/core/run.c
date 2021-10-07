@@ -13,7 +13,6 @@ static af_Message *getTopMsg(af_Environment *env);
 static bool checkInMsgType(char *type, af_Environment *env);
 static bool checkLiteral(af_Message **msg, af_Environment *env);
 static int checkMacro(af_Message *msg, af_Environment *env);
-static bool checkRunGC(af_Environment *env);
 static int checkMsg(af_Message *msg, af_Environment *env);
 bool checkNormalEnd(af_Message *msg, af_Environment *env);
 static bool checkGetArgEnd(af_Message *msg, af_Environment *env);
@@ -91,20 +90,6 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 }
 
 /*
- * 函数名: checkRunGC
- * 目标: 检查是否该运行gc, 若是则返回true并运行gc, 否则返回false
- */
-static bool checkRunGC(af_Environment *env) {
-    if (env->core->gc_runtime->num == grt_always ||
-        env->core->gc_runtime->num == grt_count && env->core->gc_count->num >= env->core->gc_max->num) {
-        env->core->gc_count->num = 0;  // 清零
-        gc_RunGC(env);
-        return true;
-    }
-    return false;
-}
-
-/*
  * 函数名: iterCodeInit
  * 目标: 初始化activity和environment (若environment中未存在activity则通过code新增一个TopActivity, 否则沿用原activity)
  *
@@ -142,11 +127,11 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
                 return false;
             env->activity->file = strCopy("top-gc.aun.sys");
 
-            if (env->activity->type == act_gc || !codeSemanticCheck(env->activity->bt_start) || env->activity->bt_next == NULL || code != NULL)
+            if (env->activity->type == act_guardian || !codeSemanticCheck(env->activity->bt_start) || env->activity->bt_next == NULL || code != NULL)
                 return false;
             break;
         case 3:
-            if (env->activity->type != act_gc || code != NULL)
+            if (env->activity->type != act_guardian || code != NULL)
                 return false;
             break;
         default:
@@ -244,6 +229,7 @@ static bool runGuardian(af_Environment *env) {
     }
 
     if (gl != NULL) {
+        env->activity->process_msg_first++;  //  guardian开始处理时, 已经在原activity中有msg了, 所以要先处理
         pushGuardianActivity(gl, pgl, env);
         return true;
     }
@@ -395,17 +381,11 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
             goto RETURN;
         }
 
-        /* 检查gc机制 */
-        checkRunGC(env);
-        if (env->activity->type == act_gc) {
-            if (env->activity->dl_next == NULL)
-                popActivity(true, NULL, env);  // 结束运行
-            else
-                pushDestructActivity(env->activity->dl_next, env);
-            continue;
-        } else if (env->activity->type == act_guardian) {
+        if (env->activity->type == act_guardian) {
             if (env->activity->gl_next == NULL) {
                 popActivity(true, NULL, env);  // 结束运行
+                if (mode == 3)  // mode = 3, 表示只运行守护器
+                    break;
             } else
                 pushGuadianFuncActivity(env->activity->gl_next, env);
             continue;
@@ -515,13 +495,13 @@ RETURN:
  */
 bool iterDestruct(int deep, af_Environment *env) {
     for (int count = 0; deep == 0 || deep > count; count++) {
-        gc_DestructList *dl = NULL;
-        pgc_DestructList pdl = &dl;
+        af_GuardianList *gl = NULL;
+        paf_GuardianList pdl = &gl;
 
         pdl = checkAllDestruct(env, pdl);
-        if (dl == NULL)
+        if (gl == NULL)
             return true;
-        pushGCActivity(dl, pdl, env);
+        pushGuardianActivity(gl, pdl, env);
         if (!iterCode(NULL, 3, env))
             return false;
     }

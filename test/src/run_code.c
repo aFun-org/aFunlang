@@ -380,7 +380,7 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
 
     af_GuardianList *gd = NULL;
     data->no_first = true;
-    pushGuardianList(data->func, &gd);
+    pushGuardianList(NULL, data->func, &gd);
     return gd;
 }
 
