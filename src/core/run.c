@@ -366,8 +366,8 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
         return false;
 
     bool re = true;
-    af_SignalInfo si;
-    aFunSignalInit(&si);
+    aFunRunInfo ri;
+    defineRunEnvCore(&ri);
 
     /*
      * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
@@ -502,7 +502,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     }
 
 RETURN:
-    aFunSignalRecover(&si);
+    undefRunEnvCore(&ri);
     env->in_run = false;
     return re;
 }

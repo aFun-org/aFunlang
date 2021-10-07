@@ -66,21 +66,25 @@ bool aFunGetSignal(int signum) {
 void aFunSignalInit(af_SignalInfo *sig_info) {
     writeDebugLog(aFunCoreLogger, "Signal setting");
 
-    sig_int = 0;
     sig_info->sig_int = signal(SIGINT, aFunSigFunc);
+    if (aFunSigFunc != sig_info->sig_int)
+        sig_int = 0;
     assertWarningLog(sig_info->sig_int != SIG_ERR, aFunCoreLogger, "SIGINT setting fail");
 
-    sig_term = 0;
     sig_info->sig_term = signal(SIGTERM, aFunSigFunc);
+    if (aFunSigFunc != sig_info->sig_term)
+        sig_term = 0;
     assertWarningLog(sig_info->sig_term != SIG_ERR, aFunCoreLogger, "SIGTERM setting fail");
 
 #if (defined SIGUSR1 && defined SIGUSR2)
-    sig_u1 = 0;
     sig_info->sig_u1 = signal(SIGUSR1, aFunSigFunc);
+    if (aFunSigFunc != sig_info->sig_u1)
+        sig_u1 = 0;
     assertWarningLog(sig_info->sig_u1 != SIG_ERR, aFunCoreLogger, "SIGUSR1 setting fail");
 
-    sig_u2 = 0;
     sig_info->sig_u2 = signal(SIGUSR2, aFunSigFunc);
+    if (aFunSigFunc != sig_info->sig_u2)
+        sig_u2 = 0;
     assertWarningLog(sig_info->sig_u2 != SIG_ERR, aFunCoreLogger, "SIGUSR2 setting fail");
 #endif
 }

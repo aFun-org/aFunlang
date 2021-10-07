@@ -28,6 +28,23 @@ bool aFunInit(aFunInitInfo *info) {
     return aFunInit_mark;
 }
 
+/*
+ * 函数名: defineRunEnv
+ * 目标: 运行前的初始化
+ */
+void defineRunEnv(aFunRunInfo *run_env) {
+    defineRunEnvCore(run_env);
+}
+
+/*
+ * 函数名: undefRunEnv
+ * 目标: 取消运行前的初始哈
+ */
+void undefRunEnv(aFunRunInfo *run_env) {
+    undefRunEnvCore(run_env);
+}
+
+
 af_Environment *creatAFunEnvironment(int argc, char **argv){
     if (!aFunInit_mark)
         return NULL;

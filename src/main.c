@@ -46,6 +46,8 @@ char *base_path = NULL;
 static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
 
+#define CHECK_SIGNAL() do{if (getSignal()){writeErrorLog(aFunlangLogger, "SIGINT");return EXIT_FAILURE;}}while(0)
+
 void freeBaseName(void) {
     free(base_path);
 }
@@ -78,8 +80,6 @@ INIT_ERROR:
     initLogger(aFunlangLogger, "aFunlang-exe", info.level);
     aFunlangLogger->buf = &main_buf;
     writeDebugLog(aFunlangLogger, "aFunlang-exe init success");
-
-    signalInit();
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
@@ -175,6 +175,8 @@ static int mainRun(ff_FFlags *ff) {
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
     af_Environment *env;
+    aFunRunInfo ri = {0};
+    defineRunEnv(&ri);
 
     if (argc == 0) {
         /* 进入命令行模式 */
@@ -195,6 +197,7 @@ static int mainRun(ff_FFlags *ff) {
         destructAFunEnvironment(env);
     }
 
+    undefRunEnv(&ri);
     if (exit_code != 0)
         writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     else
@@ -278,7 +281,12 @@ static int mainCL(ff_FFlags *ff) {
     for (int i = 0; ff_getopt_wild_after(&text, ff); i++)
         argv[i] = text;
 
+    CHECK_SIGNAL();
+
     af_Environment *env = creatAFunEnvironment(argc, argv);
+    aFunRunInfo ri = {0};
+    defineRunEnv(&ri);  // 由aFunCore提前接管
+
     if (rl != NULL)
         exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
 
@@ -300,6 +308,7 @@ static int mainCL(ff_FFlags *ff) {
         writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     printf_stdout(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
 
+    undefRunEnv(&ri);
     destructAFunEnvironment(env);
     freeAllRunList(rl);
     free(argv);
@@ -362,6 +371,7 @@ out:
             goto error;
         }
 
+        CHECK_SIGNAL();  // 检查信号
         return buildFileOutput(out_put, in, force);
     } else if (path != NULL) {
         int exit_code = 0;
@@ -371,8 +381,10 @@ out:
     }
 
     int exit_code = 0;
-    while (ff_getopt_wild(&text, ff) && exit_code == 0)
+    while (ff_getopt_wild(&text, ff) && exit_code == 0) {
+        CHECK_SIGNAL();  // 检查信号
         exit_code = buildFileToSelf(text, force);
+    }
     return exit_code;
 
 error:

@@ -76,3 +76,12 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     writeDebugLog(aFunCoreLogger, "aFunCore init success");
     return true;
 }
+
+void defineRunEnvCore(aFunRunInfo *run_env) {
+    memset(&run_env->si, 0, sizeof(af_SignalInfo));
+    aFunSignalInit(&run_env->si);
+}
+
+void undefRunEnvCore(aFunRunInfo *run_env) {
+    aFunSignalRecover(&run_env->si);
+}

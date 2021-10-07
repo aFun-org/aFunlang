@@ -13,6 +13,8 @@ struct aFunInitInfo {
 };
 
 AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
+AFUN_LANG_EXPORT void defineRunEnv(aFunRunInfo *run_env);
+AFUN_LANG_EXPORT void undefRunEnv(aFunRunInfo *run_env);
 
 AFUN_LANG_EXPORT af_Environment *creatAFunEnvironment(int argc, char **argv);
 AFUN_LANG_EXPORT void destructAFunEnvironment(af_Environment *env);

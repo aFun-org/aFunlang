@@ -413,6 +413,9 @@ INIT_ERROR:
 
 
     af_Environment *env = creatAFunEnvironment(0, NULL);
+    aFunRunInfo ri = {0};
+    defineRunEnv(&ri);
+
     if(!pushLiteralRegex("data.*", "func", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
         goto RETURN_1;
@@ -1297,6 +1300,7 @@ INIT_ERROR:
     printf("freeEnvironment:\n");
     destructAFunEnvironment(env);
 
+    undefRunEnv(&ri);
     printf("Exit at 0.");
 #ifndef IN_CTEST
     getc(stdin);
@@ -1304,6 +1308,7 @@ INIT_ERROR:
     return 0;
 
 RETURN_1:
+    undefRunEnv(&ri);
     printf("Exit at 1.");
 #ifndef IN_CTEST
     getc(stdin);
@@ -1311,6 +1316,7 @@ RETURN_1:
     return 1;
 
 RETURN_2:
+    undefRunEnv(&ri);
     printf("Exit at 2.");
 #ifndef IN_CTEST
     getc(stdin);
