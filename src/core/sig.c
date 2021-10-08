@@ -64,7 +64,11 @@ bool aFunGetSignal(int signum) {
 }
 
 void aFunSignalInit(af_SignalInfo *sig_info) {
-    writeDebugLog(aFunCoreLogger, "Signal setting");
+    struct af_SignalInfo tmp;
+    if (sig_info == NULL)
+        sig_info = &tmp;
+    else
+        writeDebugLog(aFunCoreLogger, "Signal setting");  // 只有有sig_info的才显示此句
 
     sig_info->sig_int = signal(SIGINT, aFunSigFunc);
     if (aFunSigFunc != sig_info->sig_int)

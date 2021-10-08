@@ -3,7 +3,6 @@
 #include "aFun.h"
 #include "main_run.h"
 #include "main_build.h"
-#include "main_signal.h"
 
 ff_defArg(help, false)
                 ff_argRule('h', help, not, 'h')
@@ -37,7 +36,7 @@ static const char *name = NULL;
 static int mainHelp(ff_FFlags *ff);
 static void printVersion(void);
 static void printHelp(void);
-static bool stdin_interrupt(void);
+static bool stdin_interrupt(int f);
 static int mainRun(ff_FFlags *ff);
 static int mainCL(ff_FFlags *ff);
 static int mainBuild(ff_FFlags *ff);
@@ -45,8 +44,6 @@ static int mainBuild(ff_FFlags *ff);
 char *base_path = NULL;
 static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
-
-#define CHECK_SIGNAL() do{if (getSignal()){writeErrorLog(aFunlangLogger, "SIGINT");return EXIT_FAILURE;}}while(0)
 
 void freeBaseName(void) {
     free(base_path);
@@ -134,6 +131,7 @@ static int mainHelp(ff_FFlags *ff) {
     char *text = NULL;
     int mark;
     bool have_opt = false;
+    /* 无信号处理 */
 
     while (1) {
         mark = ff_getopt(&text, ff);
@@ -163,13 +161,6 @@ out:
     return EXIT_SUCCESS;
 }
 
-static bool stdin_interrupt(void) {
-    bool re = getSignal();
-    if (re)
-        writeInfoLog(aFunlangLogger, "Signal Interrupt");
-    return re;
-}
-
 static int mainRun(ff_FFlags *ff) {
     int exit_code;
     char **argv = NULL;
@@ -183,12 +174,12 @@ static int mainRun(ff_FFlags *ff) {
         env = creatAFunEnvironment(0, NULL);
         printWelcomeInfo();
         do {
-            if (CLEAR_FERROR(stdin) || feof(stdin)) {
+            if (ferror(stdin) || feof(stdin)) {  // 错误应在实际程序中处理, 若在此仍处于错误状态则直接返回
                 writeErrorLog(aFunlangLogger, "stdin error/eof");
                 exit_code = -1;
                 break;
             }
-            exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
+            exit_code = runCodeFromStdin("stdin", env);
         } while (isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
         destructAFunEnvironment(env);
     } else {
@@ -281,8 +272,6 @@ static int mainCL(ff_FFlags *ff) {
     for (int i = 0; ff_getopt_wild_after(&text, ff); i++)
         argv[i] = text;
 
-    CHECK_SIGNAL();
-
     af_Environment *env = creatAFunEnvironment(argc, argv);
     aFunRunInfo ri = {0};
     defineRunEnv(&ri);  // 由aFunCore提前接管
@@ -293,12 +282,12 @@ static int mainCL(ff_FFlags *ff) {
     if (command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
         do {
-            if (CLEAR_FERROR(stdin) || feof(stdin)) {
+            if (ferror(stdin) || feof(stdin)) {  // 错误应在实际程序中处理, 若在此仍处于错误状态则直接返回
                 writeErrorLog(aFunlangLogger, "stdin error/eof");
                 exit_code = -1;
                 break;
             }
-            exit_code = runCodeFromStdin("stdin", stdin_interrupt, env);
+            exit_code = runCodeFromStdin("stdin", env);
         } while (isCoreExit(env) != 1);
     }
 
@@ -321,6 +310,7 @@ static int mainBuild(ff_FFlags *ff) {
     char *path = NULL;
     bool force = false;
     int mark;
+    int exit_code = 0;
 
     while (1) {
         mark = ff_getopt(&text, ff);
@@ -371,20 +361,16 @@ out:
             goto error;
         }
 
-        CHECK_SIGNAL();  // 检查信号
         return buildFileOutput(out_put, in, force);
     } else if (path != NULL) {
-        int exit_code = 0;
         while (ff_getopt_wild(&text, ff) && exit_code == 0)
             exit_code = buildFileToPath(path, text, force);
         return exit_code;
     }
 
-    int exit_code = 0;
-    while (ff_getopt_wild(&text, ff) && exit_code == 0) {
-        CHECK_SIGNAL();  // 检查信号
+    while (ff_getopt_wild(&text, ff) && exit_code == 0)
         exit_code = buildFileToSelf(text, force);
-    }
+
     return exit_code;
 
 error:

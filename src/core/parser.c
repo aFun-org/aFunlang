@@ -4,6 +4,7 @@
  */
 
 #include "aFunCore.h"
+#include "tool.h"
 #include "__parser.h"
 
 static af_Lexical *makeLexical(void);
@@ -148,15 +149,47 @@ af_Parser *makeParserByFile(FilePath path){
 
 struct readerDataStdin {
     bool no_first;
-    bool (*interrupt)(void);  // 中断函数
+
+    void *sig_int;
+    void *sig_term;
 
     char *data;
     size_t index;
     size_t len;
 };
 
+static sig_atomic_t stdin_interrupt = 0;
+
+static void stdinSignalFunc(int signum) {
+    stdin_interrupt = 1;
+}
+
+static void setStdinSignalFunc(struct readerDataStdin *data) {
+    data->sig_int = signal(SIGINT, stdinSignalFunc);
+    data->sig_term = signal(SIGTERM, stdinSignalFunc);
+}
+
+static void resetStdinSignalFunc(void) {
+    stdin_interrupt = 0;
+    signal(SIGINT, stdinSignalFunc);
+    signal(SIGTERM, stdinSignalFunc);
+}
+
+static bool getStdinSignalFunc(void) {
+    bool re = stdin_interrupt == 1;
+    stdin_interrupt = 0;
+    resetStdinSignalFunc();
+    return re;
+}
+
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
     if (data->index == data->len) {  // 读取内容
+        if (CLEAR_STDIN()) {
+            writeErrorLog(aFunCoreLogger, "The strin IO error, %d, %d", ferror(stdin), feof(stdin));
+            *read_end = true;
+            return 0;
+        }
+
         if (data->no_first)
             fputs("\r.... ", stdout);
         else
@@ -166,15 +199,22 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         free(data->data);
 
         while (!checkStdin()) {  // 无内容则一直循环等到
-            /* 检查信号中断 */
-            if (data->interrupt != NULL && data->interrupt()) {  // 设置了中断函数, 并且该函数返回0
-                printf("\rInterrupt\n");
+            if (getStdinSignalFunc()) {  // 设置了中断函数, 并且该函数返回0
+                printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
                 *read_end = true;
                 return 0;
             }
         }
 
         int ch = fgetchar_stdin();
+        if (ferror(stdin) || feof(stdin)) {  // 被中断
+            clearerr(stdin);
+            resetStdinSignalFunc();
+            printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
+            *read_end = true;
+            return 0;
+        }
+
         if (ch == '\n' || ch == EOF) {
             /* 读取结束 */
             *read_end = true;
@@ -202,16 +242,25 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
 
 static void destructStdin(struct readerDataStdin *data) {
     free(data->data);
+    if (data->sig_int != SIG_ERR)
+        signal(SIGINT, data->sig_int);
+    if (data->sig_term != SIG_ERR)
+        signal(SIGTERM, data->sig_term);
 }
 
-af_Parser *makeParserByStdin(ParserStdinInterruptFunc *interrupt){
+static void initStdin(struct readerDataStdin *data) {
+    stdin_interrupt = 0;
+    setStdinSignalFunc(data);
+}
+
+af_Parser *makeParserByStdin(){
     if (CLEAR_FERROR(stdin))
         return NULL;
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
     af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataStdin));
-    ((struct readerDataStdin *)parser->reader->data)->interrupt = interrupt;
+    initStdin(parser->reader->data);
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

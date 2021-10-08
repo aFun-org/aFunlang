@@ -8,8 +8,6 @@
 #define SYNTACTIC_MAX_DEEP (1000)
 typedef struct af_Parser af_Parser;
 
-typedef bool ParserStdinInterruptFunc(void);
-
 #define STDIN_MAX_SIZE (1024)
 
 /* Parser 创建与释放 */
@@ -18,7 +16,7 @@ makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) dest
 AFUN_CORE_EXPORT void freeParser(af_Parser *parser);
 AFUN_CORE_EXPORT af_Parser *makeParserByString(char *str, bool free_str);
 AFUN_CORE_EXPORT af_Parser *makeParserByFile(FilePath path);
-AFUN_CORE_EXPORT af_Parser *makeParserByStdin(ParserStdinInterruptFunc *interrupt);
+AFUN_CORE_EXPORT af_Parser *makeParserByStdin(void);
 
 /* Parser 相关操作 */
 AFUN_CORE_EXPORT af_Code *parserCode(FilePath file, af_Parser *parser);

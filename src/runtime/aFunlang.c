@@ -36,6 +36,10 @@ void defineRunEnv(aFunRunInfo *run_env) {
     defineRunEnvCore(run_env);
 }
 
+void redefRunEnvSignal(void) {
+    aFunSignalInit(NULL);
+}
+
 /*
  * 函数名: undefRunEnv
  * 目标: 取消运行前的初始哈
@@ -157,14 +161,14 @@ int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int 
  * 函数名: runCodeFromStdin
  * 目标: 运行stdin的程序 (源码形式)
  */
-int runCodeFromStdin(char *name, ParserStdinInterruptFunc *interrupt, af_Environment *env){
-    if (env == NULL || CLEAR_FERROR(stdin) || feof(stdin) || !aFunInit_mark)  // ferror在feof前执行
+int runCodeFromStdin(char *name, af_Environment *env){
+    if (env == NULL || CLEAR_STDIN() || !aFunInit_mark)  // ferror在feof前执行
         return -1;
 
     if (name == NULL)
         name = "sys-stdin.aun";
 
-    af_Parser *parser = makeParserByStdin(interrupt);
+    af_Parser *parser = makeParserByStdin();
     return runCode_(name, parser, 0, NULL, env);
 }
 

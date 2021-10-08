@@ -162,7 +162,7 @@ int fgets_stdin(char **dest, int len) {
  *
  * 参考自: https://gist.github.com/SuperH-0630/a4190b89d21c349a8d6882ca71453ae6
  */
-bool checkStdin(void){
+bool checkStdin(void) {
     bool re = false;
 
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
