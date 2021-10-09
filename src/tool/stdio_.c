@@ -9,6 +9,13 @@
 #include <stdarg.h>
 #include "tool.h"
 
+/* 注意:
+ * checkStdin在Windows和Linux之前行为具有差别, 本质目标时检查缓冲区是否有内容
+ * Linux使用无阻塞读取直接检查, 检查结果确实为缓冲区是否有内容
+ * Windows则是通过记录每次读取时是否已经读取`\n`来判断缓冲区是否有内容, 并且配合khbit来判断是否有内容输入
+ * 实际上, khbit只能代表有内容输入而无法确定内容是否已经输入到缓冲区中
+ */
+
 #ifdef aFunWIN32_NO_CYGWIN
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)

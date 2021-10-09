@@ -198,6 +198,8 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         data->no_first = true;
         free(data->data);
 
+        /* 在Linux平台, 只用当数据写入stdin缓冲行时checkStdin才true */
+        /* 在Windows平台则是根据读取的最后一个字符是否为\n或者是否有按键按下来确定缓冲区是否有内容 */
         while (!checkStdin()) {  // 无内容则一直循环等到
             if (getStdinSignalFunc()) {  // 设置了中断函数, 并且该函数返回0
                 printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
@@ -223,6 +225,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
 
         fungetc_stdin(ch);
 
+        /* 读取内容的长度不得少于STDIN_MAX_SZIE, 否则可能导致编码转换错误 */
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
             writeErrorLog(aFunCoreLogger, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
             *read_end = true;
