@@ -2,6 +2,13 @@
 #include "__aFunlang.h"
 #include "__env.h"
 
+#ifdef aFunWIN32_NO_CYGWIN
+#include <io.h>
+#define isatty _isatty
+#else
+#include "unistd.h"
+#endif
+
 static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
 static bool aFunInit_mark = false;
 
@@ -162,7 +169,7 @@ int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int 
  * 目标: 运行stdin的程序 (源码形式)
  */
 int runCodeFromStdin(char *name, af_Environment *env){
-    if (env == NULL || CLEAR_STDIN() || !aFunInit_mark)  // ferror在feof前执行
+    if (env == NULL || CLEAR_STDIN() || !aFunInit_mark || !isatty(fileno(stdin)))  // ferror在feof前执行
         return -1;
 
     if (name == NULL)

@@ -1917,3 +1917,7 @@ int isCoreExit(af_Environment *env) {
 bool getErrorStd(af_Environment *env) {
     return env->core->error_std->num;  // true-stderr, false-stdout
 }
+
+int32_t getCoreExitCode(af_Environment *env) {
+    return env->core->exit_code_->num;
+}

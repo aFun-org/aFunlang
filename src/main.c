@@ -1,6 +1,7 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
 #include "aFun.h"
+#include "main.h"
 #include "main_run.h"
 #include "main_build.h"
 
@@ -44,6 +45,7 @@ static int mainBuild(ff_FFlags *ff);
 char *base_path = NULL;
 static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
+static bool tty_stdin = false;
 
 void freeBaseName(void) {
     free(base_path);
@@ -51,6 +53,7 @@ void freeBaseName(void) {
 
 int main(int argc, char **argv) {
     jmp_buf main_buf;
+    tty_stdin = isatty(fileno(stdin));
     base_path = getExedir(1);
     if (base_path == NULL)
         goto INIT_ERROR;
@@ -76,7 +79,7 @@ INIT_ERROR:
 
     initLogger(aFunlangLogger, "aFunlang-exe", info.level);
     aFunlangLogger->buf = &main_buf;
-    writeDebugLog(aFunlangLogger, "aFunlang-exe init success");
+    writeDebugLog(aFunlangLogger, "aFunlang-exe init success: %s", (tty_stdin ? "tty" : "no-tty"));
 
     int exit_code = EXIT_SUCCESS;
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
@@ -171,6 +174,8 @@ static int mainRun(ff_FFlags *ff) {
 
     if (argc == 0) {
         /* 进入命令行模式 */
+        if (!tty_stdin)
+            return 0;
         env = creatAFunEnvironment(0, NULL);
         printWelcomeInfo();
         do {
@@ -180,7 +185,8 @@ static int mainRun(ff_FFlags *ff) {
                 break;
             }
             exit_code = runCodeFromStdin("stdin", env);
-        } while (isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
+        } while (exit_code == 0 && isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
+        exit_code = getCoreExitCode(env);
         destructAFunEnvironment(env);
     } else {
         env = creatAFunEnvironment(argc - 1, argv + 1);
@@ -189,10 +195,7 @@ static int mainRun(ff_FFlags *ff) {
     }
 
     undefRunEnv(&ri);
-    if (exit_code != 0)
-        writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
-    else
-        writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
+    writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     printf_stdout(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
 
     return exit_code;
@@ -279,7 +282,7 @@ static int mainCL(ff_FFlags *ff) {
     if (rl != NULL)
         exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
 
-    if (command_line && isCoreExit(env) != 1) {
+    if (tty_stdin && command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
         do {
             if (ferror(stdin) || feof(stdin)) {  // 错误应在实际程序中处理, 若在此仍处于错误状态则直接返回
@@ -288,13 +291,11 @@ static int mainCL(ff_FFlags *ff) {
                 break;
             }
             exit_code = runCodeFromStdin("stdin", env);
-        } while (isCoreExit(env) != 1);
+        } while (exit_code == 0 && isCoreExit(env) != 1);
     }
 
-    if (exit_code != 0)
-        writeErrorLog(aFunlangLogger, "aFun exit code: %d", exit_code);
-    else
-        writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
+    exit_code = getCoreExitCode(env);
+    writeInfoLog(aFunlangLogger, "aFun exit code: %d", exit_code);
     printf_stdout(0, "aFun %s: %d\n", HT_aFunGetText(exit_code_n, "exit code"), exit_code);
 
     undefRunEnv(&ri);

@@ -21,6 +21,7 @@
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif
 #include <conio.h>
+#include <io.h>
 #include <Windows.h>
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
@@ -54,6 +55,14 @@ int fgets_stdin(char **dest, int len) {
     char *wstr = calloc(len, sizeof(char));
     int re = 0;
 
+    if (!_isatty(fileno(stdin))) {
+        *dest = NEW_STR(len);
+        re = fgets(*dest, len, stdin) != NULL;
+        if (!re)
+            free(*dest);
+        return re;
+    }
+
     UINT code_page = GetConsoleCP();
     if (fgets(wstr, len, stdin) != NULL)
         re = convertMultiByte(dest, wstr, code_page, CP_UTF8);
@@ -86,6 +95,8 @@ int fungetc_stdin(int ch) {
  * 无内容则返回false
  */
 bool checkStdin(void) {
+    if (!_isatty(fileno(stdin)))
+        return true;
     if (!stdin_empty)
         return true;
     return _kbhit();
@@ -104,11 +115,17 @@ static int fputs_std_(char *str, FILE *std) {
 }
 
 int fputs_stdout(char *str) {
-    return fputs_std_(str, stdout);
+    if (_isatty(fileno(stdout)))
+        return fputs_std_(str, stdout);
+    fputs(str, stdout);
+    return 1;
 }
 
 int fputs_stderr(char *str) {
-    return fputs_std_(str, stderr);
+    if (_isatty(fileno(stderr)))
+        return fputs_std_(str, stderr);
+    fputs(str, stderr);
+    return 1;
 }
 
 static size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap) {
@@ -124,11 +141,15 @@ static size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap) 
 }
 
 size_t vprintf_stdout(size_t buf_len, char *format, va_list ap) {
-    return vprintf_std_(stdout, buf_len, format, ap);
+    if (_isatty(fileno(stdout)))
+        return vprintf_std_(stdout, buf_len, format, ap);
+    return vfprintf(stdout, format, ap);
 }
 
 size_t vprintf_stderr(size_t buf_len, char *format, va_list ap) {
-    return vprintf_std_(stderr, buf_len, format, ap);
+    if (_isatty(fileno(stderr)))
+        return vprintf_std_(stderr, buf_len, format, ap);
+    return vfprintf(stderr, format, ap);
 }
 
 size_t printf_stdout(size_t buf_len, char *format, ...) {
@@ -170,6 +191,8 @@ int fgets_stdin(char **dest, int len) {
  * 参考自: https://gist.github.com/SuperH-0630/a4190b89d21c349a8d6882ca71453ae6
  */
 bool checkStdin(void) {
+    if (!isatty(fileno(stdin)))
+        return true;
     bool re = false;
 
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
