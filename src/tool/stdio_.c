@@ -335,7 +335,13 @@ bool checkStdin(void) {
     return true;
 }
 
-static int fputs_std_(char *str, FILE *std) {
+int fputs_std_(char *str, FILE *std) {
+    if (std == NULL)
+        return 0;
+
+    if (!_isatty(_fileno(std)))
+        return fputs(str, std);
+
     UINT code_page = GetConsoleCP();
     char *wstr = NULL;
     int re = EOF;
@@ -347,21 +353,13 @@ static int fputs_std_(char *str, FILE *std) {
     return re;
 }
 
-int fputs_stdout(char *str) {
-    if (_isatty(_fileno(stdout)))
-        return fputs_std_(str, stdout);
-    fputs(str, stdout);
-    return 1;
-}
+size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap) {
+    if (std == NULL)
+        return 0;
 
-int fputs_stderr(char *str) {
-    if (_isatty(_fileno(stderr)))
-        return fputs_std_(str, stderr);
-    fputs(str, stderr);
-    return 1;
-}
+    if (!_isatty(_fileno(std)))
+        return vfprintf(std, format, ap);
 
-static size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap) {
     if (buf_len == 0)
         buf_len = 1024;
     buf_len += 10;  // 预留更多位置
@@ -371,18 +369,6 @@ static size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap) 
         re = 0;
     free(buf);
     return re;
-}
-
-size_t vprintf_stdout(size_t buf_len, char *format, va_list ap) {
-    if (_isatty(_fileno(stdout)))
-        return vprintf_std_(stdout, buf_len, format, ap);
-    return vfprintf(stdout, format, ap);
-}
-
-size_t vprintf_stderr(size_t buf_len, char *format, va_list ap) {
-    if (_isatty(_fileno(stderr)))
-        return vprintf_std_(stderr, buf_len, format, ap);
-    return vfprintf(stderr, format, ap);
 }
 
 size_t printf_stdout(size_t buf_len, char *format, ...) {

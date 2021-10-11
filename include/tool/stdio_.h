@@ -14,11 +14,16 @@ AFUN_TOOL_EXPORT int fgetc_stdin(void);
 AFUN_TOOL_EXPORT char *fgets_stdin_(char *buf, size_t len);
 AFUN_TOOL_EXPORT int fungetc_stdin(int ch);
 
-AFUN_TOOL_EXPORT int fputs_stdout(char *str);
-AFUN_TOOL_EXPORT int fputs_stderr(char *str);
+AFUN_TOOL_EXPORT int fputs_std_(char *str, FILE *std);
+#define fputs_stdout(std) fputs_std_(std, stdout)
+#define fputs_stderr(std) fputs_std_(std, stderr)
 
-AFUN_TOOL_EXPORT size_t vprintf_stdout(size_t buf_len, char *format, va_list ap);
-AFUN_TOOL_EXPORT size_t vprintf_stderr(size_t buf_len, char *format, va_list ap);
+
+AFUN_TOOL_EXPORT size_t vprintf_std_(FILE *std, size_t buf_len, char *format, va_list ap);
+#define vprintf_stderr(len, format, ap) vprintf_std_(stderr, len, format, ap)
+#define vprintf_stdout(len, format, ap) vprintf_std_(stdout, len, format, ap)
+
+
 AFUN_TOOL_EXPORT size_t printf_stdout(size_t buf_len, char *format, ...);
 AFUN_TOOL_EXPORT size_t printf_stderr(size_t buf_len, char *format, ...);
 
