@@ -90,26 +90,35 @@ char getChar(af_Reader *reader) {
     } else if (reader->read_end)  // 读取到末尾, 且无新内容
         return NUL;
 
-    char *new_buf = NEW_STR(reader->buf_size + NEW_BUF_SIZE);
-    memcpy(new_buf, reader->buf, reader->buf_size);
+    if (reader->read == reader->buf + reader->buf_size) {
+        char *new_buf = NEW_STR(reader->buf_size + NEW_BUF_SIZE);
+        memcpy(new_buf, reader->buf, reader->buf_size);
 
-    int mode = READER_MODE_NORMAL;
-    size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &mode);
-    if (len > NEW_BUF_SIZE)
-        len = NEW_BUF_SIZE;
-    *(new_buf + reader->buf_size + len) = NUL;
+        int mode = READER_MODE_NORMAL;
+        size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &mode);
+        if (len > NEW_BUF_SIZE)
+            len = NEW_BUF_SIZE;
+        *(new_buf + reader->buf_size + len) = NUL;
 
-    if (mode == READER_MODE_FINISHED)
-        reader->read_end = true;
-    else if (mode == READER_MODE_ERROR) {
-        reader->read_end = true;
-        reader->read_error = true;
+        if (mode == READER_MODE_FINISHED)
+            reader->read_end = true;
+        else if (mode == READER_MODE_ERROR) {
+            reader->read_end = true;
+            reader->read_error = true;
+        }
+
+        free(reader->buf);
+        reader->buf = new_buf;
+        reader->buf_size = reader->buf_size + NEW_BUF_SIZE;
+        reader->read = reader->buf + reader->buf_size - NEW_BUF_SIZE;  // 当前读取的位置
+    } else {
+        int mode = READER_MODE_NORMAL;
+        size_t len_ = reader->buf_size - (reader->read - reader->buf);  // 总长度  - (已读取长度) = 剩余空白
+        size_t len = GET_SYMBOL(reader->read_func)(reader->data, reader->read, len_, &mode);
+        if (len > len_)
+            len = len_;
+        *(reader->read + len) = NUL;
     }
-
-    free(reader->buf);
-    reader->buf = new_buf;
-    reader->buf_size = reader->buf_size + NEW_BUF_SIZE;
-    reader->read = reader->buf + reader->buf_size - NEW_BUF_SIZE;
 
     ch = *(reader->read);
     if (ch != NUL)
