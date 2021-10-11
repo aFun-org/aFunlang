@@ -181,11 +181,10 @@ static int mainRun(ff_FFlags *ff) {
         do {
             if (ferror(stdin) || feof(stdin)) {  // 错误应在实际程序中处理, 若在此仍处于错误状态则直接返回
                 writeErrorLog(aFunlangLogger, "stdin error/eof");
-                exit_code = -1;
                 break;
             }
-            exit_code = runCodeFromStdin("stdin", env);
-        } while (exit_code == 0 && isCoreExit(env) != 1);  // exit_code == -1 表示stdin出现错误
+            runCodeFromStdin("stdin", env);
+        } while (isCoreExit(env) != 1);
         exit_code = getCoreExitCode(env);
         destructAFunEnvironment(env);
     } else {
@@ -280,18 +279,17 @@ static int mainCL(ff_FFlags *ff) {
     defineRunEnv(&ri);  // 由aFunCore提前接管
 
     if (rl != NULL)
-        exit_code = runCodeFromRunList(rl, NULL, save_aub, env);
+        runCodeFromRunList(rl, NULL, save_aub, env);
 
     if (tty_stdin && command_line && isCoreExit(env) != 1) {
         printWelcomeInfo();
         do {
             if (ferror(stdin) || feof(stdin)) {  // 错误应在实际程序中处理, 若在此仍处于错误状态则直接返回
                 writeErrorLog(aFunlangLogger, "stdin error/eof");
-                exit_code = -1;
                 break;
             }
-            exit_code = runCodeFromStdin("stdin", env);
-        } while (exit_code == 0 && isCoreExit(env) != 1);
+            runCodeFromStdin("stdin", env);
+        } while (isCoreExit(env) != 1);
     }
 
     exit_code = getCoreExitCode(env);

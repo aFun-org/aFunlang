@@ -192,8 +192,10 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
 
         if (data->no_first)
             fputs("\r.... ", stdout);
-        else
+        else {
+            fclear_stdin();
             fputs("\r>>>> ", stdout);
+        }
         fflush(stdout);
         data->no_first = true;
         free(data->data);
@@ -208,7 +210,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
             }
         }
 
-        int ch = fgetchar_stdin();
+        int ch = fgetc_stdin();
         if (ferror(stdin) || feof(stdin)) {  // 被中断
             clearerr(stdin);
             resetStdinSignalFunc();

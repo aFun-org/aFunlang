@@ -4,6 +4,7 @@
 
 #ifdef aFunWIN32_NO_CYGWIN
 #include <io.h>
+#define fileno _fileno
 #define isatty _isatty
 #else
 #include "unistd.h"
