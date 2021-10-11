@@ -59,13 +59,13 @@ struct readerDataString {
     size_t len;
 };
 
-static size_t readFuncString(struct readerDataString *data, char *dest, size_t len, bool *read_end) {
+static size_t readFuncString(struct readerDataString *data, char *dest, size_t len, int *mode) {
     if (data->index == data->len)  // 读取到末尾
         return 0;
 
     if (data->index + len > data->len) {  // 超出长度范围
         len = data->len - data->index;
-        *read_end = true;
+        *mode = READER_MODE_FINISHED;
     }
     memcpy(dest, data->str + data->index, len);
     data->index += len;
@@ -95,12 +95,12 @@ struct readerDataFile {
     bool no_first;
 };
 
-static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, bool *read_end) {
+static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, int *mode) {
     if (!data->no_first) {
         data->no_first = true;
         char ch;
         if (fread(&ch, sizeof(char), 1, data->file) != 1) {
-            *read_end = true;
+            *mode = READER_MODE_FINISHED;
             return 0;
         }
 
@@ -108,7 +108,9 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
             /* 处理BOM编码 */
             char ch_[2];
             if (fread(ch_, sizeof(char), 2, data->file) != 2 || ch_[0] != (char)0xBB || ch_[1] != (char)0xBF) {
-                *read_end = true;
+                writeErrorLog(aFunCoreLogger, "Parser utf-8 with error BOM");
+                printf_stderr(0, HT_aFunGetText(error_bom, "Read utf-8 file with bad bom."));
+                *mode = READER_MODE_ERROR;
                 return 0;
             }
             writeTrackLog(aFunCoreLogger, "Parser utf-8 with BOM");
@@ -119,8 +121,11 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
     }
 
     size_t len_r =  fread(dest, sizeof(char), len, data->file);
-    if (CLEAR_FERROR(data->file) || feof(data->file))  // ferror在feof前执行
-        *read_end = true;
+    if (CLEAR_FERROR(data->file)) {  // ferror在feof前执行
+        *mode = READER_MODE_ERROR;
+        printf_stderr(0, HT_aFunGetText(stdin_error, "The file io error/eof"));
+    } else if (feof(data->file))
+        *mode = READER_MODE_FINISHED;
     return len_r;
 }
 
@@ -182,11 +187,12 @@ static bool getStdinSignalFunc(void) {
     return re;
 }
 
-static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, bool *read_end) {
+static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, int *mode) {
     if (data->index == data->len) {  // 读取内容
         if (CLEAR_STDIN()) {
-            writeErrorLog(aFunCoreLogger, "The strin IO error, %d, %d", ferror(stdin), feof(stdin));
-            *read_end = true;
+            writeErrorLog(aFunCoreLogger, "The stdin IO error, %d, %d", ferror(stdin), feof(stdin));
+            printf_stderr(0, HT_aFunGetText(stdin_error, ""));
+            *mode = READER_MODE_ERROR;
             return 0;
         }
 
@@ -205,23 +211,15 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         while (!checkStdin()) {  // 无内容则一直循环等到
             if (getStdinSignalFunc()) {  // 设置了中断函数, 并且该函数返回0
                 printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
-                *read_end = true;
+                *mode = READER_MODE_ERROR;
                 return 0;
             }
         }
 
         int ch = fgetc_stdin();
-        if (ferror(stdin) || feof(stdin)) {  // 被中断
-            clearerr(stdin);
-            resetStdinSignalFunc();
-            printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
-            *read_end = true;
-            return 0;
-        }
-
         if (ch == '\n' || ch == EOF) {
             /* 读取结束 */
-            *read_end = true;
+            *mode = READER_MODE_FINISHED;
             return 0;
         }
 
@@ -230,7 +228,8 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         /* 读取内容的长度不得少于STDIN_MAX_SZIE, 否则可能导致编码转换错误 */
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
             writeErrorLog(aFunCoreLogger, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
-            *read_end = true;
+            printf_stderr(0, "%s (> %d)", HT_aFunGetText(stdin_too_large, "The stdin buf too large"), STDIN_MAX_SIZE);
+            *mode = READER_MODE_ERROR;
             return 0;
         }
 

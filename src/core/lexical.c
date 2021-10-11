@@ -331,13 +331,18 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
     if (parser->lexical->is_end) {
         *text = NULL;
         return TK_EOF;
-    } else if (parser->lexical->is_error) {
+    } else if (parser->lexical->is_error || parser->reader->read_error) {
         *text = NULL;
         return TK_ERROR;
     }
 
     while (1) {
         char ch = getChar(parser->reader);
+        if (parser->reader->read_error) {
+            *text = NULL;
+            return TK_ERROR;
+        }
+
         if (isascii(ch) && iscntrl(ch) && !isspace(ch) && ch != NUL)  // ascii 控制字符
             printLexicalWarning(INCULDE_CONTROL(base), parser);
 

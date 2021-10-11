@@ -10,7 +10,7 @@
 
 typedef struct af_Reader af_Reader;
 
-typedef size_t readerFunc(void *data, char *dest, size_t len, bool *is_end);
+typedef size_t readerFunc(void *data, char *dest, size_t len, int *mode);
 NEW_DLC_SYMBOL(readerFunc, readerFunc);
 
 typedef void destructReaderFunc(void *data);
@@ -26,6 +26,7 @@ struct af_Reader {
     size_t buf_size;  // buf的长度-1
     char *read;
     bool read_end;
+    bool read_error;
     FileLine line;
 
     bool init;  // 是否初始化

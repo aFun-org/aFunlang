@@ -24,7 +24,7 @@ if __name__ != '__main__':
 
 argv = sys.argv
 if len(argv) < 7:
-    warnings.warn(f"Too few argument [{len(argv)}]")
+    warnings.warn(f"Too few argument [{len(argv)}]", UserWarning)
     raise ArgError()
 
 output_dir = argv[1]
@@ -89,7 +89,7 @@ for file in file_list:
                 if i[0] in flat_list:
                     if flat_list[i[0]][0] != default_ and default_ != '""' and flat_list[i[0]][0] != '""':
                         # 若果是空字串则可以覆盖
-                        warnings.warn(f"Double define text: {i[0]}")
+                        warnings.warn(f"Double define text: {i[0]}", UserWarning)
                         continue
                     elif default_ == '""':
                         default_ = flat_list[i[0]][0]

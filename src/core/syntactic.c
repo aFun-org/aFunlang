@@ -223,7 +223,7 @@ af_Code *parserCode(FilePath file, af_Parser *parser) {
     if (file == NULL)
         return NULL;
 
-    if (parser->is_error) {
+    if (parser->is_error || parser->reader->read_error || parser->lexical->is_error) {
         freeAllCode(code);
         return NULL;
     }

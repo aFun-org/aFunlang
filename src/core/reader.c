@@ -41,6 +41,7 @@ void *getReaderData(af_Reader *reader) {
 
 char *readWord(size_t del_index, af_Reader *reader) {
     char *re;
+    int mode = READER_MODE_NORMAL;
     reader->read = reader->buf;  // 重置指针
 
     if (del_index == 0)
@@ -53,10 +54,17 @@ char *readWord(size_t del_index, af_Reader *reader) {
     if (!reader->read_end) { // 没到尾部, 则写入数据
         char *write = reader->buf + STR_LEN(reader->buf);  // 数据写入的位置
         size_t len_ = reader->buf_size - STR_LEN(reader->buf);
-        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, len_, &reader->read_end);
+        size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, len_, &mode);
         if (len > len_)
             len = len_;
         *(write + len) = NUL;
+    }
+
+    if (mode == READER_MODE_FINISHED)
+        reader->read_end = true;
+    else if (mode == READER_MODE_ERROR) {
+        reader->read_end = true;
+        reader->read_error = true;
     }
 
     /* 计算行号 */
@@ -85,10 +93,18 @@ char getChar(af_Reader *reader) {
     char *new_buf = NEW_STR(reader->buf_size + NEW_BUF_SIZE);
     memcpy(new_buf, reader->buf, reader->buf_size);
 
-    size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &reader->read_end);
+    int mode = READER_MODE_NORMAL;
+    size_t len = GET_SYMBOL(reader->read_func)(reader->data, new_buf + reader->buf_size, NEW_BUF_SIZE, &mode);
     if (len > NEW_BUF_SIZE)
         len = NEW_BUF_SIZE;
     *(new_buf + reader->buf_size + len) = NUL;
+
+    if (mode == READER_MODE_FINISHED)
+        reader->read_end = true;
+    else if (mode == READER_MODE_ERROR) {
+        reader->read_end = true;
+        reader->read_error = true;
+    }
 
     free(reader->buf);
     reader->buf = new_buf;
