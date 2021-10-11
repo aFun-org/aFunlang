@@ -27,7 +27,7 @@
 // cygwin环境下, 终端默认为uft-8
 
 #define BUFF_SIZE (40960)
-static char buffer[BUFF_SIZE] = "";
+static char buffer[BUFF_SIZE + 1] = "";
 static size_t index = 0;
 static size_t next = 0;
 static size_t end = 0;
