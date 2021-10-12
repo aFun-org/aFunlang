@@ -53,8 +53,13 @@ if os.path.exists(base_tr_file):
         code = f.read()
         exec(code, base_tr, base_tr)
 
+def checkFileType(dest: str, src: List[str]) -> bool:
+    for i in src:
+        if i == dest:
+            return True
+    return False
 
-def getFileFromPath(paths: List[str], file_type_: str) -> FileList:
+def getFileFromPath(paths: List[str], file_type_: List[str]) -> FileList:
     """
     函数名: 获取目录列表中所有指定后缀的文件
     :param paths: 目录列表
@@ -66,13 +71,13 @@ def getFileFromPath(paths: List[str], file_type_: str) -> FileList:
         for file_path, dir_names, file_names in os.walk(path):
             for names in file_names:
                 file_type = os.path.splitext(names)[-1]
-                if file_type == file_type_:
+                if checkFileType(file_type, file_type_):
                     tmp.append(os.path.join(file_path, names))
     return tmp
 
 
 # 获取宏 HT_aFunGetText的列表并计算
-file_list: FileList = getFileFromPath(input_dir, '.c')
+file_list: FileList = getFileFromPath(input_dir, ['.c', '.h'])
 pattern = re.compile(f'HT_{base_name}GetText' + r'\(([\S]+),[\s]*(\"[^\"]*\")\)')  # 宏的定义
 flat_list: FlatList = {}
 for file in file_list:
@@ -155,7 +160,7 @@ int HT_init{base_name}GetText(char *lang) {{
 for i in flat_list:
     print(f"TEXT: {i}")
 
-translation_list: FileList = getFileFromPath([translation], '.py')
+translation_list: FileList = getFileFromPath([translation], ['.py'])
 for t in translation_list:
     name = os.path.splitext(os.path.split(t)[-1])[0]
     if name == 'base':

@@ -12,14 +12,15 @@ typedef struct af_Parser af_Parser;
 
 /* Parser 创建与释放 */
 AFUN_CORE_EXPORT af_Parser *
-makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
+makeParser(FilePath file, DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func,
+           size_t data_size);
 AFUN_CORE_EXPORT void freeParser(af_Parser *parser);
-AFUN_CORE_EXPORT af_Parser *makeParserByString(char *str, bool free_str);
+AFUN_CORE_EXPORT af_Parser *makeParserByString(FilePath name, char *str, bool free_str);
 AFUN_CORE_EXPORT af_Parser *makeParserByFile(FilePath path);
-AFUN_CORE_EXPORT af_Parser *makeParserByStdin(void);
+AFUN_CORE_EXPORT af_Parser *makeParserByStdin(FilePath file);
 
 /* Parser 相关操作 */
-AFUN_CORE_EXPORT af_Code *parserCode(FilePath file, af_Parser *parser);
+AFUN_CORE_EXPORT af_Code *parserCode(af_Parser *parser);
 AFUN_CORE_EXPORT void initParser(af_Parser *parser);
 
 #endif //AFUN_PARSER_H

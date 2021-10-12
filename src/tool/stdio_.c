@@ -215,6 +215,9 @@ static int fcheck_stdin(HANDLE *std_i, HANDLE *std_o) {
 }
 
 int fgetc_stdin(void) {
+    if (!_isatty(_fileno(stdin)))
+        return fgetc(stdin);
+
     HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE)
@@ -231,6 +234,9 @@ int fgetc_stdin(void) {
 }
 
 char *fgets_stdin_(char *buf, size_t len) {
+    if (!_isatty(_fileno(stdin)))
+        return fgets(buf, len, stdin);
+
     HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE)
@@ -252,6 +258,11 @@ char *fgets_stdin_(char *buf, size_t len) {
 }
 
 bool fclear_stdin(void) {
+    if (!_isatty(_fileno(stdin))) {
+        rewind(stdin);  // 仅 winAPI 可用
+        return true;
+    }
+
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_o == INVALID_HANDLE_VALUE)
         return true;
@@ -287,9 +298,7 @@ static int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
 }
 
 int fgets_stdin(char **dest, int len) {
-    char *wstr = calloc(len, sizeof(char));
     int re = 0;
-
     if (!_isatty(_fileno(stdin))) {
         *dest = NEW_STR(len);
         re = fgets(*dest, len, stdin) != NULL;
@@ -298,6 +307,7 @@ int fgets_stdin(char **dest, int len) {
         return re;
     }
 
+    char *wstr = calloc(len, sizeof(char));
     UINT code_page = GetConsoleCP();
     if (fgets_stdin_(wstr, len) != NULL)
         re = convertMultiByte(dest, wstr, code_page, CP_UTF8);
@@ -305,6 +315,9 @@ int fgets_stdin(char **dest, int len) {
 }
 
 int fungetc_stdin(int ch) {
+    if (!_isatty(_fileno(stdin)))
+        return ungetc(ch, stdin);
+
     if (ch == 0 || index == 0 && end == BUFF_SIZE)
         return 0;
 

@@ -4,14 +4,12 @@
 #include "__parser.h"
 #include "parserl_warning_error.h"
 
-static void printSyntacticError(char *info, af_Parser *parser) {
-    writeErrorLog(aFunCoreLogger, "[Syntactic] %s", info);
-    parser->is_error = true;
-}
-
-static void printSyntacticWarning(char *info, af_Parser *parser) {
-    writeWarningLog(aFunCoreLogger, "[Syntactic] %s", info);
-}
+#define printSyntacticError(info, parser) do { \
+    writeErrorLog(aFunCoreLogger, "[Syntactic] %s:%d %s", (parser)->reader->file, (parser)->reader->line, (info ## Log)); \
+    printf_stderr(0, "[%s] %s:%d : %s\n", HT_aFunGetText(syntactic_n, "Syntactic"), (parser)->reader->file,               \
+                  (parser)->reader->line, info ## Console); \
+    (parser)->is_error = true; \
+} while(0)
 
 static bool getToken(af_Parser *parser) {
     if (parser->syntactic->back) {
@@ -53,7 +51,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
             if (deep <= SYNTACTIC_MAX_DEEP)
                 code_list = codeList(deep, parser);
             else
-                printSyntacticError(SYNTACTIC_TOO_DEEP(), parser);
+                printSyntacticError(TooDeep, parser);
 
             getToken(parser);
             switch (parser->syntactic->token) {
@@ -64,7 +62,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     return NULL;
                 default:
                     goBackToken(parser);
-                    printSyntacticError(CodeEndError(") or !)"), parser);
+                    printSyntacticError(CodeBlockEndError, parser);
                     break;
             }
 
@@ -74,7 +72,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
             if (deep <= SYNTACTIC_MAX_DEEP)
                 code_list = codeList(deep, parser);
             else
-                printSyntacticError(SYNTACTIC_TOO_DEEP(), parser);
+                printSyntacticError(TooDeep, parser);
 
             getToken(parser);
             switch (parser->syntactic->token) {
@@ -85,7 +83,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     return NULL;
                 default:
                     goBackToken(parser);
-                    printSyntacticError(CodeEndError("] or @)"), parser);
+                    printSyntacticError(CodeBlockEndError, parser);
                     break;
             }
 
@@ -95,7 +93,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
             if (deep <= SYNTACTIC_MAX_DEEP)
                 code_list = codeList(deep, parser);
             else
-                printSyntacticError(SYNTACTIC_TOO_DEEP(), parser);
+                printSyntacticError(TooDeep, parser);
 
             getToken(parser);
             switch (parser->syntactic->token) {
@@ -106,7 +104,7 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
                     return NULL;
                 default:
                     goBackToken(parser);
-                    printSyntacticError(CodeEndError("} or #)"), parser);
+                    printSyntacticError(CodeBlockEndError, parser);
                     break;
             }
 
@@ -115,12 +113,12 @@ static af_Code *code(size_t deep, char prefix, af_Parser *parser) {
         case TK_ERROR:
             return NULL;
         default:
-            printSyntacticError(CodeStartError(), parser);
+            printSyntacticError(CodeBlockEndError, parser);
             return NULL;
     }
 
     if (re == NULL)
-        printSyntacticError(MakeCodeFail(), parser);
+        printSyntacticError(MakeCodeFail, parser);
     return re;
 }
 
@@ -129,9 +127,9 @@ static af_Code *codePrefix(size_t deep, af_Parser *parser) {
     getToken(parser);
     if (parser->syntactic->token != TK_PREFIX) {
         goBackToken(parser);
-        printSyntacticError(PREFIX_ERROR(codePrefix), parser);
+        printSyntacticError(PrefixError, parser);
     } else if (STR_LEN( parser->syntactic->text) != 1) {
-        printSyntacticError(PREFIX_ERROR(codePrefix), parser);
+        printSyntacticError(PrefixError, parser);
         free(parser->syntactic->text);
     } else {
         ch = *(parser->syntactic->text);
@@ -203,7 +201,7 @@ static af_Code *codeListEnd(af_Parser *parser) {
                     freeAllCode(re);
                     return NULL;
                 default:
-                    printSyntacticError(CodeListEndError(), parser);
+                    printSyntacticError(CodeListEndError, parser);
                     freeAllCode(re);
                     return NULL;
             }
@@ -211,24 +209,26 @@ static af_Code *codeListEnd(af_Parser *parser) {
         case TK_ERROR:
             return NULL;
         default:
-            printSyntacticError(CodeListStartError(), parser);
+            printSyntacticError(CodeListStartError, parser);
             return NULL;
     }
 
     return re;
 }
 
-af_Code *parserCode(FilePath file, af_Parser *parser) {
+af_Code *parserCode(af_Parser *parser){
     af_Code *code = codeListEnd(parser);
-    if (file == NULL)
-        return NULL;
-
     if (parser->is_error || parser->reader->read_error || parser->lexical->is_error) {
         freeAllCode(code);
         return NULL;
     }
 
-    if (code != NULL)
-        code->path = pathCopy(file);
+    if (code != NULL) {
+        if (parser->reader->file != NULL)
+            code->path = pathCopy(parser->reader->file);
+        else
+            code->path = pathCopy("unknown.aun");
+    }
+
     return code;
 }

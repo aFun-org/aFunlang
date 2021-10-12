@@ -10,7 +10,7 @@
 #include "unistd.h"
 #endif
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
+static int runCode_(af_Parser *parser, int mode, FilePath save_path, af_Environment *env);
 static bool aFunInit_mark = false;
 
 bool aFunInit(aFunInitInfo *info) {
@@ -93,11 +93,11 @@ void destructAFunEnvironment(af_Environment *env) {
     freeEnvironment(env);
 }
 
-static int runCode_(FilePath name, af_Parser *parser, int mode, FilePath save_path, af_Environment *env){
+static int runCode_(af_Parser *parser, int mode, FilePath save_path, af_Environment *env){
     if (parser == NULL)
         return -1;
 
-    af_Code *bt_code = parserCode(name, parser);
+    af_Code *bt_code = parserCode(parser);
     freeParser(parser);
     if (bt_code == NULL)
         return -2;
@@ -130,8 +130,8 @@ int runCodeFromString(char *code, char *string_name, int mode, af_Environment *e
     if (string_name == NULL)
         string_name = "string-code.aun";
 
-    af_Parser *parser = makeParserByString(code, false);
-    return runCode_(string_name, parser, mode, NULL, env);
+    af_Parser *parser = makeParserByString(string_name, code, false);
+    return runCode_(parser, mode, NULL, env);
 }
 
 /*
@@ -159,7 +159,7 @@ int runCodeFromFileSource(FilePath file, bool save_afb, FilePath save_path, int 
         save_path = NULL;
 
     af_Parser *parser = makeParserByFile(file);
-    int exit_code = runCode_(file, parser, mode, save_path, env);
+    int exit_code = runCode_(parser, mode, save_path, env);
     if (free_save_path)
         free(save_path);
     return exit_code;
@@ -176,8 +176,8 @@ int runCodeFromStdin(char *name, af_Environment *env){
     if (name == NULL)
         name = "sys-stdin.aun";
 
-    af_Parser *parser = makeParserByStdin();
-    return runCode_(name, parser, 0, NULL, env);
+    af_Parser *parser = makeParserByStdin(name);
+    return runCode_(parser, 0, NULL, env);
 }
 
 /*
@@ -290,7 +290,7 @@ int buildFile(FilePath out, FilePath in){
     }
 
     af_Parser *parser = makeParserByFile(in);
-    af_Code *code = parserCode(in, parser);
+    af_Code *code = parserCode(parser);
     freeParser(parser);
     if (code == NULL)
         return -2;

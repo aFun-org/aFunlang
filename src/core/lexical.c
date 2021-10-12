@@ -14,14 +14,23 @@
 #define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || (ch) == ','))  /* 被忽略的符号 */
 #define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
 
-static void printLexicalError(char *info, af_Parser *parser) {
-    writeErrorLog(aFunCoreLogger, "[Lexical] %s", info);
-    parser->is_error = true;
-}
+#define DEL_TOKEN (0)
+#define FINISH_TOKEN (-1)
+#define CONTINUE_TOKEN (1)
+#define ERROR_TOKEN (-2)
 
-static void printLexicalWarning(char *info, af_Parser *parser) {
-    writeWarningLog(aFunCoreLogger, "[Lexical] %s", info);
-}
+#define printLexicalError(info, parser) do { \
+    writeErrorLog(aFunCoreLogger, "[Lexical] %s:%d %s", (parser)->reader->file, (parser)->reader->line, (info ## Log)); \
+    printf_stderr(0, "[%s] %s:%d : %s\n", HT_aFunGetText(lexical_n, "Lexical"), (parser)->reader->file, \
+                  (parser)->reader->line, info ## Console); \
+    (parser)->is_error = true; /* 错误标记在Parser而非Lexical中, Lexical的异常表示lexical停止运行 */ \
+} while(0)
+
+#define printLexicalWarning(info, parser) do { \
+    writeWarningLog(aFunCoreLogger, "[Lexical] %s:%d %s", (parser)->reader->file, (parser)->reader->line, (info ## Log)); \
+    printf_stderr(0, "[%s] %s:%d : %s\n", HT_aFunGetText(lexical_n, "Lexical"), (parser)->reader->file, \
+                  (parser)->reader->line, info ## Console); \
+} while(0)
 
 static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parser *parser) {
     parser->lexical->status = status;
@@ -43,16 +52,16 @@ static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parse
  * 状态机图:
  * [lex_begin]
  *     -> NUL -> (lex_nul)
- *     -> ALL_PREFIX -> [lex_prefix] # return -1
+ *     -> ALL_PREFIX -> [lex_prefix] # return FINISH_TOKEN
  *     -> ! -> (lex_prefix_block_p)
  *     -> @ -> (lex_prefix_block_b)
  *     -> # -> (lex_prefix_block_c)
- *     -> ( -> [lex_lp] # return -1
- *     -> [ -> [lex_lb] # return -1
- *     -> { -> [lex_lc] # return -1
- *     -> ) -> [lex_rp] # return -1
- *     -> ] -> [lex_rb] # return -1
- *     -> } -> [lex_rc] # return -1
+ *     -> ( -> [lex_lp] # return FINISH_TOKEN
+ *     -> [ -> [lex_lb] # return FINISH_TOKEN
+ *     -> { -> [lex_lc] # return FINISH_TOKEN
+ *     -> ) -> [lex_rp] # return FINISH_TOKEN
+ *     -> ] -> [lex_rb] # return FINISH_TOKEN
+ *     -> } -> [lex_rc] # return FINISH_TOKEN
  *     -> ; -> (lex_comment_before)
  *     -> isignore(ch) -> [lex_space]
  *     -> | -> (lex_element_long)
@@ -62,10 +71,10 @@ static void setLexicalLast(af_LexicalStatus status, af_TokenType token, af_Parse
 static int doneBegin(char ch, af_Parser *parser) {
     if (ch == NUL) {
         setLexicalLast(lex_nul, TK_EOF, parser);
-        return -1;
+        return FINISH_TOKEN;
     } else if (strchr(ALL_PREFIX, ch)) {  /* 属于前缀 */
         setLexicalLast(lex_prefix, TK_PREFIX, parser);
-        return -1;
+        return FINISH_TOKEN;
     } else if (strchr("!@#", ch)) {
         switch (ch) {
             case '!':
@@ -78,32 +87,32 @@ static int doneBegin(char ch, af_Parser *parser) {
                 parser->lexical->status = lex_prefix_block_c;
                 return 1;
             default:
-                printLexicalError(SYS_ILLEGAL_CHAR(lex_beging), parser);
-                return -2;
+                writeFatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                return ERROR_TOKEN;
         }
     } else if (strchr("([{)]}", ch)) { /* 括号 */
         switch (ch) {
             case '(':
                 setLexicalLast(lex_lp, TK_LP, parser);
-                return -1;
+                return FINISH_TOKEN;
             case '[':
                 setLexicalLast(lex_lb, TK_LB, parser);
-                return -1;
+                return FINISH_TOKEN;
             case '{':
                 setLexicalLast(lex_lc, TK_LC, parser);
-                return -1;
+                return FINISH_TOKEN;
             case ')':
                 setLexicalLast(lex_rp, TK_RP, parser);
-                return -1;
+                return FINISH_TOKEN;
             case ']':
                 setLexicalLast(lex_rb, TK_RB, parser);
-                return -1;
+                return FINISH_TOKEN;
             case '}':
                 setLexicalLast(lex_rc, TK_RC, parser);
-                return -1;
+                return FINISH_TOKEN;
             default:
-                printLexicalError(SYS_ILLEGAL_CHAR(lex_beging), parser);
-                return -2;
+                writeFatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                return ERROR_TOKEN;
         }
     } else if (ch == ';') {
         parser->lexical->status = lex_comment_before;
@@ -118,66 +127,66 @@ static int doneBegin(char ch, af_Parser *parser) {
         setLexicalLast(lex_element_short, TK_ELEMENT_SHORT, parser);
         return 1;
     }
-    printLexicalError(ILLEGAL_CHAR(lex_beging), parser);
-    return 0;
+    printLexicalError(IllegalChar, parser);
+    return DEL_TOKEN;
 }
 
 /*
  * 状态机图:
- * [lex_prefix_block_p] -> ( -> [lex_lp] # return -1
- * [lex_prefix_block_b] -> ( -> [lex_lb] # return -1
- * [lex_prefix_block_c] -> ( -> [lex_lc] # return -1
- * [lex_prefix_block_p] -> ) -> [lex_rp] # return -1
- * [lex_prefix_block_b] -> ) -> [lex_rb] # return -1
- * [lex_prefix_block_c] -> ) -> [lex_rc] # return -1
+ * [lex_prefix_block_p] -> ( -> [lex_lp] # return FINISH_TOKEN
+ * [lex_prefix_block_b] -> ( -> [lex_lb] # return FINISH_TOKEN
+ * [lex_prefix_block_c] -> ( -> [lex_lc] # return FINISH_TOKEN
+ * [lex_prefix_block_p] -> ) -> [lex_rp] # return FINISH_TOKEN
+ * [lex_prefix_block_b] -> ) -> [lex_rb] # return FINISH_TOKEN
+ * [lex_prefix_block_c] -> ) -> [lex_rc] # return FINISH_TOKEN
  */
 static int donePrefixBlock(char ch, af_Parser *parser) {
     if (ch == '(') {
         switch (parser->lexical->status) {
             case lex_prefix_block_p:
                 setLexicalLast(lex_lp, TK_LP, parser);
-                return -1;
+                return FINISH_TOKEN;
             case lex_prefix_block_b:
                 setLexicalLast(lex_lb, TK_LB, parser);
-                return -1;
+                return FINISH_TOKEN;
             case lex_prefix_block_c:
                 setLexicalLast(lex_lc, TK_LC, parser);
-                return -1;
+                return FINISH_TOKEN;
             default:
-                printLexicalError(SYS_ERROR_STATUS(lex_prefix_block), parser);
-                return -2;
+                writeFatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                return ERROR_TOKEN;
         }
     } else if (ch == ')') {
         switch (parser->lexical->status) {
             case lex_prefix_block_p:
                 setLexicalLast(lex_rp, TK_RP, parser);
-                return -1;
+                return FINISH_TOKEN;
             case lex_prefix_block_b:
                 setLexicalLast(lex_rb, TK_RB, parser);
-                return -1;
+                return FINISH_TOKEN;
             case lex_prefix_block_c:
                 setLexicalLast(lex_rc, TK_RC, parser);
-                return -1;
+                return FINISH_TOKEN;
             default:
-                printLexicalError(SYS_ERROR_STATUS(lex_prefix_block), parser);
-                return -2;
+                writeFatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                return ERROR_TOKEN;
         }
     }
-    printLexicalError(ILLEGAL_CHAR(lex_prefix_block), parser);
-    return 0;
+    printLexicalError(IllegalChar, parser);
+    return DEL_TOKEN;
 }
 
 /*
  * 状态机图:
  * [lex_comment_before]
- *      -> '\n' || NUL -> [lex_uni_comment_end] # return -1
+ *      -> '\n' || NUL -> [lex_uni_comment_end] # return FINISH_TOKEN
  *      -> ; -> (lex_mutli_comment) # mutli_comment = 0
  *      -> other -> (lex_uni_comment)
  */
 static int doneCommentBefore(char ch, af_Parser *parser) {
     if (ch == '\n' || ch == NUL) {
         setLexicalLast(lex_uni_comment_end, TK_COMMENT, parser);
-        return -1;
+        return FINISH_TOKEN;
     } else if (ch == ';') {  // 多行注释
         parser->lexical->status = lex_mutli_comment;
         parser->lexical->mutli_comment = 0;
@@ -190,13 +199,13 @@ static int doneCommentBefore(char ch, af_Parser *parser) {
 /*
  * 状态机图:
  * [lex_uni_comment]
- *      -> '\n' || NUL -> [lex_uni_comment_end] # return -1
+ *      -> '\n' || NUL -> [lex_uni_comment_end] # return FINISH_TOKEN
  *      -> other -> (lex_uni_comment)
  */
 static int doneUniComment(char ch, af_Parser *parser) {
     if (ch == '\n' || ch == NUL) {
         setLexicalLast(lex_uni_comment_end, TK_COMMENT, parser);
-        return -1;
+        return FINISH_TOKEN;
     }
     parser->lexical->status = lex_uni_comment;
     return 1;
@@ -205,15 +214,15 @@ static int doneUniComment(char ch, af_Parser *parser) {
 /*
  * 状态机图:
  * [lex_mutli_comment]
- *      -> NUL -> [lex_mutli_comment_end] # return -1; [warning]
+ *      -> NUL -> [lex_mutli_comment_end] # return FINISH_TOKEN; [warning]
  *      -> ; -> (lex_mutli_comment_end_before)
  *      -> other -> (lex_mutli_comment)
  */
 static int doneMutliComment(char ch, af_Parser *parser) {
     if (ch == NUL) {
         parser->lexical->status = lex_mutli_comment_end;
-        printLexicalWarning(INCOMPLETE_FILE(lex_mutli_comment), parser);
-        return -1;
+        printLexicalWarning(IncompleteFile, parser);
+        return FINISH_TOKEN;
     } else if (ch == ';')
         parser->lexical->status = lex_mutli_comment_end_before;
     else
@@ -224,17 +233,17 @@ static int doneMutliComment(char ch, af_Parser *parser) {
 /*
  * 状态机图:
  * [lex_mutli_comment_end_before]
- *      -> NUL -> [lex_mutli_comment_end] # return -1; [warning]
+ *      -> NUL -> [lex_mutli_comment_end] # return FINISH_TOKEN; [warning]
  *      -> ; -> (lex_mutli_comment) # mutli_comment++;
  *      -> = ->
- *              mutli_comment == 0 -> [lex_mutli_comment_end] # return -1
+ *              mutli_comment == 0 -> [lex_mutli_comment_end] # return FINISH_TOKEN
  *              else -> (lex_mutli_comment)# mutli_comment--;
  */
 static int doneMutliCommentBeforeEnd(char ch, af_Parser *parser) {
     if (ch == NUL) {
-        printLexicalWarning(INCOMPLETE_FILE(lex_mutli_comment_end_before), parser);
+        printLexicalWarning(IncompleteFile, parser);
         setLexicalLast(lex_mutli_comment_end, TK_COMMENT, parser);
-        return -1;
+        return FINISH_TOKEN;
     } else if (ch == ';') {
         /* 嵌套注释 */
         parser->lexical->mutli_comment++;
@@ -243,7 +252,7 @@ static int doneMutliCommentBeforeEnd(char ch, af_Parser *parser) {
         if (parser->lexical->mutli_comment == 0) {
             /* 注释结束 */
             setLexicalLast(lex_mutli_comment_end, TK_COMMENT, parser);
-            return -1;
+            return FINISH_TOKEN;
         } else {
             /* 嵌套注释 */
             parser->lexical->mutli_comment--;
@@ -266,8 +275,8 @@ static int doneElementLong(char ch, af_Parser *parser) {
         setLexicalLast(lex_element_long_end, TK_ELEMENT_LONG, parser);
         return 1;
     } else if (ch == NUL) {
-        printLexicalError(INCOMPLETE_FILE(lex_element_long), parser);
-        return -2;
+        printLexicalError(IncompleteFile, parser);
+        return ERROR_TOKEN;
     }
     parser->lexical->status = lex_element_long;
     return 1;
@@ -277,7 +286,7 @@ static int doneElementLong(char ch, af_Parser *parser) {
  * 状态机图:
  * [lex_element_long]
  *      -> | -> (lex_element_long)
- *      -> other -> [lex_element_long_end] # return -1
+ *      -> other -> [lex_element_long_end] # return FINISH_TOKEN
  */
 static int doneElementLongEnd(char ch, af_Parser *parser) {
     if (ch == '|') {  // ||表示非结束
@@ -285,14 +294,14 @@ static int doneElementLongEnd(char ch, af_Parser *parser) {
         return 1;
     }
     parser->lexical->status = lex_element_long_end;
-    return -1;
+    return FINISH_TOKEN;
 }
 
 /*
  * 状态机图:
  * [lex_element_short]
  *      -> !strchr("!@#([{}]);,", ch) && iselement(ch) -> (lex_element_short)
- *      -> other -> (lex_element_short) # return -1
+ *      -> other -> (lex_element_short) # return FINISH_TOKEN
  */
 static int doneElementShort(char ch, af_Parser *parser) {
     if (!strchr("!@#([{}]);,", ch) && iselement(ch)) {  // 除空格外的可见字符 (不包括NUL)
@@ -300,14 +309,14 @@ static int doneElementShort(char ch, af_Parser *parser) {
         return 1;
     }
     parser->lexical->status = lex_element_short;
-    return -1;
+    return FINISH_TOKEN;
 }
 
 /*
  * 状态机图:
  * [lex_space]
  *      -> ch != NUL && isignore(ch) -> (lex_space)
- *      -> other -> (lex_space) # return -1
+ *      -> other -> (lex_space) # return FINISH_TOKEN
  */
 static int doneSpace(char ch, af_Parser *parser) {
     if (ch != NUL && isignore(ch)) {
@@ -315,7 +324,7 @@ static int doneSpace(char ch, af_Parser *parser) {
         return 1;
     }
     parser->lexical->status = lex_space;
-    return -1;
+    return FINISH_TOKEN;
 }
 
 /*
@@ -331,7 +340,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
     if (parser->lexical->is_end) {
         *text = NULL;
         return TK_EOF;
-    } else if (parser->lexical->is_error || parser->reader->read_error) {
+    } else if (parser->lexical->is_error || parser->reader->read_error) {  /* lexical和reader出现异常后不再执行 */
         *text = NULL;
         return TK_ERROR;
     }
@@ -344,7 +353,7 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
         }
 
         if (isascii(ch) && iscntrl(ch) && !isspace(ch) && ch != NUL)  // ascii 控制字符
-            printLexicalWarning(INCULDE_CONTROL(base), parser);
+            printLexicalWarning(IncludeControlChar, parser);
 
         switch (parser->lexical->status) {
             case lex_begin:
@@ -380,12 +389,23 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
                 re = doneElementLongEnd(ch, parser);
                 break;
             default:
-                printLexicalError(SYS_ERROR_STATUS(base), parser);
-                re = -3;
+                writeFatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                re = ERROR_TOKEN;
                 break;
         }
 
-        if (re == -1) {
+        if (re == ERROR_TOKEN) {
+ERROR:
+            tt = TK_ERROR;
+            *text = NULL;
+            break;
+        } else if (re == DEL_TOKEN) {  // 删除该token, 继续执行
+            char *word = readWord(parser->lexical->last, parser->reader);
+            free(word);
+            parser->lexical->status = lex_begin;
+            parser->lexical->last = 0;
+            continue;
+        } else if (re == FINISH_TOKEN) {
             char *word = readWord(parser->lexical->last, parser->reader);
             if (word == NULL)
                 goto ERROR;
@@ -425,18 +445,6 @@ af_TokenType getTokenFromLexical(char **text, af_Parser *parser) {
             } else if (tt == TK_EOF)
                 parser->lexical->is_end = true;
 
-            break;
-        } else if (re == 0) {  // 删除该token, 继续执行
-            char *word = readWord(parser->lexical->last, parser->reader);
-            free(word);
-            parser->lexical->status = lex_begin;
-            parser->lexical->last = 0;
-            continue;
-        } else if (re == -2 || re == -3) {
-ERROR:
-            tt = TK_ERROR;
-            *text = NULL;
-            parser->lexical->is_error = true;
             break;
         }
     }

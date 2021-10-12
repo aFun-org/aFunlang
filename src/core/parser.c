@@ -12,9 +12,10 @@ static void freeLexical(af_Lexical *lex);
 static af_Syntactic *makeSyntactic(void);
 static void freeSyntactic(af_Syntactic *syntactic);
 
-af_Parser *makeParser(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size){
+af_Parser *makeParser(FilePath file, DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func,
+                      size_t data_size){
     af_Parser *parser = calloc(1, sizeof(af_Parser));
-    parser->reader = makeReader(read_func, destruct_func, data_size);
+    parser->reader = makeReader(1, file, read_func, destruct_func, data_size);
     parser->lexical = makeLexical();
     parser->syntactic = makeSyntactic();
     return parser;
@@ -52,7 +53,15 @@ static void freeSyntactic(af_Syntactic *syntactic) {
 }
 
 /* makeParser函数封装 */
+#define printReaderError(info, parser, stream) do { \
+    writeErrorLog(aFunCoreLogger, "[Reader] %s:%d %s", (parser)->reader->file, (parser)->reader->line, (info ## Log)); \
+    printf_std##stream(0, "[%s] %s:%d : %s\n", HT_aFunGetText(reader_n, "Reader"), (parser)->reader->file, \
+                  (parser)->reader->line, info ## Console); \
+    (parser)->is_error = true; /* 错误标记在Parser而非Lexical中, Lexical的异常表示lexical停止运行 */ \
+} while(0)
+
 struct readerDataString {
+    af_Parser *parser;
     char *str;
     bool free_str;
     size_t index;
@@ -77,13 +86,18 @@ static void destructFunc(struct readerDataString *data) {
         free(data->str);
 }
 
-af_Parser *makeParserByString(char *str, bool free_str){
+static void initStringReader(af_Parser *parser, char *str, bool free_str, struct readerDataString *data) {
+    data->str = str;
+    data->free_str = free_str;
+    data->len = strlen(str);
+    data->parser = parser;
+}
+
+af_Parser *makeParserByString(FilePath name, char *str, bool free_str){
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncString, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFunc, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
-    ((struct readerDataString *)parser->reader->data)->str = str;
-    ((struct readerDataString *)parser->reader->data)->free_str = free_str;
-    ((struct readerDataString *)parser->reader->data)->len = strlen(str);
+    af_Parser *parser = makeParser(name, read_func, destruct, sizeof(struct readerDataString));
+    initStringReader(parser, str, free_str, parser->reader->data);
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);
@@ -91,6 +105,7 @@ af_Parser *makeParserByString(char *str, bool free_str){
 }
 
 struct readerDataFile {
+    af_Parser *parser;
     FILE *file;
     bool no_first;
 };
@@ -108,8 +123,7 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
             /* 处理BOM编码 */
             char ch_[2];
             if (fread(ch_, sizeof(char), 2, data->file) != 2 || ch_[0] != (char)0xBB || ch_[1] != (char)0xBF) {
-                writeErrorLog(aFunCoreLogger, "Parser utf-8 with error BOM");
-                printf_stderr(0, HT_aFunGetText(error_bom, "Read utf-8 file with bad bom."));
+                printReaderError(BOMError, data->parser, err);
                 *mode = READER_MODE_ERROR;
                 return 0;
             }
@@ -123,7 +137,7 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
     size_t len_r =  fread(dest, sizeof(char), len, data->file);
     if (CLEAR_FERROR(data->file)) {  // ferror在feof前执行
         *mode = READER_MODE_ERROR;
-        printf_stderr(0, HT_aFunGetText(stdin_error, "The file io error/eof"));
+        printReaderError(FileIOError, data->parser, err);
     } else if (feof(data->file))
         *mode = READER_MODE_FINISHED;
     return len_r;
@@ -132,6 +146,11 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
 static void destructFile(struct readerDataFile *data) {
     if (data->file != NULL)
         fclose(data->file);
+}
+
+static void initFileReader(af_Parser *parser, FILE *file, struct readerDataFile *data) {
+    data->file = file;
+    data->parser = parser;
 }
 
 af_Parser *makeParserByFile(FilePath path){
@@ -144,8 +163,8 @@ af_Parser *makeParserByFile(FilePath path){
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncFile, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructFile, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataString));
-    ((struct readerDataFile *)parser->reader->data)->file = file;
+    af_Parser *parser = makeParser(path, read_func, destruct, sizeof(struct readerDataString));
+    initFileReader(parser, file, parser->reader->data);
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);
@@ -153,6 +172,7 @@ af_Parser *makeParserByFile(FilePath path){
 }
 
 struct readerDataStdin {
+    af_Parser *parser;
     bool no_first;
 
     void *sig_int;
@@ -190,8 +210,7 @@ static bool getStdinSignalFunc(void) {
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, int *mode) {
     if (data->index == data->len) {  // 读取内容
         if (CLEAR_STDIN()) {
-            writeErrorLog(aFunCoreLogger, "The stdin IO error, %d, %d", ferror(stdin), feof(stdin));
-            printf_stderr(0, HT_aFunGetText(stdin_error, ""));
+            printReaderError(StdinError, data->parser, err);
             *mode = READER_MODE_ERROR;
             return 0;
         }
@@ -210,7 +229,9 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
         /* 在Windows平台则是根据读取的最后一个字符是否为\n或者是否有按键按下来确定缓冲区是否有内容 */
         while (!checkStdin()) {  // 无内容则一直循环等到
             if (getStdinSignalFunc()) {  // 设置了中断函数, 并且该函数返回0
-                printf_stdout(0, "\n %s \n", HT_aFunGetText(Interrupt_n, "Interrupt"));
+                writeErrorLog(aFunCoreLogger, "Interrupt");
+                printf_stdout(0, "%s\n", HT_aFunGetText(Interrupt_n, "Interrupt"));
+                data->parser->is_error = true;
                 *mode = READER_MODE_ERROR;
                 return 0;
             }
@@ -227,8 +248,7 @@ static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len
 
         /* 读取内容的长度不得少于STDIN_MAX_SZIE, 否则可能导致编码转换错误 */
         if (fgets_stdin(&data->data, STDIN_MAX_SIZE) == 0) {
-            writeErrorLog(aFunCoreLogger, "The stdin buf too large (> %d)", STDIN_MAX_SIZE);
-            printf_stderr(0, "%s (> %d)", HT_aFunGetText(stdin_too_large, "The stdin buf too large"), STDIN_MAX_SIZE);
+            printReaderError(TooMuchInputError, data->parser, err);
             *mode = READER_MODE_ERROR;
             return 0;
         }
@@ -252,19 +272,20 @@ static void destructStdin(struct readerDataStdin *data) {
         signal(SIGTERM, data->sig_term);
 }
 
-static void initStdin(struct readerDataStdin *data) {
+static void initStdinReader(af_Parser *parser, struct readerDataStdin *data) {
     stdin_interrupt = 0;
     setStdinSignalFunc(data);
+    data->parser = parser;
 }
 
-af_Parser *makeParserByStdin(){
+af_Parser *makeParserByStdin(FilePath file){
     if (CLEAR_FERROR(stdin))
         return NULL;
 
     DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readFuncStdin, readerFunc);
     DLC_SYMBOL(destructReaderFunc) destruct = MAKE_SYMBOL(destructStdin, destructReaderFunc);
-    af_Parser *parser = makeParser(read_func, destruct, sizeof(struct readerDataStdin));
-    initStdin(parser->reader->data);
+    af_Parser *parser = makeParser(file, read_func, destruct, sizeof(struct readerDataStdin));
+    initStdinReader(parser, parser->reader->data);
     initParser(parser);
     FREE_SYMBOL(read_func);
     FREE_SYMBOL(destruct);

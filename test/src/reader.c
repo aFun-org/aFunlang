@@ -10,7 +10,8 @@ DEFINE_DLC_SYMBOL(readerFunc);
 typedef void destructReaderFunc(void *data);
 DEFINE_DLC_SYMBOL(destructReaderFunc);
 
-af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
+af_Reader * makeReader(FileLine line, FilePath file, DLC_SYMBOL(readerFunc) read_func,
+                       DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
 void freeReader(af_Reader *reader);
 af_Reader *initReader(af_Reader *reader);
 void *getReaderData(af_Reader *reader);
@@ -39,7 +40,7 @@ int main() {
     {
         DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readTest, readerFunc);
         DLC_SYMBOL(destructReaderFunc) destruct_func = MAKE_SYMBOL(destructTest, destructReaderFunc);
-        af_Reader *reader = makeReader(read_func, destruct_func, sizeof(int));
+        af_Reader *reader = makeReader(1, "test1", read_func, destruct_func, sizeof(int));
         *(int *) getReaderData(reader) = 0;
         initReader(reader);
         FREE_SYMBOL(read_func);
@@ -59,7 +60,7 @@ int main() {
     {
         DLC_SYMBOL(readerFunc) read_func = MAKE_SYMBOL(readTest, readerFunc);
         DLC_SYMBOL(destructReaderFunc) destruct_func = MAKE_SYMBOL(destructTest, destructReaderFunc);
-        af_Reader *reader = makeReader(read_func, destruct_func, sizeof(int));
+        af_Reader *reader = makeReader(1, "test2", read_func, destruct_func, sizeof(int));
         *(int *) getReaderData(reader) = 0;
         initReader(reader);
         FREE_SYMBOL(read_func);

@@ -1,7 +1,9 @@
 ﻿#include "core_init.h"
 #include "__reader.h"
+static void readFirstWord(af_Reader *reader);
 
-af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size) {
+af_Reader *makeReader(FileLine line, FilePath file, DLC_SYMBOL(readerFunc) read_func,
+                      DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size){
     af_Reader *reader = calloc(1, sizeof(af_Reader));
     reader->read_func = COPY_SYMBOL(read_func, readerFunc);
     reader->destruct = COPY_SYMBOL(destruct_func, destructReaderFunc);
@@ -12,16 +14,17 @@ af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReade
     reader->buf = NEW_STR(DEFAULT_BUF_SIZE);
     reader->buf_size = DEFAULT_BUF_SIZE;  // buf_size 不包括NUL
     reader->read = reader->buf;
+
+    reader->line = line;
+    reader->file = strCopy(file);
     return reader;
 }
 
 af_Reader *initReader(af_Reader *reader) {
     if (reader->init)
         return reader;
-    char *new = readWord(reader->buf_size, reader);  // 写入数据
-    free(new);
+    readFirstWord(reader);
     reader->init = true;
-    reader->line = 1;
     return reader;
 }
 
@@ -30,6 +33,7 @@ void freeReader(af_Reader *reader) {
         GET_SYMBOL(reader->destruct)(reader->data);
     free(reader->data);
     free(reader->buf);
+    free(reader->file);
     FREE_SYMBOL(reader->read_func);
     FREE_SYMBOL(reader->destruct);
     free(reader);
@@ -80,6 +84,25 @@ char *readWord(size_t del_index, af_Reader *reader) {
     }
 
     return re;
+}
+
+static void readFirstWord(af_Reader *reader) {
+    int mode = READER_MODE_NORMAL;
+    reader->read = reader->buf;  // 重置指针
+
+    char *write = reader->buf + STR_LEN(reader->buf);  // 数据写入的位置
+    size_t len_ = reader->buf_size - STR_LEN(reader->buf);
+    size_t len = GET_SYMBOL(reader->read_func)(reader->data, write, len_, &mode);
+    if (len > len_)
+        len = len_;
+    *(write + len) = NUL;
+
+    if (mode == READER_MODE_FINISHED)
+        reader->read_end = true;
+    else if (mode == READER_MODE_ERROR) {
+        reader->read_end = true;
+        reader->read_error = true;
+    }
 }
 
 char getChar(af_Reader *reader) {

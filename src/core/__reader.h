@@ -28,12 +28,15 @@ struct af_Reader {
     bool read_end;
     bool read_error;
     FileLine line;
+    FilePath file;
 
     bool init;  // 是否初始化
 };
 
 /* Reader 创建与释放 */
-AFUN_CORE_NO_EXPORT af_Reader *makeReader(DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func, size_t data_size);
+AFUN_CORE_NO_EXPORT af_Reader *
+makeReader(FileLine line, FilePath file, DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func,
+           size_t data_size);
 AFUN_CORE_NO_EXPORT void freeReader(af_Reader *reader);
 
 /* Reader 初始化函数 */

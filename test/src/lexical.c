@@ -19,7 +19,7 @@ char *str = "Hello_var\n"
             ";= var-300\n";
 
 int main() {
-    af_Parser *parser = makeParserByString(str, false);
+    af_Parser *parser = makeParserByString("test1", str, false);
     af_TokenType tt;
     char *text = NULL;
 

@@ -6,6 +6,7 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/hgt)
 to_native_path(${hgt_dir} hgt_dir_n)
 to_native_path(${CMAKE_CURRENT_LIST_DIR}/tr tr_n)
 to_native_path(${CMAKE_SOURCE_DIR}/src src_n)
+to_native_path(${CMAKE_SOURCE_DIR}/include include_n)
 set(hgt_name aFun)
 
 set(HGT_COMMAND
@@ -15,11 +16,13 @@ set(HGT_COMMAND
     BASEHT_EXPORT
     ${tr_n}
     ${hgt_name}
-    ${src_n})
+    ${src_n}
+    ${include_n})
 
 unset(hgt_dir_n)
 unset(tr_n)
 unset(src_n)
+unset(include_n)
 
 add_custom_target(hgt ALL)
 add_custom_command(TARGET hgt POST_BUILD
