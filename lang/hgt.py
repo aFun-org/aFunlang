@@ -171,7 +171,7 @@ for t in translation_list:
         code = f.read()
         var = {}
         for i in flat_list:
-            var[i] = flat_list[i][0][1:-2]  # [1:-2] 去除引号
+            var[i] = flat_list[i][0][1:-1]  # [1:-1] 去除引号
         exec(code, var, var)
         with open(os.path.join(translation_output, f"{name}.c"), "w", encoding="utf-8") as fc:
             fc.write(f"#include \"{export_h}.h\"\n")  # 需要导出
