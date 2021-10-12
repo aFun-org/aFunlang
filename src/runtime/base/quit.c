@@ -54,7 +54,7 @@ static void funcDestruct(char *id, af_Object *obj, QuitFunc *data, af_Environmen
 }
 
 void makeQuitFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
-    static APIFunc api_list[] = {
+    static APIFuncList api_list[] = {
             {.name="obj_getDataSize", .func=funcGetSize, .dlc=NULL},
             {.name="obj_initData", .func=funcInit, .dlc=NULL},
             {.name="obj_destructData", .func=funcDestruct, .dlc=NULL},
@@ -65,7 +65,7 @@ void makeQuitFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
             {.name=NULL}
     };
 
-    static ObjectDefine obj_def[] = {
+    static ObjectDefineList obj_def[] = {
             {.id=func_id, .free_api=true, .api_list=api_list, .allow_inherit=false,
                     .var_name="quit", .p_self=3, .p_posterity=3, .p_external=3},
             {.id=NULL}

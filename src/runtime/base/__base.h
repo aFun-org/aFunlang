@@ -4,7 +4,7 @@
 #include "__env.h"
 #include "__var.h"
 
-static const LiteralFunc literal[] = {
+static const LiteralFuncList literal[] = {
         /* 字符串匹配：\"[\s\S]*\" */
         {.pattern="\\\"[\\s\\S]*\\\"", .func="str", .in_protect=true},
         {.pattern=NULL}

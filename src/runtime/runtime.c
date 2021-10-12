@@ -42,12 +42,12 @@ int runtimeToolImport(char *name, af_Object **obj, af_Code **code, af_Environmen
 
 /*
  * 函数名: makeAPIFromList
- * 目标: 根据APIFunc生成api表并写入数据
+ * 目标: 根据APIFuncList生成api表并写入数据
  */
-af_ObjectAPI *makeAPIFromList(const APIFunc api_list[]) {
+af_ObjectAPI *makeAPIFromList(const APIFuncList api_list[]) {
     af_ObjectAPI *api = makeObjectAPI();
 
-    for (const APIFunc *af = api_list; af->name != NULL; af++) {
+    for (const APIFuncList *af = api_list; af->name != NULL; af++) {
         if (af->func != NULL) {
             DLC_SYMBOL(objectAPIFunc) func = MAKE_SYMBOL_FROM_HANDLE(af->func, af->dlc, objectAPIFunc);
             addAPI(func, af->name, api);
@@ -66,10 +66,10 @@ af_ObjectAPI *makeAPIFromList(const APIFunc api_list[]) {
 
 /*
  * 函数名: makeObjectFromList
- * 目标: 根据ObjectDefine生成Object, 并保存到对应位置和变量空间中
+ * 目标: 根据ObjectDefineList生成Object, 并保存到对应位置和变量空间中
  */
-void makeObjectFromList(const ObjectDefine obj_def[], af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
-    for (const ObjectDefine *od = obj_def; od->id != NULL; od++) {
+void makeObjectFromList(const ObjectDefineList obj_def[], af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
+    for (const ObjectDefineList *od = obj_def; od->id != NULL; od++) {
         af_ObjectAPI *api = od->api;
         if (api == NULL)
             api = makeAPIFromList(od->api_list);
@@ -86,21 +86,21 @@ void makeObjectFromList(const ObjectDefine obj_def[], af_Object *visitor, af_Var
 
 /*
  * 函数名: makeLiteralRegexFromList
- * 目标: 根据LiteralFunc压入新的字面量处理器
+ * 目标: 根据LiteralFuncList压入新的字面量处理器
  */
-void makeLiteralRegexFromList(const LiteralFunc literal_list[], af_Environment *env) {
-    for (const LiteralFunc *lt = literal_list; lt->pattern != NULL; lt++)
+void makeLiteralRegexFromList(const LiteralFuncList literal_list[], af_Environment *env) {
+    for (const LiteralFuncList *lt = literal_list; lt->pattern != NULL; lt++)
         pushLiteralRegex(lt->pattern, lt->func, lt->in_protect, env);
 }
 
 /*
  * 函数名: makeTopMsgProcessFromList
- * 目标: 根据TopMsgFunc压入新的字面量处理器
+ * 目标: 根据TopMsgFuncList压入新的字面量处理器
  */
-void makeTopMsgProcessFromList(const TopMsgFunc top_msg_list[], af_Environment *env) {
-    for (const TopMsgFunc *tml = top_msg_list; tml->type != NULL; tml++) {
+void makeTopMsgProcessFromList(const TopMsgFuncList top_msg_list[], af_Environment *env) {
+    for (const TopMsgFuncList *tml = top_msg_list; tml->type != NULL; tml++) {
         if (tml->func != NULL) {
-            DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL(tml->func, TopMsgProcessFunc);
+            DLC_SYMBOL(TopMsgProcessFunc) func = MAKE_SYMBOL_FROM_HANDLE(tml->func, tml->dlc, TopMsgProcessFunc);
             addTopMsgProcess(tml->type, func, env);
             FREE_SYMBOL(func);
             continue;
@@ -115,13 +115,13 @@ void makeTopMsgProcessFromList(const TopMsgFunc top_msg_list[], af_Environment *
 
 /*
  * 函数名: makeInheritFromListReverse
- * 目标: 以InheritDefine的顺序反向压入Inherit
+ * 目标: 以InheritDefineList的顺序反向压入Inherit
  * 注意: pushInherit是反向压入, 因此InheritDefine得正向读取, 最后Inherit反向压入
  */
-static af_Inherit *makeInheritFromListReverse(const InheritDefine inherit_list[]) {
+static af_Inherit *makeInheritFromListReverse(const InheritDefineList inherit_list[]) {
     af_Inherit *inherit = NULL;
     af_Inherit **pinherit = &inherit;
-    for (const InheritDefine *ind = inherit_list; ind->obj != NULL; ind++) {
+    for (const InheritDefineList *ind = inherit_list; ind->obj != NULL; ind++) {
         af_Inherit *ih = makeInherit(ind->obj);
         pinherit = pushInherit(pinherit, ih);
     }
@@ -131,13 +131,13 @@ static af_Inherit *makeInheritFromListReverse(const InheritDefine inherit_list[]
 
 /*
  * 函数名: makeInheritFromListForward
- * 目标: 以InheritDefine的顺序压入Inherit
+ * 目标: 以InheritDefineList的顺序压入Inherit
  * 注意: pushInherit是反向压入, 因此InheritDefine也得反向读取, 最后Inherit正向压入
  */
-static af_Inherit *makeInheritFromListForward(const InheritDefine inherit_list[]) {
+static af_Inherit *makeInheritFromListForward(const InheritDefineList inherit_list[]) {
     af_Inherit *inherit = NULL;
     af_Inherit **pinherit = &inherit;
-    const InheritDefine *ind = inherit_list;
+    const InheritDefineList *ind = inherit_list;
 
     /* 找到最后一个元素 */
     while (ind->obj != NULL)
@@ -154,11 +154,52 @@ static af_Inherit *makeInheritFromListForward(const InheritDefine inherit_list[]
 
 /*
  * 函数名: makeInheritFromList
- * 目标: 根据InheritDefine生成新的Inherit
+ * 目标: 根据InheritDefineList生成新的Inherit
  */
-af_Inherit *makeInheritFromList(const InheritDefine inherit_list[], bool is_reverse) {
+af_Inherit *makeInheritFromList(const InheritDefineList inherit_list[], bool is_reverse) {
     if (is_reverse)
         return makeInheritFromListReverse(inherit_list);
     else
         return makeInheritFromListForward(inherit_list);
+}
+
+/*
+ * 函数名: makeGuardianFromList
+ * 目标: 根据GuardianFuncList压入新的字面量处理器
+ */
+void makeGuardianFromList(const GuardianFuncList gd_list[], af_Environment *env) {
+    for (const GuardianFuncList *gdl = gd_list; gdl->type != NULL; gdl++) {
+        DLC_SYMBOL(GuardianFunc) func = gdl->func_;
+        bool free_func_ = gdl->free_func_;
+
+        DLC_SYMBOL(GuardianDestruct) destruct = gdl->destruct_;
+        bool free_destruct_ = gdl->free_destruct_;
+
+        if (func == NULL) {
+            if (gdl->func == NULL)
+                continue;  // 遇到错误
+            func = MAKE_SYMBOL_FROM_HANDLE(gdl->func, gdl->dlc, GuardianFunc);
+            free_func_ = true;
+        }
+
+        if (destruct == NULL) {
+            if (gdl->destruct == NULL)
+                continue;  // 遇到错误
+            destruct = MAKE_SYMBOL_FROM_HANDLE(gdl->destruct, gdl->dlc, GuardianDestruct);
+            free_destruct_ = true;
+        }
+
+        void *tmp = NULL;
+        void **pdata = gdl->data;
+        if (pdata == NULL)
+            pdata = &tmp;
+
+        if (addGuardian(gdl->type, gdl->always, gdl->size, func, destruct, pdata, env))
+            gdl->initData(*pdata, env);
+
+        if (free_func_)
+            FREE_SYMBOL(func);
+        if (free_destruct_)
+            FREE_SYMBOL(destruct);
+    }
 }

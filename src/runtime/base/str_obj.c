@@ -36,7 +36,7 @@ static size_t strFuncGetSize(char *id, af_Object *obj) {
 }
 
 static void strFuncInit(char *id, af_Object *obj, ObjectStrFunc *data, af_Environment *env) {
-    static const APIFunc api_list[] = {
+    static const APIFuncList api_list[] = {
             {.name="obj_getDataSize", .func=strGetSize, .dlc=NULL},
             {.name="obj_initData", .func=strInit, .dlc=NULL},
             {.name="obj_destructData", .func=strDestruct, .dlc=NULL},
@@ -92,7 +92,7 @@ static void strFuncDestruct(char *id, af_Object *obj, ObjectStrFunc *data, af_En
 }
 
 void makeStrFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
-    static APIFunc api_list[] = {
+    static APIFuncList api_list[] = {
             {.name="obj_getDataSize", .func=strFuncGetSize, .dlc=NULL},
             {.name="obj_initData", .func=strFuncInit, .dlc=NULL},
             {.name="obj_destructData", .func=strFuncDestruct, .dlc=NULL},
@@ -103,7 +103,7 @@ void makeStrFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
             {.name=NULL}
     };
 
-    static ObjectDefine obj_def[] = {
+    static ObjectDefineList obj_def[] = {
             {.id=string_func_id, .free_api=true, .api_list=api_list, .allow_inherit=true,
                     .var_name="str", .p_self=3, .p_posterity=3, .p_external=3},
             {.id=NULL}
