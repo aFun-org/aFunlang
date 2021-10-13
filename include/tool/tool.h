@@ -24,6 +24,7 @@
 #include "log.h"
 
 #include "fflags.h"
+#include "pthread.h"
 #include "aFun_ht.h"
 
 #endif //AFUN_TOOL_H

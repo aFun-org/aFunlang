@@ -7,10 +7,12 @@ set(deps_install_dir ${INSTALL_RESOURCEDIR}/deps)  # 依赖的安装位置
 set(dlfcn_cmake "share/dlfcn-win32")  # dlfcn cmake 安装位置 (相对路径)
 set(pcre2_cmake "cmake")
 set(fflags_cmake "cmake")  # FindFFlags.cmake 不是 fflags 的一部分, 但是会被安装到 cmake 目录下
+set(pthread_cmake "cmake")
 
 set(dlfcn-win32_MUST_BUILD TRUE CACHE BOOL "Must build dlfcn-win32")
 set(PCRE2_MUST_BUILD TRUE CACHE BOOL "Must build pcre2")
 set(FFlags_MUST_BUILD TRUE CACHE BOOL "Must build FFlags")
+set(PThreadWin32_MUST_BUILD TRUE CACHE BOOL "Must build pthreads-win32")
 
 if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
     if (_print)
@@ -85,3 +87,30 @@ set(fflags_lib FFlags::fflags)
 install(DIRECTORY "${fflags_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")  # 安装fflags.h
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindFFlags.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
 cfep_install(FFlags PREFIX ${deps_install_dir})
+
+if (MSVC)
+    if (_print)
+        message(STATUS "Build pthreads-win32...")
+    endif()
+    cfep_find_dir(PThreadWin32
+                  REQUIRED
+                  MODULE  # 使用FindFFlags.cmake文件
+                  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/pthread-win32
+                  CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"  # FindPThreadWin32.cmake 文件位置
+                  EXTERNAL
+                  BUILD_CMAKE_CACHE_ARGS
+                  -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                  BUILD_DIR "pthread")
+    set(pthread_lib PThreadWin32::pthread)
+
+    install(DIRECTORY "${pthread_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")  # 安装fflags.h
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindPThreadWin32.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
+    cfep_install(PThreadWin32 PREFIX ${deps_install_dir})
+else()
+    find_package(Threads REQUIRED)
+    set(pthread_define ${CMAKE_USE_PTHREADS_INIT})
+    if (NOT pthread_define)
+        message(FATAL_ERROR "pthread not found")
+    endif()
+    set(pthread_lib Threads::Threads)
+endif()

@@ -39,7 +39,7 @@ if (re)
     message(FATAL_ERROR "hgt error[${re}]\n${errput}")
 endif()
 
-add_library(hgt-base STATIC)
+add_library(hgt-base SHARED)
 target_sources(hgt-base
                PRIVATE ${hgt_dir}/${hgt_name}_ht.c
                PUBLIC $<BUILD_INTERFACE:${hgt_dir}/${hgt_name}_ht.h> $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${hgt_name}_ht.h>)
@@ -53,7 +53,9 @@ generate_export_header(hgt-base EXPORT_FILE_NAME "${hgt_dir}/baseHTExport.h" BAS
 target_include_directories(hgt-base PUBLIC
                            $<BUILD_INTERFACE:${hgt_dir}>
                            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
-set_target_properties(hgt-base PROPERTIES PUBLIC_HEADER "${hgt_dir}/${hgt_name}_ht.h")
+set_target_properties(hgt-base PROPERTIES
+                      PUBLIC_HEADER "${hgt_dir}/${hgt_name}_ht.h"
+                      OUTPUT_NAME "aFunlangTr")
 
 install(TARGETS hgt-base
         EXPORT aFunlang
