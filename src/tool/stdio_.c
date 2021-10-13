@@ -31,6 +31,7 @@ static char buffer[BUFF_SIZE + 1] = "";
 static size_t index = 0;
 static size_t next = 0;
 static size_t end = 0;
+static pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
 
 static int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_) {
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -223,28 +224,36 @@ int fgetc_stdin(void) {
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE)
         return EOF;
 
+    int re = EOF;
+    pthread_mutex_lock(&buffer_mutex);
     for (int fs = 0; fs != 1 ; fs = fcheck_stdin(std_i, std_o)) {  // 阻塞
         if (fs == -1)
-            return EOF;
+            goto RETURN;  // 返回EOF
     }
 
-    int re = (int)buffer[index];
+    re = (int)buffer[index];
     index++;
+
+RETURN:
+    pthread_mutex_unlock(&buffer_mutex);
     return re;
 }
 
 char *fgets_stdin_(char *buf, size_t len) {
     if (!_isatty(_fileno(stdin)))
-        return fgets(buf, len, stdin);
+        return fgets(buf, (int)len, stdin);
 
     HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE)
         return NULL;
 
+    pthread_mutex_lock(&buffer_mutex);
     for (int fs = 0; fs != 1 ; fs = fcheck_stdin(std_i, std_o)) {  // 阻塞
-        if (fs == -1)
-            return NULL;
+        if (fs == -1) {
+            buf = NULL;
+            goto RETURN;  // 返回NULL
+        }
     }
 
     size_t len_ = len - 1;
@@ -254,6 +263,9 @@ char *fgets_stdin_(char *buf, size_t len) {
     index += len_;
     nextToEnd(std_o);
     buf[len_] = '\0';  // 最后一位
+
+RETURN:
+    pthread_mutex_unlock(&buffer_mutex);
     return buf;
 }
 
@@ -266,11 +278,14 @@ bool fclear_stdin(void) {
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_o == INVALID_HANDLE_VALUE)
         return true;
+
+    pthread_mutex_lock(&buffer_mutex);
     nextToEnd(std_o);
     index = 0;
     end = 0;
     next = 0;
     memset(buffer, 0, BUFF_SIZE);
+    pthread_mutex_unlock(&buffer_mutex);
     return false;
 }
 
@@ -309,7 +324,7 @@ int fgets_stdin(char **dest, int len) {
 
     char *wstr = calloc(len, sizeof(char));
     UINT code_page = GetConsoleCP();
-    if (fgets_stdin_(wstr, len) != NULL)
+    if (fgets_stdin_(wstr, len) != NULL)  // 已经有互斥锁
         re = convertMultiByte(dest, wstr, code_page, CP_UTF8);
     return re;
 }
@@ -318,8 +333,11 @@ int fungetc_stdin(int ch) {
     if (!_isatty(_fileno(stdin)))
         return ungetc(ch, stdin);
 
-    if (ch == 0 || index == 0 && end == BUFF_SIZE)
+    pthread_mutex_lock(&buffer_mutex);
+    if (ch == 0 || index == 0 && end == BUFF_SIZE) {
+        pthread_mutex_unlock(&buffer_mutex);
         return 0;
+    }
 
     if (index != 0) {
         index--;
@@ -330,6 +348,8 @@ int fungetc_stdin(int ch) {
         next++;
         buffer[0] = (char) ch;
     }
+
+    pthread_mutex_unlock(&buffer_mutex);
     return 1;
 }
 
@@ -342,7 +362,9 @@ int fungetc_stdin(int ch) {
 bool checkStdin(void) {
     HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
+    pthread_mutex_lock(&buffer_mutex);
     int fs = fcheck_stdin(std_i, std_o);
+    pthread_mutex_unlock(&buffer_mutex);
     if (fs == 0)
         return false;
     return true;
@@ -403,7 +425,8 @@ size_t printf_stderr(size_t buf_len, char *format, ...) {
 #else
 #include <unistd.h>
 #include <fcntl.h>
-#include <termios.h>
+
+static pthread_mutex_t fcntl_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
 
 // 用于Linux平台的IO函数
 // 默认Linux平台均使用utf-8
@@ -427,6 +450,7 @@ bool checkStdin(void) {
         return true;
     bool re = false;
 
+    pthread_mutex_lock(&fcntl_mutex);
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
@@ -439,14 +463,15 @@ bool checkStdin(void) {
     }
 
     fcntl(STDIN_FILENO, F_SETFL, oldf);
+    pthread_mutex_unlock(&fcntl_mutex);
     return re;
 }
 
 bool fclear_stdin(void) {
     if (!isatty(fileno(stdin)))
         return true;
-    bool re = false;
 
+    pthread_mutex_lock(&fcntl_mutex);
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
@@ -457,6 +482,7 @@ bool fclear_stdin(void) {
     } while (ch != EOF);
 
     fcntl(STDIN_FILENO, F_SETFL, oldf);
+    pthread_mutex_unlock(&fcntl_mutex);
     return !ferror(stdin) && !feof(stdin);
 }
 
