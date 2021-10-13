@@ -1,4 +1,5 @@
-﻿set(_root ${FFlags_ROOT})
+﻿include(FindPackageHandleStandardArgs)
+set(_root ${FFlags_ROOT})
 
 if (NOT _root)
     find_package_handle_standard_args(FFlags

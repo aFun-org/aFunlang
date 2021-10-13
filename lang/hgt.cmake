@@ -39,7 +39,7 @@ if (re)
     message(FATAL_ERROR "hgt error[${re}]\n${errput}")
 endif()
 
-add_library(hgt-base SHARED)
+add_library(hgt-base STATIC)
 target_sources(hgt-base
                PRIVATE ${hgt_dir}/${hgt_name}_ht.c
                PUBLIC $<BUILD_INTERFACE:${hgt_dir}/${hgt_name}_ht.h> $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${hgt_name}_ht.h>)
