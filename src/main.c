@@ -47,7 +47,7 @@ static Logger aFunlangLogger_;
 Logger *aFunlangLogger = &aFunlangLogger_;
 static bool tty_stdin = false;
 
-void freeBaseName(void) {
+void freeBaseName(void *_) {
     free(base_path);
 }
 
@@ -57,10 +57,10 @@ int main(int argc, char **argv) {
     base_path = getExedir(1);
     if (base_path == NULL)
         goto INIT_ERROR;
-    atexit(freeBaseName);
+    aFunAtExit(freeBaseName, NULL);
 
     if (setjmp(main_buf) == 1)
-        return EXIT_FAILURE;
+        aFunExit(aFunExitFail);
 
     aFunInitInfo info = {.base_dir=base_path,
 #ifdef aFunDEBUG
@@ -74,12 +74,12 @@ int main(int argc, char **argv) {
 
     ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
     if (ff == NULL)
-        return EXIT_FAILURE;
+        aFunExit(aFunExitFail);
 
     if (!aFunInit(&info)) {
 INIT_ERROR:
         printf_stderr(0, "aFunlang init error.");
-        return EXIT_FAILURE;
+        aFunExit(aFunExitFail);
     }
 
     initLogger(aFunlangLogger, "aFunlang-exe", info.level);
@@ -101,7 +101,7 @@ INIT_ERROR:
 
     ff_freeFFlags(ff);
     aFunDestruct();
-    return exit_code;
+    aFunExit(exit_code);
 }
 
 static void printVersion(void) {

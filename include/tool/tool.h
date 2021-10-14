@@ -12,6 +12,7 @@
 #include "aFunToolExport.h"
 
 #include "stdio_.h"
+#include "exit_.h"
 #include "btye.h"
 #include "dlc.h"
 #include "file.h"

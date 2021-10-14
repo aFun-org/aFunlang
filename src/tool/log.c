@@ -8,6 +8,7 @@
  * file.h 中 getFileSize
  * stdio_.h
  * str.h
+ * exit_.h
  * pthread.h
  */
 
@@ -22,6 +23,7 @@
 #include "file.h"
 #include "stdio_.h"
 #include "str.h"
+#include "exit_.h"
 #include "pthread.h"
 
 #ifdef aFunWIN32
@@ -71,6 +73,7 @@ static struct LogFactory {
 static pthread_mutex_t log_factory_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define MUTEX (&log_factory_mutex)
 
+static void destructLogSystemAtExit(void *data);
 static void *ansyWritrLog_(void *_);
 
 /*
@@ -140,7 +143,12 @@ int initLogSystem(FilePath path, bool asyn){
     writeInfoLog(NULL, "Log system init success");
     writeInfoLog(NULL, "Log .log size %lld", log_size);
     writeInfoLog(NULL, "Log .csv size %lld", csv_size);
+    aFunAtExit(destructLogSystemAtExit, NULL);
     return re;
+}
+
+static void destructLogSystemAtExit(void *data) {
+    destructLogSystem();
 }
 
 int destructLogSystem(void) {
@@ -371,11 +379,12 @@ int writeSendErrorLog_(Logger *logger, char *file, int line, char *func, char *f
     writeLog_(logger, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
 #endif
 
+    destructLogSystem();
     if (buf != NULL) {
         initLogger(logger, NULL, 0);  // 清零
         longjmp(*buf, 1);
     } else
-        exit(EXIT_FAILURE);
+        aFunExit(aFunExitFail);
 #endif
 }
 
@@ -389,9 +398,10 @@ int writeFatalErrorLog_(Logger *logger, char *file, int line, char *func, int ex
     writeLog_(logger, aFunConsoleFatalError, log_fatal_error, file, line, func, format, ap);
 #endif
 
+    destructLogSystem();
     if (exit_code == EXIT_SUCCESS)
         abort();
     else
-        exit(exit_code);
+        aFunExit(exit_code);
 #endif
 }

@@ -15,7 +15,7 @@ char *log_path = NULL;
 char *lang_path = NULL;
 char *varlib_path = NULL;
 
-static void destructCoreExit(void) {
+static void destructCoreExit(void *data) {
     free(log_path);
     free(lang_path);
     free(varlib_path);
@@ -39,7 +39,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     log_path = strJoin(info->base_dir, SEP aFunLogDir SEP, false, false);
     lang_path = strJoin(info->base_dir, SEP aFunLangDir SEP, false, false);
     varlib_path = strJoin(info->base_dir, SEP aFunVarLibDir SEP, false, false);
-    atexit(destructCoreExit);
+    aFunAtExit(destructCoreExit, NULL);
 
     char *log = strJoin(log_path, "aFunlang", false, false);
     bool re = initLogSystem(log, info->log_asyn);
