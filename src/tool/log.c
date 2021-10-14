@@ -7,6 +7,8 @@
  * mem.h 中 free
  * file.h 中 getFileSize
  * stdio_.h
+ * str.h
+ * pthread.h
  */
 
 #include <stdio.h>
@@ -19,6 +21,8 @@
 #include "time_s.h"
 #include "file.h"
 #include "stdio_.h"
+#include "str.h"
+#include "pthread.h"
 
 #ifdef aFunWIN32
 #include <windows.h>
@@ -36,13 +40,14 @@
 
 static struct LogFactory {
     bool init;  // 是否已经初始化
-    long pid;
+    pid_t pid;
 
     FILE *log;  // 记录文件输出的位置
     FILE *csv;
 
     Logger sys_log;
 } log_factory = {.init=false};
+static pthread_mutex_t LogFactoryMutext = PTHREAD_MUTEX_INITIALIZER;
 
 static void destructLogSystem_at_exit(void);
 
@@ -83,7 +88,7 @@ int initLogSystem(FilePath path) {
     if (log_factory.csv == NULL)
         return 0;
 
-#define CSV_FORMAT "%s,%s,%ld,%ld,%s,%ld,%s,%d,%s,%s\n"
+#define CSV_FORMAT "%s,%s,%d,%d,%s,%ld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
     if (csv_head_write) {
         fprintf(log_factory.csv, CSV_TITLE);  // 设置 cvs 标题
@@ -155,6 +160,36 @@ static const char *LogLevelNameLong[] = {
         "*FATAL ERROR*",  // fatal_error 6
 };
 
+static void writeLogToFactory_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
+#define FORMAT "%s/[%s] %d %d {%s %ld} (%s:%d at %s) : '%s' \n"
+    /* 写入文件日志 */
+    if (log_factory.log != NULL) {
+        fprintf(log_factory.log, FORMAT, LogLevelName[level], id, log_factory.pid, tid, ti, t, file, line, func, info);
+        fflush(log_factory.log);
+    }
+    if (log_factory.csv != NULL) {
+        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], id, log_factory.pid, tid, ti, t, file, line, func, info);
+        fflush(log_factory.csv);
+    }
+
+#undef FORMAT
+#undef CSV_FORMAT
+}
+
+static void writeLogToConsole_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
+#define FORMAT_SHORT "\r* %s(%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
+#define STD_BUF_SIZE (STR_LEN(info) + 1024)
+    if (level < log_warning) {
+        printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, info);
+        fflush(stdout);
+    } else {
+        printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, info);
+        fflush(stderr);
+    }
+#undef FORMAT_SHORT
+#undef STD_BUF_SIZE
+}
+
 static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
     if (logger->level > level)
         return 2;
@@ -165,40 +200,17 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
     // 输出 head 信息
     time_t t = 0;
     char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
-
-#define FORMAT "%s/[%s] %ld %ld {%s %ld} (%s:%d at %s) : '%s' \n"
-    long tid = gettid();
+    pid_t tid = gettid();
 
     char tmp[2048] = {0};
     vsnprintf(tmp, 1024, format, ap);  // ap只使用一次
     va_end(ap);
 
-    /* 写入文件日志 */
-    if (log_factory.log != NULL) {
-        fprintf(log_factory.log, FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
-        fflush(log_factory.log);
-    }
-    if (log_factory.csv != NULL) {
-        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], logger->id, log_factory.pid, tid, ti, t, file, line, func, tmp);
-        fflush(log_factory.csv);
-    }
+    writeLogToFactory_(level, logger->id, tid, ti, t, file, line, func, tmp);
+    if (pc)
+        writeLogToConsole_(level, logger->id, tid, ti, t, file, line, func, tmp);
 
-#define FORMAT_SHORT "\r* %s(%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
-#define STD_BUF_SIZE (strlen(tmp) + 1024)
-    if (pc) {
-        if (level < log_warning) {
-            printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-            fflush(stdout);
-        } else {
-            printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], file, line, tmp);
-            fflush(stderr);
-        }
-    }
-#undef FORMAT_SHORT
-#undef STD_BUF_SIZE
     free(ti);
-#undef FORMAT
-#undef CSV_FORMAT
     return 0;
 }
 
