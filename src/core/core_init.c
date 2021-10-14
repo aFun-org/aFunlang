@@ -25,6 +25,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     if (info == NULL) {
         static aFunCoreInitInfo info_default = {.base_dir=".",
                                                 .buf=NULL,
+                                                .log_asyn=true,
                                                 .level=log_info};
         info = &info_default;
     }
@@ -41,7 +42,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     atexit(destructCoreExit);
 
     char *log = strJoin(log_path, "aFunlang", false, false);
-    bool re = initLogSystem(log);
+    bool re = initLogSystem(log, info->log_asyn);
     free(log);
     if (re == 0)
         return false;
@@ -74,6 +75,11 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     } else
         HT_initaFunGetText(NULL);
     writeDebugLog(aFunCoreLogger, "aFunCore init success");
+    return true;
+}
+
+bool aFunCoreDestruct(void) {
+    destructLogSystem();
     return true;
 }
 

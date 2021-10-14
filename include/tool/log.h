@@ -31,7 +31,8 @@ struct Logger {
 };
 typedef struct Logger Logger;
 
-AFUN_TOOL_EXPORT int initLogSystem(FilePath path);
+AFUN_TOOL_EXPORT int initLogSystem(FilePath path, bool asyn);
+AFUN_TOOL_EXPORT int destructLogSystem(void);
 
 AFUN_TOOL_EXPORT void initLogger(Logger *logger, char *id, LogLevel level);
 AFUN_TOOL_EXPORT void destructLogger(Logger *logger);

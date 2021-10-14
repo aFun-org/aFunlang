@@ -21,6 +21,7 @@ bool aFunInit(aFunInitInfo *info) {
         static aFunInitInfo info_default = {
                 .base_dir=".",
                 .buf=NULL,
+                .log_asyn=true,
                 .level=log_info
         };
         info = &info_default;
@@ -28,12 +29,17 @@ bool aFunInit(aFunInitInfo *info) {
 
     aFunCoreInitInfo core_info = {.base_dir=info->base_dir,
                                   .buf=info->buf,
+                                  .log_asyn=info->log_asyn,
                                   .level=info->level};
 
     aFunInit_mark = aFunCoreInit(&core_info);
     if (aFunInit_mark)
         writeDebugLog(aFunCoreLogger, "aFun-runtime Init success");
     return aFunInit_mark;
+}
+
+bool aFunDestruct(void) {
+    return aFunCoreDestruct();
 }
 
 /*

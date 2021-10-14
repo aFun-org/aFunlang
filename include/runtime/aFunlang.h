@@ -8,11 +8,14 @@ typedef struct aFunInitInfo aFunInitInfo;
 struct aFunInitInfo {
     char *base_dir;
 
+    bool log_asyn;
     jmp_buf *buf;
     LogLevel level;
 };
 
 AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
+AFUN_LANG_EXPORT bool aFunDestruct(void);
+
 AFUN_LANG_EXPORT void defineRunEnv(aFunRunInfo *run_env);
 AFUN_LANG_EXPORT void redefRunEnvSignal(void);
 AFUN_LANG_EXPORT void undefRunEnv(aFunRunInfo *run_env);

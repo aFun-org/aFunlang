@@ -10,6 +10,7 @@ typedef struct aFunCoreInitInfo aFunCoreInitInfo;
 struct aFunCoreInitInfo {
     char *base_dir;
 
+    bool log_asyn;
     jmp_buf *buf;
     LogLevel level;
 };
@@ -21,6 +22,7 @@ struct aFunRunInfo {
 
 AFUN_CORE_EXPORT extern Logger *aFunCoreLogger;
 AFUN_CORE_EXPORT bool aFunCoreInit(aFunCoreInitInfo *info);
+AFUN_CORE_EXPORT bool aFunCoreDestruct(void);
 
 AFUN_CORE_EXPORT void defineRunEnvCore(aFunRunInfo *run_env);
 AFUN_CORE_EXPORT void undefRunEnvCore(aFunRunInfo *run_env);

@@ -68,8 +68,13 @@ int main(int argc, char **argv) {
 #else
                          .level=log_info,
 #endif
+                         .log_asyn=true,
                          .buf=&main_buf,
     };
+
+    ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
+    if (ff == NULL)
+        return EXIT_FAILURE;
 
     if (!aFunInit(&info)) {
 INIT_ERROR:
@@ -82,9 +87,6 @@ INIT_ERROR:
     writeDebugLog(aFunlangLogger, "aFunlang-exe init success: %s", (tty_stdin ? "tty" : "no-tty"));
 
     int exit_code = EXIT_SUCCESS;
-    ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
-    if (ff == NULL)
-        return EXIT_FAILURE;
     char *child = ff_getChild(ff);
     name = *argv;  // 获取第一个参数为name
 
@@ -98,6 +100,7 @@ INIT_ERROR:
         exit_code = mainHelp(ff);
 
     ff_freeFFlags(ff);
+    aFunDestruct();
     return exit_code;
 }
 

@@ -400,6 +400,7 @@ int main(int argc, char **argv) {
     aFunInitInfo info = {
             .base_dir=base_path,
             .level=log_debug,
+            .log_asyn=true,
             .buf=&main_buf
     };
 
@@ -1305,6 +1306,7 @@ INIT_ERROR:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
+    aFunCoreDestruct();
     return 0;
 
 RETURN_1:
@@ -1313,6 +1315,7 @@ RETURN_1:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
+    aFunCoreDestruct();
     return 1;
 
 RETURN_2:
@@ -1321,5 +1324,6 @@ RETURN_2:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
+    aFunCoreDestruct();
     return 2;
 }

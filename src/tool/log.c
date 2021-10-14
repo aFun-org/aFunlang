@@ -38,6 +38,21 @@
 
 #undef calloc
 
+typedef struct LogNode LogNode;
+struct LogNode {
+    LogLevel level;
+    char *id;
+    pid_t tid;
+    char *date;  // 需要释放
+    time_t time;
+    char *file;
+    int line;
+    char *func;
+    char *info;  // 需要释放
+
+    LogNode *next;
+};
+
 static struct LogFactory {
     bool init;  // 是否已经初始化
     pid_t pid;
@@ -46,10 +61,17 @@ static struct LogFactory {
     FILE *csv;
 
     Logger sys_log;
-} log_factory = {.init=false};
-static pthread_mutex_t LogFactoryMutext = PTHREAD_MUTEX_INITIALIZER;
 
-static void destructLogSystem_at_exit(void);
+    bool asyn;  // 异步
+    pthread_t pt;
+    pthread_cond_t cond;  // 有日志
+    LogNode *log_buf;
+    LogNode **plog_buf;  // 指向 log_buf的末端
+} log_factory = {.init=false};
+static pthread_mutex_t log_factory_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define MUTEX (&log_factory_mutex)
+
+static void *ansyWritrLog_(void *_);
 
 /*
  * 函数名: initLogSystem
@@ -58,12 +80,19 @@ static void destructLogSystem_at_exit(void);
  * 1 表示初始化成功
  * 2 表示已经初始化
  * 0 表示初始化失败
+ *
+ * 该程序线程不安全
  */
-int initLogSystem(FilePath path) {
-    if (log_factory.init)
-        return 2;
+int initLogSystem(FilePath path, bool asyn){
     if (strlen(path) >= 218)  // 路径过长
         return 0;
+
+    int re = 1;
+    pthread_mutex_lock(MUTEX);
+    if (log_factory.init) {
+        pthread_mutex_unlock(MUTEX);
+        return 2;
+    }
 
     char log_path[218] = {0};
     char csv_path[218] = {0};
@@ -81,12 +110,15 @@ int initLogSystem(FilePath path) {
     log_factory.log = fopen(log_path, "a");
     if (log_factory.log == NULL) {
         printf("log_path = %s\n", log_path);
+        pthread_mutex_unlock(MUTEX);
         return 0;
     }
 
     log_factory.csv = fopen(csv_path, "a");
-    if (log_factory.csv == NULL)
+    if (log_factory.csv == NULL) {
+        pthread_mutex_unlock(MUTEX);
         return 0;
+    }
 
 #define CSV_FORMAT "%s,%s,%d,%d,%s,%ld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
@@ -97,39 +129,53 @@ int initLogSystem(FilePath path) {
 #undef CSV_TITLE
 
     log_factory.init = true;
-    atexit(destructLogSystem_at_exit);
+    log_factory.asyn = asyn;
+    if (log_factory.asyn) {
+        pthread_cond_init(&log_factory.cond, NULL);
+        pthread_create(&log_factory.pt, NULL, ansyWritrLog_, NULL);
+    }
 
-    initLogger(&(log_factory.sys_log), "SYSTEM", log_debug);  // 设置为 debug, 记录 success 信息
-    writeDebugLog(NULL, "Log system init success");
-    writeDebugLog(NULL, "Log .log size %lld", log_size);
-    writeDebugLog(NULL, "Log .csv size %lld", csv_size);
-    log_factory.sys_log.level = log_error;
-    return 1;
-}
-
-static void destructLogSystem_at_exit(void) {
-    if (!log_factory.init)
-        return;
-    log_factory.sys_log.level = log_debug;
-    writeDebugLog(NULL, "Log system destruct by exit.");
-    fclose(log_factory.log);
-    fclose(log_factory.csv);
-    log_factory.log = NULL;
-    log_factory.csv = NULL;
-    log_factory.init = false;
+    initLogger(&(log_factory.sys_log), "SYSTEM", log_info);  // 设置为 debug, 记录 success 信息
+    pthread_mutex_unlock(MUTEX);
+    writeInfoLog(NULL, "Log system init success");
+    writeInfoLog(NULL, "Log .log size %lld", log_size);
+    writeInfoLog(NULL, "Log .csv size %lld", csv_size);
+    return re;
 }
 
 int destructLogSystem(void) {
-    if (!log_factory.init)
-        return 2;
-    log_factory.sys_log.level = log_debug;
-    writeDebugLog(NULL, "Log system destruct by user.");
+    int re = 1;
+    pthread_mutex_lock(MUTEX);
+    if (!log_factory.init) {
+        re = 2;
+        goto RETURN;
+    }
+    pthread_mutex_unlock(MUTEX);
+
+    writeInfoLog(NULL, "Log system destruct by exit.");  // 需要用锁
+
+    pthread_mutex_lock(MUTEX);
+    log_factory.init = false;
+    if (log_factory.asyn) {
+        pthread_mutex_unlock(MUTEX);
+        pthread_cond_signal(&log_factory.cond);
+
+        pthread_join(log_factory.pt, NULL);
+
+        pthread_mutex_lock(MUTEX);
+        pthread_cond_destroy(&log_factory.cond);
+        if (log_factory.log_buf != NULL)
+            printf_stderr(0, "Logsystem destruct error.");
+    }
+
     fclose(log_factory.log);
     fclose(log_factory.csv);
     log_factory.log = NULL;
     log_factory.csv = NULL;
     log_factory.init = false;
-    return 1;
+RETURN:
+    pthread_mutex_unlock(MUTEX);
+    return re;
 }
 
 void initLogger(Logger *logger, char *id, LogLevel level) {
@@ -190,11 +236,54 @@ static void writeLogToConsole_(LogLevel level, char *id, pid_t tid, char *ti, ti
 #undef STD_BUF_SIZE
 }
 
+static void writeLogToAsyn_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
+#define D(i) (*(log_factory.plog_buf))->i
+    *(log_factory.plog_buf) = calloc(1, sizeof(LogNode));
+    D(level) = level;
+    D(id) = id;
+    D(tid) = tid;
+    D(date) = strCopy(ti);
+    D(time) = t;
+    D(file) = file;
+    D(line) = line;
+    D(func) = func;
+    D(info) = strCopy(info);
+    log_factory.plog_buf = &(D(next));
+    pthread_cond_signal(&log_factory.cond);
+#undef D
+}
+
+static void *ansyWritrLog_(void *_) {
+    pthread_mutex_lock(MUTEX);
+    while (1) {
+        while (log_factory.init && log_factory.log_buf == NULL)
+            pthread_cond_wait(&log_factory.cond, MUTEX);
+        if (!log_factory.init && log_factory.log_buf == NULL)
+            break;
+#define D(i) log_factory.log_buf->i
+        writeLogToFactory_(D(level), D(id), D(tid), D(date), D(time), D(file), D(line), D(func), D(info));
+#undef D
+        LogNode *tmp = log_factory.log_buf->next;
+        free(log_factory.log_buf->date);
+        free(log_factory.log_buf->info);
+        free(log_factory.log_buf);
+        log_factory.log_buf = tmp;
+        if (tmp == NULL)
+            log_factory.plog_buf = &log_factory.log_buf;
+    }
+    pthread_mutex_unlock(MUTEX);
+    return NULL;
+}
+
 static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
     if (logger->level > level)
         return 2;
-    if (!log_factory.init || log_factory.log == NULL)
+
+    pthread_mutex_lock(MUTEX);
+    if (!log_factory.init || log_factory.log == NULL) {
+        pthread_mutex_unlock(MUTEX);
         return 1;
+    }
     CLEAR_FERROR(log_factory.log);
 
     // 输出 head 信息
@@ -206,10 +295,15 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
     vsnprintf(tmp, 1024, format, ap);  // ap只使用一次
     va_end(ap);
 
-    writeLogToFactory_(level, logger->id, tid, ti, t, file, line, func, tmp);
+    if (!log_factory.asyn)
+        writeLogToAsyn_(level, logger->id, tid, ti, t, file, line, func, tmp);
+    else
+        writeLogToFactory_(level, logger->id, tid, ti, t, file, line, func, tmp);
+
     if (pc)
         writeLogToConsole_(level, logger->id, tid, ti, t, file, line, func, tmp);
 
+    pthread_mutex_unlock(MUTEX);
     free(ti);
     return 0;
 }
