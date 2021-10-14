@@ -183,7 +183,7 @@ struct readerDataStdin {
     size_t len;
 };
 
-static sig_atomic_t stdin_interrupt = 0;
+static volatile sig_atomic_t stdin_interrupt = 0;
 
 static void stdinSignalFunc(int signum) {
     stdin_interrupt = 1;
