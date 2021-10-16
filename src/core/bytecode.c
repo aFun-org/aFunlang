@@ -38,7 +38,7 @@ int writeByteCode(af_Code *code, FilePath path) {
         return 3;
 
     int re = 1;
-    FILE *file = fopen(path, "wb");
+    FILE *file = fileOpen(path, "wb");
     if (file == NULL) {
         re = 2;
         goto RETURN_2;
@@ -55,7 +55,7 @@ int writeByteCode(af_Code *code, FilePath path) {
     }
 
 RETURN_:
-    fclose(file);
+    fileClose(file);
 RETURN_2:
     free(md5);
     return re;
@@ -66,7 +66,7 @@ int readByteCode(af_Code **code, FilePath path) {
         return 0;
 
     int re = 1;
-    FILE *file = fopen(path, "rb");
+    FILE *file = fileOpen(path, "rb");
     if (file == NULL)
         return 2;
 
@@ -109,6 +109,6 @@ RETURN_:
     free(head);
     free(md5str);
     free(code_md5);
-    fclose(file);
+    fileClose(file);
     return re;
 }

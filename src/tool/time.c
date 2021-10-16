@@ -31,10 +31,27 @@ char *getTime(time_t *t, char *format) {
     if (t == NULL)
         t = &tmp;
 
-    struct tm *lt;
     time (t);  // 获取时间戳
+#if aFunWIN32_NO_CYGWIN
+    struct tm lt;
+    if (localtime_s(&lt, t) != 0)
+        return NULL;
+    wchar_t time_str[100];
+    wchar_t *format_ = NULL;
+    if (convertWideByte(&format_, format, CP_UTF8) == 0)
+        return NULL;
+    wcsftime(time_str, 100, format_, &lt);
+    free(format_);
+
+    char *re = NULL;
+    if (convertFromWideByte(&re, time_str, CP_UTF8) == 0)
+        return NULL;
+    return re;
+#else
+    struct tm *lt = NULL;
     lt = localtime (t);  // 转为时间结构
     char time_str[100];
     strftime(time_str, 100, format, lt);
     return strCopy(time_str);
+#endif
 }

@@ -145,7 +145,7 @@ static size_t readFuncFile(struct readerDataFile *data, char *dest, size_t len, 
 
 static void destructFile(struct readerDataFile *data) {
     if (data->file != NULL)
-        fclose(data->file);
+        fileClose(data->file);
 }
 
 static void initFileReader(af_Parser *parser, FILE *file, struct readerDataFile *data) {
@@ -154,7 +154,7 @@ static void initFileReader(af_Parser *parser, FILE *file, struct readerDataFile 
 }
 
 af_Parser *makeParserByFile(FilePath path){
-    FILE *file = fopen(path, "rb");
+    FILE *file = fileOpen(path, "rb");
     if (file == NULL) {
         writeErrorLog(aFunCoreLogger, "File open error: %s", path);
         return NULL;

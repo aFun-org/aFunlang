@@ -29,27 +29,53 @@
 #define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
 #endif
 
+#ifdef aFunWIN32_NO_CYGWIN
+typedef struct _stat64 aFun_stat;
+typedef wchar_t aFun_path;
+#else
+typedef struct stat aFun_stat;
+typedef char aFun_path;
+#endif
+
+static int get_stat(aFun_stat *stat_, char *path_){
+    aFun_path *tmp = NULL;
+    int re;
+#ifdef aFunWIN32_NO_CYGWIN
+    tmp = NULL;
+    if (convertWideByte(&tmp, path_, CP_UTF8) == 0)
+        return -1;
+    re = _wstat64(tmp, stat_);
+    free(tmp);  // 如果 path 为NULL, 则释放最新生成的 wchat_t
+#else
+    re = stat(path_, stat_);
+#endif
+    return re;
+}
+
 /*
  * 函数名: checkFile
  * 目标判断文件类型, 若是普通文件返回1, 若是文件夹返回2, 其他遇到错误返回0
  */
-int checkFile(char *path){
-    struct stat my_stat;
-    if (path == NULL || stat(path, &my_stat) != 0)
+int checkFile(char *path_){
+    if (path_ == NULL)
         return 0;
-    if (S_ISREG(my_stat.st_mode))  // 普通文件
-        return 1;
-    else if (S_ISDIR(my_stat.st_mode))
-        return 2;
-    else
-        return 0;
+
+    int re = 0;
+    aFun_stat stat;
+    if (get_stat(&stat, path_) != 0)
+        re = 0;
+    else if (S_ISREG(stat.st_mode))  // 普通文件
+        re = 1;
+    else if (S_ISDIR(stat.st_mode))
+        re = 2;
+    return re;
 }
 
 time_t getFileMTime(char *path) {
-    struct stat my_stat;
-    if (path == NULL || stat(path, &my_stat) != 0)
+    aFun_stat stat;
+    if (path == NULL || get_stat(&stat, path) != 0)
         return 0;
-    return my_stat.st_mtime;
+    return stat.st_mtime;
 }
 
 char *joinPath(char *path, char *name, char *suffix) {
@@ -184,26 +210,32 @@ char *findPath(char *path, char *env, bool need_free){
  * dep表示从可执行程序往回跳出的层数
  */
 char *getExedir(int dep) {
-    char exepath[218] = {0};
+    aFun_path exepath[218] = {0};
 #ifdef aFunWIN32_NO_CYGWIN
-    DWORD ret = GetModuleFileNameA(NULL, exepath, 217);  // 预留一位给NUL
-    if (ret == 0 || STR_LEN(exepath) == 0)
+    DWORD ret = GetModuleFileNameW(NULL, exepath, 217);  // 预留一位给NUL
+    if (ret == 0 || WSTR_LEN(exepath) == 0)
         return NULL;
+    char *path = NULL;
+    if (convertFromWideByte(&path, exepath, CP_UTF8) == 0)
+        return NULL;
+    char *re = getFilePath(path, dep + 1);
+    free(path);
+    return re;
 #else
     ssize_t ret =  readlink("/proc/self/exe", exepath, 217);  // 预留一位给NUL
     if (ret == -1 || STR_LEN(exepath) == 0)
         return NULL;
-#endif
     return getFilePath(exepath, dep + 1);
+#endif
 }
 
 uintmax_t getFileSize(char *path) {
-    struct stat statbuf;
+    aFun_stat stat;
     int ret;
-    ret = stat(path, &statbuf);
+    ret = get_stat(&stat, path);
     if(ret != 0)
         return 0;  // 获取失败。
-    return (uintmax_t)statbuf.st_size;  // 返回文件大小
+    return (uintmax_t)stat.st_size;  // 返回文件大小
 
 }
 
@@ -240,4 +272,28 @@ bool isCharUTF8(char *str) {
     }
 
     return true;
+}
+
+FILE *fileOpen(char *path_, char *mode_) {
+    if (STR_LEN(mode_) >= 5)
+        return NULL;
+    FILE *file = NULL;
+#if aFunWIN32_NO_CYGWIN
+    wchar_t *path = NULL;
+    wchar_t mode[5];
+    if (convertWideByte(&path, path_, CP_UTF8) == 0)
+        return NULL;
+    for (int i = 0; i < 5; i++)
+        mode[i] = (wchar_t)mode_[i];  // ascii字符转换
+
+    _wfopen_s(&file, path, mode);
+    free(path);
+    return file;
+#else
+    return fopen(path_, mode_);
+#endif
+}
+
+int fileClose(FILE *file) {
+    return fclose(file);
 }

@@ -57,7 +57,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     char LANG_path[218] = {0};
     snprintf(LANG_path, 218, "%sLANG", lang_path);
 
-    FILE *LANG_file = fopen(LANG_path, "r");
+    FILE *LANG_file = fileOpen(LANG_path, "r");
     if (LANG_file != NULL) {
         char LANG[100] = {0};
         fgets(LANG, 100, LANG_file);
@@ -71,7 +71,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
             writeDebugLog(aFunCoreLogger, "aFunCore lang init success: %s", LANG_lib);
         else
             writeDebugLog(aFunCoreLogger, "aFunCore lang init failed: %s", LANG_lib);
-        fclose(LANG_file);
+        fileClose(LANG_file);
     } else
         HT_initaFunGetText(NULL);
     writeDebugLog(aFunCoreLogger, "aFunCore init success");

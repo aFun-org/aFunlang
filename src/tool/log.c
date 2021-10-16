@@ -110,14 +110,15 @@ int initLogSystem(FilePath path, bool asyn){
     uintmax_t csv_size = getFileSize(csv_path);
     bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
-    log_factory.log = fopen(log_path, "a");
+    log_factory.log = fileOpen(log_path, "a");
     if (log_factory.log == NULL) {
+        perror("ERROR: ");
         printf("log_path = %s\n", log_path);
         pthread_mutex_unlock(MUTEX);
         return 0;
     }
 
-    log_factory.csv = fopen(csv_path, "a");
+    log_factory.csv = fileOpen(csv_path, "a");
     if (log_factory.csv == NULL) {
         pthread_mutex_unlock(MUTEX);
         return 0;
@@ -176,8 +177,8 @@ int destructLogSystem(void) {
             printf_stderr(0, "Logsystem destruct error.");
     }
 
-    fclose(log_factory.log);
-    fclose(log_factory.csv);
+    fileClose(log_factory.log);
+    fileClose(log_factory.csv);
     log_factory.log = NULL;
     log_factory.csv = NULL;
     log_factory.init = false;

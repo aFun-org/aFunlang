@@ -10,6 +10,18 @@ AFUN_TOOL_EXPORT bool fclear_stdin(void);
 #define CLEAR_STDIN(file) ((ferror(stdin) || feof(stdin)) && (clearerr(stdin), (ferror(stdin) || feof(stdin))))
 
 #ifdef aFunWIN32_NO_CYGWIN
+
+#ifdef _MSC_VER
+#pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
+#endif
+#include <conio.h>
+#include <io.h>
+#include <Windows.h>
+
+AFUN_TOOL_EXPORT int convertMultiByte(char **dest, char *str, UINT from, UINT to);  // win32 特有函数
+AFUN_TOOL_EXPORT int convertWideByte(wchar_t **dest, char *str, UINT from);  // win32 特有函数
+AFUN_TOOL_EXPORT int convertFromWideByte(char **dest, wchar_t *str, UINT to);
+
 AFUN_TOOL_EXPORT int fgetc_stdin(void);
 AFUN_TOOL_EXPORT char *fgets_stdin_(char *buf, size_t len);
 AFUN_TOOL_EXPORT int fungetc_stdin(int ch);

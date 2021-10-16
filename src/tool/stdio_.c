@@ -17,12 +17,6 @@
  */
 
 #ifdef aFunWIN32_NO_CYGWIN
-#ifdef _MSC_VER
-#pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
-#endif
-#include <conio.h>
-#include <io.h>
-#include <Windows.h>
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
 
@@ -289,7 +283,7 @@ bool fclear_stdin(void) {
     return false;
 }
 
-static int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
+int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
     if (str == NULL || dest == NULL)
         return 0;
 
@@ -310,6 +304,30 @@ static int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
 
     free(tmp);
     return re;
+}
+
+int convertWideByte(wchar_t **dest, char *str, UINT from) {
+    if (str == NULL || dest == NULL)
+        return 0;
+
+    int tmp_len = MultiByteToWideChar(from, 0, str, -1, 0, 0);
+    if (tmp_len == 0)
+        return 0;
+
+    *dest = calloc(tmp_len + 1, sizeof(wchar_t));
+    return MultiByteToWideChar(from, 0, str, -1, *dest, tmp_len);
+}
+
+int convertFromWideByte(char **dest, wchar_t *str, UINT to) {
+    if (str == NULL || dest == NULL)
+        return 0;
+
+    int dest_len = WideCharToMultiByte(to, 0, str, -1, NULL, 0, NULL, NULL);
+    if (dest_len == 0)
+        return 0;
+
+    *dest = calloc(dest_len + 1, sizeof(char));
+    return WideCharToMultiByte(to, 0, str, -1, *dest, dest_len, NULL, NULL);
 }
 
 int fgets_stdin(char **dest, int len) {
@@ -380,8 +398,7 @@ int fputs_std_(char *str, FILE *std) {
     UINT code_page = GetConsoleCP();
     char *wstr = NULL;
     int re = EOF;
-    convertMultiByte(&wstr, str, CP_UTF8, code_page);
-    if (wstr != NULL) {
+    if (convertMultiByte(&wstr, str, CP_UTF8, code_page) == 0 || wstr != NULL) {
         re = fputs(wstr, std);
         free(wstr);
     }

@@ -13,6 +13,6 @@ typedef struct MD5_CTX MD5_CTX;
 AFUN_TOOL_EXPORT MD5_CTX *MD5Init(void);
 AFUN_TOOL_EXPORT void MD5Final(MD5_CTX *context, unsigned char digest[16]);
 AFUN_TOOL_EXPORT void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len);
-AFUN_TOOL_EXPORT char *getFileMd5(const char *path);
+AFUN_TOOL_EXPORT char *getFileMd5(char *path);
 
 #endif //AFUN_MD5_H

@@ -28,7 +28,7 @@ void test1(void) {
 
 void test2(void) {
     FilePath path = "./test.aun";
-    FILE *file = fopen(path, "wb");
+    FILE *file = fileOpen(path, "wb");
     if (file == NULL) {
         perror("File open error");
         exit(EXIT_FAILURE);
@@ -38,7 +38,7 @@ void test2(void) {
         fprintf(stderr, "File write error.\n");
         exit(EXIT_FAILURE);
     }
-    fclose(file);
+    fileClose(file);
 
     af_Parser *parser = makeParserByFile(path);
     af_Code *code = parserCode(parser);

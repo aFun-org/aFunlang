@@ -24,7 +24,7 @@ int main() {
 
     getEndian();
 
-    FILE *file = fopen("test.byte", "wb");
+    FILE *file = fileOpen("test.byte", "wb");
     if (file == NULL) {
         fprintf(stderr, "Can't not creat file: test.byte\n");
         return EXIT_FAILURE;
@@ -36,7 +36,7 @@ int main() {
     TEST_WRITE(byteWriteInt_64(file, test64), uint64_t);
     TEST_WRITE(byteWriteStr(file, testStr), str);
 
-    fclose(file);
+    fileClose(file);
 
     int8_t rtest8;
     int16_t rtest16;
@@ -44,7 +44,7 @@ int main() {
     int64_t rtest64;
     char *rtestStr;
 
-    file = fopen("test.byte", "rb");
+    file = fileOpen("test.byte", "rb");
     if (file == NULL) {
         fprintf(stderr, "Can't not read file: test.byte\n");
         return EXIT_FAILURE;
@@ -67,6 +67,7 @@ int main() {
     }
 
     free(rtestStr);
+    fileClose(file);
     printf("success.\n");
     return EXIT_SUCCESS;
 }

@@ -188,14 +188,14 @@ static void MD5Transform(unsigned int state[4], unsigned char block[64]) {
 }
 
 
-char *getFileMd5(const char *path) {
+char *getFileMd5(char *path) {
     FILE *fd;
 
     unsigned long ret;
     unsigned char data[READ_DATA_SIZE];
     unsigned char md5_value[MD5_SIZE];
 
-    if ((fd = fopen(path, "rb")) == NULL)
+    if ((fd = fileOpen(path, "rb")) == NULL)
         return NULL;
 
     char *md5str = calloc(MD5_STRING, sizeof(char));
@@ -207,7 +207,7 @@ char *getFileMd5(const char *path) {
             break;
     }
 
-    fclose(fd);
+    fileClose(fd);
     MD5Final(md5, md5_value);
 
     for(int i = 0; i < MD5_SIZE; i++)
