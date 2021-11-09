@@ -76,7 +76,7 @@ void literalSet(char *id, af_Object *obj, void *data, char *str, af_Environment 
     printf("literalSet(): str = %s\n", str);
 }
 
-af_FuncBody *testFunc(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc(): I am testFunc\n");
     af_Object *obj;
 
@@ -108,7 +108,7 @@ void freeMark(char *id, af_Object *obj, int *mark) {
     free(mark);
 }
 
-af_FuncBody *testFunc2(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc2(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc2(): I am testFunc2\n");
     af_Object *obj;
 
@@ -173,7 +173,7 @@ bool getInfo3(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc4(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc4(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc4(): I am testFunc4\n");
     af_Object *obj;
 
@@ -198,7 +198,7 @@ bool getInfo4(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc9(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc9(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_FuncBody *fb;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
@@ -222,7 +222,7 @@ bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc8(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
@@ -231,7 +231,7 @@ af_FuncBody *testFunc8(CallFuncInfo *cfi, af_Environment *env) {  // 测试用�
     return NULL;
 }
 
-af_FuncBody *testFunc7(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc7(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
@@ -248,7 +248,7 @@ bool getInfo7(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc6(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
@@ -300,7 +300,7 @@ bool getInfo6(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc5(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);

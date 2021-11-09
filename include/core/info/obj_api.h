@@ -27,8 +27,8 @@ typedef af_GuardianList *GuardianFunc(char *type, bool is_guard, void *data, af_
 typedef void GuardianDestruct(char *type, void *data, af_Environment *env);
 
 /* 回调C函数 */
-typedef struct CallFuncInfo CallFuncInfo;
-typedef struct af_FuncBody *callFuncBody(CallFuncInfo *info, af_Environment *env);  // 位于env.h
+typedef struct af_CallFuncInfo af_CallFuncInfo;
+typedef struct af_FuncBody *callFuncBody(af_CallFuncInfo *info, af_Environment *env);  // 位于env.h
 
 /* 定义Object的函数签名 */
 /*

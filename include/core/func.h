@@ -22,9 +22,11 @@ enum af_FuncInfoEmbedded {
 #include "code.h"
 #include "object.h"
 
-typedef struct CallFuncInfo CallFuncInfo;
-struct CallFuncInfo {
+typedef struct af_CallFuncInfo af_CallFuncInfo;
+struct af_CallFuncInfo {
     void *mark;
+    af_FuncBody *body_next;
+
     af_Object *belong;
     af_Object *func;
     struct af_VarSpaceListNode *var_list;
@@ -36,7 +38,7 @@ struct CallFuncInfo {
     bool is_macro_call;
 };
 
-typedef struct af_FuncBody *callFuncBody(CallFuncInfo *info, af_Environment *env);
+typedef struct af_FuncBody *callFuncBody(af_CallFuncInfo *info, af_Environment *env);
 NEW_DLC_SYMBOL(callFuncBody, callFuncBody);
 
 /* af_ArgCodeList 创建与释放 */
