@@ -277,8 +277,8 @@ bool isCharUTF8(char *str) {
 FILE *fileOpen(char *path_, char *mode_) {
     if (STR_LEN(mode_) >= 5)
         return NULL;
-    FILE *file = NULL;
 #if aFunWIN32_NO_CYGWIN
+    FILE *file = NULL;
     wchar_t *path = NULL;
     wchar_t mode[5];
     if (convertWideByte(&path, path_, CP_UTF8) == 0)

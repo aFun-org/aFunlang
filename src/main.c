@@ -51,7 +51,34 @@ void freeBaseName(void *_) {
     free(base_path);
 }
 
+#ifdef aFunWIN32_NO_CYGWIN
+
+int argc__ = 0;
+char **argv__ = NULL;
+
+void convertArgs(int argc, char *argv_ansi[]) {
+    argc__ = argc;
+    argv__ = calloc((size_t)argc, sizeof(char *));
+    for(int i = 0; i < argc; i++) {
+        if (convertMultiByte(argv__ + i, argv_ansi[i], CP_ACP, CP_UTF8) == 0) {
+            fputs_std_("参数转换错误", stderr);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void convertArgsFree(void) {
+    for(int i = 0; i < argc__; i++)
+        free(argv__[i]);
+    free(argv__);
+}
+
+int main(int argc, char **argv_ansi) {
+    convertArgs(argc, argv_ansi);
+    char **argv = argv__;
+#else
 int main(int argc, char **argv) {
+#endif
     jmp_buf main_buf;
     tty_stdin = isatty(fileno(stdin));
     base_path = getExedir(1);
