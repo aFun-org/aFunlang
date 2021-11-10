@@ -11,6 +11,7 @@ static af_Lexical *makeLexical(void);
 static void freeLexical(af_Lexical *lex);
 static af_Syntactic *makeSyntactic(void);
 static void freeSyntactic(af_Syntactic *syntactic);
+static bool getStdinSignalFunc(void);
 
 af_Parser *makeParser(FilePath file, DLC_SYMBOL(readerFunc) read_func, DLC_SYMBOL(destructReaderFunc) destruct_func,
                       size_t data_size){
@@ -183,28 +184,8 @@ struct readerDataStdin {
     size_t len;
 };
 
-static volatile sig_atomic_t stdin_interrupt = 0;
-
-static void stdinSignalFunc(int signum) {
-    stdin_interrupt = 1;
-}
-
-static void setStdinSignalFunc(struct readerDataStdin *data) {
-    data->sig_int = signal(SIGINT, stdinSignalFunc);
-    data->sig_term = signal(SIGTERM, stdinSignalFunc);
-}
-
-static void resetStdinSignalFunc(void) {
-    stdin_interrupt = 0;
-    signal(SIGINT, stdinSignalFunc);
-    signal(SIGTERM, stdinSignalFunc);
-}
-
 static bool getStdinSignalFunc(void) {
-    bool re = stdin_interrupt == 1;
-    stdin_interrupt = 0;
-    resetStdinSignalFunc();
-    return re;
+    return aFunGetSignal(SIGINT) || aFunGetSignal(SIGTERM);
 }
 
 static size_t readFuncStdin(struct readerDataStdin *data, char *dest, size_t len, int *mode) {
@@ -273,8 +254,6 @@ static void destructStdin(struct readerDataStdin *data) {
 }
 
 static void initStdinReader(af_Parser *parser, struct readerDataStdin *data) {
-    stdin_interrupt = 0;
-    setStdinSignalFunc(data);
     data->parser = parser;
 }
 

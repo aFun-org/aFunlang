@@ -13,11 +13,15 @@ struct aFunInitInfo {
     LogLevel level;
 };
 
+typedef struct aFunRunInfo aFunRunInfo;
+struct aFunRunInfo {
+    bool signal;
+};
+
 AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
 AFUN_LANG_EXPORT bool aFunDestruct(void);
 
 AFUN_LANG_EXPORT void defineRunEnv(aFunRunInfo *run_env);
-AFUN_LANG_EXPORT void redefRunEnvSignal(void);
 AFUN_LANG_EXPORT void undefRunEnv(aFunRunInfo *run_env);
 
 AFUN_LANG_EXPORT af_Environment *creatAFunEnvironment(int argc, char **argv);

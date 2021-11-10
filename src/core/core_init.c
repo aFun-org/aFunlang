@@ -83,11 +83,12 @@ bool aFunCoreDestruct(void) {
     return true;
 }
 
-void defineRunEnvCore(aFunRunInfo *run_env) {
-    memset(&run_env->si, 0, sizeof(af_SignalInfo));
-    aFunSignalInit(&run_env->si);
+void defineRunEnvCore(aFunRunCoreInfo *run_env) {
+    if (run_env->signal)
+        aFunSignalInit();
 }
 
-void undefRunEnvCore(aFunRunInfo *run_env) {
-    aFunSignalRecover(&run_env->si);
+void undefRunEnvCore(aFunRunCoreInfo *run_env) {
+    if (run_env->signal)
+        aFunSignalRecover();
 }

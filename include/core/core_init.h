@@ -15,16 +15,16 @@ struct aFunCoreInitInfo {
     LogLevel level;
 };
 
-typedef struct aFunRunInfo aFunRunInfo;
-struct aFunRunInfo {
-    struct af_SignalInfo si;
+typedef struct aFunRunCoreInfo aFunRunCoreInfo;
+struct aFunRunCoreInfo {
+    bool signal;
 };
 
 AFUN_CORE_EXPORT extern Logger *aFunCoreLogger;
 AFUN_CORE_EXPORT bool aFunCoreInit(aFunCoreInitInfo *info);
 AFUN_CORE_EXPORT bool aFunCoreDestruct(void);
 
-AFUN_CORE_EXPORT void defineRunEnvCore(aFunRunInfo *run_env);
-AFUN_CORE_EXPORT void undefRunEnvCore(aFunRunInfo *run_env);
+AFUN_CORE_EXPORT void defineRunEnvCore(aFunRunCoreInfo *run_env);
+AFUN_CORE_EXPORT void undefRunEnvCore(aFunRunCoreInfo *run_env);
 
 #endif //AFUN_INIT_H

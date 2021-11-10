@@ -47,19 +47,17 @@ bool aFunDestruct(void) {
  * 目标: 运行前的初始化
  */
 void defineRunEnv(aFunRunInfo *run_env) {
-    defineRunEnvCore(run_env);
-}
-
-void redefRunEnvSignal(void) {
-    aFunSignalInit(NULL);
+    aFunRunCoreInfo core_info = {.signal=run_env->signal};
+    defineRunEnvCore(&core_info);
 }
 
 /*
  * 函数名: undefRunEnv
- * 目标: 取消运行前的初始哈
+ * 目标: 取消运行前的初始化
  */
 void undefRunEnv(aFunRunInfo *run_env) {
-    undefRunEnvCore(run_env);
+    aFunRunCoreInfo core_info = {.signal=run_env->signal};
+    undefRunEnvCore(&core_info);
 }
 
 

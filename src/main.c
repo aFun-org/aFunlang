@@ -199,7 +199,7 @@ static int mainRun(ff_FFlags *ff) {
     char **argv = NULL;
     int argc = ff_get_process_argv(&argv, ff);
     af_Environment *env;
-    aFunRunInfo ri = {0};
+    aFunRunInfo ri = {.signal=true};
     defineRunEnv(&ri);
 
     if (argc == 0) {
@@ -305,7 +305,7 @@ static int mainCL(ff_FFlags *ff) {
         argv[i] = text;
 
     af_Environment *env = creatAFunEnvironment(argc, argv);
-    aFunRunInfo ri = {0};
+    aFunRunInfo ri = {.signal=true};
     defineRunEnv(&ri);  // 由aFunCore提前接管
 
     if (rl != NULL)

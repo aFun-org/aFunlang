@@ -414,7 +414,7 @@ INIT_ERROR:
 
 
     af_Environment *env = creatAFunEnvironment(0, NULL);
-    aFunRunInfo ri = {0};
+    aFunRunInfo ri = {.signal=true};
     defineRunEnv(&ri);
 
     if(!pushLiteralRegex("data.*", "func", true, env)) {

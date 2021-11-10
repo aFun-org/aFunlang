@@ -350,10 +350,7 @@ static bool checkStop(af_Environment *env) {
 bool iterCode(af_Code *code, int mode, af_Environment *env){
     if (!iterCodeInit(code, mode, env))
         return false;
-
     bool re = true;
-    aFunRunInfo ri;
-    defineRunEnvCore(&ri);
 
     /*
      * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
@@ -483,7 +480,6 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     }
 
 RETURN:
-    undefRunEnvCore(&ri);
     env->in_run = false;
     return re;
 }
