@@ -576,19 +576,15 @@ af_Message *makeNORMALMessage(af_Object *obj) {
 }
 
 af_Message *makeERRORMessage(char *type, char *error, af_Environment *env) {
-    char *info = getActivityInfoToBacktracking(env->activity);
-    af_ErrorInfo *ei = makeErrorInfo(type, error, info, env->activity->line, env->activity->file);
-    free(info);
+    char *info = NULL;
+    af_ErrorInfo *ei = NULL;
 
-    for (af_ActivityTrackBack *atb = env->activity->tb; atb != NULL; atb = atb->next) {
-        info = getActivityTrackBackInfoToBacktracking(atb);
-        pushErrorBacktracking(atb->line, atb->file, info, ei);
-        free(info);
-    }
-
-    for (af_Activity *activity = env->activity->prev; activity != NULL; activity = activity->prev) {
+    for (af_Activity *activity = env->activity; activity != NULL; activity = activity->prev) {
         info = getActivityInfoToBacktracking(activity);
-        pushErrorBacktracking(activity->line, activity->file, info, ei);
+        if (ei == NULL)
+            ei = makeErrorInfo(type, error, info, env->activity->line, env->activity->file);
+        else
+            pushErrorBacktracking(activity->line, activity->file, info, ei);
         free(info);
 
         for (af_ActivityTrackBack *atb = activity->tb; atb != NULL; atb = atb->next) {
@@ -1708,6 +1704,14 @@ static char *getActivityInfoToBacktracking(af_Activity *activity){
 
     if (activity->optimization)
         strcat(info, "\ntail-call-optimization;");
+
+    if (activity->bt_done != NULL) {
+        char *code = codeToStr(activity->bt_done, 1);
+        if (code != NULL) {
+            strcat(info, "\ncode: ");
+            strcat(info, code);
+        }
+    }
 
     return strCopy(info);
 }

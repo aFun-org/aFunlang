@@ -26,6 +26,7 @@ struct af_Code {  // 一个 Code 的结构体
     FileLine line;
     FilePath path;  // path == NULL表示沿用上层地址
 
+    struct af_Code *prev;
     struct af_Code *next;
 };
 

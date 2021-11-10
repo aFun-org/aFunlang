@@ -418,13 +418,14 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
         /* 有代码运行 */
         bool pass_msg = false;  // 表示不处理msg
         if (env->activity->process_msg_first == 0) {  /* 运行实际代码 */
-            switch (env->activity->bt_next->type) {
+            env->activity->bt_done = env->activity->bt_next;
+            switch (env->activity->bt_done->type) {
                 case code_element:
-                    if (codeElement(env->activity->bt_next, env))
+                    if (codeElement(env->activity->bt_done, env))
                         pass_msg = true;
                     break;
                 case code_block:
-                    if (codeBlock(env->activity->bt_next, env))
+                    if (codeBlock(env->activity->bt_done, env))
                         pass_msg = true;  // 若运行成功则跳转到下一次运行, 该步骤仅为设置Activity
                     break;
                 default:

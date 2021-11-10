@@ -17,7 +17,7 @@ static af_Code *freeCode(af_Code *bt);
 static int countElement(af_Code *element, CodeUInt *elements, af_Code **next);
 
 /* Code IO函数 */
-static bool readCode(af_Code **bt, FILE *file);
+static bool readCode(af_Code **bt, af_Code *prev, FILE *file);
 static bool writeCode(af_Code *bt, FILE *file);
 
 /* Code 转换STR函数 */
@@ -113,8 +113,12 @@ af_Code *makeBlockCode(enum af_BlockType type, af_Code *element, char prefix, Fi
 }
 
 af_Code *pushCode(af_Code **base, af_Code *next) {
-    while ((*base) != NULL)
-        base = &((*base)->next);
+    af_Code *prev = NULL;
+    while ((*base) != NULL) {
+        prev = *base;
+        base = &(prev->next);
+    }
+    next->prev = prev;
     *base = next;
 
     while (next != NULL && next->next != NULL)
@@ -126,11 +130,14 @@ af_Code *pushCode(af_Code **base, af_Code *next) {
 af_Code *copyAllCode(af_Code *base, FilePath *path) {
     af_Code *dest = NULL;
     af_Code **pdest = &dest;
+    af_Code *prev = NULL;
 
-    for (NULL; base != NULL; base = base->next) {
+    for (NULL; base != NULL; base = base->next, prev = *pdest, pdest = &(prev->next)) {
         *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
         (*pdest)->code_end = base->code_end;
+        (*pdest)->prev = prev;
+
         switch (base->type) {
             case code_element:
                 (*pdest)->element.data = strCopy(base->element.data);
@@ -159,11 +166,14 @@ af_Code *copyAllCode(af_Code *base, FilePath *path) {
 af_Code *copyCode(af_Code *base, FilePath *path) {
     af_Code *dest = NULL;
     af_Code **pdest = &dest;
+    af_Code *prev = NULL;
 
     CodeUInt layer = 0;
-    for (NULL; base != NULL; base = base->next) {
+    for (NULL; base != NULL; base = base->next, prev = *pdest, pdest = &(prev->next)) {
         *pdest = makeCode(base->prefix, base->line, base->path);
         (*pdest)->type = base->type;
+        (*pdest)->prev = prev;
+
         switch (base->type) {
             case code_element:
                 (*pdest)->element.data = strCopy(base->element.data);
@@ -291,7 +301,7 @@ RETURN_FALSE:
     return false;
 }
 
-static bool readCode(af_Code **bt, FILE *file) {
+static bool readCode(af_Code **bt, af_Code *prev, FILE *file) {
     uint8_t type;
     uint8_t prefix;
     uint32_t line;
@@ -305,6 +315,7 @@ static bool readCode(af_Code **bt, FILE *file) {
     *bt = makeCode((char)prefix, line, NULL);
     (*bt)->type = type;
     (*bt)->code_end = (CodeUInt)code_end;
+    (*bt)->prev = prev;
 
     switch (type) {
         case code_element:
@@ -327,10 +338,11 @@ static bool readCode(af_Code **bt, FILE *file) {
 
 bool readAllCode(af_Code **bt, FilePath path, FILE *file) {
     af_Code **base = bt;
+    af_Code *prev = NULL;
     *bt = NULL;
 
-    for (NULL; true;bt = &((*bt)->next)) {
-        if(!readCode(bt, file))
+    for (NULL; true;prev = *bt, bt = &(prev->next)) {
+        if(!readCode(bt, prev, file))
             goto RETURN_FALSE;
         if (CLEAR_FERROR(stdin))
             goto RETURN_FALSE;

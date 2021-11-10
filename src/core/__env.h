@@ -124,6 +124,7 @@ struct af_Activity {  // 活动记录器
 
             struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素) [只在函数调用的非NORMAL期有用]
             struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
+            struct af_Code *bt_done;  // 当前正在执行的代码
             struct af_Code *bt_next;  // 指示代码下一步要运行的位置 [总是超前当前执行的code]
 
             /* 返回值 */
