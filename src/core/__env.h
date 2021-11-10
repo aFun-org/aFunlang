@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_ENV_H_
 #define AFUN_ENV_H_
 #include "tool.h"
+#include "pthread.h"
 
 typedef struct af_Core af_Core;
 typedef struct af_Activity af_Activity;
@@ -233,7 +234,7 @@ struct af_Environment {  // 运行环境
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
     struct af_Guardian *guardian;
-    bool in_run;
+    pthread_mutex_t in_run;
 };
 
 struct af_LiteralRegex {

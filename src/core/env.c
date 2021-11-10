@@ -821,6 +821,11 @@ static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, a
 
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(1, sizeof(af_Environment));
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
+    pthread_mutex_init(&env->in_run, &attr);  // 检测锁
+
     env->esv = makeEnvVarSpace();
     env->core = makeCore(grt, env);
     /* 生成global对象 */
@@ -868,6 +873,8 @@ void freeEnvironment(af_Environment *env) {
     freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
     freeAllGuardian(env->guardian, env);
+
+    pthread_mutex_destroy(&env->in_run);
     freeCore(env);  // core最后释放, 因为Object等需要最后释放
 
     if (!res)

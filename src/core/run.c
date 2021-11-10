@@ -100,8 +100,13 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
  * 3. gc模式
  */
 static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
-    if (env == NULL || env->core == NULL || env->activity == NULL || env->core->status == core_exit || env->in_run)
+    if (env == NULL || pthread_mutex_trylock(&env->in_run) != 0)
         return false;
+    if (env->core == NULL || env->activity == NULL || env->core->status == core_exit) {
+        pthread_mutex_unlock(&env->in_run);
+        return false;
+    }
+
     if (env->core->status == core_stop)
         env->core->status = core_normal;
 
@@ -138,7 +143,6 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
             return false;
     }
 
-    env->in_run = true;
     return true;
 }
 
@@ -480,7 +484,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     }
 
 RETURN:
-    env->in_run = false;
+    pthread_mutex_unlock(&env->in_run);
     return re;
 }
 
