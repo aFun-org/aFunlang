@@ -11,6 +11,9 @@ AFUN_TOOL_EXPORT bool fclear_stdin(void);
 
 #ifdef aFunWIN32_NO_CYGWIN
 
+AFUN_TOOL_EXPORT void stdio_signal_init(bool signal);
+AFUN_TOOL_EXPORT bool stdio_check_signal(void);
+
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif

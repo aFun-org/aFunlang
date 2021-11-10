@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "tool.h"
+#include "signal.h"
 
 /* 注意:
  * checkStdin在Windows和Linux之前行为具有差别, 本质目标时检查缓冲区是否有内容
@@ -25,6 +26,7 @@ static char buffer[BUFF_SIZE + 1] = "";
 static size_t index = 0;
 static size_t next = 0;
 static size_t end = 0;
+volatile sig_atomic_t ctrl_c = 0;
 static pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
 
 static int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_) {
@@ -167,7 +169,10 @@ static int checkNewInput(HANDLE *std_i, HANDLE *std_o) {
         if (record.EventType == KEY_EVENT) {
             if (!record.Event.KeyEvent.bKeyDown)
                 continue;
-            else if (record.Event.KeyEvent.wVirtualKeyCode == VK_BACK) {  // 退格
+            else if (record.Event.KeyEvent.uChar.AsciiChar == 3) {
+                ctrl_c = 1;
+                continue;
+            } else if (record.Event.KeyEvent.wVirtualKeyCode == VK_BACK) {  // 退格
                 if (backChar(std_o) == 0)
                     return -1;
                 continue;
@@ -281,6 +286,32 @@ bool fclear_stdin(void) {
     memset(buffer, 0, BUFF_SIZE);
     pthread_mutex_unlock(&buffer_mutex);
     return false;
+}
+
+void stdio_signal_init(bool signal) {
+    HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD  mode;
+    GetConsoleMode(std_i, &mode);
+    if (signal)
+        mode &= ~ENABLE_PROCESSED_INPUT;
+    else
+        mode |= ENABLE_PROCESSED_INPUT;  // 系统接管 ^c
+    SetConsoleMode(std_i, mode);
+}
+
+bool stdio_check_signal(void) {
+    HANDLE *std_i = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE *std_o = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    pthread_mutex_lock(&buffer_mutex);
+    fcheck_stdin(std_i, std_o);
+    bool res = ctrl_c == 1;
+    ctrl_c = 0;
+    pthread_mutex_unlock(&buffer_mutex);
+    return res;
 }
 
 int convertMultiByte(char **dest, char *str, UINT from, UINT to) {
