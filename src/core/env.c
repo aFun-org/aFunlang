@@ -1674,7 +1674,7 @@ void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInf
 }
 
 static char *getActivityInfoToBacktracking(af_Activity *activity){
-    char info[512] = "";
+    char info[512 + CODE_STR_MAX_SIZE] = "";
 
     /* strcat拼接的字符是可控的, 因此不需要使用安全函数 */
     if (activity->type == act_guardian) {
@@ -1726,6 +1726,7 @@ static char *getActivityInfoToBacktracking(af_Activity *activity){
         if (code != NULL) {
             strcat(info, "\ncode: ");
             strcat(info, code);
+            free(code);
         }
     }
 
