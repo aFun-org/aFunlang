@@ -4,10 +4,6 @@
 #include "__run.h"
 #include "__sig.h"
 
-/* Core 创建和释放 */
-static af_Core *makeCore(enum GcRunTime grt, af_Environment *env);
-static void freeCore(af_Environment *env);
-
 /* Activity 创建和释放 */
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong);
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
@@ -91,44 +87,12 @@ static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, a
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
 
-static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
-    af_Core *core = calloc(1, sizeof(af_Core));
-
-    /* 设置默认prefix */
-    char prefix[PREFIX_SIZE + 1] = "";
-    prefix[E_QUOTE] = '\'';
-    prefix[B_EXEC] = '\'';
-    prefix[B_EXEC_FIRST] = '$';
-    core->prefix = setEnvVarData_(ev_sys_prefix, prefix, env);
-    core->gc_runtime = setEnvVarNumber_(ev_grt, grt, env);
-    core->gc_max = setEnvVarNumber_(ev_gcmax, DEFAULT_GC_COUNT_MAX, env);
-    core->gc_count = setEnvVarNumber_(ev_gccount, 0, env);
-    core->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
-    core->argc = setEnvVarNumber_(ev_argc, 0, env);
-    core->error_std = setEnvVarNumber_(ev_error_std, 0, env);
-    core->status = core_creat;
-    return core;
-}
-
-/*
- * 函数名: freeCore
- * 目标: 释放Core
- * 因为gc_freeAllValue需要env作为参数, 故使用env作为freeCore的参数
- */
-static void freeCore(af_Environment *env) {
-    freeAllLiteralRegex(env->core->lr);
-    gc_freeAllValueData(env);  // 先释放ObjectData的void *data
-    printGCByCore(env->core);
-    gc_freeAllValue(env);  // 再完全释放Object
-    free(env->core);
-}
-
 char setPrefix(size_t name, char prefix, af_Environment *env) {
     if (name >= PREFIX_SIZE)
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
 
     pthread_rwlock_wrlock(&env->esv->lock);
-    char *prefix_ = env->core->prefix->data;
+    char *prefix_ = env->prefix->data;
     if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE) {
         pthread_rwlock_unlock(&env->esv->lock);
         return '-';
@@ -158,7 +122,7 @@ char getPrefix(size_t name, af_Environment *env) {
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
 
     pthread_rwlock_rdlock(&env->esv->lock);
-    char *prefix = env->core->prefix->data;
+    char *prefix = env->prefix->data;
     pthread_rwlock_unlock(&env->esv->lock);
     if (prefix == NULL || strlen(prefix) < PREFIX_SIZE)
         return '-';
@@ -182,24 +146,24 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
 }
 
 void setCoreStop(af_Environment *env) {
-    if (env->core->status != core_exit)
-        env->core->status = core_stop;
+    if (env->status != core_exit)
+        env->status = core_stop;
 }
 
 void setCoreExit(int exit_code, af_Environment *env) {
-    env->core->status = core_exit;
+    env->status = core_exit;
 
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->exit_code_->num = exit_code;
+    env->exit_code_->num = exit_code;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void setCoreNormal(af_Environment *env) {
-    if (env->core->status == core_exit || env->core->status == core_stop) {
-        env->core->status = core_normal;
+    if (env->status == core_exit || env->status == core_stop) {
+        env->status = core_normal;
 
         pthread_rwlock_wrlock(&env->esv->lock);
-        env->core->exit_code_->num = 0;
+        env->exit_code_->num = 0;
         pthread_rwlock_unlock(&env->esv->lock);
     }
 }
@@ -255,7 +219,7 @@ static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af
 }
 
 static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env) {
-    af_Activity *activity = makeActivity(NULL, NULL, env->core->global);
+    af_Activity *activity = makeActivity(NULL, NULL, env->global);
     activity->type = act_guardian;
 
     activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
@@ -851,12 +815,26 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
 
     env->esv = makeEnvVarSpace();
-    env->core = makeCore(grt, env);
+
+    /* 设置默认prefix */
+    char prefix[PREFIX_SIZE + 1] = "";
+    prefix[E_QUOTE] = '\'';
+    prefix[B_EXEC] = '\'';
+    prefix[B_EXEC_FIRST] = '$';
+    env->prefix = setEnvVarData_(ev_sys_prefix, prefix, env);
+    env->gc_runtime = setEnvVarNumber_(ev_grt, grt, env);
+    env->gc_max = setEnvVarNumber_(ev_gcmax, DEFAULT_GC_COUNT_MAX, env);
+    env->gc_count = setEnvVarNumber_(ev_gccount, 0, env);
+    env->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
+    env->argc = setEnvVarNumber_(ev_argc, 0, env);
+    env->error_std = setEnvVarNumber_(ev_error_std, 0, env);
+
+    /* 创建保护空间 */
     env->protect = makeVarSpace(NULL, 3, 3, 3, env);
 
     /* 生成global对象 */
-    env->core->global = makeGlobalObject(env);
-    addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->core->global, env), env);
+    env->global = makeGlobalObject(env);
+    addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->global, env), env);
 
     /* 设置NORMAL顶级处理器 */
     DLC_SYMBOL(TopMsgProcessFunc) func1 = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
@@ -880,19 +858,19 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     addGuardian("GC", true, 0, func5, NULL, NULL, env);
     FREE_SYMBOL(func5);
 
-    env->core->status = core_init;
-    env->activity = makeTopActivity(NULL, NULL, env->protect, env->core->global);
+    env->status = core_init;
+    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
     return env;
 }
 
 void enableEnvironment(af_Environment *env) {
     env->protect->is_protect = true;
-    env->core->status = core_normal;
+    env->status = core_normal;
 }
 
 void freeEnvironment(af_Environment *env) {
     bool res = true;
-    if (env->core->status != core_creat)
+    if (env->status != core_creat)
         res = iterDestruct(10, env);
 
     freeAllActivity(env->activity);
@@ -901,7 +879,10 @@ void freeEnvironment(af_Environment *env) {
     freeAllGuardian(env->guardian, env);
 
     pthread_mutex_destroy(&env->in_run);
-    freeCore(env);  // core最后释放, 因为Object等需要最后释放
+    freeAllLiteralRegex(env->lr);
+    gc_freeAllValueData(env);  // 先释放ObjectData的void *data
+    printGCByCore(env);
+    gc_freeAllValue(env);  // 再完全释放Object
 
     if (!res)
         writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
@@ -1200,7 +1181,7 @@ bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment
 bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env) {
     env->activity->gl_next = gl->next;
 
-    af_Object *belong = gl->obj != NULL ? gl->obj : env->core->global;
+    af_Object *belong = gl->obj != NULL ? gl->obj : env->global;
     /* 隐式调用不设置 bt_top */
     af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
                                              env->activity->var_list, belong, NULL);
@@ -1543,8 +1524,8 @@ bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment
     af_LiteralRegex *lr = makeLiteralRegex(pattern, func, in_protect);
     if (lr == NULL)
         return false;
-    lr->next = env->core->lr;
-    env->core->lr = lr;
+    lr->next = env->lr;
+    env->lr = lr;
     return true;
 }
 
@@ -1554,7 +1535,7 @@ bool pushLiteralRegex(char *pattern, char *func, bool in_protect, af_Environment
  * 注意: func被写入函数名, 但不是复制式写入
  */
 bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environment *env) {
-    for (af_LiteralRegex *lr = env->core->lr; lr != NULL; lr = lr->next) {
+    for (af_LiteralRegex *lr = env->lr; lr != NULL; lr = lr->next) {
         if (matchRegex(literal, lr->rg, NULL) == 1) {
             if (func != NULL)
                 *func = lr->func;  // 不使用复制
@@ -1850,63 +1831,63 @@ af_GuardianList **contectGuardianList(af_GuardianList *new, af_GuardianList **ba
 
 void setGcMax(int32_t max, af_Environment *env) {
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->gc_max->num = max;
+    env->gc_max->num = max;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void setGcRun(enum GcRunTime grt, af_Environment *env) {
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->gc_runtime->num = grt;
+    env->gc_runtime->num = grt;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 int32_t getGcCount(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    int32_t res = env->core->gc_count->num;
+    int32_t res = env->gc_count->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }
 
 void GcCountAdd1(af_Environment *env) {
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->gc_count->num++;
+    env->gc_count->num++;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void GcCountToZero(af_Environment *env) {
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->gc_count->num = 0;
+    env->gc_count->num = 0;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void setArgc(int argc, af_Environment *env) {
     pthread_rwlock_wrlock(&env->esv->lock);
-    env->core->argc->num = argc;
+    env->argc->num = argc;
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
 int32_t getGcMax(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    int32_t res = env->core->gc_max->num;
+    int32_t res = env->gc_max->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }
 
 enum GcRunTime getGcRun(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    enum GcRunTime res = env->core->gc_runtime->num;
+    enum GcRunTime res = env->gc_runtime->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }
 int getArgc(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    int res = env->core->argc->num;
+    int res = env->argc->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }
 
 af_Object *getCoreGlobal(af_Environment *env) {
-    return env->core->global;
+    return env->global;
 }
 
 af_Object *getGlobal(af_Environment *env) {
@@ -1915,7 +1896,7 @@ af_Object *getGlobal(af_Environment *env) {
         if (activity->type == act_top || activity->type == act_top_import)
             return activity->belong;
     }
-    return env->core->global;
+    return env->global;
 }
 
 af_Object *getBelong(af_Environment *env) {
@@ -1988,23 +1969,23 @@ af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
 }
 
 int isCoreExit(af_Environment *env) {
-    if (env->core->status == core_exit)
+    if (env->status == core_exit)
         return 1;
-    else if (env->core->status == core_stop)
+    else if (env->status == core_stop)
         return -1;
     return 0;
 }
 
 bool getErrorStd(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    bool res = env->core->error_std->num != 0;  // true-stderr, false-stdout
+    bool res = env->error_std->num != 0;  // true-stderr, false-stdout
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }
 
 int32_t getCoreExitCode(af_Environment *env) {
     pthread_rwlock_rdlock(&env->esv->lock);
-    int res = env->core->exit_code_->num;
+    int res = env->exit_code_->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
 }

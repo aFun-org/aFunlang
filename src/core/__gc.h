@@ -9,9 +9,9 @@ typedef struct GC_ObjectData GC_ObjectData;
 typedef struct af_GcList af_GcList;
 typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
 
-#define GC_FREE_EXCHANGE(obj, Type, Core) do { \
+#define GC_FREE_EXCHANGE(obj, Type, Env) do { \
 {if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
- else {(Core)->gc_##Type = (obj)->gc.next;}} \
+ else {(Env)->gc_##Type = (obj)->gc.next;}} \
 {if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}}} while(0)
 
 #define GC_CHAIN(type) struct type *next, *prev
@@ -97,7 +97,6 @@ AFUN_CORE_NO_EXPORT void gc_addObject(af_Object *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVar(af_Var *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVarSpace(af_VarSpace *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);
-AFUN_CORE_NO_EXPORT void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
 /* gc Reference 管理函数 : 涉及af_ObjectData 不对外公开 */
 AFUN_CORE_NO_EXPORT void gc_addObjectDataReference(af_ObjectData *obj);
@@ -111,7 +110,7 @@ AFUN_CORE_NO_EXPORT void gc_freeAllValueData(af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */
-AFUN_CORE_NO_EXPORT void printGCByCore(af_Core *core);
+AFUN_CORE_NO_EXPORT void printGCByCore(af_Environment *env);
 
 /* gc 运行时函数 */
 AFUN_CORE_NO_EXPORT void resetGC(af_Environment *env);

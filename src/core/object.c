@@ -74,17 +74,17 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
     af_Inherit *ih = NULL;
     if (inherit != NULL)
         ih = inherit;
-    else if (env->core->global != NULL)  // init模式生成: global
-        ih = makeInherit(env->core->global);
-    else if (env->core->status != core_creat)
+    else if (env->global != NULL)  // init模式生成: global
+        ih = makeInherit(env->global);
+    else if (env->status != core_creat)
         return NULL;
 
     if (belong == NULL) {
         if (env->activity != NULL)
             belong = env->activity->belong;
-        else if (env->core->status == core_init)  // init模式生成: global
-            belong = env->core->global;
-        else if (env->core->status != core_creat)  // 只有creat可以使用belong=NULL
+        else if (env->status == core_init)  // init模式生成: global
+            belong = env->global;
+        else if (env->status != core_creat)  // 只有creat可以使用belong=NULL
             return NULL;
     }
 
@@ -127,17 +127,12 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
     if (od->free_api)
         freeObjectAPI(od->api);
     freeAllInherit(od->inherit);
-    GC_FREE_EXCHANGE(od, ObjectData, env->core);
+    GC_FREE_EXCHANGE(od, ObjectData, env);
     free(od);
 }
 
 void freeObject(af_Object *obj, af_Environment *env) {
-    GC_FREE_EXCHANGE(obj, Object, env->core);
-    free(obj);
-}
-
-void freeObjectByCore(af_Object *obj, af_Core *core) {
-    GC_FREE_EXCHANGE(obj, Object, core);
+    GC_FREE_EXCHANGE(obj, Object, env);
     free(obj);
 }
 

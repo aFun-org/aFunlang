@@ -102,13 +102,13 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
     if (env == NULL || pthread_mutex_trylock(&env->in_run) != 0)
         return false;
-    if (env->core == NULL || env->activity == NULL || env->core->status == core_exit) {
+    if (env->activity == NULL || env->status == core_exit) {
         pthread_mutex_unlock(&env->in_run);
         return false;
     }
 
-    if (env->core->status == core_stop)
-        env->core->status = core_normal;
+    if (env->status == core_stop)
+        env->status = core_normal;
 
     switch (mode) {
         case 0:
@@ -333,7 +333,7 @@ static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
 }
 
 static bool checkStop(af_Environment *env) {
-    if (env->core->status == core_stop || env->core->status == core_exit) {
+    if (env->status == core_stop || env->status == core_exit) {
         while (env->activity->type != act_top || env->activity->prev != NULL)
             popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
         popActivity(false, NULL, env);  // 再释放 act_top

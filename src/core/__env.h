@@ -3,7 +3,6 @@
 #include "tool.h"
 #include "pthread.h"
 
-typedef struct af_Core af_Core;
 typedef struct af_Activity af_Activity;
 typedef struct af_ActivityTrackBack af_ActivityTrackBack;
 typedef struct af_EnvVarSpace af_EnvVarSpace;
@@ -26,37 +25,6 @@ typedef struct af_ErrorBacktracking af_ErrorBacktracking;
 #define DEFAULT_GC_COUNT_MAX (50)
 #define ENV_VAR_HASH_SIZE (8)
 typedef uint16_t ActivityCount;
-
-struct af_Core {  // 解释器核心
-    enum af_CoreStatus {
-        core_creat = 0,
-        core_init,  // 执行初始化程序
-        core_normal,  // 正常执行
-        core_stop,  // 当前运算退出
-        core_exit,  // 解释器退出
-    } status;
-
-    /* GC基本信息 */
-    struct af_ObjectData *gc_ObjectData;
-    struct af_Object *gc_Object;
-    struct af_Var *gc_Var;
-    struct af_VarSpace *gc_VarSpace;
-
-    /* 基本对象信息 */
-    struct af_Object *global;  // 顶级属对象
-
-    /* 字面量基本信息 */
-    af_LiteralRegex *lr;
-
-    /* 数据 */
-    af_EnvVar *gc_count;
-    af_EnvVar *gc_max;
-    af_EnvVar *gc_runtime;
-    af_EnvVar *prefix;
-    af_EnvVar *exit_code_;  // 退出代码
-    af_EnvVar *argc;  // 参数个数
-    af_EnvVar *error_std;  // Error输出的位置 0-stdout 其他-stderr
-};
 
 struct af_Message {
     char *type;  // 消息类型
@@ -227,10 +195,37 @@ struct af_EnvVarSpace {  // 环境变量
 };
 
 struct af_Environment {  // 运行环境
+    enum af_CoreStatus {
+        core_creat = 0,
+        core_init,  // 执行初始化程序
+        core_normal,  // 正常执行
+        core_stop,  // 当前运算退出
+        core_exit,  // 解释器退出
+    } status;
+
     /* 保护空间 */
     struct af_VarSpace *protect;  // 顶级保护变量空间
 
-    struct af_Core *core;
+    /* 数据 */
+    af_EnvVar *gc_count;
+    af_EnvVar *gc_max;
+    af_EnvVar *gc_runtime;
+    af_EnvVar *prefix;
+    af_EnvVar *exit_code_;  // 退出代码
+    af_EnvVar *argc;  // 参数个数
+    af_EnvVar *error_std;  // Error输出的位置 0-stdout 其他-stderr
+
+    /* 基本对象信息 */
+    struct af_Object *global;  // 顶级属对象
+
+    /* 字面量基本信息 */
+    af_LiteralRegex *lr;
+
+    struct af_ObjectData *gc_ObjectData;
+    struct af_Object *gc_Object;
+    struct af_Var *gc_Var;
+    struct af_VarSpace *gc_VarSpace;
+
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
     struct af_TopMsgProcess *process;
@@ -265,8 +260,8 @@ struct af_ImportInfo {
 };
 
 /* Core 管理函数 */
-void GcCountAdd1(af_Environment *env);
-void GcCountToZero(af_Environment *env);
+AFUN_CORE_NO_EXPORT void GcCountAdd1(af_Environment *env);
+AFUN_CORE_NO_EXPORT void GcCountToZero(af_Environment *env);
 
 
 /* 运行时Activity设置函数 (新增Activity) */

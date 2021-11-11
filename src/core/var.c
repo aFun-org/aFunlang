@@ -56,14 +56,7 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
 void freeVar(af_Var *var, af_Environment *env){
     freeAllVarNode(var->vn);
     free(var->name);
-    GC_FREE_EXCHANGE(var, Var, env->core);
-    free(var);
-}
-
-void freeVarByCore(af_Var *var, af_Core *core) {
-    freeAllVarNode(var->vn);
-    free(var->name);
-    GC_FREE_EXCHANGE(var, Var, core);
+    GC_FREE_EXCHANGE(var, Var, env);
     free(var);
 }
 
@@ -111,7 +104,7 @@ static void freeAllVarCup(af_VarCup *vp) {
 }
 
 af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char p_external, af_Environment *env){
-    if (env->core->status != core_creat && belong == NULL)
+    if (env->status != core_creat && belong == NULL)
         return NULL;
 
     af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
@@ -126,14 +119,7 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
 void freeVarSpace(af_VarSpace *vs, af_Environment *env) {
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++)
         freeAllVarCup(vs->var[i]);
-    GC_FREE_EXCHANGE(vs, VarSpace, env->core);
-    free(vs);
-}
-
-void freeVarSpaceByCore(af_VarSpace *vs, af_Core *core) {
-    for (int i = 0; i < VAR_HASHTABLE_SIZE; i++)
-        freeAllVarCup(vs->var[i]);
-    GC_FREE_EXCHANGE(vs, VarSpace, core);
+    GC_FREE_EXCHANGE(vs, VarSpace, env);
     free(vs);
 }
 
