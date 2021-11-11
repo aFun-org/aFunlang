@@ -811,8 +811,10 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(1, sizeof(af_Environment));
 
     pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
+    pthread_mutexattr_destroy(&attr);
 
     env->esv = makeEnvVarSpace();
 
