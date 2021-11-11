@@ -53,18 +53,6 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
     return var;
 }
 
-af_Var *makeVarByCore(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Core *core){
-    af_VarNode *vn = makeVarNode(obj, NULL);
-    af_Var *var = calloc(1, sizeof(af_Var));
-    var->name = strCopy(name);
-    var->vn = vn;
-    var->permissions[0] = p_self;
-    var->permissions[1] = p_posterity;
-    var->permissions[1] = p_external;
-    gc_addVarByCore(var, core);
-    return var;
-}
-
 void freeVar(af_Var *var, af_Environment *env){
     freeAllVarNode(var->vn);
     free(var->name);
@@ -132,19 +120,6 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
     vs->permissions[1] = p_posterity;
     vs->permissions[2] = p_external;
     gc_addVarSpace(vs, env);
-    return vs;
-}
-
-af_VarSpace *makeVarSpaceByCore(af_Object *belong, char p_self, char p_posterity, char p_external, af_Core *core) {
-    if (core->status != core_creat && belong == NULL)
-        return NULL;
-
-    af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
-    vs->belong = belong;
-    vs->permissions[0] = p_self;
-    vs->permissions[1] = p_posterity;
-    vs->permissions[2] = p_external;
-    gc_addVarSpaceByCore(vs, core);
     return vs;
 }
 
@@ -283,9 +258,9 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
  * 调用 addVarToVarSpace
  */
 bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
-    env->core->protect->is_protect = false;
-    bool re = addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), env->activity->belong, env->core->protect);
-    env->core->protect->is_protect = true;
+    env->protect->is_protect = false;
+    bool re = addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), env->activity->belong, env->protect);
+    env->protect->is_protect = true;
     return re;
 }
 
@@ -297,10 +272,10 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
  * 调用 addVarToVarSpace
  */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
-    bool is_protect = env->core->protect->is_protect;
-    env->core->protect->is_protect = false;
-    bool re = addVarToVarSpace(var, NULL, env->core->protect);
-    env->core->protect->is_protect = is_protect;
+    bool is_protect = env->protect->is_protect;
+    env->protect->is_protect = false;
+    bool re = addVarToVarSpace(var, NULL, env->protect);
+    env->protect->is_protect = is_protect;
     return re;
 }
 

@@ -97,9 +97,6 @@ AFUN_CORE_NO_EXPORT void gc_addObject(af_Object *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVar(af_Var *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVarSpace(af_VarSpace *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addObjectData(struct af_ObjectData *obj, af_Environment *env);
-AFUN_CORE_NO_EXPORT void gc_addObjectDataByCore(struct af_ObjectData *obj, af_Core *core);
-AFUN_CORE_NO_EXPORT void gc_addObjectByCore(struct af_Object *obj, af_Core *core);
-AFUN_CORE_NO_EXPORT void gc_addVarByCore(struct af_Var *obj, af_Core *core);
 AFUN_CORE_NO_EXPORT void gc_addVarSpaceByCore(struct af_VarSpace *obj, af_Core *core);
 
 /* gc Reference 管理函数 : 涉及af_ObjectData 不对外公开 */

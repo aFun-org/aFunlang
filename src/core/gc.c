@@ -12,16 +12,7 @@ void gc_addObjectData(af_ObjectData *obj, af_Environment *env){
         env->core->gc_ObjectData->gc.prev = obj;
     obj->gc.next = env->core->gc_ObjectData;
     env->core->gc_ObjectData = obj;
-    env->core->gc_count->num++;
-}
-
-void gc_addObjectDataByCore(af_ObjectData *obj, af_Core *core){
-    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
-        return;
-    obj->gc.prev = ((void *) 0);
-    obj->gc.next = core->gc_ObjectData;
-    core->gc_ObjectData = obj;
-    core->gc_count->num++;
+    GcCountAdd1(env);
 }
 
 void gc_addObjectDataReference(af_ObjectData *obj){
@@ -42,16 +33,7 @@ void gc_addObject(af_Object *obj, af_Environment *env){
         env->core->gc_Object->gc.prev = obj;
     obj->gc.next = env->core->gc_Object;
     env->core->gc_Object = obj;
-    env->core->gc_count->num++;
-}
-
-void gc_addObjectByCore(af_Object *obj, af_Core *core){
-    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
-        return;
-    obj->gc.prev = ((void *) 0);
-    obj->gc.next = core->gc_Object;
-    core->gc_Object = obj;
-    core->gc_count->num++;
+    GcCountAdd1(env);
 }
 
 void gc_addObjectReference(af_Object *obj){
@@ -72,16 +54,7 @@ void gc_addVar(af_Var *obj, af_Environment *env) {
         env->core->gc_Var->gc.prev = obj;
     obj->gc.next = env->core->gc_Var;
     env->core->gc_Var = obj;
-    env->core->gc_count->num++;
-}
-
-void gc_addVarByCore(af_Var *obj, af_Core *core) {
-    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
-        return;
-    obj->gc.prev = ((void *) 0);
-    obj->gc.next = core->gc_Var;
-    core->gc_Var = obj;
-    core->gc_count->num++;
+    GcCountAdd1(env);
 }
 
 void gc_addVarReference(af_Var *obj) {
@@ -101,16 +74,7 @@ void gc_addVarSpace(af_VarSpace *obj, af_Environment *env){
     if (env->core->gc_VarSpace != ((void *) 0)) { env->core->gc_VarSpace->gc.prev = obj; }
     obj->gc.next = env->core->gc_VarSpace;
     env->core->gc_VarSpace = obj;
-    env->core->gc_count->num++;
-}
-
-void gc_addVarSpaceByCore(af_VarSpace *obj, af_Core *core) {
-    if (obj->gc.next != ((void *) 0) || obj->gc.prev != ((void *) 0))
-        return;
-    obj->gc.prev = ((void *) 0);
-    obj->gc.next = core->gc_VarSpace;
-    core->gc_VarSpace = obj;
-    core->gc_count->num++;
+    GcCountAdd1(env);
 }
 
 void gc_addVarSpaceReference(af_VarSpace *obj) {
@@ -191,7 +155,7 @@ static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
 /* gc运行函数 */
 static void freeValue(af_Environment *env);
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
-static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist);
+static pgc_Analyzed iterLinker(af_Environment *core, pgc_Analyzed plist);
 static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pdl, pgc_Analyzed plist);
 static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 
@@ -290,27 +254,27 @@ static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_A
     return plist;
 }
 
-static pgc_Analyzed iterLinker(af_Core *core, pgc_Analyzed plist) {
-    plist = reachableVarSpace(core->protect, plist);
-    if (core->global != NULL)
-        plist = reachableObject(core->global, plist);
+static pgc_Analyzed iterLinker(af_Environment *env, pgc_Analyzed plist) {
+    plist = reachableVarSpace(env->protect, plist);
+    if (env->core->global != NULL)
+        plist = reachableObject(env->core->global, plist);
 
-    for (af_ObjectData *od = core->gc_ObjectData; od != NULL; od = od->gc.next) {
+    for (af_ObjectData *od = env->core->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.info.reachable && (od->gc.info.reference > 0 || od->gc.info.not_clear))
             plist = reachableObjectData(od, plist);
     }
 
-    for (af_Object *obj = core->gc_Object; obj != NULL; obj = obj->gc.next) {
+    for (af_Object *obj = env->core->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (!obj->gc.info.reachable && (obj->gc.info.reference > 0 || obj->gc.info.not_clear))
             plist = reachableObject(obj, plist);
     }
 
-    for (af_VarSpace *vs = core->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
+    for (af_VarSpace *vs = env->core->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
         if (!vs->gc.info.reachable && (vs->gc.info.reference > 0 || vs->gc.info.not_clear))
             plist = reachableVarSpace(vs, plist);
     }
 
-    for (af_Var *var = core->gc_Var; var != NULL; var = var->gc.next) {
+    for (af_Var *var = env->core->gc_Var; var != NULL; var = var->gc.next) {
         if (!var->gc.info.reachable && (var->gc.info.reference > 0 || var->gc.info.not_clear))
             plist = reachableVar(var, plist);
     }
@@ -418,7 +382,7 @@ af_GuardianList *gc_RunGC(af_Environment *env) {
     paf_GuardianList pgl = &gl;
     resetGC(env);
 
-    plist = iterLinker(env->core, plist);  // 临时量分析 (临时量都是通过reference标记的)
+    plist = iterLinker(env, plist);  // 临时量分析 (临时量都是通过reference标记的)
     plist = reachable(env->activity, plist);
     plist = checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
     plist = checkDestruct(env, &pgl, plist);  // 在检查析构

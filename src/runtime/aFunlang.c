@@ -71,14 +71,14 @@ af_Environment *creatAFunEnvironment(int argc, char **argv){
     for(int i = 0; i < argc; i++)
         writeTrackLog(aFunCoreLogger, "[aFunlang] Env-arg %d. %s", i, argv[i]);
 
-    env->core->argc->num = argc;
+    setArgc(argc, env);
     for (int i = 0; i < argc; i++) {
         char tmp[512] = {0};
         snprintf(tmp, 512, ev_argvx_prefix "%d", i);
         setEnvVarData(tmp, argv[i], env);
     }
 
-    runtimeTool("base", &code, NULL, env->core->protect, env);
+    runtimeTool("base", &code, NULL, env->protect, env);
 
     if (code != NULL) {
         bool res = iterCode(code, 0, env);
@@ -118,7 +118,7 @@ static int runCode_(af_Parser *parser, int mode, FilePath save_path, af_Environm
     bool res = iterCode(bt_code, mode, env);
     freeAllCode(bt_code);
     if (!res)
-        return env->core->exit_code_->num;
+        return getCoreExitCode(env);
     return 0;
 }
 
@@ -194,7 +194,7 @@ int runCodeFromMemory(af_Code *code, int mode, af_Environment *env){
 
     bool res = iterCode(code, mode, env);
     if (!res)
-        return env->core->exit_code_->num;
+        return getCoreExitCode(env);
     return 0;
 }
 

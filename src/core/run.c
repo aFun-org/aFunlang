@@ -164,7 +164,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     if (checkLiteralCode(code->element.data, &func, &in_protect, env)) {
         /* 字面量执行 */
         if (in_protect)
-            var = findVarFromVarSpace(func, env->activity->belong, env->core->protect);
+            var = findVarFromVarSpace(func, env->activity->belong, env->protect);
         else
             var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
 

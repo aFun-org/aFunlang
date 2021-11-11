@@ -58,6 +58,7 @@ AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreStop(af_Environment *env);
 AFUN_CORE_EXPORT void setCoreExit(int exit_code, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreNormal(af_Environment *env);
+AFUN_CORE_EXPORT void setArgc(int argc, af_Environment *env);
 
 /* 消息 相关操作 */
 AFUN_CORE_EXPORT void pushMessageUp(af_Message *msg, af_Environment *env);
@@ -104,6 +105,7 @@ AFUN_CORE_EXPORT af_VarSpace *getProtectVarSpace(af_Environment *env);
 AFUN_CORE_EXPORT int32_t getGcCount(af_Environment *env);
 AFUN_CORE_EXPORT int32_t getGcMax(af_Environment *env);
 AFUN_CORE_EXPORT enum GcRunTime getGcRun(af_Environment *env);
+AFUN_CORE_EXPORT int getArgc(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getCoreGlobal(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getGlobal(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getBelong(af_Environment *env);

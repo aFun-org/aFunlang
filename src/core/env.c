@@ -106,9 +106,7 @@ static af_Core *makeCore(enum GcRunTime grt, af_Environment *env) {
     core->exit_code_ = setEnvVarNumber_(ev_exit_code, 0, env);
     core->argc = setEnvVarNumber_(ev_argc, 0, env);
     core->error_std = setEnvVarNumber_(ev_error_std, 0, env);
-
     core->status = core_creat;
-    core->protect = makeVarSpaceByCore(NULL, 3, 3, 3, core);
     return core;
 }
 
@@ -128,9 +126,14 @@ static void freeCore(af_Environment *env) {
 char setPrefix(size_t name, char prefix, af_Environment *env) {
     if (name >= PREFIX_SIZE)
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
+
+    pthread_rwlock_wrlock(&env->esv->lock);
     char *prefix_ = env->core->prefix->data;
-    if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE)
+    if (prefix_ == NULL || strlen(prefix_) < PREFIX_SIZE) {
+        pthread_rwlock_unlock(&env->esv->lock);
         return '-';
+    }
+
     switch (name) {
         case E_QUOTE:
             if (prefix == NUL && strchr(E_PREFIX, prefix) == NULL)
@@ -146,6 +149,7 @@ char setPrefix(size_t name, char prefix, af_Environment *env) {
     }
     char old = prefix_[name];
     prefix_[name] = prefix;
+    pthread_rwlock_unlock(&env->esv->lock);
     return old;
 }
 
@@ -153,34 +157,28 @@ char getPrefix(size_t name, af_Environment *env) {
     if (name >= PREFIX_SIZE)
         return '-';  // 表示未获取到prefix (NUL在Code中表示无prefix)
 
+    pthread_rwlock_rdlock(&env->esv->lock);
     char *prefix = env->core->prefix->data;
+    pthread_rwlock_unlock(&env->esv->lock);
     if (prefix == NULL || strlen(prefix) < PREFIX_SIZE)
         return '-';
     return prefix[name];
 }
 
 af_VarSpace *getProtectVarSpace(af_Environment *env) {
-    return env->core->protect;
+    return env->protect;
 }
 
-/*
- * 函数名: getBaseObjectFromCore
- * 目标: 从VarSpace中获取一个量
- * 作用: 用于init初始化时在保护空间获得一些初始化对象
- */
-af_Object *getBaseObjectFromCore(char *name, af_Core *core) {
-    af_Var *var = findVarFromVarSpace(name, NULL, core->protect);
-    if (var != NULL)
-        return var->vn->obj;
-    return NULL;
-}
 
 /*
  * 函数名: getBaseObject
  * 目标: getBaseObjectFromCore的对外接口
  */
 af_Object *getBaseObject(char *name, af_Environment *env) {
-    return getBaseObjectFromCore(name, env->core);
+    af_Var *var = findVarFromVarSpace(name, NULL, env->protect);
+    if (var != NULL)
+        return var->vn->obj;
+    return NULL;
 }
 
 void setCoreStop(af_Environment *env) {
@@ -190,13 +188,19 @@ void setCoreStop(af_Environment *env) {
 
 void setCoreExit(int exit_code, af_Environment *env) {
     env->core->status = core_exit;
+
+    pthread_rwlock_wrlock(&env->esv->lock);
     env->core->exit_code_->num = exit_code;
+    pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void setCoreNormal(af_Environment *env) {
     if (env->core->status == core_exit || env->core->status == core_stop) {
         env->core->status = core_normal;
+
+        pthread_rwlock_wrlock(&env->esv->lock);
         env->core->exit_code_->num = 0;
+        pthread_rwlock_unlock(&env->esv->lock);
     }
 }
 
@@ -634,47 +638,57 @@ static void freeAllEnvVar(af_EnvVar *var) {
 }
 
 static af_EnvVarSpace *makeEnvVarSpace(void) {
-    af_EnvVarSpace *esv = calloc(1, sizeof(af_EnvVarSpace));
-    return esv;
+    af_EnvVarSpace *evs = calloc(1, sizeof(af_EnvVarSpace));
+    pthread_rwlock_init(&evs->lock, NULL);
+    return evs;
 }
 
 static void freeEnvVarSpace(af_EnvVarSpace *evs) {
     for (int i = 0; i < ENV_VAR_HASH_SIZE; i++)
         freeAllEnvVar(evs->var[i]);
+    pthread_rwlock_destroy(&evs->lock);
     free(evs);
 }
 
 af_EnvVar *setEnvVarData_(char *name, char *data, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
+    pthread_rwlock_wrlock(&env->esv->lock);
+
     af_EnvVar **pvar = &env->esv->var[index];
     env->esv->count++;
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
         if (EQ_STR((*pvar)->name, name)) {
             free((*pvar)->data);
             (*pvar)->data = strCopy(data);
+            pthread_rwlock_unlock(&env->esv->lock);
             return *pvar;
         }
     }
 
     *pvar = makeEnvVar(name);
     (*pvar)->data = strCopy(data);
+    pthread_rwlock_unlock(&env->esv->lock);
     return *pvar;
 }
 
 af_EnvVar *setEnvVarNumber_(char *name, int32_t data, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
+    pthread_rwlock_wrlock(&env->esv->lock);
+
     af_EnvVar **pvar = &env->esv->var[index];
     env->esv->count++;
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
         if (EQ_STR((*pvar)->name, name)) {
             free((*pvar)->data);
             (*pvar)->num = data;
+            pthread_rwlock_unlock(&env->esv->lock);
             return *pvar;
         }
     }
 
     *pvar = makeEnvVar(name);
     (*pvar)->num = data;
+    pthread_rwlock_unlock(&env->esv->lock);
     return *pvar;
 }
 
@@ -688,25 +702,35 @@ void setEnvVarNumber(char *name, int32_t data, af_Environment *env) {
 
 char *findEnvVarData(char *name, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
-    af_EnvVar **pvar = &env->esv->var[index];
+    pthread_rwlock_rdlock(&env->esv->lock);
 
+    af_EnvVar **pvar = &env->esv->var[index];
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
-        if (EQ_STR((*pvar)->name, name))
-            return (*pvar)->data;
+        if (EQ_STR((*pvar)->name, name)) {
+            char *data = (*pvar)->data;
+            pthread_rwlock_unlock(&env->esv->lock);
+            return data;
+        }
     }
 
+    pthread_rwlock_unlock(&env->esv->lock);
     return NULL;
 }
 
 int32_t *findEnvVarNumber(char *name, af_Environment *env) {
     time33_t index = time33(name) % ENV_VAR_HASH_SIZE;
-    af_EnvVar **pvar = &env->esv->var[index];
+    pthread_rwlock_rdlock(&env->esv->lock);
 
+    af_EnvVar **pvar = &env->esv->var[index];
     for (NULL; *pvar != NULL; pvar = &((*pvar)->next)) {
-        if (EQ_STR((*pvar)->name, name))
-            return &(*pvar)->num;  // 返回指针, NULL表示没找到
+        if (EQ_STR((*pvar)->name, name)) {
+            int32_t *data = &(*pvar)->num;  // 返回指针, NULL表示没找到
+            pthread_rwlock_unlock(&env->esv->lock);
+            return data;
+        }
     }
 
+    pthread_rwlock_unlock(&env->esv->lock);
     return NULL;
 }
 
@@ -726,7 +750,7 @@ static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env) {
         return;
     }
     if (is_top) {
-        if (env->core->error_std->num == 0)
+        if (getErrorStd(env) == 0)
             fprintfErrorInfoStdout(*(af_ErrorInfo **) msg->msg);
         else
             fprintfErrorInfoStderr(*(af_ErrorInfo **) msg->msg);
@@ -780,9 +804,9 @@ static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char 
  */
 static af_GuardianList *guardian_GC(char *type, bool is_guard, void *data, af_Environment *env) {
     af_GuardianList *gl = NULL;
-    if (env->core->gc_runtime->num == grt_always ||
-        env->core->gc_runtime->num == grt_count && env->core->gc_count->num >= env->core->gc_max->num) {
-        env->core->gc_count->num = 0;  // 清零
+    enum GcRunTime grt = getGcRun(env);
+    if (grt == grt_always || grt == grt_count && getGcCount(env) >= getGcMax(env)) {
+        GcCountToZero(env);  // 清零
         gl = gc_RunGC(env);
         if (gl != NULL)
             writeDebugLog(aFunCoreLogger, "GC destruct");
@@ -828,6 +852,8 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     env->esv = makeEnvVarSpace();
     env->core = makeCore(grt, env);
+    env->protect = makeVarSpace(NULL, 3, 3, 3, env);
+
     /* 生成global对象 */
     env->core->global = makeGlobalObject(env);
     addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->core->global, env), env);
@@ -855,12 +881,12 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     FREE_SYMBOL(func5);
 
     env->core->status = core_init;
-    env->activity = makeTopActivity(NULL, NULL, env->core->protect, env->core->global);
+    env->activity = makeTopActivity(NULL, NULL, env->protect, env->core->global);
     return env;
 }
 
 void enableEnvironment(af_Environment *env) {
-    env->core->protect->is_protect = true;
+    env->protect->is_protect = true;
     env->core->status = core_normal;
 }
 
@@ -1166,7 +1192,7 @@ bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment
     if (*obj == NULL)
         return false;
 
-    af_Activity *activity = makeTopImportActivity(bt, bt, env->core->protect, *obj, mark);
+    af_Activity *activity = makeTopImportActivity(bt, bt, env->protect, *obj, mark);
     pushActivity(activity, env);
     return true;
 }
@@ -1260,7 +1286,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         if (fi->scope == normal_scope)  // 使用函数变量空间
             env->activity->var_list = env->activity->func_var_list;
         else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
-            env->activity->var_list = makeVarSpaceList(env->core->protect);
+            env->activity->var_list = makeVarSpaceList(env->protect);
             env->activity->new_vs_count = 1;
         } else if (fi->scope == super_pure_scope)  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
             env->activity->var_list = NULL;
@@ -1823,23 +1849,60 @@ af_GuardianList **contectGuardianList(af_GuardianList *new, af_GuardianList **ba
 }
 
 void setGcMax(int32_t max, af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
     env->core->gc_max->num = max;
+    pthread_rwlock_unlock(&env->esv->lock);
 }
 
 void setGcRun(enum GcRunTime grt, af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
     env->core->gc_runtime->num = grt;
+    pthread_rwlock_unlock(&env->esv->lock);
 }
 
 int32_t getGcCount(af_Environment *env) {
-    return env->core->gc_count->num;
+    pthread_rwlock_rdlock(&env->esv->lock);
+    int32_t res = env->core->gc_count->num;
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
+}
+
+void GcCountAdd1(af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
+    env->core->gc_count->num++;
+    pthread_rwlock_unlock(&env->esv->lock);
+}
+
+void GcCountToZero(af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
+    env->core->gc_count->num = 0;
+    pthread_rwlock_unlock(&env->esv->lock);
+}
+
+void setArgc(int argc, af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
+    env->core->argc->num = argc;
+    pthread_rwlock_unlock(&env->esv->lock);
 }
 
 int32_t getGcMax(af_Environment *env) {
-    return env->core->gc_max->num;
+    pthread_rwlock_rdlock(&env->esv->lock);
+    int32_t res = env->core->gc_max->num;
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
 }
 
 enum GcRunTime getGcRun(af_Environment *env) {
-    return env->core->gc_runtime->num;
+    pthread_rwlock_rdlock(&env->esv->lock);
+    enum GcRunTime res = env->core->gc_runtime->num;
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
+}
+int getArgc(af_Environment *env) {
+    pthread_rwlock_rdlock(&env->esv->lock);
+    int res = env->core->argc->num;
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
 }
 
 af_Object *getCoreGlobal(af_Environment *env) {
@@ -1933,9 +1996,15 @@ int isCoreExit(af_Environment *env) {
 }
 
 bool getErrorStd(af_Environment *env) {
-    return env->core->error_std->num;  // true-stderr, false-stdout
+    pthread_rwlock_rdlock(&env->esv->lock);
+    bool res = env->core->error_std->num != 0;  // true-stderr, false-stdout
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
 }
 
 int32_t getCoreExitCode(af_Environment *env) {
-    return env->core->exit_code_->num;
+    pthread_rwlock_rdlock(&env->esv->lock);
+    int res = env->core->exit_code_->num;
+    pthread_rwlock_unlock(&env->esv->lock);
+    return res;
 }

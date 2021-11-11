@@ -45,9 +45,6 @@ struct af_Core {  // 解释器核心
     /* 基本对象信息 */
     struct af_Object *global;  // 顶级属对象
 
-    /* 保护空间 */
-    struct af_VarSpace *protect;  // 顶级保护变量空间
-
     /* 字面量基本信息 */
     af_LiteralRegex *lr;
 
@@ -226,9 +223,13 @@ struct af_EnvVar {  // 环境变量
 struct af_EnvVarSpace {  // 环境变量
     size_t count;
     struct af_EnvVar *(var[ENV_VAR_HASH_SIZE]);
+    pthread_rwlock_t lock;
 };
 
 struct af_Environment {  // 运行环境
+    /* 保护空间 */
+    struct af_VarSpace *protect;  // 顶级保护变量空间
+
     struct af_Core *core;
     struct af_EnvVarSpace *esv;
     struct af_Activity *activity;
@@ -264,7 +265,9 @@ struct af_ImportInfo {
 };
 
 /* Core 管理函数 */
-AFUN_CORE_NO_EXPORT af_Object *getBaseObjectFromCore(char *name, af_Core *core);
+void GcCountAdd1(af_Environment *env);
+void GcCountToZero(af_Environment *env);
+
 
 /* 运行时Activity设置函数 (新增Activity) */
 AFUN_CORE_NO_EXPORT bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);
