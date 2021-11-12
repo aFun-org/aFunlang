@@ -15,6 +15,7 @@ int main(int argc, char **argv){
             .buf=&main_buf,
     };
 
+    printLogSystemInfo();
     if (!aFunInit(&info)) {
 INIT_ERROR:
         printf_stderr(0, "aFunlang init error.");

@@ -76,6 +76,10 @@ static pthread_mutex_t log_factory_mutex = PTHREAD_MUTEX_INITIALIZER;
 static void destructLogSystemAtExit(void *data);
 static void *ansyWritrLog_(void *_);
 
+void printLogSystemInfo(void) {
+    printf("Log system on %p\n", &log_factory);
+}
+
 /*
  * 函数名: initLogSystem
  * 目标: 初始化日志系统
