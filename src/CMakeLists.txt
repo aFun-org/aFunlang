@@ -1,4 +1,29 @@
-﻿add_subdirectory(tool)
+﻿set(build_include_tool ${PROJECT_SOURCE_DIR}/include/tool)
+set(install_include_tool ${INSTALL_INCLUDEDIR})
+
+set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
+set(build_include_core_info ${PROJECT_SOURCE_DIR}/include/core/info)
+set(install_include_core ${INSTALL_INCLUDEDIR})
+
+set(build_include_runtime ${PROJECT_SOURCE_DIR}/include/runtime)
+set(install_include_runtime ${INSTALL_INCLUDEDIR})
+
+set(build_include_
+    ${hgt_dir}
+    ${base_include_dir}
+    ${build_include_tool}
+    ${build_include_core}
+    ${build_include_core_info}
+    ${build_include_runtime})
+
+set(build_include)
+foreach(dir IN LISTS build_include_)
+    list(APPEND build_include $<BUILD_INTERFACE:${dir}>)
+endforeach()
+
+set(install_include $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
+
+add_subdirectory(tool)
 add_subdirectory(core)  # core 依赖 tool
 add_subdirectory(runtime)  # runtime 依赖 core
 

@@ -18,9 +18,6 @@ file(GLOB private_h_core
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/../core/*.h)  # 需要使用 core 的特定头文件 (高级开发)
 
-set(build_include_runtime ${PROJECT_SOURCE_DIR}/include/runtime)
-set(install_include_runtime ${INSTALL_INCLUDEDIR})
-
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_runtime}"
@@ -49,8 +46,8 @@ foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
                                    "${CMAKE_CURRENT_LIST_DIR}/../core"
                                    "${CMAKE_CURRENT_LIST_DIR}"  # aFunTool内的程序需要使用
                                PUBLIC
-                                   $<BUILD_INTERFACE:${build_include_runtime}>
-                                   $<INSTALL_INTERFACE:${install_include_runtime}>)
+                                   ${build_include}
+                                   ${install_include})
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
     define_FILENAME(${tgt})
 endforeach()

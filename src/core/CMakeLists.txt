@@ -6,9 +6,6 @@ file(GLOB private_h
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
-set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
-set(install_include_core ${INSTALL_INCLUDEDIR})
-
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_core}"
@@ -16,8 +13,8 @@ file(GLOB public_h
 
 file(GLOB public_h_info
      LIST_DIRECTORIES FALSE
-     RELATIVE "${build_include_core}/info"
-     "${build_include_core}/info/*.h")
+     RELATIVE "${build_include_core_info}"
+     "${build_include_core_info}/*.h")
 
 set(public_h_build)
 set(public_h_install)
@@ -29,7 +26,7 @@ foreach(h IN LISTS public_h)
 endforeach()
 
 foreach(h IN LISTS public_h_info)
-    file(RELATIVE_PATH _path ${CMAKE_CURRENT_LIST_DIR} "${build_include_core}/info/${h}")
+    file(RELATIVE_PATH _path ${CMAKE_CURRENT_LIST_DIR} "${build_include_core_info}/${h}")
     list(APPEND public_h_build   "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${_path}>")  # 相对路径的转换, 此处只能使用相对路径
     list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_core}/${h}>")
 endforeach()
@@ -40,10 +37,7 @@ add_library(core-static-s STATIC "")  # core和tool静态库
 
 foreach(tgt core-shared-t core-shared-s core-static-s)
     target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
-    target_include_directories(${tgt} PUBLIC
-                               $<BUILD_INTERFACE:${build_include_core}>
-                               $<BUILD_INTERFACE:${build_include_core}/info>
-                               $<INSTALL_INTERFACE:${install_include_core}>)
+    target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
     set_target_properties(${tgt} PROPERTIES
                           PUBLIC_HEADER "${public_h_build}"
                           PRIVATE_HEADER "${private_h}")  # PRIVATE_HEADER私有头文件, 可以用于高级开发

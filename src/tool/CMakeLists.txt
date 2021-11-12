@@ -9,9 +9,6 @@ file(GLOB private_h
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
-set(build_include_tool ${PROJECT_SOURCE_DIR}/include/tool)
-set(install_include_tool ${INSTALL_INCLUDEDIR})
-
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_tool}"
@@ -31,10 +28,7 @@ add_library(tool-static STATIC "")
 
 foreach(tgt tool-shared tool-static)
     target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
-    target_include_directories(${tgt} PUBLIC
-                               $<BUILD_INTERFACE:${build_include_tool}>
-                               $<INSTALL_INTERFACE:${install_include_tool}>)
-    target_link_libraries(${tgt} PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
+    target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
     set_target_properties(${tgt} PROPERTIES
                           PUBLIC_HEADER "${public_h_build}")
     if(_build_mem)
@@ -42,6 +36,9 @@ foreach(tgt tool-shared tool-static)
     endif()
     define_FILENAME(${tgt})
 endforeach()
+
+target_link_libraries(tool-shared PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
+target_link_libraries(tool-static PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
 
 set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFunTool")
 set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFunTool-static")
