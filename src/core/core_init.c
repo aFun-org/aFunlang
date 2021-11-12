@@ -75,6 +75,7 @@ bool aFunCoreInit(aFunCoreInitInfo *info) {
     } else
         HT_initaFunGetText(NULL);
     writeDebugLog(aFunCoreLogger, "aFunCore init success");
+    printf("aFunCoreInit: %p\n", initLogSystem);
     return true;
 }
 

@@ -1306,8 +1306,8 @@ INIT_ERROR:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
-    aFunCoreDestruct();
-    return 0;
+    aFunDestruct();
+    aFunExit(0);
 
 RETURN_1:
     undefRunEnv(&ri);
@@ -1315,8 +1315,8 @@ RETURN_1:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
-    aFunCoreDestruct();
-    return 1;
+    aFunDestruct();
+    aFunExit(1);
 
 RETURN_2:
     undefRunEnv(&ri);
@@ -1324,6 +1324,6 @@ RETURN_2:
 #ifndef IN_CTEST
     getc(stdin);
 #endif
-    aFunCoreDestruct();
-    return 2;
+    aFunDestruct();
+    aFunExit(2);
 }
