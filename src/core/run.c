@@ -1,5 +1,4 @@
 ﻿#include "aFunCore.h"
-#include "__sig.h"
 #include "__run.h"
 #include "__env.h"
 
@@ -166,7 +165,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         if (in_protect)
             var = findVarFromVarSpace(func, env->activity->belong, env->protect);
         else
-            var = findVarFromVarList(func, env->activity->belong, env->activity->vsl);
+            var = findVarFromVarList(func, env->activity->belong, env->activity->run_varlist);
 
         if (var == NULL) {
             pushMessageDown(makeERRORMessageFormat(LITERAL_ERROR, env, "Literal not found: %s: %s.", code->element.data, func), env);
@@ -178,7 +177,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
     }
 
     /* 变量执行 */
-    var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->vsl);
+    var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->run_varlist);
 
     if (var == NULL) {
         pushMessageDown(makeERRORMessageFormat(VARIABLE_ERROR, env, "Variable not found: %s.", code->element.data), env);
@@ -392,12 +391,17 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
             continue;
         }
 
-        /* 切换执行的var_list */
-        if (env->activity->type == act_func && env->activity->status == act_func_arg &&
-            env->activity->run_in_func && env->activity->func_var_list != NULL)
-            env->activity->vsl = env->activity->func_var_list;
-        else
-            env->activity->vsl = env->activity->var_list;
+        /* 切换执行的 var_list */
+        if (env->activity->type == act_func && env->activity->status == act_func_arg) {
+            if (env->activity->run_in_func && env->activity->func_varlist != NULL)
+                env->activity->run_varlist = env->activity->func_varlist;
+            else
+                env->activity->run_varlist = env->activity->out_varlist;
+            env->activity->count_run_varlist = 0;
+        } else if (env->activity->type == act_func && env->activity->status == act_func_get) {
+            env->activity->run_varlist = env->activity->out_varlist;
+            env->activity->count_run_varlist = 0;
+        }
 
         /* 无代码运行 */
         if (env->activity->bt_next == NULL && env->activity->process_msg_first == 0) {  // 无代码运行, 并且非msg_first

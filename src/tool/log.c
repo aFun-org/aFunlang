@@ -181,7 +181,6 @@ int destructLogSystem(void) {
     fileClose(log_factory.csv);
     log_factory.log = NULL;
     log_factory.csv = NULL;
-    log_factory.init = false;
 RETURN:
     pthread_mutex_unlock(MUTEX);
     return re;

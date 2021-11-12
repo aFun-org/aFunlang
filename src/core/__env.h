@@ -60,8 +60,8 @@ struct af_Activity {  // 活动记录器
     struct af_Message *msg_up;  // 调用者向被调用者传递信息
     ActivityCount msg_up_count;  // msg_up 添加的个数
 
-    struct af_VarSpaceListNode *var_list;  // 主变量空间
-    ActivityCount new_vs_count;  // 需要释放的空间数
+    struct af_VarSpaceListNode *run_varlist;  // 主变量空间
+    ActivityCount count_run_varlist;  // 需要释放的空间数
 
     FilePath file;
     FileLine line;
@@ -85,8 +85,10 @@ struct af_Activity {  // 活动记录器
             struct af_Object *func;  // 函数本身
 
             bool run_in_func;  // 在函数变量空间内运行 (act_arg用)
-            struct af_VarSpaceListNode *vsl;  // 变量空间
-            struct af_VarSpaceListNode *func_var_list;  // 函数内部变量空间 (运行函数体时会设置为 主变量空间)
+            struct af_VarSpaceListNode *out_varlist;  // 变量空间
+            ActivityCount count_out_varlist;  // 需要释放的空间数
+
+            struct af_VarSpaceListNode *func_varlist;  // 函数内部变量空间 (运行函数体时会设置为 主变量空间)
 
             struct af_Code *bt_top;  // 最顶层设置为NULL, 函数调用设置为block, (bt_start的上一个元素) [只在函数调用的非NORMAL期有用]
             struct af_Code *bt_start;  // 代码的起始位置 (block的第一个元素)
@@ -109,8 +111,8 @@ struct af_Activity {  // 活动记录器
 
             /* 函数调用: 宏函数*/
             bool is_macro_call;  // 宏函数隐式调用
-            struct af_VarSpaceListNode *macro_vsl;  // 宏函数执行的vsl (即调用函数时的外部VarLis)
-            ActivityCount macro_vs_count;
+            struct af_VarSpaceListNode *macro_varlist;  // 宏函数执行的vsl (即调用函数时的外部VarLis)
+            ActivityCount count_macro_varlist;  // 需要释放的空间数
 
             /* 函数调用: 析构函数 在错误回溯时使用, 是个标记*/
             bool is_gc_call;

@@ -286,7 +286,7 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
         if (activity->belong != NULL)
             plist = reachableObject(activity->belong, plist);
 
-        plist = reachableVarSpaceList(activity->var_list, plist);
+        plist = reachableVarSpaceList(activity->run_varlist, plist);
 
         if (activity->type == act_guardian)  // gc不执行接下来的检查
             continue;
@@ -300,8 +300,8 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
         if (activity->parentheses_call != NULL)
             plist = reachableObject(activity->parentheses_call, plist);
 
-        plist = reachableVarSpaceList(activity->func_var_list, plist);
-        plist = reachableVarSpaceList(activity->macro_vsl, plist);
+        plist = reachableVarSpaceList(activity->func_varlist, plist);
+        plist = reachableVarSpaceList(activity->macro_varlist, plist);
     }
     return plist;
 }

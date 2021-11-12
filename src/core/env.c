@@ -5,9 +5,9 @@
 #include "__sig.h"
 
 /* Activity 创建和释放 */
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong);
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong);
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func);
+                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func);
 static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
 static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark);
 static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
@@ -16,10 +16,10 @@ static void freeActivityTop(af_Activity *activity);
 static void freeAllActivity(af_Activity *activity);
 
 /* Activity 相关处理函数 */
-static void clearActivity(af_Activity *activity);
+static void clearFuncActivity(af_Activity *activity);
 static void pushActivity(af_Activity *activity, af_Environment *env);
 static void freeMark(af_Activity *activity);
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
+static void newFuncActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env);
 
 /* ActivityTrackBack 创建与释放 */
 static af_ActivityTrackBack *makeActivityTrackBack(af_Activity *activity);
@@ -168,24 +168,27 @@ void setCoreNormal(af_Environment *env) {
     }
 }
 
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *vsl, af_Object *belong) {
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong) {
     af_Activity *activity = calloc(1, sizeof(af_Activity));
     activity->msg_up = msg_up;
     activity->msg_up_count = 0;
-    activity->var_list = vsl;
-    activity->new_vs_count = 0;
+    activity->run_varlist = varlist;
+    activity->count_run_varlist = 0;
     activity->belong = belong;
     activity->line = 1;
     return activity;
 }
 
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *vsl, af_Object *belong, af_Object *func) {
-    af_Activity *activity = makeActivity(msg_up, vsl, belong);
+                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func) {
+    af_Activity *activity = makeActivity(msg_up, out_varlist, belong);
 
     activity->type = act_func;
     activity->status = act_func_get;
     activity->func = func;
+
+    activity->out_varlist = out_varlist;
+    activity->func_varlist = NULL;
 
     setActivityBtTop(bt_top, activity);  // 非NORMAL期间, bt_top被设定
     setActivityBtStart(bt_start, activity);
@@ -200,9 +203,9 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     activity->type = act_top;
     activity->status = act_func_normal;
 
-    activity->new_vs_count = 2;
-    activity->var_list = makeVarSpaceList(belong->data->var_space);
-    activity->var_list->next = makeVarSpaceList(protect);
+    activity->count_run_varlist = 2;
+    activity->run_varlist = makeVarSpaceList(belong->data->var_space);
+    activity->run_varlist->next = makeVarSpaceList(protect);
 
     setActivityBtTop(NULL, activity);  // top-activity直接就在normal, bt_top将不被设定
     setActivityBtStart(bt_start, activity);
@@ -222,8 +225,8 @@ static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **
     af_Activity *activity = makeActivity(NULL, NULL, env->global);
     activity->type = act_guardian;
 
-    activity->var_list = makeVarSpaceList(getProtectVarSpace(env));
-    activity->new_vs_count = 1;
+    activity->run_varlist = makeVarSpaceList(getProtectVarSpace(env));
+    activity->count_run_varlist = 1;
 
     activity->file = strCopy("guardian.aun.sys");
     activity->line = 1;
@@ -240,16 +243,15 @@ static af_Activity *freeActivity(af_Activity *activity) {
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
     freeMessageCount(activity->msg_up_count, activity->msg_up);
 
-    freeVarSpaceListCount(activity->new_vs_count, activity->var_list);
     free(activity->file);
+    freeVarSpaceListCount(activity->count_run_varlist, activity->run_varlist);
 
     if (activity->type == act_guardian) {
         if (activity->gl != NULL)
             freeAllGuardianList(activity->gl);
     } else {
-        // vsl 是引用自 var_list和func_var_list的 故不释放
-        // func_var_list 是引用自函数的 故不释放
-        freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
+        freeVarSpaceListCount(activity->count_out_varlist, activity->out_varlist);
+        freeVarSpaceListCount(activity->count_macro_varlist, activity->macro_varlist);
 
         freeAllArgCodeList(activity->acl_start);
         if (activity->fi != NULL)
@@ -289,13 +291,21 @@ static void pushActivity(af_Activity *activity, af_Environment *env) {
 /*
  * 函数名: clearActivity
  * 目标: 尾调用优化时用于清理Activity.
+ * file和line都遗留
+ * 清空 varlist (除 run_varlist)
  */
-static void clearActivity(af_Activity *activity) {
-    freeVarSpaceListCount(activity->macro_vs_count, activity->macro_vsl);
+static void clearFuncActivity(af_Activity *activity) {
     /* acl在runArgList之后就被释放了 */
     /* acl在FuncBody暂时不释放 */
 
-    activity->func_var_list = NULL;
+    activity->out_varlist = activity->run_varlist;
+    activity->count_out_varlist = activity->count_run_varlist;
+    activity->count_run_varlist = 0;
+
+    activity->macro_varlist = NULL;
+    activity->count_macro_varlist = 0;
+
+    activity->func_varlist = NULL;
     setActivityBtTop(NULL, activity);
     setActivityBtStart(NULL, activity);
 
@@ -309,8 +319,7 @@ static void clearActivity(af_Activity *activity) {
     /* mark在setFuncActivityToNormal被清理*/
     /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
     activity->mark = NULL;
-
-    /* file和line都遗留 */
+    activity->func = NULL;
 }
 
 /*
@@ -352,11 +361,12 @@ static void freeAllActivityTrackBack(af_ActivityTrackBack *atb) {
  * 函数名: tailCallActivity
  * 目标: 记录ActivityTrackBack然后清除Activity
  */
-static void tailCallActivity(af_Activity *activity) {
+static void tailCallActivity(af_Object *func, af_Activity *activity) {
     af_ActivityTrackBack *atb = makeActivityTrackBack(activity);
     atb->next = activity->tb;
+    clearFuncActivity(activity);
     activity->tb = atb;
-    clearActivity(activity);
+    activity->func = func;
 }
 
 /*
@@ -999,18 +1009,19 @@ bool popGuardian(char *type, af_Environment *env) {
     return false;
 }
 
-static void newActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
-    if (next == NULL && env->activity->body_next == NULL && env->activity->type == act_func) {
+static void newFuncActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
+    if (next == NULL && env->activity->body_next == NULL &&
+        env->activity->type == act_func && env->activity->macro_varlist == NULL) {
         writeTrackLog(aFunCoreLogger, "Tail call optimization");
-        tailCallActivity(env->activity);
+        tailCallActivity(getActivityFunc(env), env->activity);
         setActivityBtTop(bt, env->activity);
         env->activity->optimization = true;
         if (!env->activity->return_first)  // 若原本就有设置 return_first 则没有在设置的必要了, 因为该执行不会被返回
             env->activity->return_first = return_first;
     } else {
         af_Activity *activity = makeFuncActivity(bt, NULL, return_first, env->activity->msg_up,
-                                                 env->activity->var_list, env->activity->belong,
-                                                 env->activity->func);
+                                                 env->activity->run_varlist, env->activity->belong,
+                                                 getActivityFunc(env));
         pushActivity(activity, env);
     }
 }
@@ -1026,7 +1037,8 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
     if (checkLiteralCode(code->element.data, NULL, NULL, env))  // 检查是否字面量
         return false;
 
-    af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->var_list);
+    printf("isInfixFunc: %s\n", code->element.data);
+    af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->run_varlist);
     if (var == NULL)
         return false;
 
@@ -1048,7 +1060,7 @@ bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) 
 
     setActivityBtNext(next, env->activity);
 
-    newActivity(bt, next, return_first, env);
+    newFuncActivity(bt, next, return_first, env);
     setActivityBtStart(bt->next, env->activity);
 
     env->activity->status = act_func_normal;
@@ -1094,7 +1106,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 
     setActivityBtNext(next, env->activity);  // 设置当前Activity的bt_next
 
-    newActivity(bt, next, false, env);  // 添加新的Activity或尾调用优化
+    newFuncActivity(bt, next, false, env);  // 添加新的Activity或尾调用优化
     setActivityBtStart(func, env->activity);
 
     env->activity->call_type = env->activity->bt_top->block.type;  // newActivity时会设置bt_top
@@ -1113,7 +1125,7 @@ bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environmen
     setActivityBtNext(bt->next, env->activity);
 
     writeTrackLog(aFunCoreLogger, "Run literal");
-    newActivity(bt, bt->next, false, env);
+    newFuncActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
     pushLiteralData(strCopy(data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
     return setFuncActivityToArg(func, env);
@@ -1123,7 +1135,7 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
     writeTrackLog(aFunCoreLogger, "Run variable");
-    newActivity(bt, bt->next, false, env);
+    newFuncActivity(bt, bt->next, false, env);
     env->activity->is_obj_func = true;
     return setFuncActivityToArg(func, env);
 }
@@ -1133,18 +1145,17 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* 沿用activity */
 
     writeTrackLog(aFunCoreLogger, "Run macro");
-    if (!freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) { // 释放外部变量空间
-        env->activity->new_vs_count = 0;
+    if (!freeVarSpaceListCount(env->activity->count_run_varlist, env->activity->run_varlist)) { // 释放外部变量空间
+        env->activity->count_run_varlist = 0;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
         return false;
     }
 
-    env->activity->var_list = env->activity->macro_vsl;
-    env->activity->new_vs_count = env->activity->macro_vs_count;
-    env->activity->macro_vs_count = 0;
+    env->activity->out_varlist = env->activity->macro_varlist;
+    env->activity->count_run_varlist = env->activity->count_macro_varlist;
     env->activity->is_macro_call = true;
 
-    tailCallActivity(env->activity);  /* 隐式调用不设置 bt_top */
+    tailCallActivity(func, env->activity);  /* 隐式调用不设置 bt_top */
     return setFuncActivityToArg(func, env);
 }
 
@@ -1186,7 +1197,7 @@ bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env) {
     af_Object *belong = gl->obj != NULL ? gl->obj : env->global;
     /* 隐式调用不设置 bt_top */
     af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
-                                             env->activity->var_list, belong, NULL);
+                                             env->activity->run_varlist, belong, NULL);
     activity->is_guard_call = true;
     pushActivity(activity, env);
     return setFuncActivityToArg(gl->func, env);
@@ -1222,7 +1233,7 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     } else
         env->activity->acl_start = NULL;
 
-    if (!get_var_list(func->data->id, func, &env->activity->func_var_list, env->activity->mark, env))  // 设置 func_var_list
+    if (!get_var_list(func->data->id, func, &env->activity->func_varlist, env->activity->mark, env))  // 设置 func_var_list
         return false;
 
     env->activity->acl_done = env->activity->acl_start;
@@ -1254,38 +1265,40 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     if (fi->is_macro) {  // 是宏函数则保存变量空间
-        env->activity->macro_vsl = env->activity->var_list;
-        env->activity->macro_vs_count = env->activity->new_vs_count;
-        env->activity->new_vs_count = 0;
+        env->activity->macro_varlist = env->activity->out_varlist;
+        env->activity->count_macro_varlist = env->activity->count_out_varlist;
+        env->activity->count_out_varlist = 0;
     }
 
-    if (fi->scope != inline_scope) {  // 非内联函数, 释放外部变量空间
-        if (env->activity->new_vs_count != 0 && !freeVarSpaceListCount(env->activity->new_vs_count, env->activity->var_list)) {
-            pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);  // 释放失败
-            return false;
-        }
-
-        env->activity->new_vs_count = 0;
-        if (fi->scope == normal_scope)  // 使用函数变量空间
-            env->activity->var_list = env->activity->func_var_list;
-        else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
-            env->activity->var_list = makeVarSpaceList(env->protect);
-            env->activity->new_vs_count = 1;
-        } else if (fi->scope == super_pure_scope)  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
-            env->activity->var_list = NULL;
+    if (fi->scope != inline_scope) {
+        env->activity->count_run_varlist = env->activity->count_out_varlist;
+        env->activity->count_out_varlist = 0;
+        env->activity->run_varlist = env->activity->out_varlist;
+    } else if  (fi->scope == normal_scope) { // 使用函数变量空间
+        env->activity->count_run_varlist = 0;
+        env->activity->run_varlist = env->activity->func_varlist;
+    } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
+        env->activity->count_run_varlist = 1;
+        env->activity->run_varlist = makeVarSpaceList(env->protect);
+    } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
+        env->activity->count_run_varlist = 0;
+        env->activity->run_varlist = NULL;
     }
+
+    env->activity->func_varlist = NULL;
+    freeVarSpaceListCount(env->activity->count_out_varlist, env->activity->out_varlist);
+    env->activity->count_out_varlist = 0;
+    env->activity->out_varlist = NULL;
 
     if (fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
         /* 新层的变量空间应该属于belong而不是func */
-        env->activity->var_list = pushNewVarList(env->activity->belong, env->activity->var_list, env);
-        env->activity->new_vs_count++;
+        env->activity->run_varlist = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);
+        env->activity->count_run_varlist++;
     }
-
-    env->activity->func_var_list = NULL;
 
     if (fi->var_this && env->activity->belong != NULL) {
         if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong,
-                                   env->activity->var_list, env->activity->belong, env)) {
+                                   env->activity->run_varlist, env->activity->belong, env)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(this), env), env);
             return false;
         }
@@ -1293,7 +1306,7 @@ bool setFuncActivityAddVar(af_Environment *env){
 
     if (fi->var_func && env->activity->func != NULL) {
         if (!makeVarToVarSpaceList("func", 3, 3, 3, env->activity->func,
-                                   env->activity->var_list, env->activity->belong, env)) {
+                                   env->activity->run_varlist, env->activity->belong, env)) {
             pushMessageDown(makeERRORMessage(RUN_ERROR, IMPLICIT_SET_INFO(func), env), env);
             return false;
         }
@@ -1304,12 +1317,12 @@ bool setFuncActivityAddVar(af_Environment *env){
         af_ArgList *al;
         if (!get_arg_list(env->activity->func->data->id, env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
             return false;
-        runArgList(al, env->activity->var_list, env);
+        runArgList(al, env->activity->run_varlist, env);
         freeAllArgList(al);
     }
 
     if (fi->embedded == protect_embedded)
-        env->activity->var_list->vs->is_protect = true;
+        env->activity->run_varlist->vs->is_protect = true;
 
     /* ArgCodeList 在此处被清理 */
     freeAllArgCodeList(env->activity->acl_start);
@@ -1339,7 +1352,7 @@ static void initCallFuncInfo(af_CallFuncInfo *cfi, af_Environment *env) {
 
     cfi->belong = env->activity->belong;
     cfi->func = env->activity->func;
-    cfi->var_list = env->activity->var_list;  // 传var_list而非vsl
+    cfi->var_list = env->activity->run_varlist;
 
     cfi->call_type = env->activity->call_type;
     cfi->is_gc_call = env->activity->is_gc_call;
@@ -1965,10 +1978,7 @@ af_Object *getImportObject(af_ImportInfo *ii) {
 }
 
 af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
-    if (env->activity->type == act_guardian)
-        return env->activity->var_list;
-    else
-        return env->activity->vsl;
+    return env->activity->run_varlist;
 }
 
 int isCoreExit(af_Environment *env) {
@@ -1991,4 +2001,10 @@ int32_t getCoreExitCode(af_Environment *env) {
     int res = env->exit_code_->num;
     pthread_rwlock_unlock(&env->esv->lock);
     return res;
+}
+
+af_Object *getActivityFunc(af_Environment *env) {
+    if (env->activity == NULL || env->activity->type == act_guardian)
+        return NULL;
+    return env->activity->func;
 }

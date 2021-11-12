@@ -228,7 +228,7 @@ void freeAllCode(af_Code *bt) {
 
 af_Code *getCodeNext(af_Code *bt) {
     if (!LAYER_ADD1(bt))
-        return bt->next;
+        return bt->code_end == 0 ? bt->next : NULL;
 
     CodeUInt layer = 1;
     bt = bt->next;  // 跳过第一个code_block
