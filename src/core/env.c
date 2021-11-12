@@ -812,7 +812,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
     pthread_mutexattr_destroy(&attr);
 
