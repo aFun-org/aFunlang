@@ -4,27 +4,24 @@ generate_export_header(tool-shared
                        EXPORT_FILE_NAME "${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunToolExport.h"  # 导出的位置
                        BASE_NAME "AFUN_TOOL")
 
-generate_export_header(core-shared-t
+generate_export_header(core-shared
                        EXPORT_FILE_NAME "${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunCoreExport.h"  # 导出的位置
                        BASE_NAME "AFUN_CORE")
 
-generate_export_header(aFun-xx-libs
+generate_export_header(rt-shared
                        EXPORT_FILE_NAME "${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunlangExport.h"  # 导出的位置
                        BASE_NAME "AFUN_LANG")
 
 target_compile_definitions(tool-static PUBLIC AFUN_TOOL_STATIC_DEFINE=1)  # 静态库需要定义 AFUN_TOOL_STATIC_DEFINE
-target_compile_definitions(core-static-s PUBLIC AFUN_CORE_STATIC_DEFINE=1)
+target_compile_definitions(core-static PUBLIC AFUN_CORE_STATIC_DEFINE=1)
+target_compile_definitions(rt-static PUBLIC AFUN_LANG_STATIC_DEFINE=1)
 
-target_compile_definitions(core-shared-s PRIVATE core_shared_t_EXPORTS)
-target_compile_definitions(aFun-cx-libs PRIVATE aFun_xx_libs_EXPORTS)
-target_compile_definitions(aFun-ct-libs PRIVATE aFun_xx_libs_EXPORTS)
-
-set_property(TARGET tool-shared core-shared-t core-shared-s aFun-xx-libs aFun-cx-libs aFun-ct-libs
+set_property(TARGET tool-shared core-shared rt-shared
              PROPERTY C_VISIBILITY_PRESET "hidden")
-set_property(TARGET tool-shared core-shared-t core-shared-s aFun-xx-libs aFun-cx-libs aFun-ct-libs
+set_property(TARGET tool-shared core-shared rt-shared
              PROPERTY VISIBILITY_INLINES_HIDDEN TRUE)
 
-set_property(TARGET tool-static core-static-s
+set_property(TARGET tool-static core-static rt-static
              PROPERTY C_VISIBILITY_PRESET "default")
-set_property(TARGET tool-static core-static-s
+set_property(TARGET tool-static core-static
              PROPERTY VISIBILITY_INLINES_HIDDEN FALSE)

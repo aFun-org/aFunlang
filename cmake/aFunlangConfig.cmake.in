@@ -16,16 +16,12 @@ if (TARGET aFunlang::tool-static)
     list(APPEND components_list tool-shared)
 endif()
 
-if (TARGET aFunlang::core-shared-t)
-    list(APPEND components_list core-shared-t)
+if (TARGET aFunlang::core-shared)
+    list(APPEND components_list core-shared)
 endif()
 
-if (TARGET aFunlang::core-shared-s)
-    list(APPEND components_list core-shared-s)
-endif()
-
-if (TARGET aFunlang::core-static-s)
-    list(APPEND components_list core-static-s)
+if (TARGET aFunlang::core-static)
+    list(APPEND components_list core-static)
 endif()
 
 # 查找可执行程序
@@ -39,9 +35,9 @@ else()
     set_and_check(aFunlang_RUNTIME_LIBRARIES_DIRS @PACKAGE_LIBDIR@)
 endif()
 
-find_program(aFunlang_EXECUTABLE NAMES aFun aFun-ct aFun-cx aFun-xx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun executable" NO_DEFAULT_PATH)
+find_program(aFunlang_EXECUTABLE NAMES aFun aFun-ct aFun-ct aFun-xx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun executable" NO_DEFAULT_PATH)
 find_program(aFunlang_ct_EXECUTABLE NAMES aFun-ct HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-ct executable" NO_DEFAULT_PATH)
-find_program(aFunlang_cx_EXECUTABLE NAMES aFun-cx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-cx executable" NO_DEFAULT_PATH)
+find_program(aFunlang_cx_EXECUTABLE NAMES aFun-ct HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-ct executable" NO_DEFAULT_PATH)
 find_program(aFunlang_xx_EXECUTABLE NAMES aFun-xx HINTS ${aFunlang_RUNTIME_DIRS} DOC "aFun-xx executable" NO_DEFAULT_PATH)
 
 if (aFunlang_EXECUTABLE)
@@ -53,7 +49,7 @@ if (aFunlang_ct_EXECUTABLE)
 endif()
 
 if (aFunlang_cx_EXECUTABLE)
-    list(APPEND components_list aFun-cx)
+    list(APPEND components_list aFun-ct)
 endif()
 
 if (aFunlang_xx_EXECUTABLE)

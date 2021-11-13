@@ -31,11 +31,10 @@ foreach(h IN LISTS public_h_info)
     list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_core}/${h}>")
 endforeach()
 
-add_library(core-shared-t SHARED "")  # core和tool动态库
-add_library(core-shared-s SHARED "")  # core动态库, tool静态库
-add_library(core-static-s STATIC "")  # core和tool静态库
+add_library(core-shared SHARED "")  # core和tool动态库
+add_library(core-static STATIC "")  # core和tool静态库
 
-foreach(tgt core-shared-t core-shared-s core-static-s)
+foreach(tgt core-shared core-static)
     target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
     target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
     set_target_properties(${tgt} PROPERTIES
@@ -44,15 +43,13 @@ foreach(tgt core-shared-t core-shared-s core-static-s)
     define_FILENAME(${tgt})
 endforeach()
 
-set_target_properties(core-shared-t PROPERTIES OUTPUT_NAME "aFunCore-t")
-set_target_properties(core-shared-s PROPERTIES OUTPUT_NAME "aFunCore")
-set_target_properties(core-static-s PROPERTIES OUTPUT_NAME "aFunCore-static")
+set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
+set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
 
-target_link_libraries(core-shared-t PUBLIC tool-shared)
-target_link_libraries(core-shared-s PUBLIC tool-static)
-target_link_libraries(core-static-s PUBLIC tool-static)
+target_link_libraries(core-shared PUBLIC tool-shared)
+target_link_libraries(core-static PUBLIC tool-static)
 
-install(TARGETS core-shared-t core-shared-s core-static-s
+install(TARGETS core-shared core-static
         EXPORT aFunlang
         RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
         ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev

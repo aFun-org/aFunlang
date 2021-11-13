@@ -33,11 +33,10 @@ foreach(h IN LISTS public_h)
 endforeach()
 
 
-add_library(aFun-xx-libs SHARED "")  # xx表示均为动态链接 core-share-t
-add_library(aFun-cx-libs SHARED "")  # cx表示仅core动态链接 core-share-c
-add_library(aFun-ct-libs SHARED "")  # ct表示均静态链接 core-static-s
+add_library(rt-shared SHARED "")  # xx表示均为动态链接 core-share-t
+add_library(rt-static STATIC "")  # ct表示均静态链接 core-static
 
-foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
+foreach(tgt rt-shared rt-static)
     target_sources(${tgt}
                    PRIVATE ${source} ${source_tool} ${private_h} ${private_tool_h} ${private_h_core}
                    PUBLIC ${public_h_build} ${public_h_install})
@@ -52,15 +51,13 @@ foreach(tgt aFun-xx-libs aFun-cx-libs aFun-ct-libs)
     define_FILENAME(${tgt})
 endforeach()
 
-set_target_properties(aFun-xx-libs PROPERTIES OUTPUT_NAME "aFun-xx")
-set_target_properties(aFun-cx-libs PROPERTIES OUTPUT_NAME "aFun-cx")
-set_target_properties(aFun-ct-libs PROPERTIES OUTPUT_NAME "aFun-ct")
+set_target_properties(rt-shared PROPERTIES OUTPUT_NAME "aFunrt")
+set_target_properties(rt-static PROPERTIES OUTPUT_NAME "aFunrt-s")
 
-target_link_libraries(aFun-xx-libs PUBLIC core-shared-t)
-target_link_libraries(aFun-cx-libs PUBLIC core-shared-s)
-target_link_libraries(aFun-ct-libs PUBLIC core-static-s)
+target_link_libraries(rt-shared PUBLIC core-shared)
+target_link_libraries(rt-static PUBLIC core-static)
 
-install(TARGETS aFun-xx-libs aFun-cx-libs aFun-ct-libs
+install(TARGETS rt-shared rt-static
         EXPORT aFunlang
         RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
         ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev

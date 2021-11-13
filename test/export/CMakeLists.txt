@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 11)
 find_package(aFunlang REQUIRED)
 add_executable(aFunTest main.c)
 
-target_link_libraries(aFunTest aFunlang::core-shared-t)
+target_link_libraries(aFunTest aFunlang::core-shared)
 
 file(GLOB _dll  # 遍历所有的.dll
      FOLLOW_SYMLINKS  # 遍历link

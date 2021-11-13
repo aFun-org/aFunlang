@@ -40,18 +40,9 @@ file(GLOB include_h
      LIST_DIRECTORIES FALSE
      "${PROJECT_SOURCE_DIR}/include/*.h")
 
-option(AFUN_BUILD_ALL "Build all types of aFun" ON)
-set(_build_all ${AFUN_BUILD_ALL})
-
-add_executable(aFun "")
-if (${_build_all})
-    add_executable(aFun-xx "")  # xx表示均为动态链接
-    add_executable(aFun-cx "")  # cx表示仅core动态链接
-    add_executable(aFun-ct "")  # ct表示均静态链接
-    set(aFunList aFun aFun-xx aFun-cx aFun-ct)
-else()
-    set(aFunList aFun)
-endif()
+add_executable(aFun-xx "")  # xx表示均为动态链接
+add_executable(aFun-ct "")  # ct表示均静态链接
+set(aFunList aFun-xx aFun-ct)
 
 foreach(tgt IN LISTS aFunList)
     target_sources(${tgt} PRIVATE ${source} ${private_h} ${include_h})
@@ -60,27 +51,10 @@ foreach(tgt IN LISTS aFunList)
     define_FILENAME(${tgt})
 endforeach()
 
-set(AFUN_LIBRARY "aFunCore" CACHE STRING "Assign core to aFun")
-set(_afun_lib ${AFUN_LIBRARY})
-if (_afun_lib STREQUAL "aFunCore-t")
-    target_link_libraries(aFun PUBLIC aFun-xx-libs)
-elseif(_afun_lib STREQUAL "aFunCore-s")
-    target_link_libraries(aFun PUBLIC aFun-cx-libs)
-else()
-    target_link_libraries(aFun PUBLIC aFun-ct-libs)
-endif()
+target_link_libraries(aFun-xx PUBLIC rt-shared)
+target_link_libraries(aFun-ct PUBLIC rt-static)
 
-install(TARGETS aFun
-        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
+install(TARGETS aFun-xx aFun-ct
+        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT advanced-runtime
         PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)  # 设定安装
-
-if (${_build_all})
-    target_link_libraries(aFun-xx PUBLIC aFun-xx-libs)
-    target_link_libraries(aFun-cx PUBLIC aFun-cx-libs)
-    target_link_libraries(aFun-ct PUBLIC aFun-ct-libs)
-    install(TARGETS aFun-xx aFun-cx aFun-ct
-            RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT advanced-runtime
-            PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-            PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)
-endif()
+        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)

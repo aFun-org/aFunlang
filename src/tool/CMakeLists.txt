@@ -40,8 +40,8 @@ endforeach()
 target_link_libraries(tool-shared PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
 target_link_libraries(tool-static PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
 
-set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFunTool")
-set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFunTool-static")
+set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFuntool")
+set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFuntool-s")
 
 install(TARGETS tool-shared tool-static
         EXPORT aFunlang
