@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_GC_H_
 #define AFUN_GC_H_
 #include "tool.h"
+#include "pthread.h"
 
 typedef struct GC_Var GC_Var;
 typedef struct GC_VarSpace GC_VarSpace;
@@ -8,10 +9,11 @@ typedef struct GC_Object GC_Object;
 typedef struct GC_ObjectData GC_ObjectData;
 typedef struct af_GcList af_GcList;
 typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
+typedef struct gc_Factory gc_Factory;
 
 #define GC_FREE_EXCHANGE(obj, Type, Env) do { \
 {if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
- else {(Env)->gc_##Type = (obj)->gc.next;}} \
+ else {(Env)->gc_factory->gc_##Type = (obj)->gc.next;}} \
 {if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}}} while(0)
 
 #define GC_CHAIN(type) struct type *next, *prev
@@ -69,6 +71,14 @@ struct gc_Analyzed {
     struct gc_Analyzed *next;
 };
 
+struct gc_Factory {
+    pthread_mutex_t mutex;  // 互斥锁, 保护下面字段
+    struct af_ObjectData *gc_ObjectData;
+    struct af_Object *gc_Object;
+    struct af_Var *gc_Var;
+    struct af_VarSpace *gc_VarSpace;
+};
+
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
 #ifdef core_shared_t_EXPORTS
 #undef gc_addReference
@@ -92,6 +102,11 @@ struct gc_Analyzed {
                                af_Var *: gc_getVarReference, \
                                af_VarSpace *: gc_getVarSpaceReference))(obj))
 #endif
+
+/* gc_Factory 创建与释放 */
+AFUN_CORE_NO_EXPORT gc_Factory *makegGcFactory(void);
+AFUN_CORE_NO_EXPORT void freeGcFactory(gc_Factory *factory);
+
 /* gc 对象新增函数 */
 AFUN_CORE_NO_EXPORT void gc_addObject(af_Object *obj, af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_addVar(af_Var *obj, af_Environment *env);

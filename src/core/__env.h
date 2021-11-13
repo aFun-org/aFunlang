@@ -223,10 +223,7 @@ struct af_Environment {  // 运行环境
     /* 字面量基本信息 */
     af_LiteralRegex *lr;
 
-    struct af_ObjectData *gc_ObjectData;
-    struct af_Object *gc_Object;
-    struct af_Var *gc_Var;
-    struct af_VarSpace *gc_VarSpace;
+    struct gc_Factory *gc_factory;  // 记录gc信息
 
     struct af_EnvVarSpace *esv;
     struct af_TopMsgProcess *process;

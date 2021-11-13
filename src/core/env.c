@@ -826,6 +826,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
     pthread_mutexattr_destroy(&attr);
 
+    env->gc_factory = makegGcFactory();
     env->esv = makeEnvVarSpace();
 
     /* 设置默认prefix */
@@ -895,6 +896,7 @@ void freeEnvironment(af_Environment *env) {
     gc_freeAllValueData(env);  // 先释放ObjectData的void *data
     printGCByCore(env);
     gc_freeAllValue(env);  // 再完全释放Object
+    freeGcFactory(env->gc_factory);
 
     if (!res)
         writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
