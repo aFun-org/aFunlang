@@ -41,7 +41,7 @@
 #undef calloc
 
 typedef struct LogNode LogNode;
-struct LogNode {
+struct LogNode {  // 日志信息记录节点
     LogLevel level;
     char *id;
     pid_t tid;
@@ -73,14 +73,17 @@ static struct LogFactory {
 static pthread_mutex_t log_factory_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define MUTEX (&log_factory_mutex)
 
-static void destructLogSystemAtExit(void *data);
+static void destructLogSystemAtExit(void *_);
 static void *ansyWritrLog_(void *_);
 
+/**
+ * 输出日志系统的相关信息, Debug使用
+ */
 void printLogSystemInfo(void) {
     printf("Log system on %p\n", &log_factory);
 }
 
-/*
+/**
  * 函数名: initLogSystem
  * 目标: 初始化日志系统
  * 返回值:
@@ -89,6 +92,9 @@ void printLogSystemInfo(void) {
  * 0 表示初始化失败
  *
  * 该程序线程不安全
+ * @param path 日志保存的地址
+ * @param asyn 是否启用异步
+ * @return
  */
 int initLogSystem(FilePath path, bool asyn){
     if (strlen(path) >= 218)  // 路径过长
@@ -139,6 +145,7 @@ int initLogSystem(FilePath path, bool asyn){
     log_factory.init = true;
     log_factory.asyn = asyn;
     if (log_factory.asyn) {
+        log_factory.plog_buf = &log_factory.log_buf;
         pthread_cond_init(&log_factory.cond, NULL);
         pthread_create(&log_factory.pt, NULL, ansyWritrLog_, NULL);
     }
@@ -152,7 +159,7 @@ int initLogSystem(FilePath path, bool asyn){
     return re;
 }
 
-static void destructLogSystemAtExit(void *data) {
+static void destructLogSystemAtExit(void *_) {
     destructLogSystem();
 }
 
@@ -218,6 +225,18 @@ static const char *LogLevelNameLong[] = {
         "*FATAL ERROR*",  // fatal_error 6
 };
 
+/**
+ * 日志写入到文件
+ * @param level 日志等级
+ * @param id 日志器ID
+ * @param tid 线程号
+ * @param ti 时间
+ * @param t 时间戳
+ * @param file 文件名
+ * @param line 行号
+ * @param func 函数名
+ * @param info 日志内容
+ */
 static void writeLogToFactory_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
 #define FORMAT "%s/[%s] %d %d {%s %ld} (%s:%d at %s) : '%s' \n"
     /* 写入文件日志 */
@@ -234,6 +253,18 @@ static void writeLogToFactory_(LogLevel level, char *id, pid_t tid, char *ti, ti
 #undef CSV_FORMAT
 }
 
+/**
+ * 日志写入到控制台
+ * @param level 日志等级
+ * @param id 日志器ID
+ * @param tid 线程号
+ * @param ti 时间
+ * @param t 时间戳
+ * @param file 文件名
+ * @param line 行号
+ * @param func 函数名
+ * @param info 日志内容
+ */
 static void writeLogToConsole_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
 #define FORMAT_SHORT "\r* %s(%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
 #define STD_BUF_SIZE (STR_LEN(info) + 1024)
@@ -248,6 +279,18 @@ static void writeLogToConsole_(LogLevel level, char *id, pid_t tid, char *ti, ti
 #undef STD_BUF_SIZE
 }
 
+/**
+ * 日志异步写入
+ * @param level 日志等级
+ * @param id 日志器ID
+ * @param tid 线程号
+ * @param ti 时间
+ * @param t 时间戳
+ * @param file 文件名
+ * @param line 行号
+ * @param func 函数名
+ * @param info 日志内容
+ */
 static void writeLogToAsyn_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
 #define D(i) (*(log_factory.plog_buf))->i
     *(log_factory.plog_buf) = calloc(1, sizeof(LogNode));
@@ -261,10 +304,14 @@ static void writeLogToAsyn_(LogLevel level, char *id, pid_t tid, char *ti, time_
     D(func) = func;
     D(info) = strCopy(info);
     log_factory.plog_buf = &(D(next));
-    pthread_cond_signal(&log_factory.cond);
 #undef D
 }
 
+/**
+ * 异步写入日志程序
+ * @param _ 无意义
+ * @return
+ */
 static void *ansyWritrLog_(void *_) {
     pthread_mutex_lock(MUTEX);
     while (1) {
@@ -287,6 +334,18 @@ static void *ansyWritrLog_(void *_) {
     return NULL;
 }
 
+/**
+ * 日志器 写入日志
+ * @param logger 日志器
+ * @param pc  是否写入到控制台
+ * @param level 日志等级
+ * @param file 文件名
+ * @param line 行号
+ * @param func 函数名
+ * @param format 日志内容(格式字符串)
+ * @param ap 格式字符串内容
+ * @return
+ */
 static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int line, char *func, char *format, va_list ap){
     if (logger->level > level)
         return 2;
@@ -307,7 +366,7 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
     vsnprintf(tmp, 1024, format, ap);  // ap只使用一次
     va_end(ap);
 
-    if (!log_factory.asyn)
+    if (log_factory.asyn)
         writeLogToAsyn_(level, logger->id, tid, ti, t, file, line, func, tmp);
     else
         writeLogToFactory_(level, logger->id, tid, ti, t, file, line, func, tmp);
@@ -316,6 +375,8 @@ static int writeLog_(Logger *logger, bool pc, LogLevel level, char *file, int li
         writeLogToConsole_(level, logger->id, tid, ti, t, file, line, func, tmp);
 
     pthread_mutex_unlock(MUTEX);
+    if (log_factory.asyn)
+        pthread_cond_signal(&log_factory.cond);
     free(ti);
     return 0;
 }
