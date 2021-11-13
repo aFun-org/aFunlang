@@ -32,7 +32,7 @@ AFUN_CORE_EXPORT bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarS
 AFUN_CORE_EXPORT bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpace *vs);
 AFUN_CORE_EXPORT void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
 AFUN_CORE_EXPORT void setVarSpacePermissions(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external);
-AFUN_CORE_EXPORT bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, char protect);
+AFUN_CORE_EXPORT bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, bool protect);
 
 /* 变量空间链 相关操作 */
 AFUN_CORE_EXPORT bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl);

@@ -229,9 +229,9 @@ struct af_Environment {  // 运行环境
     struct af_VarSpace *gc_VarSpace;
 
     struct af_EnvVarSpace *esv;
-    struct af_Activity *activity;
     struct af_TopMsgProcess *process;
     struct af_Guardian *guardian;
+    struct af_Activity *activity;
     pthread_mutex_t in_run;
 };
 

@@ -3,6 +3,7 @@
 #include "__var.h"
 #include "__gc.h"
 #include "__env.h"
+#include "pthread.h"
 
 /* gc 操控函数 */
 
@@ -219,6 +220,7 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 }
 
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist) {
+    pthread_rwlock_rdlock(&vs->lock);
     if (vs->gc.info.reachable)
         return plist;
 
@@ -230,6 +232,7 @@ static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist
             plist = reachableVar(var->var, plist);
     }
 
+    pthread_rwlock_unlock(&vs->lock);
     return plist;
 }
 
@@ -326,6 +329,10 @@ void resetGC(af_Environment *env) {
         var->gc.info.reachable = false;
 }
 
+/**
+ * 清理对象, 清除不可达的对象
+ * @param env
+ */
 static void freeValue(af_Environment *env) {
     for (af_ObjectData *od = env->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;

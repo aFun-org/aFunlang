@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_VAR_H_
 #define AFUN_VAR_H_
 #include "macro.h"
+#include "pthread.h"
 
 // 这些typedef可能会被下面include的文件使用
 typedef struct af_VarNode af_VarNode;
@@ -34,7 +35,9 @@ struct af_VarSpace {
     struct af_VarCup *(var[VAR_HASHTABLE_SIZE]);
     struct af_Object *belong;  // 属主
     char permissions[3];  // 可定义（2），可删除（1） [自身权限 后代权限 外部权限]
-    GC_VarSpace gc;
+    pthread_rwlock_t lock;  // 控制 除gc 外其他字段的访问
+
+    GC_VarSpace gc;  // 仅能由 gc 机制访问
 };
 
 struct af_VarSpaceListNode {  // 变量链

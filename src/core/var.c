@@ -112,6 +112,8 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
     vs->permissions[0] = p_self;
     vs->permissions[1] = p_posterity;
     vs->permissions[2] = p_external;
+
+    pthread_rwlock_init(&vs->lock, NULL);
     gc_addVarSpace(vs, env);
     return vs;
 }
@@ -120,6 +122,7 @@ void freeVarSpace(af_VarSpace *vs, af_Environment *env) {
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++)
         freeAllVarCup(vs->var[i]);
     GC_FREE_EXCHANGE(vs, VarSpace, env);
+    pthread_rwlock_destroy(&vs->lock);
     free(vs);
 }
 
@@ -163,6 +166,12 @@ bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
     return true;
 }
 
+/**
+ * 检查访问者是否有定义变量的权限
+ * 注意: 无锁, 由调用者加锁
+ * @param visitor 访问者
+ * @param vs 变量空间
+ */
 static bool checkVarSpaceDefinePermissions(af_Object *visitor, af_VarSpace *vs){
     char p = vs->permissions[2];  // 默认外部权限
 
@@ -174,29 +183,36 @@ static bool checkVarSpaceDefinePermissions(af_Object *visitor, af_VarSpace *vs){
     return p == 2 || p == 3;
 }
 
-/*
- * 函数名: addVarToVarSpace
- * 目标: 把var添加到VarSpace中
- * 若空间被保护, 权限错误或已存在同名Var则返回false不作修改
- * 否则返回true
+/**
+ * 把var添加到VarSpace中
+ * @param var 变量
+ * @param visitor 访问者
+ * @param vs 变量空间
+ * @return 若空间被保护, 权限错误或已存在同名Var则返回false不作修改 否则返回true
  */
 bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs) {
     time33_t index = time33(var->name) % VAR_HASHTABLE_SIZE;
     af_VarCup **pCup = &vs->var[index];
+    pthread_rwlock_wrlock(&vs->lock);
 
     if (vs->is_protect)
-        return false;
+        goto RETURN_FALSE;
 
     if (!checkVarSpaceDefinePermissions(visitor, vs))
-        return false;
+        goto RETURN_FALSE;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
         if (EQ_STR((*pCup)->var->name, var->name))
-            return false;
+            goto RETURN_FALSE;
     }
 
     *pCup = makeVarCup(var);
+    pthread_rwlock_unlock(&vs->lock);
     return true;
+
+RETURN_FALSE:
+    pthread_rwlock_unlock(&vs->lock);
+    return false;
 }
 
 /*
@@ -244,9 +260,15 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
  * 调用 addVarToVarSpace
  */
 bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
+    pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = false;
+    pthread_rwlock_unlock(&env->protect->lock);
+
     bool re = addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), env->activity->belong, env->protect);
+
+    pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = true;
+    pthread_rwlock_unlock(&env->protect->lock);
     return re;
 }
 
@@ -258,14 +280,27 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
  * 调用 addVarToVarSpace
  */
 bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
+    pthread_rwlock_wrlock(&env->protect->lock);
     bool is_protect = env->protect->is_protect;
     env->protect->is_protect = false;
+    pthread_rwlock_unlock(&env->protect->lock);
+
     bool re = addVarToVarSpace(var, NULL, env->protect);
+
+    pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = is_protect;
+    pthread_rwlock_unlock(&env->protect->lock);
     return re;
 }
 
 
+/**
+ * 检查访问者是否有删除变量的权限
+ * 注意: 无锁, 由调用者加锁
+ * @param visitor 访问者
+ * @param vs 变量空间
+ * @return
+ */
 static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs) {
     char p = vs->permissions[2];  // 默认外部权限
 
@@ -285,21 +320,26 @@ static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs) {
  */
 bool delVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs) {
     time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
+
+    pthread_rwlock_wrlock(&vs->lock);
     af_VarCup **pCup = &vs->var[index];
 
     if (vs->is_protect)
-        return false;
+        goto RETRUN_FALSE;
 
     if (!checkVarSpaceDelPermissions(visitor, vs))
-        return false;
+        goto RETRUN_FALSE;
 
     for (NULL; *pCup != NULL; pCup = &((*pCup)->next)) {
         if (EQ_STR((*pCup)->var->name, name)) {
             *pCup = freeVarCup(*pCup);
+            pthread_rwlock_unlock(&vs->lock);
             return true;
         }
     }
 
+RETRUN_FALSE:
+    pthread_rwlock_unlock(&vs->lock);
     return false;
 }
 
@@ -320,21 +360,35 @@ bool delVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl)
  * 权限检查交给 findVarFromVarSpace 和 findVarFromVarList
  */
 static af_Var *findVarFromVarSpaceByIndex(time33_t index, char *name, af_VarSpace *vs) {
+    pthread_rwlock_rdlock(&vs->lock);
     for (af_VarCup *cup = vs->var[index]; cup != NULL; cup = cup->next) {
-        if (EQ_STR(cup->var->name, name))
-            return cup->var;
+        if (EQ_STR(cup->var->name, name)) {
+            af_Var *var = cup->var;
+            pthread_rwlock_unlock(&vs->lock);
+            return var;
+        }
     }
+    pthread_rwlock_unlock(&vs->lock);
     return NULL;
 }
 
+/**
+ * 检查访问者是否有读取变量的权限
+ * 注意: 会给VarSpace加读锁
+ * @param var 变量
+ * @param visitor 访问者
+ * @param vs  变量空间
+ * @return 返回是否具有读取权限
+ */
 static bool checkVarReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
     char p = var->permissions[2];  // 默认外部权限
 
+    pthread_rwlock_rdlock(&vs->lock);
     if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
         p = var->permissions[0];
     else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
         p = var->permissions[1];
-
+    pthread_rwlock_unlock(&vs->lock);
     return p == 1 || p == 3;
 }
 
@@ -374,6 +428,14 @@ af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *
     return NULL;
 }
 
+/**
+ * 检查访问者是否有改写变量的权限
+ * 注意: 无锁, 由调用者加锁
+ * @param var 变量
+ * @param visitor 访问者
+ * @param vs 变量空间
+ * @return
+ */
 static bool checkVarWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
     char p = var->permissions[2];  // 默认外部权限
 
@@ -395,10 +457,14 @@ bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpac
     if (var == NULL)
         return false;
 
+    pthread_rwlock_wrlock(&vs->lock);
     if (checkVarWritePermissions(var, visitor, vs)) {
+        pthread_rwlock_wrlock(&vs->lock);
         var->vn->obj = obj;
         return true;
     }
+
+    pthread_rwlock_unlock(&vs->lock);
     return false;
 }
 
@@ -414,10 +480,13 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
     for (NULL; vsl != NULL; vsl = vsl->next) {
         var = findVarFromVarSpaceByIndex(index, name, vsl->vs);
         if (var != NULL) {
+            pthread_rwlock_wrlock(&vsl->vs->lock);
             if (checkVarWritePermissions(var, visitor, vsl->vs)) {
+                pthread_rwlock_wrlock(&vsl->vs->lock);
                 var->vn->obj = obj;
                 return true;
             }
+            pthread_rwlock_wrlock(&vsl->vs->lock);
             return false;
         }
     }
@@ -431,29 +500,43 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
 }
 
 void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+    pthread_rwlock_rdlock(&vs->lock);
     if (vs->belong->data != visitor->data)
         return;
+    pthread_rwlock_unlock(&vs->lock);
+
     var->permissions[0] = p_self;
     var->permissions[1] = p_posterity;
     var->permissions[2] = p_external;
 }
 
 void setVarSpacePermissions(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
+    pthread_rwlock_rdlock(&vs->lock);
     if (vs->belong->data != visitor->data)
         return;
+    pthread_rwlock_unlock(&vs->lock);
+
     vs->permissions[0] = p_self;
     vs->permissions[1] = p_posterity;
     vs->permissions[2] = p_external;
 }
 
 bool isProtectVarSpace(af_VarSpace *vs) {
-    return vs->is_protect;
+    pthread_rwlock_rdlock(&vs->lock);
+    bool res = vs->is_protect;
+    pthread_rwlock_unlock(&vs->lock);
+    return res;
 }
 
-bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, char protect) {
+bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, bool protect) {
+    pthread_rwlock_wrlock(&vs->lock);
     bool re = vs->is_protect;
-    if (vs->belong->data != visitor->data)
+    if (vs->belong != NULL && vs->belong->data != visitor->data) {
+        pthread_rwlock_unlock(&vs->lock);
         return re;
+    }
+
     vs->is_protect = protect;
+    pthread_rwlock_unlock(&vs->lock);
     return re;
 }

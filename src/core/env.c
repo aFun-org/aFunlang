@@ -876,7 +876,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 }
 
 void enableEnvironment(af_Environment *env) {
-    env->protect->is_protect = true;
+    setVarSpaceProtect(NULL, env->protect, true);
     env->status = core_normal;
 }
 
@@ -1266,6 +1266,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         pushMessageDown(makeERRORMessage(API_RUN_ERROR, API_DONOT_GIVE(FuncInfo), env), env);
         return false;
     }
+
     if (fi->scope == super_pure_scope && env->activity->fi->scope == super_embedded) {
         /* 超纯函数和超内嵌函数不得搭配使用 */
         pushMessageDown(makeERRORMessage(RUN_ERROR, PURE_EMBEDDED_INFO, env), env);
@@ -1330,7 +1331,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     if (fi->embedded == protect_embedded)
-        env->activity->run_varlist->vs->is_protect = true;
+        setVarSpaceProtect(env->activity->belong, env->activity->run_varlist->vs, true);
 
     /* ArgCodeList 在此处被清理 */
     freeAllArgCodeList(env->activity->acl_start);

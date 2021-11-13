@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     aFunAtExit(freeBaseName, NULL);
 
     if (setjmp(main_buf) == 1)
-        aFunExit(aFunExitFail);
+        aFunExit(2);
 
     aFunInitInfo info = {.base_dir=base_path,
 #ifdef aFunDEBUG
