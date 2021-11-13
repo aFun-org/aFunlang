@@ -1143,19 +1143,27 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* Macro是隐式调用, bt不移动 */
     /* 沿用activity */
+    af_VarSpaceListNode *macro_varlist = env->activity->macro_varlist;
+    ActivityCount count = env->activity->count_macro_varlist;
+    env->activity->count_macro_varlist = 0;
 
     writeTrackLog(aFunCoreLogger, "Run macro");
     if (!freeVarSpaceListCount(env->activity->count_run_varlist, env->activity->run_varlist)) { // 释放外部变量空间
         env->activity->count_run_varlist = 0;
+        env->activity->run_varlist = NULL;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
         return false;
     }
 
-    env->activity->out_varlist = env->activity->macro_varlist;
-    env->activity->count_run_varlist = env->activity->count_macro_varlist;
-    env->activity->is_macro_call = true;
+    env->activity->count_run_varlist = 0;
+    env->activity->run_varlist = NULL;
 
     tailCallActivity(func, env->activity);  /* 隐式调用不设置 bt_top */
+
+    /* tailCallActivity 会清除 out_varlist 的设定 */
+    env->activity->out_varlist = macro_varlist;
+    env->activity->count_out_varlist = count;
+    env->activity->is_macro_call = true;
     return setFuncActivityToArg(func, env);
 }
 
