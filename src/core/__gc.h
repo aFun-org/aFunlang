@@ -12,9 +12,11 @@ typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
 typedef struct gc_Factory gc_Factory;
 
 #define GC_FREE_EXCHANGE(obj, Type, Env) do { \
+pthread_mutex_lock(&(Env)->gc_factory->mutex); \
 {if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
  else {(Env)->gc_factory->gc_##Type = (obj)->gc.next;}} \
-{if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}}} while(0)
+{if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}} \
+pthread_mutex_unlock(&(Env)->gc_factory->mutex);} while(0)
 
 #define GC_CHAIN(type) struct type *next, *prev
 typedef uint32_t GcCount;
