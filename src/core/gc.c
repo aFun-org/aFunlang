@@ -245,11 +245,11 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 }
 
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist) {
-    pthread_rwlock_rdlock(&vs->lock);
     if (vs->gc.info.reachable)
         return plist;
-
     vs->gc.info.reachable = true;
+
+    pthread_rwlock_rdlock(&vs->lock);
     if (vs->belong != NULL)
         plist = makeAnalyzed(vs->belong, plist);
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++) {
@@ -264,13 +264,14 @@ static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
     if (var->gc.info.reachable)
         return plist;
-
     var->gc.info.reachable = true;
+
+    pthread_rwlock_rdlock(&var->lock);
     for (af_VarNode *vn = var->vn; vn != NULL; vn = vn->next) {
         if (!vn->obj->gc.info.reachable)
             plist = makeAnalyzed(vn->obj, plist);
     }
-
+    pthread_rwlock_unlock(&var->lock);
     return plist;
 }
 

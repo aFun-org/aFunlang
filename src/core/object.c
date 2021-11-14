@@ -308,12 +308,12 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) 
     af_Var *var = findVarFromVarSpace(name, visitor, obj->data->var_space);
 
     if (var != NULL)
-        return var->vn->obj;
+        return findVarNode(var, NULL);
 
     for (af_Inherit *ih = obj->data->inherit; ih != NULL; ih = ih->next) {
         var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
-            return var->vn->obj;
+            return findVarNode(var, NULL);
     }
 
     return NULL;
@@ -328,12 +328,12 @@ af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_O
     af_Var *var = findVarFromVarSpace(name, visitor, od->var_space);
 
     if (var != NULL)
-        return var->vn->obj;
+        return findVarNode(var, NULL);
 
     for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
         var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
-            return var->vn->obj;
+            return findVarNode(var, NULL);
     }
 
     return NULL;

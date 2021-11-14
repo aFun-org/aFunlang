@@ -172,8 +172,8 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             return false;
         }
 
-        writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, var->vn->obj);
-        return pushLiteralActivity(code, code->element.data, var->vn->obj, env);
+        writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, findVarNode(var, NULL));
+        return pushLiteralActivity(code, code->element.data, findVarNode(var, NULL), env);
     }
 
     /* 变量执行 */
@@ -184,13 +184,13 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         return false;
     }
 
-    af_Object *obj = var->vn->obj;
+    af_Object *obj = findVarNode(var, NULL);
     obj_isObjFunc *is_obj;
     obj_isInfixFunc *is_infix;
 
     if (code->prefix != getPrefix(E_QUOTE, env)) {
         if ((is_obj = findAPI("obj_isObjFunc", obj->data->api)) != NULL && is_obj(obj->data->id, obj))
-            return pushVariableActivity(code, var->vn->obj, env);  // 对象函数
+            return pushVariableActivity(code, obj, env);  // 对象函数
         else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
                  (is_infix = findAPI("obj_isInfixFunc", obj->data->api)) != NULL && is_infix(obj->data->id, obj)) {
             pushMessageDown(makeERRORMessageFormat(INFIX_PROTECT, env,

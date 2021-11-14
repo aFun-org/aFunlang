@@ -141,7 +141,7 @@ af_VarSpace *getProtectVarSpace(af_Environment *env) {
 af_Object *getBaseObject(char *name, af_Environment *env) {
     af_Var *var = findVarFromVarSpace(name, NULL, env->protect);
     if (var != NULL)
-        return var->vn->obj;
+        return findVarNode(var, NULL);
     return NULL;
 }
 
@@ -1044,10 +1044,11 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
     if (var == NULL)
         return false;
 
-    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", var->vn->obj->data->api);
+    af_Object *obj = findVarNode(var, NULL);
+    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", obj->data->api);
     if (func == NULL)
         return false;
-    return func(var->vn->obj->data->id, var->vn->obj);
+    return func(obj->data->id, obj);
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
