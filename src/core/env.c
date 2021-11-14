@@ -204,7 +204,7 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     activity->status = act_func_normal;
 
     activity->count_run_varlist = 2;
-    activity->run_varlist = makeVarSpaceList(belong->data->var_space);
+    activity->run_varlist = makeVarSpaceList(getObjectVarSpace(belong));
     activity->run_varlist->next = makeVarSpaceList(protect);
 
     setActivityBtTop(NULL, activity);  // top-activity直接就在normal, bt_top将不被设定
@@ -1045,10 +1045,10 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
         return false;
 
     af_Object *obj = findVarNode(var, NULL);
-    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", obj->data->api);
+    obj_isInfixFunc *func = findAPI("obj_isInfixFunc", getObjectAPI(obj));
     if (func == NULL)
         return false;
-    return func(obj->data->id, obj);
+    return func(getObjectID(obj), obj);
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
@@ -1225,8 +1225,9 @@ void setArgCodeListToActivity(af_ArgCodeList *acl, af_Environment *env) {
 }
 
 bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
-    obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", func->data->api);
-    obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", func->data->api);
+    af_ObjectAPI *api = getObjectAPI(func);
+    obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", api);
+    obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", api);
 
     if (get_var_list == NULL) {
         pushMessageDown(makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_funcGetVarList), env), env);
@@ -1239,12 +1240,12 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
     if (get_acl != NULL) {
-        if (!get_acl(func->data->id, func, &env->activity->acl_start, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
+        if (!get_acl(getObjectID(func), func, &env->activity->acl_start, env->activity->bt_top, &env->activity->mark, env))  // 设置acl
             return false;
     } else
         env->activity->acl_start = NULL;
 
-    if (!get_var_list(func->data->id, func, &env->activity->func_varlist, env->activity->mark, env))  // 设置 func_var_list
+    if (!get_var_list(getObjectID(func), func, &env->activity->func_varlist, env->activity->mark, env))  // 设置 func_var_list
         return false;
 
     env->activity->acl_done = env->activity->acl_start;
@@ -1253,8 +1254,9 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
 }
 
 bool setFuncActivityAddVar(af_Environment *env){
-    obj_funcGetInfo *get_info = findAPI("obj_funcGetInfo", env->activity->func->data->api);
-    obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", env->activity->func->data->api);
+    af_ObjectAPI *api = getObjectAPI(env->activity->func);
+    obj_funcGetInfo *get_info = findAPI("obj_funcGetInfo", api);
+    obj_funcGetArgList *get_arg_list = findAPI("obj_funcGetArgList", api);
     af_FuncInfo *fi = NULL;
 
     if (get_info == NULL) {
@@ -1263,7 +1265,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     }
 
     /* env->activity->fi可能还存储着旧的FuncInfo(尾调用优化), 因此不能直接保存到 env->activity->fi 中 */
-    if (!get_info(env->activity->func->data->id, env->activity->func, &fi, env->activity->bt_top, env->activity->mark, env))
+    if (!get_info(getObjectID(env->activity->func), env->activity->func, &fi, env->activity->bt_top, env->activity->mark, env))
         return false;
     if (fi == NULL) {
         pushMessageDown(makeERRORMessage(API_RUN_ERROR, API_DONOT_GIVE(FuncInfo), env), env);
@@ -1327,7 +1329,7 @@ bool setFuncActivityAddVar(af_Environment *env){
     /* 计算参数 */
     if (get_arg_list != NULL) {
         af_ArgList *al;
-        if (!get_arg_list(env->activity->func->data->id, env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
+        if (!get_arg_list(getObjectID(env->activity->func), env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
             return false;
         runArgList(al, env->activity->run_varlist, env);
         freeAllArgList(al);
@@ -1455,9 +1457,9 @@ void runTopMessageProcess(bool is_top, af_Environment *env) {
 
 static void freeMark(af_Activity *activity) {
     if (activity->type == act_func && activity->func != NULL && activity->mark != NULL) {
-        obj_funcFreeMask *func = findAPI("obj_funcFreeMask", activity->func->data->api);
+        obj_funcFreeMask *func = findAPI("obj_funcFreeMask", getObjectAPI(activity->func));
         if (func != NULL)
-            func(activity->func->data->id, activity->func, activity->mark);
+            func(getObjectID(activity->func), activity->func, activity->mark);
         activity->mark = NULL;
     }
 }

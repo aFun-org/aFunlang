@@ -196,7 +196,21 @@ bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
 static bool checkVarSpaceDefinePermissions(af_Object *visitor, af_VarSpace *vs){
     char p = vs->permissions[2];  // 默认外部权限
 
-    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
+    if (vs->belong == NULL || (visitor != NULL && belong_data == visitor_data))  // (无权限设定或ObjectData匹配) 应用自身权限
         p = vs->permissions[0];
     else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
         p = vs->permissions[1];
@@ -333,7 +347,21 @@ bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
 static bool checkVarSpaceDelPermissions(af_Object *visitor, af_VarSpace *vs) {
     char p = vs->permissions[2];  // 默认外部权限
 
-    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
+    if (vs->belong == NULL || (visitor != NULL && belong_data == visitor_data))  // (无权限设定或ObjectData匹配) 应用自身权限
         p = vs->permissions[0];
     else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
         p = vs->permissions[1];
@@ -424,10 +452,26 @@ static bool checkVarReadPermissions(af_Var *var, af_Object *visitor, af_VarSpace
 
     pthread_rwlock_rdlock(&vs->lock);
     pthread_rwlock_rdlock(&var->lock);
-    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
+    if (vs->belong == NULL || (visitor != NULL && belong_data == visitor_data))  // (无权限设定或ObjectData匹配) 应用自身权限
         p = var->permissions[0];
     else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
         p = var->permissions[1];
+
     pthread_rwlock_unlock(&vs->lock);
     pthread_rwlock_unlock(&var->lock);
     return p == 1 || p == 3;
@@ -480,8 +524,22 @@ af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *
 static bool checkVarWritePermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs){
     char p = var->permissions[2];  // 默认外部权限
 
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
     pthread_rwlock_rdlock(&vs->lock);
-    if (vs->belong == NULL || (visitor != NULL && vs->belong->data == visitor->data))  // (无权限设定或ObjectData匹配) 应用自身权限
+    if (vs->belong == NULL || (visitor != NULL && belong_data == visitor_data))  // (无权限设定或ObjectData匹配) 应用自身权限
         p = var->permissions[0];
     else if (visitor != NULL && checkPosterity(vs->belong, visitor))  // 应用后代权限
         p = var->permissions[1];
@@ -551,9 +609,25 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
 
 void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
     pthread_rwlock_rdlock(&vs->lock);
-    if (vs->belong->data != visitor->data)
-        return;
+
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
     pthread_rwlock_unlock(&vs->lock);
+
+    if (belong_data != NULL && belong_data != visitor_data)
+        return;
 
     pthread_rwlock_wrlock(&var->lock);
     var->permissions[0] = p_self;
@@ -564,9 +638,25 @@ void setVarPermissions(af_Var *var, af_Object *visitor, af_VarSpace *vs, char p_
 
 void setVarSpacePermissions(af_Object *visitor, af_VarSpace *vs, char p_self, char p_posterity, char p_external) {
     pthread_rwlock_rdlock(&vs->lock);
-    if (vs->belong->data != visitor->data)
-        return;
+
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
     pthread_rwlock_unlock(&vs->lock);
+
+    if (belong_data != NULL && belong_data != visitor_data)
+        return;
 
     vs->permissions[0] = p_self;
     vs->permissions[1] = p_posterity;
@@ -583,7 +673,22 @@ bool isProtectVarSpace(af_VarSpace *vs) {
 bool setVarSpaceProtect(af_Object *visitor, af_VarSpace *vs, bool protect) {
     pthread_rwlock_wrlock(&vs->lock);
     bool re = vs->is_protect;
-    if (vs->belong != NULL && vs->belong->data != visitor->data) {
+
+    af_ObjectData *belong_data = NULL;
+    if (vs->belong != NULL) {
+        pthread_rwlock_rdlock(&vs->belong->lock);
+        belong_data = vs->belong->data;
+        pthread_rwlock_unlock(&vs->belong->lock);
+    }
+
+    af_ObjectData *visitor_data = NULL;
+    if (visitor != NULL) {
+        pthread_rwlock_rdlock(&visitor->lock);
+        visitor_data = visitor->data;
+        pthread_rwlock_unlock(&visitor->lock);
+    }
+
+    if (belong_data != NULL && belong_data != visitor_data) {
         pthread_rwlock_unlock(&vs->lock);
         return re;
     }

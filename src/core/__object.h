@@ -14,6 +14,7 @@ typedef struct af_ObjectAPINode af_ObjectAPINode;
 
 #include "object.h"
 #include "__gc.h"
+#include "pthread.h"
 
 #define API_HASHTABLE_SIZE (8)
 
@@ -51,6 +52,8 @@ struct af_ObjectData {
 struct af_Object {
     struct af_Object *belong;  // 只有顶级属对象的belong属性可为NULL
     struct af_ObjectData *data;
+    pthread_rwlock_t lock;  // 保护上面两个字段
+
     GC_Object gc;
 };
 

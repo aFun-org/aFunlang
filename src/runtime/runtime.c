@@ -37,7 +37,7 @@ int runtimeToolImport(char *name, af_Object **obj, af_Code **code, af_Environmen
     if (name == NULL || code == NULL || env == NULL || obj == NULL)
         return 1;
     *obj = makeGlobalObject(env);
-    return runtimeTool(name, code, *obj, (*obj)->data->var_space, env);
+    return runtimeTool(name, code, *obj, getObjectVarSpace((*obj)), env);
 }
 
 /*

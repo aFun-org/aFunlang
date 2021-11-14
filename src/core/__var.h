@@ -22,7 +22,7 @@ struct af_Var {
     char *name;
     struct af_VarNode *vn;
     char permissions[3];  // 读-1 写-2 读且写-3 不读不写-0 [自身权限 后代权限 外部权限]
-    pthread_rwlock_t lock;
+    pthread_rwlock_t lock;  // 保护上面三个字段
 
     GC_Var gc;
 };
@@ -37,7 +37,7 @@ struct af_VarSpace {
     struct af_VarCup *(var[VAR_HASHTABLE_SIZE]);
     struct af_Object *belong;  // 属主
     char permissions[3];  // 可定义（2），可删除（1） [自身权限 后代权限 外部权限]
-    pthread_rwlock_t lock;  // 控制 除gc 外其他字段的访问
+    pthread_rwlock_t lock;  // 控制 除gc外其他字段的访问
 
     GC_VarSpace gc;  // 仅能由 gc 机制访问
 };

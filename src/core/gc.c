@@ -176,7 +176,7 @@ static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
 static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist);
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
-static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist);
+static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist);
 
 /* gc运行函数 */
 static void freeValue(af_Environment *env);
@@ -191,11 +191,14 @@ static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 // ObjectData可能要调用API, 因此其需要调用的对象是不确定的, 但只有Object需要gc_Analyzed
 // VarSpace和Var的调用是确定的, 他们不会往回调用除Object外的其他量
 // 所以gc_Analyzed记录Object就足够了
-static pgc_Analyzed reachableObject(struct af_Object *od, pgc_Analyzed plist) {
-    for (NULL; od != NULL && !od->gc.info.reachable; od = od->belong) {
-        od->gc.info.reachable = true;
-        if (!od->data->gc.info.reachable)
-            plist = reachableObjectData(od->data, plist);
+static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
+    for (NULL; obj != NULL && !obj->gc.info.reachable; obj = obj->belong) {
+        obj->gc.info.reachable = true;
+
+        pthread_rwlock_rdlock(&obj->lock);
+        if (!obj->data->gc.info.reachable)
+            plist = reachableObjectData(obj->data, plist);
+        pthread_rwlock_unlock(&obj->lock);
     }
     return plist;
 }
