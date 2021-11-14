@@ -49,6 +49,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
             init(id, base_obj, od->data, env);
     }
 
+    pthread_rwlock_init(&od->lock, NULL);
     gc_addObjectData(od, env);
     return od;
 }
@@ -102,13 +103,17 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
  */
 void freeObjectDataData(af_ObjectData *od, af_Environment *env) {
-    if (od->size == 0)
+    pthread_rwlock_rdlock(&od->lock);
+    if (od->size == 0) {
+        pthread_rwlock_unlock(&od->lock);
         return;
+    }
     obj_destructData *func = findAPI("obj_destructData", od->api);
     if (func != NULL)
         func(od->id, od->base, od->data, env);
     od->size = 0;
     free(od->data);
+    pthread_rwlock_unlock(&od->lock);
 }
 
 /*
@@ -129,6 +134,7 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
         freeObjectAPI(od->api);
     freeAllInherit(od->inherit);
     GC_FREE_EXCHANGE(od, ObjectData, env);
+    pthread_rwlock_destroy(&od->lock);
     free(od);
 }
 
@@ -140,8 +146,12 @@ void freeObject(af_Object *obj, af_Environment *env) {
 
 void *getObjectData(af_Object *obj) {
     pthread_rwlock_rdlock(&obj->lock);
-    void *data = obj->data->data;
+    af_ObjectData *od = obj->data;
     pthread_rwlock_unlock(&obj->lock);
+
+    pthread_rwlock_rdlock(&od->lock);
+    void *data = od->data;
+    pthread_rwlock_unlock(&od->lock);
 
     return data;
 }
@@ -154,12 +164,15 @@ af_Object *getBelongObject(af_Object *object){
 }
 
 af_Inherit *makeInherit(af_Object *obj) {
-    if (!obj->data->allow_inherit)
+    if (!isObjectAllowInherit(obj))
         return NULL;
 
-    obj_getShareVarSpace *func = findAPI("obj_getShareVarSpace", obj->data->api);
+    obj_getShareVarSpace *func = findAPI("obj_getShareVarSpace", getObjectAPI(obj));
     af_VarSpace *vs = NULL;
-    if (func == NULL || (vs = func(obj->data->id, obj)) == NULL)
+    if (func == NULL)
+        return NULL;
+
+    if ((vs = func(getObjectID(obj), obj)) == NULL)
         return NULL;
 
     af_Inherit *ih = calloc(1, sizeof(af_Inherit));
@@ -193,15 +206,11 @@ bool checkPosterity(af_Object *base, af_Object *posterity) {
     af_ObjectData *data = posterity->data;
     pthread_rwlock_unlock(&posterity->lock);
 
-    pthread_rwlock_rdlock(&base->lock);
-    for (af_Inherit *ih = base->data->inherit; ih != NULL; ih = ih->next) {
-        if (ih->obj->data == data) {
-            pthread_rwlock_unlock(&base->lock);
+    for (af_Inherit *ih = getObjectInherit(base); ih != NULL; ih = ih->next) {
+        if (ih->obj->data == data)
             return true;
-        }
     }
 
-    pthread_rwlock_unlock(&base->lock);
     return false;
 }
 
@@ -279,21 +288,30 @@ void *findAPI(char *api_name, af_ObjectAPI *api) {
 static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name,
                               af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
-    af_ObjectAPINode **pNode = &od->api->node[index];
 
+    pthread_rwlock_rdlock(&od->lock);
+    af_ObjectAPI *api = od->api;
+    pthread_rwlock_unlock(&od->lock);
+
+    af_ObjectAPINode **pNode = &api->node[index];
     for (NULL; *pNode != NULL; pNode = &((*pNode)->next)) {
         if (EQ_STR((*pNode)->name, api_name))
             return 0;
     }
 
     *pNode = makeObjectAPINode(func, api_name);
-    od->api->count++;
+    api->count++;
     return *pNode == NULL ? -1 : 1;
 }
 
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
-    for (af_ObjectAPINode *node = od->api->node[index]; node != NULL; node = node->next) {
+
+    pthread_rwlock_rdlock(&od->lock);
+    af_ObjectAPI *api = od->api;
+    pthread_rwlock_unlock(&od->lock);
+
+    for (af_ObjectAPINode *node = api->node[index]; node != NULL; node = node->next) {
         if (EQ_STR(node->name, api_name))
             return node;
     }
@@ -328,16 +346,12 @@ void *findObjectAPI(char *api_name, af_Object *obj) {
 }
 
 af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) {
-    pthread_rwlock_rdlock(&obj->lock);
-    af_ObjectData *data = obj->data;
-    pthread_rwlock_unlock(&obj->lock);
-
-    af_Var *var = findVarFromVarSpace(name, visitor, data->var_space);
+    af_Var *var = findVarFromVarSpace(name, visitor, getObjectVarSpace(obj));
 
     if (var != NULL)
         return findVarNode(var, NULL);
 
-    for (af_Inherit *ih = data->inherit; ih != NULL; ih = ih->next) {
+    for (af_Inherit *ih = getObjectInherit(obj); ih != NULL; ih = ih->next) {
         var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
             return findVarNode(var, NULL);
@@ -348,20 +362,19 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) 
 
 bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
                          af_Object *obj, af_Object *visitor, af_Environment *env){
-    pthread_rwlock_rdlock(&obj->lock);
-    af_ObjectData *data = obj->data;
-    pthread_rwlock_unlock(&obj->lock);
-
-    return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, data->var_space, visitor, env);
+    return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, getObjectVarSpace(obj), visitor, env);
 }
 
 af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od) {
+    pthread_rwlock_rdlock(&od->lock);
     af_Var *var = findVarFromVarSpace(name, visitor, od->var_space);
+    af_Inherit *ih = od->inherit;
+    pthread_rwlock_unlock(&od->lock);
 
     if (var != NULL)
         return findVarNode(var, NULL);
 
-    for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
+    for (NULL; ih != NULL; ih = ih->next) {
         var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
         if (var != NULL)
             return findVarNode(var, NULL);
@@ -375,7 +388,11 @@ char *getObjectID(af_Object *obj) {
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
-    return data->id;
+    pthread_rwlock_rdlock(&data->lock);
+    char *id = data->id;
+    pthread_rwlock_unlock(&data->lock);
+
+    return id;
 }
 
 af_ObjectAPI *getObjectAPI(af_Object *obj) {
@@ -383,7 +400,11 @@ af_ObjectAPI *getObjectAPI(af_Object *obj) {
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
-    return data->api;
+    pthread_rwlock_rdlock(&data->lock);
+    af_ObjectAPI *api = data->api;
+    pthread_rwlock_unlock(&data->lock);
+
+    return api;
 }
 
 af_Inherit *getObjectInherit(af_Object *obj) {
@@ -391,7 +412,11 @@ af_Inherit *getObjectInherit(af_Object *obj) {
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
-    return data->inherit;
+    pthread_rwlock_rdlock(&data->lock);
+    af_Inherit *ih = data->inherit;
+    pthread_rwlock_unlock(&data->lock);
+
+    return ih;
 }
 
 af_VarSpace *getObjectVarSpace(af_Object *obj) {
@@ -399,7 +424,11 @@ af_VarSpace *getObjectVarSpace(af_Object *obj) {
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
-    return data->var_space;
+    pthread_rwlock_rdlock(&data->lock);
+    af_VarSpace *vs = data->var_space;
+    pthread_rwlock_unlock(&data->lock);
+
+    return vs;
 }
 
 af_Inherit *getInheritNext(af_Inherit *ih) {
@@ -423,5 +452,19 @@ void objectSetAllowInherit(af_Object *obj, bool allow) {
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
+    pthread_rwlock_rdlock(&data->lock);
     data->allow_inherit = allow;
+    pthread_rwlock_unlock(&data->lock);
+}
+
+bool isObjectAllowInherit(af_Object *obj) {
+    pthread_rwlock_rdlock(&obj->lock);
+    af_ObjectData *data = obj->data;
+    pthread_rwlock_unlock(&obj->lock);
+
+    pthread_rwlock_rdlock(&data->lock);
+    bool res = data->allow_inherit;
+    pthread_rwlock_unlock(&data->lock);
+
+    return res;
 }

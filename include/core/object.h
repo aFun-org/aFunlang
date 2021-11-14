@@ -47,6 +47,7 @@ AFUN_CORE_EXPORT char *getObjectID(af_Object *obj);
 AFUN_CORE_EXPORT af_ObjectAPI *getObjectAPI(af_Object *obj);
 AFUN_CORE_EXPORT af_Inherit *getObjectInherit(af_Object *obj);
 AFUN_CORE_EXPORT af_VarSpace *getObjectVarSpace(af_Object *obj);
+AFUN_CORE_EXPORT bool isObjectAllowInherit(af_Object *obj);
 
 /* API表 属性访问 */
 AFUN_CORE_EXPORT void *findAPI(char *api_name, af_ObjectAPI *api);

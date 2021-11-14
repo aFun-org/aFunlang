@@ -208,8 +208,9 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
         return plist;
 
     od->gc.info.reachable = true;
-    plist = reachableVarSpace(od->var_space, plist);
 
+    pthread_rwlock_rdlock(&od->lock);
+    plist = reachableVarSpace(od->var_space, plist);
     if (!od->base->gc.info.reachable)
         plist = makeAnalyzed(od->base, plist);
 
@@ -244,6 +245,8 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
         }
         freeAllGcList(gl);
     }
+
+    pthread_rwlock_unlock(&od->lock);
     return plist;
 }
 
@@ -416,8 +419,12 @@ static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pg
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;
-            printf("od->base = %p\n", od->base);
-            *pgl = pushGuardianList(od->base, func, *pgl);
+
+            pthread_rwlock_rdlock(&od->lock);
+            af_Object *base = od->base;
+            pthread_rwlock_unlock(&od->lock);
+
+            *pgl = pushGuardianList(base, func, *pgl);
             plist = reachableObjectData(od, plist);
         }
     }
@@ -457,7 +464,12 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             if (func == NULL)
                 continue;
             od->gc.done_destruct = true;
-            pgl = pushGuardianList(od->base, func, pgl);
+
+            pthread_rwlock_rdlock(&od->lock);
+            af_Object *base = od->base;
+            pthread_rwlock_unlock(&od->lock);
+
+            pgl = pushGuardianList(base, func, pgl);
         }
     }
     pthread_mutex_unlock(&env->gc_factory->mutex);
