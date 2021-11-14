@@ -239,12 +239,14 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin) {
 
 af_ObjectAPI *makeObjectAPI(void) {
     af_ObjectAPI *api = calloc(1, sizeof(af_ObjectAPI));
+    pthread_rwlock_init(&api->lock, NULL);
     return api;
 }
 
 void freeObjectAPI(af_ObjectAPI *api) {
     for (int i = 0; i < API_HASHTABLE_SIZE; i++)
         freeAllObjectAPINode(api->node[i]);
+    pthread_rwlock_destroy(&api->lock);
     free(api);
 }
 
@@ -257,25 +259,43 @@ void freeObjectAPI(af_ObjectAPI *api) {
  */
 int addAPI(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectAPI *api) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
+
+    pthread_rwlock_wrlock(&api->lock);
     af_ObjectAPINode **pNode = &api->node[index];
 
     for (NULL; *pNode != NULL; pNode = &((*pNode)->next)) {
-        if (EQ_STR((*pNode)->name, api_name))
+        if (EQ_STR((*pNode)->name, api_name)) {
+            pthread_rwlock_unlock(&api->lock);
             return 0;
+        }
     }
 
     *pNode = makeObjectAPINode(func, api_name);
-    api->count++;
-    return *pNode == NULL ? -1 : 1;
+
+    int res = -1;
+    if (*pNode != NULL) {
+        api->count++;
+        res = 1;
+    }
+
+    pthread_rwlock_unlock(&api->lock);
+    return res;
 }
 
 void *findAPI(char *api_name, af_ObjectAPI *api) {
     time33_t index = time33(api_name) % API_HASHTABLE_SIZE;
+    void *data = NULL;
+    pthread_rwlock_rdlock(&api->lock);
+
     for (af_ObjectAPINode *node = api->node[index]; node != NULL; node = node->next) {
-        if (EQ_STR(node->name, api_name))
-            return GET_SYMBOL(node->api);
+        if (EQ_STR(node->name, api_name)) {
+            data = GET_SYMBOL(node->api);
+            break;
+        }
     }
-    return NULL;
+
+    pthread_rwlock_unlock(&api->lock);
+    return data;
 }
 
 /*
@@ -293,15 +313,25 @@ static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name,
     af_ObjectAPI *api = od->api;
     pthread_rwlock_unlock(&od->lock);
 
+    pthread_rwlock_wrlock(&api->lock);
     af_ObjectAPINode **pNode = &api->node[index];
     for (NULL; *pNode != NULL; pNode = &((*pNode)->next)) {
-        if (EQ_STR((*pNode)->name, api_name))
+        if (EQ_STR((*pNode)->name, api_name)) {
+            pthread_rwlock_unlock(&api->lock);
             return 0;
+        }
     }
 
     *pNode = makeObjectAPINode(func, api_name);
-    api->count++;
-    return *pNode == NULL ? -1 : 1;
+
+    int res = -1;
+    if (*pNode != NULL) {
+        api->count++;
+        res = 1;
+    }
+
+    pthread_rwlock_unlock(&api->lock);
+    return res;
 }
 
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od) {
@@ -311,11 +341,18 @@ static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od
     af_ObjectAPI *api = od->api;
     pthread_rwlock_unlock(&od->lock);
 
+    void *data = NULL;
+    pthread_rwlock_rdlock(&api->lock);
+
     for (af_ObjectAPINode *node = api->node[index]; node != NULL; node = node->next) {
-        if (EQ_STR(node->name, api_name))
-            return node;
+        if (EQ_STR(node->name, api_name)) {
+            data = node;
+            break;
+        }
     }
-    return NULL;
+
+    pthread_rwlock_unlock(&api->lock);
+    return data;
 }
 
 /*
@@ -444,7 +481,10 @@ af_VarSpace *getInheritVarSpace(af_Inherit *ih) {
 }
 
 ObjAPIUint getAPICount(af_ObjectAPI *api) {
-    return api->count;
+    pthread_rwlock_rdlock(&api->lock);
+    ObjAPIUint res = api->count;
+    pthread_rwlock_unlock(&api->lock);
+    return res;
 }
 
 void objectSetAllowInherit(af_Object *obj, bool allow) {

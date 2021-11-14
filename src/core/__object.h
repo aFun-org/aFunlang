@@ -30,6 +30,7 @@ struct af_ObjectAPINode {
 struct af_ObjectAPI {
     ObjAPIUint count;  // api个数记录
     struct af_ObjectAPINode *(node[API_HASHTABLE_SIZE]);
+    pthread_rwlock_t lock;
 };
 
 struct af_ObjectData {
