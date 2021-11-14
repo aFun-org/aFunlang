@@ -49,7 +49,7 @@ struct af_ObjectData {
     struct af_VarSpace *var_space;
 
     struct af_Object *base;  // 在gc机制中, 当对想要被释放前, 调用析构函数是对象以该base的身份出现
-    pthread_rwlock_t lock;
+    pthread_rwlock_t lock;  // 保护除gc外其他字段
 
     GC_ObjectData gc;
 };
@@ -66,6 +66,7 @@ struct af_Inherit {
     struct af_Object *obj;
     struct af_VarSpace *vs;  // 共享变量空间
     struct af_Inherit *next;
+    pthread_rwlock_t lock;
 };
 
 /* 对象 创建与释放 */

@@ -214,11 +214,13 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
     if (!od->base->gc.info.reachable)
         plist = makeAnalyzed(od->base, plist);
 
-    for (af_Inherit *ih = od->inherit; ih != NULL; ih = ih->next) {
-        if (!ih->obj->gc.info.reachable)
-            plist = makeAnalyzed(ih->obj, plist);
-        if (!ih->vs->gc.info.reachable)
-            plist = reachableVarSpace(ih->vs, plist);
+    for (af_Inherit *ih = od->inherit; ih != NULL; ih = getInheritNext(ih)) {
+        af_Object *obj = getInheritObject(ih);
+        af_VarSpace *vs = getInheritVarSpace(ih);
+        if (!obj->gc.info.reachable)
+            plist = makeAnalyzed(obj, plist);
+        if (!vs->gc.info.reachable)
+            plist = reachableVarSpace(vs, plist);
     }
 
     obj_getGcList *func = findAPI("obj_getGcList", od->api);

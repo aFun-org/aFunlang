@@ -186,9 +186,17 @@ af_Inherit *makeInherit(af_Object *obj) {
     af_Inherit *ih = calloc(1, sizeof(af_Inherit));
     ih->vs = vs;
     ih->obj = obj;  // 调用API获取vs
+    pthread_rwlock_init(&ih->lock, NULL);
     return ih;
 }
 
+/**
+ * 压入Inherit到末尾
+ * 注意: 不上锁
+ * @param base
+ * @param new
+ * @return
+ */
 af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new) {
     while ((*base) != NULL)
         base = &((*base)->next);
@@ -200,6 +208,7 @@ af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new) {
 
 static af_Inherit *freeInherit(af_Inherit *ih) {
     af_Inherit *next = ih->next;  // vs一定是被gc托管的
+    pthread_rwlock_destroy(&ih->lock);
     free(ih);
     return next;
 }
@@ -214,9 +223,14 @@ bool checkPosterity(af_Object *base, af_Object *posterity) {
     af_ObjectData *data = posterity->data;
     pthread_rwlock_unlock(&posterity->lock);
 
-    for (af_Inherit *ih = getObjectInherit(base); ih != NULL; ih = ih->next) {
-        if (ih->obj->data == data)
+    for (af_Inherit *ih = getObjectInherit(base); ih != NULL; ih = getInheritNext(ih)) {
+        af_Object *obj = getInheritObject(ih);
+        pthread_rwlock_rdlock(&obj->lock);
+        if (obj->data == data) {
+            pthread_rwlock_unlock(&obj->lock);
             return true;
+        }
+        pthread_rwlock_unlock(&obj->lock);
     }
 
     return false;
@@ -396,8 +410,8 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) 
     if (var != NULL)
         return findVarNode(var, NULL);
 
-    for (af_Inherit *ih = getObjectInherit(obj); ih != NULL; ih = ih->next) {
-        var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
+    for (af_Inherit *ih = getObjectInherit(obj); ih != NULL; ih = getInheritNext(ih)) {
+        var = findVarFromVarSpace(name, visitor, getInheritVarSpace(ih));  // 搜索共享变量空间
         if (var != NULL)
             return findVarNode(var, NULL);
     }
@@ -419,8 +433,8 @@ af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_O
     if (var != NULL)
         return findVarNode(var, NULL);
 
-    for (NULL; ih != NULL; ih = ih->next) {
-        var = findVarFromVarSpace(name, visitor, ih->vs);  // 搜索共享变量空间
+    for (NULL; ih != NULL; ih = getInheritNext(ih)) {
+        var = findVarFromVarSpace(name, visitor, getInheritVarSpace(ih));  // 搜索共享变量空间
         if (var != NULL)
             return findVarNode(var, NULL);
     }
@@ -477,15 +491,24 @@ af_VarSpace *getObjectVarSpace(af_Object *obj) {
 }
 
 af_Inherit *getInheritNext(af_Inherit *ih) {
-    return ih->next;
+    pthread_rwlock_rdlock(&ih->lock);
+    af_Inherit *next = ih->next;
+    pthread_rwlock_unlock(&ih->lock);
+    return next;
 }
 
 af_Object *getInheritObject(af_Inherit *ih) {
-    return ih->obj;
+    pthread_rwlock_rdlock(&ih->lock);
+    af_Object *obj = ih->obj;
+    pthread_rwlock_unlock(&ih->lock);
+    return obj;
 }
 
 af_VarSpace *getInheritVarSpace(af_Inherit *ih) {
-    return ih->vs;
+    pthread_rwlock_rdlock(&ih->lock);
+    af_VarSpace *vs = ih->vs;
+    pthread_rwlock_unlock(&ih->lock);
+    return vs;
 }
 
 ObjAPIUint getAPICount(af_ObjectAPI *api) {
