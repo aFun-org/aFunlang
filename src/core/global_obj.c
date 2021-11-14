@@ -72,5 +72,5 @@ af_Object *makeGlobalObject(af_Environment *env) {
     FREE_SYMBOL(get_share_vs);
     FREE_SYMBOL(get_gl);
 
-    return makeObject(global_id, true, api, true, NULL, NULL, env);
+    return makeObject(global_id, true, api, true, NULL, true, NULL, env);
 }

@@ -31,6 +31,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
 
     od->api = api;
     od->free_api = free_api;
+
     od->allow_inherit = allow_inherit;
 
     od->var_space = makeVarSpace(base_obj, 3, 2, 0, env);
@@ -69,17 +70,22 @@ static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, boo
  * 若处于初始化模式, 则belong, inherit等可以设置为NULL, 由后期统一填上
  */
 af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
-                      af_Inherit *inherit, af_Environment *env) {
-    if (api == NULL)
-        return NULL;
+                      bool free_inherit, af_Inherit *inherit, af_Environment *env){
+    if (api == NULL) {
+        api = makeObjectAPI();
+        free_api = true;
+    }
 
     af_Inherit *ih = NULL;
     if (inherit != NULL)
         ih = inherit;
-    else if (env->global != NULL)  // init模式生成: global
-        ih = makeInherit(env->global);
-    else if (env->status != core_creat)
-        return NULL;
+    else {
+        free_inherit = true;
+        if (env->global != NULL)
+            ih = makeInherit(env->global);
+        else if (env->status != core_creat)
+            return NULL;
+    }
 
     if (belong == NULL) {
         if (env->activity != NULL)
@@ -94,6 +100,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
 
     obj->belong = belong;
     obj->data->inherit = ih;
+    obj->data->free_inherit = free_inherit;
     return obj;
 }
 
@@ -132,7 +139,8 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
     free(od->data);
     if (od->free_api)
         freeObjectAPI(od->api);
-    freeAllInherit(od->inherit);
+    if (od->free_inherit)
+        freeAllInherit(od->inherit);
     GC_FREE_EXCHANGE(od, ObjectData, env);
     pthread_rwlock_destroy(&od->lock);
     free(od);

@@ -85,7 +85,7 @@ af_FuncBody *testFunc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用
         DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
         if (addAPI(literal_set, "obj_literalSetting", api) != 1)
             return NULL;
-        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        obj = makeObject("func", true, api, true, NULL, true, NULL, env);
         FREE_SYMBOL(literal_set);
     }
 
@@ -142,7 +142,7 @@ af_FuncBody *testFunc2(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return NULL;
 
-        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        obj = makeObject("func", true, api, true, NULL, true, NULL, env);
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
@@ -182,7 +182,7 @@ af_FuncBody *testFunc4(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
         DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
         if (addAPI(literal_set, "obj_literalSetting", api) != 1)
             return NULL;
-        obj = makeObject("func", true, api, true, NULL, NULL, env);
+        obj = makeObject("func", true, api, true, NULL, true, NULL, env);
         FREE_SYMBOL(literal_set);
     }
 
@@ -201,7 +201,7 @@ bool getInfo4(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
 af_FuncBody *testFunc9(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_FuncBody *fb;
-    obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
+    obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc9(%p): I am testFunc9\n", obj);
 
@@ -224,7 +224,7 @@ bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
 
 af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
-    obj = makeObject("obj", true, makeObjectAPI(), true, NULL, NULL, env);
+    obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc8(%p): I am testFunc8\n", obj);
     fflush(stdout);
@@ -233,7 +233,7 @@ af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
 
 af_FuncBody *testFunc7(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
-    obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
+    obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj), env);
     printf("testFunc7[des](%p): I am testFunc7\n", obj);
     fflush(stdout);
@@ -251,7 +251,7 @@ bool getInfo7(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
 af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
-    obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
+    obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
 
     {
         af_ObjectAPI *api = makeObjectAPI();
@@ -273,7 +273,7 @@ af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
             return NULL;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return NULL;
-        des = makeObject("func-des", true, api, true, NULL, NULL, env);
+        des = makeObject("func-des", true, api, true, NULL, true, NULL, env);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_info7);
         FREE_SYMBOL(get_gl);
@@ -303,7 +303,7 @@ bool getInfo6(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
 af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
-    obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
+    obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
 
     {
         af_ObjectAPI *api = makeObjectAPI();
@@ -325,7 +325,7 @@ af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
             return NULL;
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             return NULL;
-        des = makeObject("func-des", true, api, true, NULL, NULL, env);
+        des = makeObject("func-des", true, api, true, NULL, true, NULL, env);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_info6);
         FREE_SYMBOL(get_gl);
@@ -442,7 +442,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
-                                        (obj = makeObject("object", true, api, true, NULL, NULL, env)),
+                                        (obj = makeObject("object", true, api, true, NULL, true, NULL, env)),
                                         env),
                                 env);
         FREE_SYMBOL(getSize_3);
@@ -487,7 +487,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -534,7 +534,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func2", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -580,7 +580,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func3", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -629,7 +629,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func4", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -676,7 +676,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func5", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -691,7 +691,7 @@ INIT_ERROR:
     }
 
     {
-        af_Object *obj = makeObject("func", true, makeObjectAPI(), true, NULL, NULL, env);
+        af_Object *obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
         af_Object *des;
 
         {
@@ -714,7 +714,7 @@ INIT_ERROR:
                 goto RETURN_2;
             if (addAPI(get_gl, "obj_getGcList", api) != 1)
                 goto RETURN_2;
-            des = makeObject("func-des", true, api, true, NULL, NULL, env);
+            des = makeObject("func-des", true, api, true, NULL, true, NULL, env);
             FREE_SYMBOL(get_vsl);
             FREE_SYMBOL(get_info6);
             FREE_SYMBOL(get_gl);
@@ -760,7 +760,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func7", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -809,7 +809,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func8", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -856,7 +856,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func9", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
@@ -902,7 +902,7 @@ INIT_ERROR:
             goto RETURN_2;
 
         addVarToProtectVarSpace(makeVar("func10", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, NULL, env)), env),
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
                                 env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);

@@ -74,7 +74,7 @@ void makeObjectFromList(const ObjectDefineList obj_def[], af_Object *visitor, af
         if (api == NULL)
             api = makeAPIFromList(od->api_list);
 
-        af_Object *obj = makeObject(od->id, od->free_api, api, od->allow_inherit, od->belong, od->inherit, env);
+        af_Object *obj = makeObject(od->id, od->free_api, api, od->allow_inherit, od->belong, true, od->inherit, env);
         if (od->save != NULL)
             *(od->save) = obj;
         if (vs != NULL && od->var_name != NULL) {

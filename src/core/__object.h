@@ -43,8 +43,10 @@ struct af_ObjectData {
     bool allow_inherit;  // 是否允许被继承
     bool free_api;  // 是否释放api
 
-    struct af_VarSpace *var_space;
     struct af_Inherit *inherit;  // 只有顶级继承对象的inherit属性可为NULL
+    bool free_inherit;  // 是否释放inherit
+
+    struct af_VarSpace *var_space;
 
     struct af_Object *base;  // 在gc机制中, 当对想要被释放前, 调用析构函数是对象以该base的身份出现
     pthread_rwlock_t lock;

@@ -16,8 +16,9 @@ DEFINE_DLC_SYMBOL(objectAPIFunc);
 #include "var.h"
 
 /* 对象创建 */
-AFUN_CORE_EXPORT af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
-                                       af_Inherit *inherit, af_Environment *env);
+AFUN_CORE_EXPORT af_Object * makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit,
+                                        af_Object *belong, bool free_inherit, af_Inherit *inherit,
+                                        af_Environment *env);
 
 /* API表 创建与释放 */
 AFUN_CORE_EXPORT af_ObjectAPI *makeObjectAPI(void);

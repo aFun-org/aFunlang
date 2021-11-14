@@ -70,7 +70,7 @@ static bool strFuncVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, 
 static af_FuncBody *strFuncBody(af_CallFuncInfo *cfi, af_Environment *env) {
     af_Object *obj = cfi->func;
     ObjectStrFunc *osf = getObjectData(obj);
-    af_Object *str = makeObject((char *)string_id, false, osf->api, false, NULL, makeInherit(obj), env);
+    af_Object *str = makeObject((char *) string_id, false, osf->api, false, NULL, true, makeInherit(obj), env);
     af_Message *msg = makeNORMALMessage(str);
     pushMessageDown(msg, env);
     return NULL;
