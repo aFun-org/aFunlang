@@ -54,6 +54,8 @@ struct af_Activity {  // 活动记录器
         act_guardian,  /* 守护器 */
     } type;
 
+    /* gc锁, 保护belong, run_varlist, func, return_obj, parentheses_call, macro_varlistm func_varlist */
+    pthread_rwlock_t gc_lock;  // gc读时上读锁, 解释器所在进读时不上锁, 写时上写锁
     struct af_Object *belong;  // 属对象 (belong通常为func的belong)
 
     struct af_Message *msg_down;  // 被调用者向调用者传递信息

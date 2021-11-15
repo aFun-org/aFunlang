@@ -333,13 +333,16 @@ static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist) {
 
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
     for (NULL; activity != NULL; activity = activity->prev) {
+        pthread_rwlock_rdlock(&activity->gc_lock);
         if (activity->belong != NULL)
             plist = reachableObject(activity->belong, plist);
 
         plist = reachableVarSpaceList(activity->run_varlist, plist);
 
-        if (activity->type == act_guardian)  // gc不执行接下来的检查
+        if (activity->type == act_guardian) {  // gc不执行接下来的检查
+            pthread_rwlock_unlock(&activity->gc_lock);
             continue;
+        }
 
         if (activity->func != NULL)
             plist = reachableObject(activity->func, plist);
@@ -352,6 +355,7 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
 
         plist = reachableVarSpaceList(activity->func_varlist, plist);
         plist = reachableVarSpaceList(activity->macro_varlist, plist);
+        pthread_rwlock_unlock(&activity->gc_lock);
     }
     return plist;
 }

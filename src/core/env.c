@@ -185,6 +185,7 @@ static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlis
     activity->count_run_varlist = 0;
     activity->belong = belong;
     activity->line = 1;
+    pthread_rwlock_init(&activity->gc_lock, NULL);
     return activity;
 }
 
@@ -247,6 +248,7 @@ static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **
 }
 
 static af_Activity *freeActivity(af_Activity *activity) {
+    pthread_rwlock_wrlock(&activity->gc_lock);
     af_Activity *prev = activity->prev;
 
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
@@ -271,6 +273,8 @@ static af_Activity *freeActivity(af_Activity *activity) {
         free(activity->import_mark);
     }
 
+    pthread_rwlock_unlock(&activity->gc_lock);
+    pthread_rwlock_destroy(&activity->gc_lock);
     free(activity);
     return prev;
 }
@@ -307,6 +311,7 @@ static void clearFuncActivity(af_Activity *activity) {
     /* acl在runArgList之后就被释放了 */
     /* acl在FuncBody暂时不释放 */
 
+    pthread_rwlock_wrlock(&activity->gc_lock);
     activity->out_varlist = activity->run_varlist;
     activity->count_out_varlist = activity->count_run_varlist;
     activity->count_run_varlist = 0;
@@ -315,6 +320,13 @@ static void clearFuncActivity(af_Activity *activity) {
     activity->count_macro_varlist = 0;
 
     activity->func_varlist = NULL;
+
+    /* mark在setFuncActivityToNormal被清理*/
+    /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
+    activity->mark = NULL;
+    activity->func = NULL;
+    pthread_rwlock_unlock(&activity->gc_lock);
+
     setActivityBtTop(NULL, activity);
     setActivityBtStart(NULL, activity);
 
@@ -324,11 +336,6 @@ static void clearFuncActivity(af_Activity *activity) {
 
     /* activity->fi 暂时不清理, 直到setFuncActivityAddVar时才清理 */
     activity->body_next = NULL;
-
-    /* mark在setFuncActivityToNormal被清理*/
-    /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
-    activity->mark = NULL;
-    activity->func = NULL;
 }
 
 /*
@@ -375,7 +382,10 @@ static void tailCallActivity(af_Object *func, af_Activity *activity) {
     atb->next = activity->tb;
     clearFuncActivity(activity);
     activity->tb = atb;
+
+    pthread_rwlock_wrlock(&activity->gc_lock);
     activity->func = func;
+    pthread_rwlock_unlock(&activity->gc_lock);
 }
 
 /*
@@ -1175,7 +1185,10 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *next;
     af_Code *func;
     af_Object *parentheses_call = env->activity->parentheses_call;
+
+    pthread_rwlock_wrlock(&env->activity->gc_lock);
     env->activity->parentheses_call = NULL;
+    pthread_rwlock_unlock(&env->activity->gc_lock);
 
     writeTrackLog(aFunCoreLogger, "Run func");
     next = getCodeNext(bt);
@@ -1250,23 +1263,27 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     ActivityCount count = env->activity->count_macro_varlist;
     env->activity->count_macro_varlist = 0;
 
+    pthread_rwlock_wrlock(&env->activity->gc_lock);
+    af_VarSpaceListNode *tmp = env->activity->run_varlist;
+    env->activity->run_varlist = NULL;
+    pthread_rwlock_unlock(&env->activity->gc_lock);
+
     writeTrackLog(aFunCoreLogger, "Run macro");
-    if (!freeVarSpaceListCount(env->activity->count_run_varlist, env->activity->run_varlist)) { // 释放外部变量空间
+    if (!freeVarSpaceListCount(env->activity->count_run_varlist, tmp)) { // 释放外部变量空间
         env->activity->count_run_varlist = 0;
-        env->activity->run_varlist = NULL;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
         return false;
     }
 
     env->activity->count_run_varlist = 0;
-    env->activity->run_varlist = NULL;
-
     tailCallActivity(func, env->activity);  /* 隐式调用不设置 bt_top */
 
     /* tailCallActivity 会清除 out_varlist 的设定 */
+    pthread_rwlock_wrlock(&env->activity->gc_lock);
     env->activity->out_varlist = macro_varlist;
     env->activity->count_out_varlist = count;
     env->activity->is_macro_call = true;
+    pthread_rwlock_unlock(&env->activity->gc_lock);
     return setFuncActivityToArg(func, env);
 }
 
@@ -1328,15 +1345,19 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     af_ObjectAPI *api = getObjectAPI(func);
     obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", api);
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", api);
+    af_VarSpaceListNode *func_varlist = NULL;
+    af_Object *belong = getBelongObject(func);
 
     if (get_var_list == NULL) {
         pushMessageDown(makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_funcGetVarList), env), env);
         return false;
     }
 
+    pthread_rwlock_wrlock(&env->activity->gc_lock);
     env->activity->func = func;
-    env->activity->belong = getBelongObject(func);
+    env->activity->belong = belong;
     env->activity->status = act_func_arg;
+    pthread_rwlock_unlock(&env->activity->gc_lock);
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
     if (get_acl != NULL) {
@@ -1378,6 +1399,9 @@ bool setFuncActivityAddVar(af_Environment *env){
         return false;
     }
 
+    af_VarSpaceListNode *tmp = NULL;  // 临时变量, 存放内容见代码注释
+    pthread_rwlock_wrlock(&env->activity->gc_lock);
+
     if (fi->is_macro) {  // 是宏函数则保存变量空间
         env->activity->macro_varlist = env->activity->out_varlist;
         env->activity->count_macro_varlist = env->activity->count_out_varlist;
@@ -1393,21 +1417,34 @@ bool setFuncActivityAddVar(af_Environment *env){
         env->activity->run_varlist = env->activity->func_varlist;
     } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
         env->activity->count_run_varlist = 1;
-        env->activity->run_varlist = makeVarSpaceList(env->protect);
+        pthread_rwlock_unlock(&env->activity->gc_lock);
+
+        tmp = makeVarSpaceList(env->protect);  // 该过程不加gc锁, 避免死锁
+
+        pthread_rwlock_wrlock(&env->activity->gc_lock);
+        env->activity->run_varlist = tmp;
     } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
         env->activity->count_run_varlist = 0;
         env->activity->run_varlist = NULL;
     }
 
     env->activity->func_varlist = NULL;
-    freeVarSpaceListCount(env->activity->count_out_varlist, env->activity->out_varlist);
-    env->activity->count_out_varlist = 0;
+    tmp = env->activity->out_varlist;
     env->activity->out_varlist = NULL;
+
+    pthread_rwlock_unlock(&env->activity->gc_lock);
+
+    freeVarSpaceListCount(env->activity->count_out_varlist, tmp);  // freeVarSpaceListCount 前释放, 避免死锁
+    env->activity->count_out_varlist = 0;
 
     if (fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
         /* 新层的变量空间应该属于belong而不是func */
-        env->activity->run_varlist = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);
+        tmp = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);
+
+        pthread_rwlock_wrlock(&env->activity->gc_lock);
+        env->activity->run_varlist = tmp;
         env->activity->count_run_varlist++;
+        pthread_rwlock_unlock(&env->activity->gc_lock);
     }
 
     if (fi->var_this && env->activity->belong != NULL) {
@@ -1429,7 +1466,8 @@ bool setFuncActivityAddVar(af_Environment *env){
     /* 计算参数 */
     if (get_arg_list != NULL) {
         af_ArgList *al;
-        if (!get_arg_list(getObjectID(env->activity->func), env->activity->func, &al, env->activity->acl_start, env->activity->mark, env))
+        if (!get_arg_list(getObjectID(env->activity->func), env->activity->func, &al, env->activity->acl_start,
+                          env->activity->mark, env))
             return false;
         runArgList(al, env->activity->run_varlist, env);
         freeAllArgList(al);
