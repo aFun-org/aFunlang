@@ -157,13 +157,28 @@ void setCoreStop(af_Environment *env) {
 }
 
 void setCoreExit(int exit_code, af_Environment *env) {
+    pthread_rwlock_wrlock(&env->esv->lock);
+    env->exit_code_->num = exit_code;
+    pthread_rwlock_unlock(&env->esv->lock);
+
+    setCoreExitNotExitCode(env);
+}
+
+void setCoreExitNotExitCode(af_Environment *env) {
     pthread_mutex_lock(&env->status_lock);
     env->status = core_exit;
     pthread_mutex_unlock(&env->status_lock);
 
-    pthread_rwlock_wrlock(&env->esv->lock);
-    env->exit_code_->num = exit_code;
-    pthread_rwlock_unlock(&env->esv->lock);
+    if (env == env->base) {  // 若是主线程, 通知所有次线程
+        pthread_mutex_lock(&env->thread_lock);
+        for (af_EnvironmentList *envl = env->env_list; envl != NULL; envl = envl->next) {
+            pthread_mutex_lock(&envl->env->thread_lock);
+            if (envl->env->monitor != NULL)
+                pthread_cond_signal(&envl->env->monitor->cond);
+            pthread_mutex_unlock(&envl->env->thread_lock);
+        }
+        pthread_mutex_lock(&env->thread_lock);
+    }
 }
 
 void setCoreNormal(af_Environment *env) {
@@ -1757,7 +1772,7 @@ bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base) {
     return false;
 }
 
-bool pushEnvironmentList(af_Environment *env, af_Environment *base) {
+void pushEnvironmentList(af_Environment *env, af_Environment *base) {
     af_EnvironmentList *envl = makeEnvironmentList(env);
     pthread_mutex_lock(&env->thread_lock);
     envl->next = base->env_list;
@@ -2236,6 +2251,8 @@ enum af_CoreStatus getCoreStatus(af_Environment *env) {
 void setEnviromentExit_out(af_Environment *env) {
     pthread_mutex_lock(&env->thread_lock);
     env->son_exit = true;
+    if (env->monitor != NULL)
+        pthread_cond_signal(&env->monitor->cond);
     pthread_mutex_unlock(&env->thread_lock);
 }
 
@@ -2246,6 +2263,8 @@ bool isEnviromentExit(af_Environment *env) {
     pthread_mutex_unlock(&env->thread_lock);
     if (res)
         return true;
+    else if (env == base)
+        return false;
 
     enum af_CoreStatus status = getCoreStatus(base);
     res = status == core_exit || status == core_normal_gc;  // 主线程结束
@@ -2262,12 +2281,12 @@ void waitForEnviromentExit(af_Environment *env) {
     pthread_mutex_unlock(&env->status_lock);
 
     while (1) {
-        pthread_mutex_lock(&env->thread_lock);
+        pthread_mutex_lock(&env->thread_lock);  // TODO-szh 改用信号
         if (env->env_list == NULL) {
             pthread_mutex_unlock(&env->thread_lock);
             break;
         }
         pthread_mutex_unlock(&env->thread_lock);
-        safeSleep(0.01);
+        safeSleep(0.1);  // 不易设置太小
     }
 }

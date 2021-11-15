@@ -57,6 +57,7 @@ AFUN_CORE_EXPORT void setGcRun(enum GcRunTime grt, af_Environment *env);
 AFUN_CORE_EXPORT char setPrefix(size_t name, char prefix, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreStop(af_Environment *env);
 AFUN_CORE_EXPORT void setCoreExit(int exit_code, af_Environment *env);
+AFUN_CORE_EXPORT void setCoreExitNotExitCode(af_Environment *env);
 AFUN_CORE_EXPORT void setCoreNormal(af_Environment *env);
 AFUN_CORE_EXPORT void setArgc(int argc, af_Environment *env);
 AFUN_CORE_EXPORT void setEnviromentExit_out(af_Environment *env);

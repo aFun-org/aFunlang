@@ -1,6 +1,7 @@
 ﻿#include "aFunCore.h"
 #include "__run.h"
 #include "__env.h"
+#include "__monitor.h"
 
 /* 工具函数: 初始化类型 */
 static bool iterCodeInit(af_Code *code, int mode, af_Environment *env);
@@ -362,7 +363,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     if (!iterCodeInit(code, mode, env))
         return false;
     bool re = true;
-
+    af_Monitor *monitor = makeMonitor(env);
     /*
      * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
      * 为什么会有这个问题: top-Activity只有在bt_next=NULL时被pop, 而循环也是在bt_next=NULL时可能被退出
@@ -502,6 +503,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
 
 RETURN:
     pthread_mutex_unlock(&env->in_run);
+    freeMonitor(env);
     return re;
 }
 

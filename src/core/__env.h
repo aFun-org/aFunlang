@@ -20,6 +20,7 @@ typedef struct af_EnvironmentList af_EnvironmentList;
 #include "__code.h"
 #include "__gc.h"
 #include "__func.h"
+#include "__monitor.h"
 #include "regex.h"
 
 #define DEFAULT_GC_COUNT_MAX (50)
@@ -206,6 +207,8 @@ struct af_EnvironmentList {
 };
 
 struct af_Environment {  // 运行环境
+    af_Monitor *monitor;  // 监视器线程
+
     bool is_derive;  // 是否派生
     struct af_Environment *base;  // 主线程
 
@@ -331,6 +334,6 @@ AFUN_CORE_NO_EXPORT af_GuardianList **contectGuardianList(af_GuardianList *new, 
 
 /* EnvironmentList 管理函数 */
 AFUN_CORE_NO_EXPORT bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base);
-AFUN_CORE_NO_EXPORT bool pushEnvironmentList(af_Environment *env, af_Environment *base);
+AFUN_CORE_NO_EXPORT void pushEnvironmentList(af_Environment *env, af_Environment *base);
 
 #endif //AFUN_ENV_H_
