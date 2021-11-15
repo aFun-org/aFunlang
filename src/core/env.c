@@ -57,6 +57,10 @@ static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_prot
 static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr);
 static void freeAllLiteralRegex(af_LiteralRegex *lr);
 
+/* EnvironmentList 创建与释放 */
+static af_EnvironmentList *makeEnvironmentList(af_Environment *env);
+static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *env);
+
 /* af_ErrorBacktracking 创建与释放 */
 static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file, char *note);
 static af_ErrorBacktracking *freeErrorBacktracking(af_ErrorBacktracking *ebt);
@@ -718,6 +722,21 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env) {
         writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
+static void mp_NORMALThread(af_Message *msg, bool is_top, af_Environment *env) {
+    if (msg->msg == NULL || *(af_Object **)msg->msg == NULL) {
+        writeErrorLog(aFunCoreLogger, "Thread-NORMAL msg: %p error", msg->msg);
+        return;
+    }
+
+    pthread_mutex_lock(&env->thread_lock);
+    env->result = *(af_Object **)msg->msg;
+    gc_delReference(env->result);
+    pthread_mutex_unlock(&env->thread_lock);
+
+    if (is_top)
+        writeDebugLog(aFunCoreLogger, "Thread-NORMAL Point: %p", *(af_Object **)msg->msg);
+}
+
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env) {
     if (msg->msg == NULL || *(af_ErrorInfo **)msg->msg == NULL) {
         writeErrorLog(aFunCoreLogger, "ERROR msg: %p error", msg->msg);
@@ -826,6 +845,9 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
     pthread_mutexattr_destroy(&attr);
 
+    env->is_derive = false;
+    env->base = env;
+
     env->gc_factory = makegGcFactory();
     env->esv = makeEnvVarSpace();
 
@@ -873,6 +895,70 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     env->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+    pthread_mutex_init(&env->thread_lock, NULL);
+    return env;
+}
+
+af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool derive_lr, bool enable,
+                                  af_Environment *base) {
+    af_Environment *env = calloc(1, sizeof(af_Environment));
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+    pthread_mutex_init(&env->in_run, &attr);  // 检测锁
+    pthread_mutexattr_destroy(&attr);
+
+    env->is_derive = true;
+    env->base = base->base;
+    pushEnvironmentList(env, base);
+
+#define D(v) env->v = (env->base)->v
+    D(gc_factory);
+    D(esv);
+    D(prefix);
+    D(gc_runtime);
+    D(gc_max);
+    D(gc_count);
+    D(exit_code_);
+    D(argc);
+    D(error_std);
+    D(protect);
+    D(global);
+#undef D
+
+    if (derive_tmp) {
+        for (af_TopMsgProcess *tmp = base->process; tmp != NULL; tmp = tmp->next)
+            addTopMsgProcess(tmp->type, tmp->func, env);
+    }
+
+    DLC_SYMBOL(TopMsgProcessFunc) func1 = MAKE_SYMBOL(mp_NORMALThread, TopMsgProcessFunc);
+    af_TopMsgProcess *tmp = findTopMsgProcessFunc("NORMAL", env);
+    if (tmp == NULL) {
+        addTopMsgProcess("NORMAL", func1, env);
+        FREE_SYMBOL(func1);
+    } else {
+        FREE_SYMBOL(tmp->func);
+        tmp->func = func1;
+    }
+
+    if (derive_guardian) {
+        for (af_Guardian *gu = base->guardian; gu != NULL; gu = gu->next)
+            addGuardian(gu->type, gu->always, gu->size, gu->func, gu->destruct, NULL, env);
+    }
+
+    if (derive_lr) {
+        for (af_LiteralRegex *lr = base->lr; lr != NULL; lr = lr->next)
+            pushLiteralRegex(lr->pattern, lr->func, lr->in_protect, env);
+    }
+
+    if (enable)
+        env->status = core_normal;
+    else
+        env->status = core_init;
+
+    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+    pthread_mutex_init(&env->thread_lock, NULL);
     return env;
 }
 
@@ -881,26 +967,35 @@ void enableEnvironment(af_Environment *env) {
     env->status = core_normal;
 }
 
-void freeEnvironment(af_Environment *env) {
+bool freeEnvironment(af_Environment *env) {
     bool res = true;
+    if (getEnviromentSonCount(env) != 0)
+        return false;
+
     if (env->status != core_creat)
         res = iterDestruct(10, env);
 
     freeAllActivity(env->activity);
-    freeEnvVarSpace(env->esv);
     freeAllTopMsgProcess(env->process);
     freeAllGuardian(env->guardian, env);
+    freeAllLiteralRegex(env->lr);
+
+    if (!env->is_derive) {
+        freeEnvVarSpace(env->esv);
+
+        gc_freeAllValueData(env);  // 先释放ObjectData的void *data
+        printGCByCore(env);
+        gc_freeAllValue(env);  // 再完全释放Object
+        freeGcFactory(env->gc_factory);
+    } else
+        freeEnvironmentListByEnv(env, env->base);
 
     pthread_mutex_destroy(&env->in_run);
-    freeAllLiteralRegex(env->lr);
-    gc_freeAllValueData(env);  // 先释放ObjectData的void *data
-    printGCByCore(env);
-    gc_freeAllValue(env);  // 再完全释放Object
-    freeGcFactory(env->gc_factory);
-
+    pthread_mutex_destroy(&env->thread_lock);
     if (!res)
         writeErrorLog(aFunCoreLogger, "Run iterDestruct error.");
     free(env);
+    return true;
 }
 
 static af_TopMsgProcess *makeTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func) {
@@ -1531,6 +1626,7 @@ static af_LiteralRegex *makeLiteralRegex(char *pattern, char *func, bool in_prot
 
     af_LiteralRegex *lr = calloc(1, sizeof(af_LiteralRegex));
     lr->rg = rg;
+    lr->pattern = strCopy(pattern);
     lr->func = strCopy(func);
     lr->in_protect = in_protect;
     return lr;
@@ -1540,6 +1636,7 @@ static af_LiteralRegex *freeLiteralRegex(af_LiteralRegex *lr) {
     af_LiteralRegex *next = lr->next;
     freeRegex(lr->rg);
     free(lr->func);
+    free(lr->pattern);
     free(lr);
     return next;
 }
@@ -1574,6 +1671,55 @@ bool checkLiteralCode(char *literal, char **func, bool *in_protect, af_Environme
         }
     }
     return false;
+}
+
+static af_EnvironmentList *makeEnvironmentList(af_Environment *env) {
+    static size_t id = 0;
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    af_EnvironmentList *envl = calloc(1, sizeof(af_EnvironmentList));
+    envl->env = env;
+
+    pthread_mutex_lock(&mutex);
+    envl->id = id;
+    id++;
+    pthread_mutex_unlock(&mutex);
+    return envl;
+}
+
+static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *env) {
+    pthread_mutex_lock(&env->thread_lock);
+    if (envl->prev == NULL)
+        env->env_list = envl->next;
+    else
+        envl->prev->next = envl->next;
+
+    if (envl->next != NULL)
+        envl->next->prev = envl->prev;
+
+    pthread_mutex_unlock(&env->thread_lock);
+    free(envl);
+    return true;
+}
+
+bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base) {
+    pthread_mutex_lock(&base->thread_lock);
+    for (af_EnvironmentList *envl = base->env_list; envl != NULL; envl = envl->next) {
+        if (envl->env == env) {
+            pthread_mutex_unlock(&base->thread_lock);
+            return freeEnvironmentList(envl, base);
+        }
+    }
+    pthread_mutex_unlock(&base->thread_lock);
+    return false;
+}
+
+bool pushEnvironmentList(af_Environment *env, af_Environment *base) {
+    af_EnvironmentList *envl = makeEnvironmentList(env);
+    pthread_mutex_lock(&env->thread_lock);
+    envl->next = base->env_list;
+    base->env_list = envl;
+    pthread_mutex_unlock(&env->thread_lock);
 }
 
 af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path) {
@@ -2021,4 +2167,55 @@ af_Object *getActivityFunc(af_Environment *env) {
     if (env->activity == NULL || env->activity->type == act_guardian)
         return NULL;
     return env->activity->func;
+}
+
+size_t getEnviromentSonCount(af_Environment *env) {
+    pthread_mutex_lock(&env->thread_lock);
+    size_t res = 0;
+    for (af_EnvironmentList *envl = env->env_list; envl != NULL; envl = envl->next)
+        res++;
+    pthread_mutex_unlock(&env->thread_lock);
+    return res;
+}
+
+/**
+ * 线程外部 指示线程结束
+ * @param env
+ */
+void setEnviromentExit_out(af_Environment *env) {
+    pthread_mutex_lock(&env->thread_lock);
+    env->son_exit = true;
+    pthread_mutex_unlock(&env->thread_lock);
+}
+
+bool isEnviromentExit(af_Environment *env) {
+    pthread_mutex_lock(&env->thread_lock);
+    bool res = env->son_exit == true;  // 线程外部指示线程结束
+    af_Environment *base = env->base;
+    pthread_mutex_unlock(&env->thread_lock);
+    if (res)
+        return true;
+
+    pthread_mutex_lock(&base->thread_lock);
+    res = base->status == core_exit || base->status == core_normal_gc;  // 主线程结束
+    pthread_mutex_unlock(&base->thread_lock);
+    return res;
+}
+
+/**
+ * 等待次线程结束
+ * @param env
+ */
+void waitForEnviromentExit(af_Environment *env) {
+    env->status = core_exit;  // 不需要设置 exit_code
+
+    while (1) {
+        pthread_mutex_lock(&env->thread_lock);
+        if (env->env_list == NULL) {
+            pthread_mutex_unlock(&env->thread_lock);
+            break;
+        }
+        pthread_mutex_unlock(&env->thread_lock);
+        safeSleep(0.01);
+    }
 }

@@ -12,7 +12,7 @@ typedef struct af_Guardian af_Guardian;
 typedef struct af_LiteralDataList af_LiteralDataList;
 typedef struct af_LiteralRegex af_LiteralRegex;
 typedef struct af_ErrorBacktracking af_ErrorBacktracking;
-
+typedef struct af_EnvironmentList af_EnvironmentList;
 
 #include "env.h"
 #include "__object.h"
@@ -196,11 +196,28 @@ struct af_EnvVarSpace {  // 环境变量
     pthread_rwlock_t lock;
 };
 
+struct af_EnvironmentList {
+    size_t id;
+    struct af_Environment *env;
+    struct af_EnvironmentList *next;
+    struct af_EnvironmentList *prev;
+};
+
 struct af_Environment {  // 运行环境
+    bool is_derive;  // 是否派生
+    struct af_Environment *base;  // 主线程
+
+    struct af_Object *result;  // 线程执行的结果
+    struct af_EnvironmentList *env_list;  // 主线程记录所有的子线程
+    bool all_exit;  // 由线程自己控制, 用于通知子线程退出
+    bool son_exit;  // 由线程外部控制, 命令线程结束
+    pthread_mutex_t thread_lock;  // 保护 father_exit 和 son_exit 和 son_count
+
     enum af_CoreStatus {
         core_creat = 0,
         core_init,  // 执行初始化程序
         core_normal,  // 正常执行
+        core_normal_gc,  // 正常执行
         core_stop,  // 当前运算退出
         core_exit,  // 解释器退出
     } status;
@@ -234,6 +251,7 @@ struct af_Environment {  // 运行环境
 
 struct af_LiteralRegex {
     af_Regex *rg;
+    char *pattern;  // 派生 LiteralRegex 时实用
     char *func;  // 调用的函数
     bool in_protect;  // 是否在protect空间
     struct af_LiteralRegex *next;
@@ -307,5 +325,9 @@ AFUN_CORE_NO_EXPORT af_EnvVar *setEnvVarData_(char *name, char *data, af_Environ
 
 /* af_GuardianList管理函数 */
 AFUN_CORE_NO_EXPORT af_GuardianList **contectGuardianList(af_GuardianList *new, af_GuardianList **base);
+
+/* EnvironmentList 管理函数 */
+AFUN_CORE_NO_EXPORT bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base);
+AFUN_CORE_NO_EXPORT bool pushEnvironmentList(af_Environment *env, af_Environment *base);
 
 #endif //AFUN_ENV_H_

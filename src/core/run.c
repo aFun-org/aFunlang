@@ -101,14 +101,12 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
     if (env == NULL || pthread_mutex_trylock(&env->in_run) != 0)
         return false;
-    if (env->activity == NULL || env->status == core_exit) {
+    if (env->activity == NULL) {
         pthread_mutex_unlock(&env->in_run);
         return false;
     }
 
-    if (env->status == core_stop)
-        env->status = core_normal;
-
+    env->status = core_normal_gc;
     switch (mode) {
         case 0:
             if (env->activity->type != act_top || !codeSemanticCheck(code))
@@ -512,5 +510,6 @@ bool iterDestruct(int deep, af_Environment *env) {
         if (!iterCode(NULL, 3, env))
             return false;
     }
+    env->status = core_exit;
     return false;
 }

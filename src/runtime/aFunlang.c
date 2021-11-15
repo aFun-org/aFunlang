@@ -93,8 +93,9 @@ af_Environment *creatAFunEnvironment(int argc, char **argv){
     return env;
 }
 
-void destructAFunEnvironment(af_Environment *env) {
-    freeEnvironment(env);
+bool destructAFunEnvironment(af_Environment *env) {
+    waitForEnviromentExit(env);
+    return freeEnvironment(env);
 }
 
 static int runCode_(af_Parser *parser, int mode, FilePath save_path, af_Environment *env){

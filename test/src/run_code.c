@@ -1302,7 +1302,7 @@ INIT_ERROR:
     destructAFunEnvironment(env);
 
     undefRunEnv(&ri);
-    printf("Exit at 0.");
+    printf("Exit at 0.\n");
 #ifndef IN_CTEST
     getc(stdin);
 #endif
@@ -1311,7 +1311,7 @@ INIT_ERROR:
 
 RETURN_1:
     undefRunEnv(&ri);
-    printf("Exit at 1.");
+    printf("Exit at 1.\n");
 #ifndef IN_CTEST
     getc(stdin);
 #endif
@@ -1320,7 +1320,7 @@ RETURN_1:
 
 RETURN_2:
     undefRunEnv(&ri);
-    printf("Exit at 2.");
+    printf("Exit at 2.\n");
 #ifndef IN_CTEST
     getc(stdin);
 #endif

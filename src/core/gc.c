@@ -182,6 +182,7 @@ static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist);
 static void freeValue(af_Environment *env);
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
 static pgc_Analyzed iterLinker(af_Environment *env, pgc_Analyzed plist);
+static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist);
 static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed plist);
 static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 
@@ -320,6 +321,16 @@ static pgc_Analyzed iterLinker(af_Environment *env, pgc_Analyzed plist) {
     return plist;
 }
 
+static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist) {
+    pthread_mutex_lock(&env->thread_lock);
+    if (env->result != NULL)
+        plist = reachableObject(env->result, plist);
+    pthread_mutex_unlock(&env->thread_lock);
+
+    plist = reachable(env->activity, plist);
+    return plist;
+}
+
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
     for (NULL; activity != NULL; activity = activity->prev) {
         if (activity->belong != NULL)
@@ -438,15 +449,22 @@ af_GuardianList *gc_RunGC(af_Environment *env) {
     af_GuardianList *gl = NULL;
     pgc_Analyzed plist = &analyzed;
     paf_GuardianList pgl = &gl;
-    resetGC(env);
+    af_Environment *base = env->base;
 
-    plist = iterLinker(env, plist);  // 临时量分析 (临时量都是通过reference标记的)
-    plist = reachable(env->activity, plist);
+    resetGC(base);
+    plist = iterLinker(base, plist);  // 临时量分析 (临时量都是通过reference标记的)
+    plist = iterEnvironment(base, plist);
+
+    pthread_mutex_lock(&base->thread_lock);
+    for (af_EnvironmentList *envl = base->env_list; envl != NULL; envl = envl->next)
+        plist = iterEnvironment(envl->env, plist);
+    pthread_mutex_unlock(&base->thread_lock);
+
     plist = checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
-    plist = checkDestruct(env, &pgl, plist);  // 在检查析构
+    plist = checkDestruct(base, &pgl, plist);  // 在检查析构
     checkAnalyzed(analyzed, plist);  // 在处理 checkDestruct 时产生的新引用
 
-    freeValue(env);
+    freeValue(base);
     freeAllAnalyzed(analyzed);
     return gl;
 }

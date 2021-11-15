@@ -31,7 +31,7 @@ enum GcRunTime {
 
 /* 运行环境 创建与释放 */
 AFUN_CORE_EXPORT af_Environment *makeEnvironment(enum GcRunTime grt);
-AFUN_CORE_EXPORT void freeEnvironment(af_Environment *env);
+AFUN_CORE_EXPORT bool freeEnvironment(af_Environment *env);
 
 /* 消息 创建与释放 */
 AFUN_CORE_EXPORT af_Message *makeMessage(char *type, size_t size);
@@ -59,6 +59,8 @@ AFUN_CORE_EXPORT void setCoreStop(af_Environment *env);
 AFUN_CORE_EXPORT void setCoreExit(int exit_code, af_Environment *env);
 AFUN_CORE_EXPORT void setCoreNormal(af_Environment *env);
 AFUN_CORE_EXPORT void setArgc(int argc, af_Environment *env);
+AFUN_CORE_EXPORT void setEnviromentExit_out(af_Environment *env);
+AFUN_CORE_EXPORT void waitForEnviromentExit(af_Environment *env);
 
 /* 消息 相关操作 */
 AFUN_CORE_EXPORT void pushMessageUp(af_Message *msg, af_Environment *env);
@@ -116,6 +118,8 @@ AFUN_CORE_EXPORT int isCoreExit(af_Environment *env);
 AFUN_CORE_EXPORT bool getErrorStd(af_Environment *env);
 AFUN_CORE_EXPORT int32_t getCoreExitCode(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getActivityFunc(af_Environment *env);
+AFUN_CORE_EXPORT bool isEnviromentExit(af_Environment *env);
+AFUN_CORE_EXPORT size_t getEnviromentSonCount(af_Environment *env);
 
 /* 消息 属性访问 */
 AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg);
