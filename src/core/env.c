@@ -169,7 +169,7 @@ void setCoreExitNotExitCode(af_Environment *env) {
     env->status = core_exit;
     pthread_mutex_unlock(&env->status_lock);
 
-    if (env == env->base) {  // 若是主线程, 通知所有次线程
+    if (!env->is_derive) {  // 若是主线程, 通知所有次线程
         pthread_mutex_lock(&env->thread_lock);
         for (af_EnvironmentList *envl = env->env_list; envl != NULL; envl = envl->next) {
             pthread_mutex_lock(&envl->env->thread_lock);
@@ -1745,18 +1745,19 @@ static af_EnvironmentList *makeEnvironmentList(af_Environment *env) {
     return envl;
 }
 
-static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *env) {
-    pthread_mutex_lock(&env->thread_lock);
-    if (envl->prev == NULL)
-        env->env_list = envl->next;
-    else
-        envl->prev->next = envl->next;
+static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *base) {
+    pthread_mutex_lock(&base->thread_lock);
 
+    if (envl->prev == NULL) {
+        base->env_list = envl->next;
+    } else
+        envl->prev->next = envl->next;
     if (envl->next != NULL)
         envl->next->prev = envl->prev;
-
-    pthread_mutex_unlock(&env->thread_lock);
     free(envl);
+
+    pthread_mutex_unlock(&base->thread_lock);
+    pthread_cond_signal(&base->thread_cond);  // 通知主线程
     return true;
 }
 
@@ -2280,13 +2281,8 @@ void waitForEnviromentExit(af_Environment *env) {
     env->status = core_exit;  // 不需要设置 exit_code
     pthread_mutex_unlock(&env->status_lock);
 
-    while (1) {
-        pthread_mutex_lock(&env->thread_lock);  // TODO-szh 改用信号
-        if (env->env_list == NULL) {
-            pthread_mutex_unlock(&env->thread_lock);
-            break;
-        }
-        pthread_mutex_unlock(&env->thread_lock);
-        safeSleep(0.1);  // 不易设置太小
-    }
+    pthread_mutex_lock(&env->thread_lock);
+    while (env->env_list != NULL)
+        pthread_cond_wait(&env->thread_cond, &env->thread_lock);
+    pthread_mutex_unlock(&env->thread_lock);
 }
