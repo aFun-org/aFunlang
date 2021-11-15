@@ -106,7 +106,10 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
         return false;
     }
 
+    pthread_mutex_lock(&env->status_lock);
     env->status = core_normal_gc;
+    pthread_mutex_unlock(&env->status_lock);
+
     switch (mode) {
         case 0:
             if (env->activity->type != act_top || !codeSemanticCheck(code))
@@ -332,7 +335,8 @@ static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
 }
 
 static bool checkStop(af_Environment *env) {
-    if (env->status == core_stop || env->status == core_exit) {
+    enum af_CoreStatus status = getCoreStatus(env);
+    if (status == core_stop || status == core_exit) {
         while (env->activity->type != act_top || env->activity->prev != NULL)
             popActivity(false, NULL, env);  // is_normal=false, 非正常退出, 释放mark
         popActivity(false, NULL, env);  // 再释放 act_top
@@ -510,6 +514,9 @@ bool iterDestruct(int deep, af_Environment *env) {
         if (!iterCode(NULL, 3, env))
             return false;
     }
+
+    pthread_mutex_lock(&env->status_lock);
     env->status = core_exit;
+    pthread_mutex_unlock(&env->status_lock);
     return false;
 }

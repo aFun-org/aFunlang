@@ -221,6 +221,7 @@ struct af_Environment {  // 运行环境
         core_stop,  // 当前运算退出
         core_exit,  // 解释器退出
     } status;
+    pthread_mutex_t status_lock;
 
     /* 保护空间 */
     struct af_VarSpace *protect;  // 顶级保护变量空间
@@ -279,7 +280,7 @@ struct af_ImportInfo {
 /* Core 管理函数 */
 AFUN_CORE_NO_EXPORT void GcCountAdd1(af_Environment *env);
 AFUN_CORE_NO_EXPORT void GcCountToZero(af_Environment *env);
-
+AFUN_CORE_NO_EXPORT enum af_CoreStatus getCoreStatus(af_Environment *env);
 
 /* 运行时Activity设置函数 (新增Activity) */
 AFUN_CORE_NO_EXPORT bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env);

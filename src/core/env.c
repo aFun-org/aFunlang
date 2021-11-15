@@ -150,12 +150,16 @@ af_Object *getBaseObject(char *name, af_Environment *env) {
 }
 
 void setCoreStop(af_Environment *env) {
+    pthread_mutex_lock(&env->status_lock);
     if (env->status != core_exit)
         env->status = core_stop;
+    pthread_mutex_unlock(&env->status_lock);
 }
 
 void setCoreExit(int exit_code, af_Environment *env) {
+    pthread_mutex_lock(&env->status_lock);
     env->status = core_exit;
+    pthread_mutex_unlock(&env->status_lock);
 
     pthread_rwlock_wrlock(&env->esv->lock);
     env->exit_code_->num = exit_code;
@@ -163,13 +167,14 @@ void setCoreExit(int exit_code, af_Environment *env) {
 }
 
 void setCoreNormal(af_Environment *env) {
-    if (env->status == core_exit || env->status == core_stop) {
+    pthread_mutex_lock(&env->status_lock);
+    if (env->status == core_exit || env->status == core_stop)
         env->status = core_normal;
+    pthread_mutex_unlock(&env->status_lock);
 
-        pthread_rwlock_wrlock(&env->esv->lock);
-        env->exit_code_->num = 0;
-        pthread_rwlock_unlock(&env->esv->lock);
-    }
+    pthread_rwlock_wrlock(&env->esv->lock);
+    env->exit_code_->num = 0;
+    pthread_rwlock_unlock(&env->esv->lock);
 }
 
 static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong) {
@@ -2142,9 +2147,10 @@ af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
 }
 
 int isCoreExit(af_Environment *env) {
-    if (env->status == core_exit)
+    enum af_CoreStatus status = getCoreStatus(env);
+    if (status == core_exit)
         return 1;
-    else if (env->status == core_stop)
+    else if (status == core_stop)
         return -1;
     return 0;
 }
@@ -2178,6 +2184,13 @@ size_t getEnviromentSonCount(af_Environment *env) {
     return res;
 }
 
+enum af_CoreStatus getCoreStatus(af_Environment *env) {
+    pthread_mutex_lock(&env->status_lock);
+    enum af_CoreStatus res = env->status;
+    pthread_mutex_unlock(&env->status_lock);
+    return res;
+}
+
 /**
  * 线程外部 指示线程结束
  * @param env
@@ -2196,9 +2209,8 @@ bool isEnviromentExit(af_Environment *env) {
     if (res)
         return true;
 
-    pthread_mutex_lock(&base->thread_lock);
-    res = base->status == core_exit || base->status == core_normal_gc;  // 主线程结束
-    pthread_mutex_unlock(&base->thread_lock);
+    enum af_CoreStatus status = getCoreStatus(base);
+    res = status == core_exit || status == core_normal_gc;  // 主线程结束
     return res;
 }
 
@@ -2207,7 +2219,9 @@ bool isEnviromentExit(af_Environment *env) {
  * @param env
  */
 void waitForEnviromentExit(af_Environment *env) {
+    pthread_mutex_lock(&env->status_lock);
     env->status = core_exit;  // 不需要设置 exit_code
+    pthread_mutex_unlock(&env->status_lock);
 
     while (1) {
         pthread_mutex_lock(&env->thread_lock);

@@ -71,6 +71,8 @@ static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, boo
  */
 af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
                       bool free_inherit, af_Inherit *inherit, af_Environment *env){
+    enum af_CoreStatus status = getCoreStatus(env);
+
     if (api == NULL) {
         api = makeObjectAPI();
         free_api = true;
@@ -83,16 +85,16 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
         free_inherit = true;
         if (env->global != NULL)
             ih = makeInherit(env->global);
-        else if (env->status != core_creat)
+        else if (status != core_creat)
             return NULL;
     }
 
     if (belong == NULL) {
         if (env->activity != NULL)
             belong = env->activity->belong;
-        else if (env->status == core_init)  // init模式生成: global
+        else if (status == core_init)  // init模式生成: global
             belong = env->global;
-        else if (env->status != core_creat)  // 只有creat可以使用belong=NULL
+        else if (status != core_creat)  // 只有creat可以使用belong=NULL
             return NULL;
     }
 
