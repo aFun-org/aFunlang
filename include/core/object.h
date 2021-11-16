@@ -43,7 +43,7 @@ AFUN_CORE_EXPORT af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new);
 /* 对象 属性访问 */
 AFUN_CORE_EXPORT void *getObjectData(af_Object *obj);
 AFUN_CORE_EXPORT af_Object *getBelongObject(af_Object *object);
-AFUN_CORE_EXPORT af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj);
+AFUN_CORE_EXPORT af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj, af_Environment *env);
 AFUN_CORE_EXPORT char *getObjectID(af_Object *obj);
 AFUN_CORE_EXPORT af_ObjectAPI *getObjectAPI(af_Object *obj);
 AFUN_CORE_EXPORT af_Inherit *getObjectInherit(af_Object *obj);

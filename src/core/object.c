@@ -1,5 +1,6 @@
 ﻿#include "__object.h"
 #include "__env.h"
+#include "__gc.h"
 #include "tool.h"
 
 /* ObjectData 创建与释放 */
@@ -35,6 +36,8 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     od->allow_inherit = allow_inherit;
 
     od->var_space = makeVarSpace(base_obj, 3, 2, 0, env);
+    gc_delReference(od->var_space, env);
+
     od->inherit = NULL;
 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);
@@ -103,6 +106,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
     obj->belong = belong;
     obj->data->inherit = ih;
     obj->data->free_inherit = free_inherit;
+    gc_delReference(obj->data, env);  // od已经被obj引用, 并且不再是临时变量
     return obj;
 }
 
@@ -406,16 +410,16 @@ void *findObjectAPI(char *api_name, af_Object *obj) {
     return GET_SYMBOL(node->api);
 }
 
-af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj) {
+af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj, af_Environment *env){
     af_Var *var = findVarFromVarSpace(name, visitor, getObjectVarSpace(obj));
 
     if (var != NULL)
-        return findVarNode(var, NULL);
+        return findVarNode(var, NULL, env);
 
     for (af_Inherit *ih = getObjectInherit(obj); ih != NULL; ih = getInheritNext(ih)) {
         var = findVarFromVarSpace(name, visitor, getInheritVarSpace(ih));  // 搜索共享变量空间
         if (var != NULL)
-            return findVarNode(var, NULL);
+            return findVarNode(var, NULL, env);
     }
 
     return NULL;
@@ -426,19 +430,26 @@ bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_exter
     return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, getObjectVarSpace(obj), visitor, env);
 }
 
-af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od) {
+/**
+ * 获得指定对象的属性, 自动添加 gc_addReference
+ * @param name
+ * @param visitor
+ * @param od
+ * @return
+ */
+af_Object *findObjectAttributesByObjectData(char *name, af_Object *visitor, af_ObjectData *od, af_Environment *env){
     pthread_rwlock_rdlock(&od->lock);
     af_Var *var = findVarFromVarSpace(name, visitor, od->var_space);
     af_Inherit *ih = od->inherit;
     pthread_rwlock_unlock(&od->lock);
 
     if (var != NULL)
-        return findVarNode(var, NULL);
+        return findVarNode(var, NULL, env);
 
     for (NULL; ih != NULL; ih = getInheritNext(ih)) {
         var = findVarFromVarSpace(name, visitor, getInheritVarSpace(ih));  // 搜索共享变量空间
         if (var != NULL)
-            return findVarNode(var, NULL);
+            return findVarNode(var, NULL, env);
     }
 
     return NULL;

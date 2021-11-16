@@ -12,6 +12,7 @@ static void *runThread(void *ec);
 
 /**
  * 启动一个次线程运行代码
+ * 注意: vs需要 gc_addReference
  * @param env 父线程env
  * @param vs 压入的变量空间
  * @param code 执行的代码
@@ -21,13 +22,18 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
     af_Environment *base = env->base;
     af_Environment *new = deriveEnvironment(derive_tmp, derive_guardian, derive_lr, enable, base);
 
-    if (vs == NULL)
-        vs = makeVarSpace(getGlobal(env), 3, 3, 3, env);
+    if (vs == NULL) {
+        af_Object *obj = getGlobal(env);
+        vs = makeVarSpace(obj, 3, 3, 3, env);
+        gc_delReference(obj, env);
+    }
 
     af_VarSpaceListNode *vsl = makeVarSpaceList(vs);
     vsl->next = new->activity->run_varlist;
     new->activity->run_varlist = vsl;
     new->activity->count_run_varlist++;
+    gc_delReference(vs, base);
+
     if (!enable)  // 如果未Enable, 则暂时不启动线程
         return new;
 

@@ -82,21 +82,19 @@ struct gc_Factory {
 };
 
 /* 重新定义包括af_ObjectData的 gc Reference 函数 */
-#ifdef core_shared_t_EXPORTS
 #undef gc_addReference
 #undef gc_delReference
-#define gc_addReference(obj) ((_Generic((obj), \
+#define gc_addReference(obj, env) ((_Generic((obj), \
                                af_ObjectData *: gc_addObjectDataReference, \
                                af_Object *: gc_addObjectReference, \
                                af_Var *: gc_addVarReference, \
-                               af_VarSpace *: gc_addVarSpaceReference))(obj))
+                               af_VarSpace *: gc_addVarSpaceReference))((obj), (env)))
 
-#define gc_delReference(obj) ((_Generic((obj), \
+#define gc_delReference(obj, env) ((_Generic((obj), \
                                af_ObjectData *: gc_delObjectDataReference, \
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
-                               af_VarSpace *: gc_delVarSpaceReference))(obj))
-#endif
+                               af_VarSpace *: gc_delVarSpaceReference))((obj), (env)))
 
 /* gc_Factory 创建与释放 */
 AFUN_CORE_NO_EXPORT gc_Factory *makegGcFactory(void);

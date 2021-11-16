@@ -174,8 +174,11 @@ static bool codeElement(af_Code *code, af_Environment *env) {
             return false;
         }
 
-        writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, findVarNode(var, NULL));
-        return pushLiteralActivity(code, code->element.data, findVarNode(var, NULL), env);
+        af_Object *obj = findVarNode(var, NULL, env);
+        writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, obj);
+        bool res = pushLiteralActivity(code, code->element.data, obj, env);
+        gc_delReference(obj, env);
+        return res;
     }
 
     /* 变量执行 */
@@ -186,19 +189,22 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         return false;
     }
 
-    af_Object *obj = findVarNode(var, NULL);
+    af_Object *obj = findVarNode(var, NULL, env);
     obj_isObjFunc *is_obj;
     obj_isInfixFunc *is_infix;
 
     if (code->prefix != getPrefix(E_QUOTE, env)) {
         af_ObjectAPI *api = getObjectAPI(obj);
         char *id = getObjectID(obj);
-        if ((is_obj = findAPI("obj_isObjFunc", api)) != NULL && is_obj(id, obj))
-            return pushVariableActivity(code, obj, env);  // 对象函数
-        else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
+        if ((is_obj = findAPI("obj_isObjFunc", api)) != NULL && is_obj(id, obj)) {
+            bool res = pushVariableActivity(code, obj, env);  // 对象函数
+            gc_delReference(obj, env);
+            return res;
+        } else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
                  (is_infix = findAPI("obj_isInfixFunc", api)) != NULL && is_infix(id, obj)) {
             pushMessageDown(makeERRORMessageFormat(INFIX_PROTECT, env,
                                                    "Infix protect variable: %s.", code->element.data), env);
+            gc_delReference(obj, env);
             return false;
         }
     }
@@ -328,7 +334,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
  * 目标: 检查act_arg是否运行到结尾 (若运行到结尾则返回true, 否则返回false)
  */
 static bool checkGetArgEnd(af_Message *msg, af_Environment *env) {
-    env->activity->acl_done->result = *(af_Object **)(msg->msg);
+    env->activity->acl_done->result = *(af_Object **)(msg->msg);  // 保持 gc 引用计数
     freeMessage(msg);
     if (env->activity->acl_done->next == NULL) { // 参数设定结束
         setArgCodeListToActivity(NULL, env);
@@ -363,7 +369,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
     if (!iterCodeInit(code, mode, env))
         return false;
     bool re = true;
-    af_Monitor *monitor = makeMonitor(env);
+    makeMonitor(env);  // 启动监视线程
     /*
      * 问题: 如何确保循环跳出之前, top-Activity已经被pop。(即执行释放)
      * 为什么会有这个问题: top-Activity只有在bt_next=NULL时被pop, 而循环也是在bt_next=NULL时可能被退出
@@ -483,10 +489,10 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 break;
             case act_func_get: {
                 af_Object *func = *(af_Object **) (msg->msg);  // func仍保留了msg的gc计数
-                gc_delReference(func, env);  // 释放计数
-                freeMessage(msg);
                 if (!setFuncActivityToArg(func, env))
                     popActivity(false, NULL, env);
+                gc_delReference(func, env);  // 释放计数 (setFuncActivityToArg 不需要计数)
+                freeMessage(msg);
                 break;
             }
             case act_func_arg: {

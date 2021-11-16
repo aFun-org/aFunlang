@@ -54,7 +54,6 @@ af_ArgList *makeArgList(char *name, af_Object *obj, af_Environment *env){
     af_ArgList *arg_list = calloc(1, sizeof(af_ArgList));
     arg_list->name = strCopy(name);
     arg_list->obj = obj;
-    gc_addReference(obj, env);
     return arg_list;
 }
 
@@ -80,6 +79,21 @@ af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new) {
     while (*base != NULL)
         base = &((*base)->next);
     return base;
+}
+
+/**
+ * af_ArgCodeList 转 af_ArgList
+ * @param name 参数名
+ * @param acl ArgCodeList
+ * @param env 运行环境
+ * @return
+ */
+af_ArgList *makeArgListFromArgCodeList(char *name, af_ArgCodeList *acl, af_Environment *env) {
+    af_Object *obj = getArgCodeListResult(acl);
+    gc_addReference(obj, env);
+
+    af_ArgList *al = makeArgList(name, obj, env);
+    return al;
 }
 
 bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env){

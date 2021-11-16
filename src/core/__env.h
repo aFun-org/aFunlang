@@ -276,7 +276,7 @@ struct af_ErrorInfo {
     char *error_type;
     char *error;
     struct af_ErrorBacktracking *track;
-    af_Object *obj;
+    af_Object *obj;  // 代表错误的obj对象
 };
 
 struct af_ImportInfo {

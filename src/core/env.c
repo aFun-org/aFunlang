@@ -146,7 +146,7 @@ af_VarSpace *getProtectVarSpace(af_Environment *env) {
 af_Object *getBaseObject(char *name, af_Environment *env) {
     af_Var *var = findVarFromVarSpace(name, NULL, env->protect);
     if (var != NULL)
-        return findVarNode(var, NULL);
+        return findVarNode(var, NULL, env);
     return NULL;
 }
 
@@ -581,10 +581,16 @@ void connectMessage(af_Message **base, af_Message *msg) {
     *base = msg;
 }
 
+/**
+ * 生成类型为NORMAL的Message
+ * 注意: obj 必须提前添加 gc_addReference
+ * @param obj
+ * @param env
+ * @return
+ */
 af_Message *makeNORMALMessage(af_Object *obj, af_Environment *env){
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
     *(af_Object **)msg->msg = obj;
-    gc_addReference(obj, env);
     return msg;
 }
 
@@ -621,6 +627,14 @@ af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *
     return makeERRORMessage(type, buf, env);;
 }
 
+/**
+ * 生成类型为IMPORT的Message
+ * 注意: obj 必须提前添加 gc_addReference
+ * @param mark
+ * @param obj
+ * @param env
+ * @return
+ */
 af_Message *makeIMPORTMessage(char *mark, af_Object *obj, af_Environment *env){
     af_Message *msg = makeMessage("IMPORT", sizeof(af_ImportInfo *));
     *(af_ImportInfo **)msg->msg = makeImportInfo(mark, obj, env);
@@ -748,9 +762,10 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env) {
         writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
         return;
     }
-    gc_delReference(*(af_Object **)msg->msg, env);
     if (is_top)
         writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
+    gc_delReference(*(af_Object **)msg->msg, env);
+    *(af_Object **)msg->msg = NULL;
 }
 
 static void mp_NORMALThread(af_Message *msg, bool is_top, af_Environment *env) {
@@ -759,13 +774,14 @@ static void mp_NORMALThread(af_Message *msg, bool is_top, af_Environment *env) {
         return;
     }
 
+    if (is_top)
+        writeDebugLog(aFunCoreLogger, "Thread-NORMAL Point: %p", *(af_Object **)msg->msg);
+
     pthread_mutex_lock(&env->thread_lock);
     env->result = *(af_Object **)msg->msg;
     gc_delReference(env->result, env);
+    *(af_Object **)msg->msg = NULL;
     pthread_mutex_unlock(&env->thread_lock);
-
-    if (is_top)
-        writeDebugLog(aFunCoreLogger, "Thread-NORMAL Point: %p", *(af_Object **)msg->msg);
 }
 
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env) {
@@ -833,7 +849,7 @@ static af_GuardianList *guardian_GC(char *type, bool is_guard, void *data, af_En
         GcCountToZero(env);  // 清零
         gl = gc_RunGC(env);
         if (gl != NULL)
-            writeDebugLog(aFunCoreLogger, "GC destruct");
+            writeDebugLog(aFunCoreLogger, "GC run destruct function");
     }
     return gl;
 }
@@ -900,10 +916,10 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     /* 创建保护空间 */
     env->protect = makeVarSpace(NULL, 3, 3, 3, env);
+    gc_delReference(env->protect, env);
 
     /* 生成global对象 */
     env->global = makeGlobalObject(env);
-    addVarToProtectVarSpace(makeVar("global", 3, 3, 3, env->global, env), env);
 
     /* 设置NORMAL顶级处理器 */
     DLC_SYMBOL(TopMsgProcessFunc) func1 = MAKE_SYMBOL(mp_NORMAL, TopMsgProcessFunc);
@@ -929,6 +945,8 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     env->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+    makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
+    gc_delReference(env->global, env);
     return env;
 }
 
@@ -1149,7 +1167,7 @@ bool popGuardian(char *type, af_Environment *env) {
 static void newFuncActivity(af_Code *bt, const af_Code *next, bool return_first, af_Environment *env){
     if (next == NULL && env->activity->body_next == NULL &&
         env->activity->type == act_func && env->activity->macro_varlist == NULL) {
-        writeTrackLog(aFunCoreLogger, "Tail call optimization");
+        writeDebugLog(aFunCoreLogger, "Tail call optimization");
         tailCallActivity(getActivityFunc(env), env->activity);
         setActivityBtTop(bt, env->activity);
         env->activity->optimization = true;
@@ -1174,22 +1192,27 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
     if (checkLiteralCode(code->element.data, NULL, NULL, env))  // 检查是否字面量
         return false;
 
-    printf("isInfixFunc: %s\n", code->element.data);
+    writeDebugLog(aFunCoreLogger, "isInfixFunc: %s\n", code->element.data);
     af_Var *var = findVarFromVarList(code->element.data, env->activity->belong, env->activity->run_varlist);
     if (var == NULL)
         return false;
 
-    af_Object *obj = findVarNode(var, NULL);
+    af_Object *obj = findVarNode(var, NULL, env);
     obj_isInfixFunc *func = findAPI("obj_isInfixFunc", getObjectAPI(obj));
-    if (func == NULL)
+    if (func == NULL) {
+        gc_delReference(obj, env);
         return false;
-    return func(getObjectID(obj), obj);
+    }
+
+    bool res = func(getObjectID(obj), obj);
+    gc_delReference(obj, env);
+    return res;
 }
 
 bool pushExecutionActivity(af_Code *bt, bool return_first, af_Environment *env) {
     af_Code *next;
     next = getCodeNext(bt);
-    writeTrackLog(aFunCoreLogger, "Run execution");
+    writeDebugLog(aFunCoreLogger, "Run execution");
 
     if (bt->type != code_block || bt->block.is_empty) {
         pushMessageDown(makeERRORMessage(SYNTAX_ERROR, NOT_CODE_INFO, env), env);
@@ -1215,7 +1238,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     env->activity->parentheses_call = NULL;
     pthread_rwlock_unlock(&env->activity->gc_lock);
 
-    writeTrackLog(aFunCoreLogger, "Run func");
+    writeDebugLog(aFunCoreLogger, "Run func");
     next = getCodeNext(bt);
     switch (bt->block.type) {
         case curly:
@@ -1265,7 +1288,7 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
 bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
-    writeTrackLog(aFunCoreLogger, "Run literal");
+    writeDebugLog(aFunCoreLogger, "Run literal");
     newFuncActivity(bt, bt->next, false, env);
     env->activity->is_literal = true;
     pushLiteralData(strCopy(data), env);  // FuncBody的释放导致code和literal_data释放, 所以要复制
@@ -1275,7 +1298,7 @@ bool pushLiteralActivity(af_Code *bt, char *data, af_Object *func, af_Environmen
 bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
     setActivityBtNext(bt->next, env->activity);
 
-    writeTrackLog(aFunCoreLogger, "Run variable");
+    writeDebugLog(aFunCoreLogger, "Run variable");
     newFuncActivity(bt, bt->next, false, env);
     env->activity->is_obj_func = true;
     return setFuncActivityToArg(func, env);
@@ -1293,7 +1316,7 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     env->activity->run_varlist = NULL;
     pthread_rwlock_unlock(&env->activity->gc_lock);
 
-    writeTrackLog(aFunCoreLogger, "Run macro");
+    writeDebugLog(aFunCoreLogger, "Run macro");
     if (!freeVarSpaceListCount(env->activity->count_run_varlist, tmp)) { // 释放外部变量空间
         env->activity->count_run_varlist = 0;
         pushMessageDown(makeERRORMessage(RUN_ERROR, FREE_VARSPACE_INFO, env), env);
@@ -1330,17 +1353,20 @@ void pushGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environ
 
 bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment *env) {
     af_Object *tmp = NULL;
-    if (obj == NULL)
-        obj = &tmp;
+    if (obj != NULL)
+        tmp = *obj;
 
-    if (*obj == NULL)
-        *obj = makeGlobalObject(env);
+    if (tmp == NULL)
+        tmp = makeGlobalObject(env);
 
-    if (*obj == NULL)
-        return false;
-
-    af_Activity *activity = makeTopImportActivity(bt, bt, env->protect, *obj, mark);
+    af_Activity *activity = makeTopImportActivity(bt, bt, env->protect, tmp, mark);
     pushActivity(activity, env);
+
+    if (obj != NULL)
+        *obj = tmp;
+    else
+        gc_delReference(tmp, env);
+
     return true;
 }
 
@@ -1651,8 +1677,11 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
         if (msg == NULL && env->activity->return_first) {  // 如果首位
             if (env->activity->return_obj == NULL)
                 msg = makeERRORMessage(RUN_ERROR, RETURN_OBJ_NOT_FOUND_INFO, env);
-            else
+            else {
+                gc_addReference(env->activity->return_obj, env);
                 msg = makeNORMALMessage(env->activity->return_obj, env);
+                env->activity->return_obj = NULL;
+            }
         }
     }
 
@@ -1662,6 +1691,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_top_import && /* import模式, 并且msg_down中有normal, 则把normal替换为belong */
         env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
         af_Message *tmp = getFirstMessage(env);
+        gc_addReference(env->activity->belong, env);
         pushMessageDown(makeIMPORTMessage(env->activity->import_mark, env->activity->belong, env), env);  // 压入belong作为msg
         pushMessageDown(tmp, env);
     }
@@ -2020,12 +2050,19 @@ static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb) {
     return strCopy(info);
 }
 
+/**
+ * 生成用于类型为IMPORT的Message的信息的数据
+ * 注意: obj必须添加 gc_addReference
+ * @param mark
+ * @param obj
+ * @param env
+ * @return
+ */
 af_ImportInfo *makeImportInfo(char *mark, af_Object *obj, af_Environment *env){
     af_ImportInfo *ii = calloc(1, sizeof(af_ImportInfo));
     if (mark != NULL)
         ii->mark = strCopy(mark);
     ii->obj = obj;
-    gc_addReference(obj, env);
     return ii;
 }
 
@@ -2036,13 +2073,18 @@ void freeImportInfo(af_ImportInfo *ii, af_Environment *env){
     free(ii);
 }
 
+/**
+ * 创建守护器函数调用列表
+ * 注意: obj和func 必须添加 gc_addReference
+ * @param obj func的belong (可为NULL)
+ * @param func 调用的函数
+ * @param env 运行环境
+ * @return
+ */
 static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func, af_Environment *env){
     af_GuardianList *gl = calloc(1, sizeof(af_GuardianList));
     gl->obj = obj;
     gl->func = func;
-    if (obj != NULL)
-        gc_addReference(obj, env);
-    gc_addReference(func, env);
     return gl;
 }
 
@@ -2138,9 +2180,13 @@ af_Object *getCoreGlobal(af_Environment *env) {
 af_Object *getGlobal(af_Environment *env) {
     af_Activity *activity = env->activity;
     for (NULL; activity != NULL; activity = activity->prev) {
-        if (activity->type == act_top || activity->type == act_top_import)
+        if (activity->type == act_top || activity->type == act_top_import) {
+            gc_addReference(activity->belong, env);
             return activity->belong;
+        }
     }
+
+    gc_addReference(env->global, env);
     return env->global;
 }
 
@@ -2162,29 +2208,6 @@ FileLine getActivityLine(af_Environment *env){
     return env->activity->line;
 }
 
-af_Object *getMsgNormalData(af_Message *msg, af_Environment *env){
-    if (!EQ_STR("NORMAL", msg->type))
-        return NULL;
-    af_Object *obj = *(af_Object **)msg->msg;
-    gc_delReference(obj, env);
-    *(af_Object **)msg->msg = NULL;
-    return obj;
-}
-
-af_ErrorInfo *getMsgErrorInfo(af_Message *msg) {
-    if (!EQ_STR("ERROR", msg->type))
-        return NULL;
-    af_ErrorInfo *ei = *(af_ErrorInfo **)msg->msg;
-    return ei;
-}
-
-af_ImportInfo *getMsgImportInfo(af_Message *msg) {
-    if (!EQ_STR("IMPORT", msg->type))
-        return NULL;
-    af_ImportInfo *ii = *(af_ImportInfo **)msg->msg;
-    return ii;
-}
-
 char *getErrorType(af_ErrorInfo *ei) {
     return ei->error_type;
 }
@@ -2202,7 +2225,6 @@ af_Object *getImportObject(af_ImportInfo *ii, af_Environment *env){
     if (obj == NULL)
         return NULL;
     ii->obj = NULL;
-    gc_delReference(obj, env);
     return obj;
 }
 

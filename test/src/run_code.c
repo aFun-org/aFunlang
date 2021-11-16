@@ -15,74 +15,35 @@ void freeData(char *id, af_Object *obj, int **data, af_Environment *env) {
     free(*data);
 }
 
-size_t getSize2(char *id, af_Object *obj) {
-    return sizeof(af_VarSpaceListNode *);
-}
-
-void initData2(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
-    *data = makeVarSpaceList(getProtectVarSpace(env));
-}
-
-void freeData2(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
-    printf("freeData2(): vsl = %p\n", *data);
-    freeAllVarSpaceList(*data);
-}
-
-size_t getSize3(char *id, af_Object *obj) {
-    return sizeof(af_VarSpace *);
-}
-
-void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    *data = makeVarSpace(obj, 3, 2, 0, env);
-}
-
-void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
-    printf("freeData(): *data = %p\n", *data);
-}
-
-af_GcList *getGcList3(char *id, af_Object *obj, void *data) {
-    af_GcList *gl = pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
-    return gl;
-}
-
-
 af_VarSpace *getShareVS(char *id, af_Object *obj) {
     return *(af_VarSpace **)getObjectData(obj);
 }
 
-bool getAcl(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, int **mark, af_Environment *env) {
-    *acl = makeArgCodeList(makeElementCode("object", NUL, 0, "Unknown"), 0, true, false);
-    *mark = calloc(1, sizeof(int));
-    **mark = 100;
-    return true;
+
+size_t getSize_Normal(char *id, af_Object *obj) {
+    return sizeof(af_VarSpaceListNode *);
 }
 
-bool getVsl(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
-    *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
-    return true;
+void initData_Normal(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+    *data = makeVarSpaceList(getProtectVarSpace(env));
 }
 
-af_GcList *getGcList(char *id, af_Object *obj, void *data) {
-    af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
-    return gl;
+void freeData_Normal(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+    printf("freeData_Normal(): vsl = %p\n", *data);
+    freeAllVarSpaceList(*data);
 }
 
-bool getAl(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
-    *al = makeArgList("test", getArgCodeListResult(acl), env);
-    return true;
+void literalSet_Data(char *id, af_Object *obj, void *data, char *str, af_Environment *env) {
+    printf("literalSet_Data(): str = %s\n", str);
 }
 
-void literalSet(char *id, af_Object *obj, void *data, char *str, af_Environment *env) {
-    printf("literalSet(): str = %s\n", str);
-}
-
-af_FuncBody *testFunc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
-    printf("testFunc(): I am testFunc\n");
+af_FuncBody *testFunc_Normal(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+    printf("testFunc_Normal(): I am testFunc_Normal\n");
     af_Object *obj;
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet_Data, objectAPIFunc);
         if (addAPI(literal_set, "obj_literalSetting", api) != 1)
             return NULL;
         obj = makeObject("func", true, api, true, NULL, true, NULL, env);
@@ -93,36 +54,58 @@ af_FuncBody *testFunc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用
     return NULL;
 }
 
-bool getInfo(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Normal(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, NULL, *fi);
 
-    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_Normal, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
 }
 
-void freeMark(char *id, af_Object *obj, int *mark) {
-    printf("freeMark(): mark = %d\n", *mark);
+bool getAcl_Normal(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, int **mark, af_Environment *env) {
+    *acl = makeArgCodeList(makeElementCode("object", NUL, 0, "Unknown"), 0, true, false);
+    *mark = calloc(1, sizeof(int));
+    **mark = 100;
+    return true;
+}
+
+bool getVsl_Normal(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
+    *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
+    return true;
+}
+
+af_GcList *getGcList_Normal(char *id, af_Object *obj, void *data) {
+    af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
+    return gl;
+}
+
+bool getAl_Normal(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
+    *al = makeArgListFromArgCodeList("test",acl, env);
+    return true;
+}
+
+void freeMark_Normal(char *id, af_Object *obj, int *mark) {
+    printf("freeMark_Normal(): mark = %d\n", *mark);
     free(mark);
 }
 
-af_FuncBody *testFunc2(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
-    printf("testFunc2(): I am testFunc2\n");
+af_FuncBody *testFuncMacro(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+    printf("testFuncMacro(): I am testFuncMacro\n");
     af_Object *obj;
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             return NULL;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -158,28 +141,28 @@ af_FuncBody *testFunc2(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     return NULL;
 }
 
-bool getInfo2(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Macro(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, NULL, *fi);
-    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc2, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFuncMacro, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
 }
 
-bool getInfo3(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Tail(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("data3", NUL, 0, "Unknown"), true, NULL, *fi);
     return true;
 }
 
-af_FuncBody *testFunc4(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
-    printf("testFunc4(): I am testFunc4\n");
+af_FuncBody *testFunc_Obj(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+    printf("testFunc_Obj(): I am testFunc_Obj\n");
     af_Object *obj;
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) literal_set = MAKE_SYMBOL(literalSet_Data, objectAPIFunc);
         if (addAPI(literal_set, "obj_literalSetting", api) != 1)
             return NULL;
         obj = makeObject("func", true, api, true, NULL, true, NULL, env);
@@ -190,31 +173,54 @@ af_FuncBody *testFunc4(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     return NULL;
 }
 
-bool getInfo4(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Obj(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
-    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc4, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_Obj, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
 }
 
-af_FuncBody *testFunc9(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+bool isObjTrue(char *id, af_Object *obj) {
+    return true;
+}
+
+size_t getSize3(char *id, af_Object *obj) {
+    return sizeof(af_VarSpace *);
+}
+
+void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
+    *data = makeVarSpace(obj, 3, 2, 0, env);
+}
+
+void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
+    if (*data != NULL)
+        gc_delReference(*data, env);
+    printf("freeData(): *data = %p\n", *data);
+}
+
+af_GcList *getGcList3(char *id, af_Object *obj, void *data) {
+    af_GcList *gl = pushGcList(glt_vs, *(af_VarSpace **)data, NULL);
+    return gl;
+}
+
+af_FuncBody *testFunc_Dynamic(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_FuncBody *fb;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
-    printf("testFunc9(%p): I am testFunc9\n", obj);
+    printf("testFunc_Dynamic(%p): I am testFunc_Dynamic\n", obj);
 
-    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc9, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc_Dynamic, callFuncBody);
     fb = makeCFuncBody(func1, NULL);
     FREE_SYMBOL(func1);
 
     return fb;
 }
 
-bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Dynamic(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
-    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc9, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc_Dynamic, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, NULL, *fi);
     FREE_SYMBOL(func1);
 
@@ -222,45 +228,45 @@ bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
     return true;
 }
 
-af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc_GcDestruct_b(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
-    printf("testFunc8(%p): I am testFunc8\n", obj);
+    printf("testFunc_GcDestruct_b(%p): I am testFunc_GcDestruct_b\n", obj);
     fflush(stdout);
     return NULL;
 }
 
-af_FuncBody *testFunc7(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc_GcDestruct_c(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
-    printf("testFunc7[des](%p): I am testFunc7\n", obj);
+    printf("testFunc_GcDestruct_c[des](%p): I am testFunc_GcDestruct_c\n", obj);
     fflush(stdout);
     return NULL;
 }
 
-bool getInfo7(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_GcDestruct_2(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
-    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc7, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_GcDestruct_c, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
 }
 
-af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc_GcDestruct_a(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info7 = MAKE_SYMBOL(getInfo7, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info7 = MAKE_SYMBOL(getInfo_GcDestruct_2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             return NULL;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -284,35 +290,37 @@ af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
 
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
-    printf("testFunc6[des](%p, %p): I am testFunc6\n", obj, des);
+    printf("testFunc_GcDestruct_a[des](%p, %p): I am testFunc_GcDestruct_a\n", obj, des);
+    gc_delReference(des, env);  // obj不需要 delReference, 因为他存在于NORMAL_Message中
     return NULL;
 }
 
-bool getInfo6(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_GcDestruct(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
-    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc6, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc_GcDestruct_a, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, NULL, *fi);
     FREE_SYMBOL(func1);
 
-    DLC_SYMBOL(callFuncBody) func2 = MAKE_SYMBOL(testFunc8, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func2 = MAKE_SYMBOL(testFunc_GcDestruct_b, callFuncBody);
     makeCFuncBodyToFuncInfo(func2, NULL, *fi);
     FREE_SYMBOL(func2);
     return true;
 }
 
-af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc_Gc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     af_Object *des;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
 
     {
         af_ObjectAPI *api = makeObjectAPI();
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info6 = MAKE_SYMBOL(getInfo6, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        /* 无get_acl API 表示析构函数没有参数 */
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info6 = MAKE_SYMBOL(getInfo_GcDestruct, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             return NULL;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -336,36 +344,33 @@ af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
 
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
-    printf("testFunc5(%p, %p): I am testFunc5\n", obj, des);
+    printf("testFunc_Gc(%p, %p): I am testFunc_Gc\n", obj, des);
+    gc_delReference(des, env);
     return NULL;
 }
 
-bool getInfo5(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Gc(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
-    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc5, callFuncBody);
+    DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_Gc, callFuncBody);
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, NULL, *fi);
     return true;
 }
 
-bool getInfo10(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_NotVar(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("no-var", NUL, 1, "func9.info.aun"), true, NULL, *fi);
     return true;
 }
 
-bool getInfo11(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Import(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeImportFuncBodyToFuncInfo(makeElementCode("global", NUL, 1, "func9.info.aun"), true, NULL, *fi);
     return true;
 }
 
-bool objFunc(char *id, af_Object *obj) {
-    return true;
-}
-
-bool infixFunc(char *id, af_Object *obj) {
+bool isInfixTrue(char *id, af_Object *obj) {
     return true;
 }
 
@@ -380,6 +385,9 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
 
     af_GuardianList *gd = NULL;
     data->no_first = true;
+    gc_addReference(data->func, env);  // data->func 本身有一次gc引用, 此次再使用一次gc引用, gd_destruct和freeGuardianList时各释放一次
+
+    printf("gd_func:run-Guardian-func\n");
     pushGuardianList(NULL, data->func, &gd, env);
     return gd;
 }
@@ -417,7 +425,7 @@ INIT_ERROR:
     aFunRunInfo ri = {.signal=true};
     defineRunEnv(&ri);
 
-    if(!pushLiteralRegex("data.*", "func", true, env)) {
+    if(!pushLiteralRegex("data.*", "func-normal", true, env)) {
         fprintf(stderr, "pushLiteralRegex Error\n");
         goto RETURN_1;
     }
@@ -441,16 +449,16 @@ INIT_ERROR:
         if (addAPI(get_gl3, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("object", 3, 3, 3,
+        makeVarToProtectVarSpace("object", 3, 3, 3,
                                         (obj = makeObject("object", true, api, true, NULL, true, NULL, env)),
-                                        env),
-                                env);
+                                        env);
         FREE_SYMBOL(getSize_3);
         FREE_SYMBOL(initData_3);
         FREE_SYMBOL(freeData_3);
         FREE_SYMBOL(getShareVS_);
         FREE_SYMBOL(get_gl3);
         printf("object(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     af_Object *af_func = NULL;
@@ -458,15 +466,15 @@ INIT_ERROR:
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -486,9 +494,8 @@ INIT_ERROR:
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-normal", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -499,21 +506,22 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         af_func = obj;
-        printf("func(%p)\n", obj);
+        gc_delReference(obj, env);
+        printf("func-normal(%p)\n", obj);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info2 = MAKE_SYMBOL(getInfo2, objectAPIFunc);  // 宏函数
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info2 = MAKE_SYMBOL(getInfo_Macro, objectAPIFunc);  // 宏函数
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -533,9 +541,8 @@ INIT_ERROR:
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func2", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("macro", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -545,21 +552,22 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func2(%p)\n", obj);
+        printf("macro(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info3 = MAKE_SYMBOL(getInfo3, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info3 = MAKE_SYMBOL(getInfo_Tail, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -579,9 +587,8 @@ INIT_ERROR:
         if (addAPI(free_mark, "obj_funcFreeMask", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func3", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-tail", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -591,22 +598,23 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func3(%p)\n", obj);
+        printf("func-tail(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info4 = MAKE_SYMBOL(getInfo4, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) obj_func = MAKE_SYMBOL(objFunc, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info4 = MAKE_SYMBOL(getInfo_Obj, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) obj_func = MAKE_SYMBOL(isObjTrue, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -628,9 +636,8 @@ INIT_ERROR:
         if (addAPI(obj_func, "obj_isObjFunc", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func4", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-obj", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -641,21 +648,22 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func4(%p)\n", obj);
+        printf("func-obj(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info5 = MAKE_SYMBOL(getInfo5, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info5 = MAKE_SYMBOL(getInfo_Gc, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -675,9 +683,8 @@ INIT_ERROR:
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func5", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-gc", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -687,7 +694,8 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func5(%p)\n", obj);
+        printf("func-gc(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
@@ -696,12 +704,12 @@ INIT_ERROR:
 
         {
             af_ObjectAPI *api = makeObjectAPI();
-            DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-            DLC_SYMBOL(objectAPIFunc) get_info6 = MAKE_SYMBOL(getInfo6, objectAPIFunc);
-            DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-            DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-            DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-            DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) get_info6 = MAKE_SYMBOL(getInfo_GcDestruct, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+            DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
             if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
                 goto RETURN_2;
             if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -724,22 +732,24 @@ INIT_ERROR:
         }
 
         setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
-        addVarToProtectVarSpace(makeVar("func6", 3, 3, 3, obj, env), env);
-        printf("func6(%p)\n", obj);
+        makeVarToProtectVarSpace("func6", 3, 3, 3, obj, env);
+        printf("func6(%p), des(%p)\n", obj, des);
+        gc_delReference(obj, env);
+        gc_delReference(des, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info9 = MAKE_SYMBOL(getInfo9, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info9 = MAKE_SYMBOL(getInfo_Dynamic, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -759,9 +769,8 @@ INIT_ERROR:
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func7", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-body-dynamic", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -771,22 +780,23 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func7(%p)\n", obj);
+        printf("func-body-dynamic(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) infix_func = MAKE_SYMBOL(infixFunc, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info = MAKE_SYMBOL(getInfo_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) infix_func = MAKE_SYMBOL(isInfixTrue, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -808,9 +818,8 @@ INIT_ERROR:
         if (addAPI(infix_func, "obj_isInfixFunc", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func8", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-brackets", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -821,21 +830,22 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         FREE_SYMBOL(infix_func);
-        printf("func8(%p)\n", obj);
+        printf("func-brackets(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info10 = MAKE_SYMBOL(getInfo10, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info10 = MAKE_SYMBOL(getInfo_NotVar, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -855,9 +865,8 @@ INIT_ERROR:
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func9", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-no-var", 3, 3, 3,
+                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -867,21 +876,22 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func9(%p)\n", obj);
+        printf("func-no-var(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
     {
         af_ObjectAPI *api = makeObjectAPI();
         af_Object *obj;
-        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_info11 = MAKE_SYMBOL(getInfo11, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData2, objectAPIFunc);
-        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData2, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_alc = MAKE_SYMBOL(getAcl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_vsl = MAKE_SYMBOL(getVsl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_al = MAKE_SYMBOL(getAl_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_info11 = MAKE_SYMBOL(getInfo_Import, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) free_mark = MAKE_SYMBOL(freeMark_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) get_gl = MAKE_SYMBOL(getGcList_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) getSize_2 = MAKE_SYMBOL(getSize_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) initData_2 = MAKE_SYMBOL(initData_Normal, objectAPIFunc);
+        DLC_SYMBOL(objectAPIFunc) freeData_2 = MAKE_SYMBOL(freeData_Normal, objectAPIFunc);
         if (addAPI(getSize_2, "obj_getDataSize", api) != 1)
             goto RETURN_2;
         if (addAPI(initData_2, "obj_initData", api) != 1)
@@ -901,9 +911,8 @@ INIT_ERROR:
         if (addAPI(get_gl, "obj_getGcList", api) != 1)
             goto RETURN_2;
 
-        addVarToProtectVarSpace(makeVar("func10", 3, 3, 3,
-                                        (obj = makeObject("func", true, api, true, NULL, true, NULL, env)), env),
-                                env);
+        makeVarToProtectVarSpace("func-import", 3, 3, 3,
+                                        (obj =makeObject("func", true, api, true, NULL, true, NULL, env)), env);
         FREE_SYMBOL(get_alc);
         FREE_SYMBOL(get_vsl);
         FREE_SYMBOL(get_al);
@@ -913,18 +922,24 @@ INIT_ERROR:
         FREE_SYMBOL(getSize_2);
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
-        printf("func9(%p)\n", obj);
+        printf("func-import(%p)\n", obj);
+        gc_delReference(obj, env);
     }
 
+    {
+        af_Object *obj = getGlobal(env);
+        printf("global(%p)\n", obj);
+        gc_delReference(obj, env);
+    }
     printf("\n");
 
     {  // 正常程序
-        printf("TAG A:\n");
+        printf("TAG A: [Normal test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
-        af_Code *bt2 = makeElementCode("data", '$', 0, NULL);
+        af_Code *bt2 = makeElementCode("data", 0, 0, NULL);
         pushCode(&bt1, bt2);
 
-        af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
+        af_Code *bt3 = makeElementCode("func-normal", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         pushCode(&bt2, bt5);
 
@@ -937,10 +952,10 @@ INIT_ERROR:
     }
 
     {  // 宏函数
-        printf("TAG L:\n");
+        printf("TAG L: [Macro test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Tagl.aun");
 
-        af_Code *bt3 = makeElementCode("func2", 0, 1, NULL);
+        af_Code *bt3 = makeElementCode("macro", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         pushCode(&bt1, bt5);
 
@@ -952,51 +967,8 @@ INIT_ERROR:
         printf("\n");
     }
 
-
-    {  // 尾调用优化
-        printf("TAG B:\n");
-        af_Code *bt1 = makeElementCode("data", '$', 0, "Tagb.aun");
-        af_Code *bt2 = makeElementCode("object", 0, 1, NULL);
-        pushCode(&bt1, bt2);
-
-        af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
-        af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
-        pushCode(&bt2, bt5);
-
-        runCodeFromMemory(bt1, 0, env);
-        freeAllCode(bt1);
-        printf("\n");
-    }
-
-    {  // 尾调用优化2
-        printf("TAG C:\n");
-        af_Code *bt1 = makeElementCode("data", '$', 0, "Tagc.aun");
-
-        runCodeFromMemory(bt1, 0, env);
-        freeAllCode(bt1);
-        printf("\n");
-    }
-
-    {  // 测试类前缀调用
-        printf("TAG D:\n");
-        af_Code *bt1 = makeElementCode("data", '$', 0, "Tagd.aun");
-        af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
-        pushCode(&bt1, bt2);
-
-        af_Code *bt5 = makeBlockCode(parentheses, NULL, 0, 1, NULL, NULL);
-        pushCode(&bt2, bt5);
-
-
-        af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt5, bt6);
-
-        runCodeFromMemory(bt1, 0, env);
-        freeAllCode(bt1);
-        printf("\n");
-    }
-
     {  // 测试顺序执行 '(xxx)
-        printf("TAG E:\n");
+        printf("TAG E: [ex]\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
@@ -1004,16 +976,50 @@ INIT_ERROR:
 
         af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "Tage.aun", NULL);
 
-        af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt5, bt6);
-
         runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
 
-    {  // 测试顺序执行 ,[xxx]
-        printf("TAG F:\n");
+    {  // 尾调用优化
+        printf("TAG B: [Tail test]\n");
+        af_Code *bt1 = makeElementCode("object", 0, 1, NULL);
+
+        af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
+        af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, NULL, NULL);
+        pushCode(&bt1, bt3);
+
+        af_Code *bt4 = makeBlockCode(parentheses, bt1, '\'', 1, "Tagb.aun", NULL);
+
+        runCodeFromMemory(bt4, 0, env);
+        freeAllCode(bt4);
+        printf("\n");
+    }
+
+    {  // 尾调用优化2
+        printf("TAG C: [Tail test on literal]\n");
+        af_Code *bt1 = makeElementCode("data", 0, 0, "Tagc.aun");
+        af_Code *bt2 = makeBlockCode(parentheses, bt1, '\'', 1, "Tagc.aun", NULL);
+
+        runCodeFromMemory(bt2, 0, env);
+        freeAllCode(bt2);
+        printf("\n");
+    }
+
+    {  // 测试类前缀调用
+        printf("TAG D: [parentheses-call]\n");
+        af_Code *bt1 = makeElementCode("func-normal", 0, 1, "Tagd.aun");
+        af_Code *bt2 = makeBlockCode(parentheses, NULL, 0, 1, NULL, NULL);
+        pushCode(&bt1, bt2);
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+
+    {  // 测试顺序执行 $[xxx]
+        printf("TAG F: [ex-first]\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
@@ -1021,53 +1027,17 @@ INIT_ERROR:
 
         af_Code *bt5 = makeBlockCode(brackets, bt3, '$', 1, "Tagf.aun", NULL);
 
-        af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt5, bt6);
-
         runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
         printf("\n");
     }
 
-    {  // 测试顺序执行 '(xxx) 【尾调用优化】
-        printf("TAG G:\n");
-        af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
-        af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
-
-        pushCode(&bt3, bt4);
-
-        af_Code *bt5 = makeBlockCode(parentheses, bt3, '\'', 1, "Tagg.aun", NULL);
-
-        runCodeFromMemory(bt5, 0, env);
-        freeAllCode(bt5);
-        printf("\n");
-    }
-
-    {  // 测试顺序执行 ,[xxx] 【尾调用优化】
-        printf("TAG H:\n");
-        af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
-        af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
-
-        pushCode(&bt3, bt4);
-
-        af_Code *bt5 = makeBlockCode(brackets, bt3, '$', 1, "Tagh.aun", NULL);
-
-        runCodeFromMemory(bt5, 0, env);
-        freeAllCode(bt5);
-        printf("\n");
-    }
 
     {  // 双层尾调用优化 （函数内调用函数）
-        printf("TAG I:\n");
-        af_Code *bt2 = makeElementCode("func3", 0, 1, NULL);
-        af_Code *bt3 = makeBlockCode(curly, bt2, 0, 1, "Tagi.aun", NULL);
-
-        af_Code *bt4 = makeElementCode("func3", 0, 1, NULL);
-        af_Code *bt5 = makeBlockCode(curly, bt4, 0, 1, NULL, NULL);
-        pushCode(&bt3, bt5);
-
-        af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt5, bt6);
+        printf("TAG I: [Double tail test]\n");
+        af_Code *bt1 = makeElementCode("func-tail", 0, 1, NULL);
+        af_Code *bt2 = makeBlockCode(curly, bt1, 0, 1, "Tagi.aun", NULL);
+        af_Code *bt3 = makeBlockCode(parentheses, bt2, '\'', 1, "Tagi.aun", NULL);
 
         runCodeFromMemory(bt3, 0, env);
         freeAllCode(bt3);
@@ -1075,10 +1045,8 @@ INIT_ERROR:
     }
 
     {  // 对象函数的调用
-        printf("TAG J:\n");
-        af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagj.aun");
-        af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt1, bt2);
+        printf("TAG J: [object]\n");
+        af_Code *bt1 = makeElementCode("func-obj", 0, 1, "Tagj.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1086,10 +1054,8 @@ INIT_ERROR:
     }
 
     {  // 变量引用调用
-        printf("TAG K:\n");
-        af_Code *bt1 = makeElementCode("func4", '\'', 1, "Tagk.aun");
-        af_Code *bt2 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt1, bt2);
+        printf("TAG K: [not object]\n");
+        af_Code *bt1 = makeElementCode("func-obj", '\'', 1, "Tagk.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1097,29 +1063,20 @@ INIT_ERROR:
     }
 
     {  // 对象函数的调用 (尾调用优化)
-        printf("TAG L:\n");
-        af_Code *bt1 = makeElementCode("func4", 0, 1, "Tagl.aun");
+        printf("TAG L: [pbject-tail]\n");
+        af_Code *bt1 = makeElementCode("func-obj", 0, 1, "Tagl.aun");
+        af_Code *bt2 = makeBlockCode(parentheses, bt1, '\'', 1, "Tagi.aun", NULL);
 
-        runCodeFromMemory(bt1, 0, env);
-        freeAllCode(bt1);
+        runCodeFromMemory(bt2, 0, env);
+        freeAllCode(bt2);
         printf("\n");
     }
 
-    {  // 函数调用
-        printf("TAG M:\n");
-
-        af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
-        af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagm.aun", NULL);
-
-        runCodeFromMemory(bt1, 0, env);
-        freeAllCode(bt1);
-        printf("\n");
-    }
 
     {  // gc测试
-        printf("TAG N:\n");
+        printf("TAG N: [gc-test]\n");
 
-        af_Code *bt2 = makeElementCode("func5", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-gc", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagn.aun", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
@@ -1135,11 +1092,8 @@ INIT_ERROR:
     {  // func_body_dynamic 测试
         printf("TAG O:\n");
 
-        af_Code *bt2 = makeElementCode("func7", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-body-dynamic", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tago.aun", NULL);
-        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
-
-        pushCode(&bt1, bt3);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1147,13 +1101,10 @@ INIT_ERROR:
     }
 
     {  // 中缀调用测试
-        printf("TAG P:\n");
+        printf("TAG P: [infix-call]\n");
 
-        af_Code *bt2 = makeElementCode("func8", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-brackets", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Tagp.aun", NULL);
-        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
-
-        pushCode(&bt1, bt3);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1161,9 +1112,9 @@ INIT_ERROR:
     }
 
     {  // func_body_import 测试
-        printf("TAG Q:\n");
+        printf("TAG Q: [import]\n");
 
-        af_Code *bt2 = makeElementCode("func10", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-import", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagq.aun", NULL);
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
 
@@ -1175,12 +1126,12 @@ INIT_ERROR:
     }
 
     {  // 导入式运行
-        printf("TAG R:\n");
+        printf("TAG R: [import-Tagr]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Tagr.aun");
-        af_Code *bt2 = makeElementCode("data", '$', 0, NULL);
+        af_Code *bt2 = makeElementCode("data", 0, 0, NULL);
         pushCode(&bt1, bt2);
 
-        af_Code *bt3 = makeElementCode("func", 0, 1, NULL);
+        af_Code *bt3 = makeElementCode("func-normal", 0, 1, NULL);
         af_Code *bt5 = makeBlockCode(curly, bt3, 0, 1, NULL, NULL);
         pushCode(&bt2, bt5);
 
@@ -1193,19 +1144,11 @@ INIT_ERROR:
     }
 
     {
-        printf("TAG S: STRING\n");
-        int exit_code = runCodeFromString("object\ndata\n{func}\nglobal\n", "Tags-string.aun", 1, env);
+        printf("TAG S: [string]\n");
+        int exit_code = runCodeFromString("object\ndata\n{func-normal}\nglobal\n", "Tags-string.aun", 1, env);
         printf("exit code = %d\n\n", exit_code);
     }
 
-#ifndef IN_CTEST
-    {
-        printf("TAG T: [stdin]\n");
-        int exit_code = runCodeFromStdin(NULL, NULL, env);
-        printf("exit code = %d\n\n", exit_code);
-        getc(stdin);
-    }
-#endif
 
     {
         DLC_SYMBOL(GuardianFunc) func = MAKE_SYMBOL(gd_func, GuardianFunc);
@@ -1217,20 +1160,23 @@ INIT_ERROR:
         FREE_SYMBOL(func);
         FREE_SYMBOL(des);
 
-        printf("TAG U:\n");
-        af_Code *bt1 = makeElementCode("str", 0, 1, "TagU.aun");
+        printf("TAG U: [guardian]\n");
+        af_Code *bt1 = makeElementCode("func-normal", 0, 1, "TagU.aun");
         af_Code *bt2 = makeElementCode("global", 0, 1, "TagU.aun");
+        af_Code *bt3 = makeElementCode("global", 0, 1, "TagU.aun");
 
         pushCode(&bt1, bt2);
+        pushCode(&bt2, bt3);
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
+
         bool re = popGuardian("test", env);
         printf("popGuardian: %d\n\n", re);
     }
 
     {
-        printf("TAG V:\n");
-        af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
+        printf("TAG V: [Thread]\n");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
 
         startRunThread(env, NULL, bt1, true, true, true, true);
         runCodeFromMemory(bt1, 0, env);
@@ -1243,11 +1189,8 @@ INIT_ERROR:
     {  // 中缀调用测试
         printf("TAG a: ERROR\n");
 
-        af_Code *bt2 = makeElementCode("func", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Taga-error.aun", NULL);
-        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
-
-        pushCode(&bt1, bt3);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1256,13 +1199,7 @@ INIT_ERROR:
 
     {  // 测试错误 (无函数指定)
         printf("TAG b: ERROR\n");
-        af_Code *bt1 = makeElementCode("data", '$', 0, "Tagb-error.aun");
-
-        af_Code *bt5 = makeBlockCode(curly, NULL, 0, 1, NULL, NULL);
-        pushCode(&bt1, bt5);
-
-        af_Code *bt6 = makeElementCode("global", 0, 1, NULL);
-        pushCode(&bt5, bt6);
+        af_Code *bt1 = makeBlockCode(curly, NULL, 0, 1, "Tagb-error.aun", NULL);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1271,10 +1208,7 @@ INIT_ERROR:
 
     {  // 测试错误 (object2 Var not found)
         printf("TAG c: ERROR\n");
-        af_Code *bt1 = makeElementCode("data", '$', 0, "Tagc-error.aun");
-        af_Code *bt2 = makeElementCode("object2", 0, 1, NULL);
-
-        pushCode(&bt1, bt2);
+        af_Code *bt1 = makeElementCode("object2", 0, 1, "Tagc-error.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
@@ -1284,8 +1218,8 @@ INIT_ERROR:
     {  // 中缀保护测试
         printf("TAG d: ERROR\n");
 
-        af_Code *bt2 = makeElementCode("func8", 0, 2, NULL);
         af_Code *bt1 = makeElementCode("global", 0, 1, "Tagd-error.aun");
+        af_Code *bt2 = makeElementCode("func-brackets", 0, 2, NULL);
 
         pushCode(&bt1, bt2);
 
@@ -1297,7 +1231,7 @@ INIT_ERROR:
     {  // 错误回溯测试
         printf("TAG e: ERROR\n");
 
-        af_Code *bt2 = makeElementCode("func9", 0, 1, NULL);
+        af_Code *bt2 = makeElementCode("func-no-var", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tage-error.aun", NULL);
 
         af_Code *bt3 = makeElementCode("global", 0, 1, NULL);

@@ -124,11 +124,6 @@ AFUN_CORE_EXPORT af_Object *getActivityFunc(af_Environment *env);
 AFUN_CORE_EXPORT bool isEnviromentExit(af_Environment *env);
 AFUN_CORE_EXPORT size_t getEnviromentSonCount(af_Environment *env);
 
-/* 消息 属性访问 */
-AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg, af_Environment *env);
-AFUN_CORE_EXPORT af_ErrorInfo *getMsgErrorInfo(af_Message *msg);
-AFUN_CORE_EXPORT af_ImportInfo *getMsgImportInfo(af_Message *msg);
-
 /* ErrorInfo 属性访问 */
 AFUN_CORE_EXPORT char *getErrorType(af_ErrorInfo *ei);
 AFUN_CORE_EXPORT char *getError(af_ErrorInfo *ei);

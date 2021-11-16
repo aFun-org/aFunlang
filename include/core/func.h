@@ -48,6 +48,7 @@ AFUN_CORE_EXPORT void freeAllArgCodeList(af_ArgCodeList *acl, af_Environment *en
 /* af_ArgList 创建与释放 */
 AFUN_CORE_EXPORT af_ArgList *makeArgList(char *name, af_Object *obj, af_Environment *env);
 AFUN_CORE_EXPORT void freeAllArgList(af_ArgList *al, af_Environment *env);
+AFUN_CORE_EXPORT af_ArgList *makeArgListFromArgCodeList(char *name, af_ArgCodeList *acl, af_Environment *env);
 
 /* FuncBody 创建与释放 */
 AFUN_CORE_EXPORT af_FuncBody *makeCodeFuncBody(af_Code *code, bool free_code, char **msg_type);

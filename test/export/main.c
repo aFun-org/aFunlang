@@ -77,7 +77,7 @@ void literalSet(char *str, void *data, af_Object *obj, af_Environment *env) {
     printf("literalSet(): str = %s\n", str);
 }
 
-af_FuncBody *testFunc(CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
+af_FuncBody *testFunc_Normal(struct af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     printf("testFunc(): I am testFunc\n");
     af_Object *obj;
 

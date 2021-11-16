@@ -65,7 +65,7 @@ af_Environment *creatAFunEnvironment(int argc, char **argv){
     if (!aFunInit_mark)
         return NULL;
 
-    af_Environment *env = makeEnvironment(grt_count);
+    af_Environment *env = makeEnvironment(grt_always);
     af_Code *code = NULL;
 
     for(int i = 0; i < argc; i++)

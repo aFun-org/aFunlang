@@ -93,16 +93,19 @@ void addVarNode(af_Var *var, af_Object *obj, char *id) {
 /**
  * 查找指定名字的VarNode
  * 外部函数, 带锁
+ * 返回值自动添加 gc_addReference
  * @param var
  * @param id
  * @return
  */
-af_Object *findVarNode(af_Var *var, char *id) {
+af_Object *findVarNode(af_Var *var, char *id, af_Environment *env){
     pthread_rwlock_rdlock(&var->lock);
     af_VarNode *vn = findVarNode_(var, id);
     af_Object *obj = NULL;
-    if (vn != NULL)
+    if (vn != NULL) {
         obj = vn->obj;
+        gc_addReference(obj, env);
+    }
     pthread_rwlock_unlock(&var->lock);
     return obj;
 }
@@ -220,12 +223,13 @@ static bool checkVarSpaceDefinePermissions(af_Object *visitor, af_VarSpace *vs){
 
 /**
  * 把var添加到VarSpace中
+ * 注意: Var必须添加 gc_addReference
  * @param var 变量
  * @param visitor 访问者
  * @param vs 变量空间
  * @return 若空间被保护, 权限错误或已存在同名Var则返回false不作修改 否则返回true
  */
-bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs) {
+bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs, af_Environment *env){
     pthread_rwlock_rdlock(&var->lock);
     pthread_rwlock_wrlock(&vs->lock);
 
@@ -250,6 +254,7 @@ bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs) {
     *pCup = makeVarCup(var);
     pthread_rwlock_unlock(&vs->lock);
     pthread_rwlock_unlock(&var->lock);
+    gc_delReference(var, env);
     return true;
 
 RETURN_FALSE:
@@ -267,7 +272,11 @@ RETURN_FALSE:
  */
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_VarSpace *vs,
                        af_Object *visitor, af_Environment *env){
-    return addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), visitor, vs);
+    af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
+    if (addVarToVarSpace(var, visitor, vs, env))
+        return true;
+    gc_delReference(var, env);
+    return false;
 }
 
 /*
@@ -276,10 +285,10 @@ bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_externa
  * 自动跳过保护空间
  * 调用 addVarToVarSpace
  */
-bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl) {
+bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl, af_Environment *env){
     for (NULL; vsl != NULL; vsl = vsl->next) {
         if (!vsl->vs->is_protect)
-            return addVarToVarSpace(var, visitor, vsl->vs);
+            return addVarToVarSpace(var, visitor, vsl->vs, env);
     }
     return false;
 }
@@ -292,7 +301,11 @@ bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *
  */
 bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                            af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env){
-    return addVarToVarSpaceList(makeVar(name, p_self, p_posterity, p_external, obj, env), visitor, vsl);
+    af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
+    if (addVarToVarSpaceList(var, visitor, vsl, env))
+        return true;
+    gc_delReference(var, env);
+    return false;
 }
 
 /*
@@ -307,7 +320,11 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
     env->protect->is_protect = false;
     pthread_rwlock_unlock(&env->protect->lock);
 
-    bool re = addVarToVarSpace(makeVar(name, p_self, p_posterity, p_external, obj, env), env->activity->belong, env->protect);
+    af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
+    bool re = addVarToVarSpace(var, env->activity->belong,
+                               env->protect, env);
+    if (!re)
+        gc_delReference(var, env);
 
     pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = true;
@@ -317,7 +334,7 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
 
 /*
  * 函数名: addVarToProtectVarSpace
- * 目标: 添加一个var变量添加到保护空间中
+ * 目标: 添加一个var变量添加到保护空间中 (Var需要提前gc_addReference)
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
  * 调用 addVarToVarSpace
@@ -328,7 +345,7 @@ bool addVarToProtectVarSpace(af_Var *var, af_Environment *env) {
     env->protect->is_protect = false;
     pthread_rwlock_unlock(&env->protect->lock);
 
-    bool re = addVarToVarSpace(var, NULL, env->protect);
+    bool re = addVarToVarSpace(var, NULL, env->protect, env);
 
     pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = is_protect;
@@ -602,8 +619,10 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
 }
 
 af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env){
-    af_VarSpaceListNode *new = makeVarSpaceList(makeVarSpace(belong, 3, 2, 0, env));
+    af_VarSpace *vs = makeVarSpace(belong, 3, 2, 0, env);
+    af_VarSpaceListNode *new = makeVarSpaceList(vs);
     new->next = base;
+    gc_delReference(vs, env);
     return new;
 }
 
