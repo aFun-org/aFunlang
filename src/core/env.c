@@ -875,6 +875,9 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
     pthread_mutexattr_destroy(&attr);
 
+    pthread_mutex_init(&env->thread_lock, NULL);
+    pthread_mutex_init(&env->status_lock, NULL);
+
     env->is_derive = false;
     env->base = env;
 
@@ -925,7 +928,6 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     env->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
-    pthread_mutex_init(&env->thread_lock, NULL);
     return env;
 }
 
