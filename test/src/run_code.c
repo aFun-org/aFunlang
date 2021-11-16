@@ -1228,6 +1228,16 @@ INIT_ERROR:
         printf("popGuardian: %d\n\n", re);
     }
 
+    {
+        printf("TAG V:\n");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
+
+        startRunThread(env, NULL, bt1, true, true, true, true);
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
     /* 错误用例 */
 
     {  // 中缀调用测试

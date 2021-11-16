@@ -1001,10 +1001,10 @@ void enableEnvironment(af_Environment *env) {
 
 bool freeEnvironment(af_Environment *env) {
     bool res = true;
-    if (getEnviromentSonCount(env) != 0)
+    if (!env->is_derive && getEnviromentSonCount(env) != 0)
         return false;
 
-    if (env->status != core_creat)
+    if (!env->is_derive && env->status != core_creat)
         res = iterDestruct(10, env);
 
     freeAllActivity(env->activity);

@@ -32,6 +32,8 @@ enum GcRunTime {
 /* 运行环境 创建与释放 */
 AFUN_CORE_EXPORT af_Environment *makeEnvironment(enum GcRunTime grt);
 AFUN_CORE_EXPORT bool freeEnvironment(af_Environment *env);
+AFUN_CORE_EXPORT af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool derive_lr, bool enable,
+                                                   af_Environment *base);
 
 /* 消息 创建与释放 */
 AFUN_CORE_EXPORT af_Message *makeMessage(char *type, size_t size);
