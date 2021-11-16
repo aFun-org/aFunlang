@@ -71,7 +71,7 @@ static af_FuncBody *strFuncBody(af_CallFuncInfo *cfi, af_Environment *env) {
     af_Object *obj = cfi->func;
     ObjectStrFunc *osf = getObjectData(obj);
     af_Object *str = makeObject((char *) string_id, false, osf->api, false, NULL, true, makeInherit(obj), env);
-    af_Message *msg = makeNORMALMessage(str);
+    af_Message *msg = makeNORMALMessage(str, env);
     pushMessageDown(msg, env);
     return NULL;
 }

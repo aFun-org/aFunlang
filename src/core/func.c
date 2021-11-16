@@ -16,20 +16,20 @@ af_ArgCodeList *makeArgCodeList(af_Code *code, size_t size, bool free_code, bool
     return acl;
 }
 
-static af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl) {
+static af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl, af_Environment *env){
     af_ArgCodeList *next = acl->next;
     free(acl->info);
     if (acl->free_code)
         freeAllCode(acl->code);
     if (acl->result != NULL)
-        gc_delReference(acl->result);
+        gc_delReference(acl->result, env);
     free(acl);
     return next;
 }
 
-void freeAllArgCodeList(af_ArgCodeList *acl) {
+void freeAllArgCodeList(af_ArgCodeList *acl, af_Environment *env){
     while (acl != NULL)
-        acl = freeArgCodeList(acl);
+        acl = freeArgCodeList(acl, env);
 }
 
 af_ArgCodeList **pushArgCodeList(af_ArgCodeList **base, af_ArgCodeList *new) {
@@ -50,26 +50,26 @@ af_Object *getArgCodeListResult(af_ArgCodeList *acl) {
     return acl->result;
 }
 
-af_ArgList *makeArgList(char *name, af_Object *obj) {
+af_ArgList *makeArgList(char *name, af_Object *obj, af_Environment *env){
     af_ArgList *arg_list = calloc(1, sizeof(af_ArgList));
     arg_list->name = strCopy(name);
     arg_list->obj = obj;
-    gc_addReference(obj);
+    gc_addReference(obj, env);
     return arg_list;
 }
 
-static af_ArgList *freeArgList(af_ArgList *al) {
+static af_ArgList *freeArgList(af_ArgList *al, af_Environment *env){
     af_ArgList *next = al->next;
     free(al->name);
     if (al->obj != NULL)
-        gc_delReference(al->obj);
+        gc_delReference(al->obj, env);
     free(al);
     return next;
 }
 
-void freeAllArgList(af_ArgList *al) {
+void freeAllArgList(af_ArgList *al, af_Environment *env){
     while (al != NULL)
-        al = freeArgList(al);
+        al = freeArgList(al, env);
 }
 
 af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new) {

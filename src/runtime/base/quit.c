@@ -35,7 +35,7 @@ static bool funcVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, voi
 
 static af_FuncBody *funcBody(af_CallFuncInfo *cfi, af_Environment *env) {
     setCoreExit(0, env);
-    pushMessageDown(makeNORMALMessage(getGlobal(env)), env);
+    pushMessageDown(makeNORMALMessage(getGlobal(env), env), env);
     return NULL;
 }
 

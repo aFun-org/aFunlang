@@ -39,18 +39,18 @@ AFUN_CORE_EXPORT af_Environment *deriveEnvironment(bool derive_tmp, bool derive_
 AFUN_CORE_EXPORT af_Message *makeMessage(char *type, size_t size);
 AFUN_CORE_EXPORT af_Message *freeMessage(af_Message *msg);
 AFUN_CORE_EXPORT bool freeMessageCount(size_t count, af_Message *msg);
-AFUN_CORE_EXPORT af_Message *makeNORMALMessage(af_Object *obj);
+AFUN_CORE_EXPORT af_Message *makeNORMALMessage(af_Object *obj, af_Environment *env);
 AFUN_CORE_EXPORT af_Message *makeERRORMessage(char *type, char *error, af_Environment *env);
 AFUN_CORE_EXPORT af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *format, ...);
-AFUN_CORE_EXPORT af_Message *makeIMPORTMessage(char *mark, af_Object *obj);
+AFUN_CORE_EXPORT af_Message *makeIMPORTMessage(char *mark, af_Object *obj, af_Environment *env);
 
 /* ErrorInfo 创建与释放 */
 AFUN_CORE_EXPORT af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path);
-AFUN_CORE_EXPORT void freeErrorInfo(af_ErrorInfo *ei);
+AFUN_CORE_EXPORT void freeErrorInfo(af_ErrorInfo *ei, af_Environment *env);
 
 /* ImportInfo 创建与释放 */
-af_ImportInfo *makeImportInfo(char *mark, af_Object *obj);
-void freeImportInfo(af_ImportInfo *ii);
+af_ImportInfo *makeImportInfo(char *mark, af_Object *obj, af_Environment *env);
+void freeImportInfo(af_ImportInfo *ii, af_Environment *env);
 
 /* 运行环境 相关操作 */
 AFUN_CORE_EXPORT void enableEnvironment(af_Environment *env);
@@ -98,7 +98,7 @@ AFUN_CORE_EXPORT void fprintfErrorInfoStdout(af_ErrorInfo *ei);
 AFUN_CORE_EXPORT void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);
 
 /* GuardianList 相关操作 */
-af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl);
+af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl, af_Environment *env);
 
 /* 环境变量 属性访问 */
 AFUN_CORE_EXPORT char *findEnvVarData(char *name, af_Environment *env);
@@ -125,7 +125,7 @@ AFUN_CORE_EXPORT bool isEnviromentExit(af_Environment *env);
 AFUN_CORE_EXPORT size_t getEnviromentSonCount(af_Environment *env);
 
 /* 消息 属性访问 */
-AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg);
+AFUN_CORE_EXPORT af_Object *getMsgNormalData(af_Message *msg, af_Environment *env);
 AFUN_CORE_EXPORT af_ErrorInfo *getMsgErrorInfo(af_Message *msg);
 AFUN_CORE_EXPORT af_ImportInfo *getMsgImportInfo(af_Message *msg);
 
@@ -135,6 +135,6 @@ AFUN_CORE_EXPORT char *getError(af_ErrorInfo *ei);
 
 /* ImportInfo 属性访问 */
 AFUN_CORE_EXPORT char *getImportMark(af_ImportInfo *ii);
-AFUN_CORE_EXPORT af_Object *getImportObject(af_ImportInfo *ii);
+AFUN_CORE_EXPORT af_Object *getImportObject(af_ImportInfo *ii, af_Environment *env);
 
 #endif //AFUN_ENV

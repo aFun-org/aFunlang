@@ -11,9 +11,9 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
 static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
 static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark);
 static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
-static af_Activity *freeActivity(af_Activity *activity);
+static af_Activity *freeActivity(af_Activity *activity, af_Environment *env);
 static void freeActivityTop(af_Activity *activity);
-static void freeAllActivity(af_Activity *activity);
+static void freeAllActivity(af_Activity *activity, af_Environment *env);
 
 /* Activity 相关处理函数 */
 static void clearFuncActivity(af_Activity *activity);
@@ -75,9 +75,9 @@ static void fprintfNoteStderr(char *note);
 static void fprintfNoteStdout(char *note);
 
 /* af_GuardianList 创建与释放 */
-static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func);
-static af_GuardianList *freeGuardianList(af_GuardianList *gl);
-static void freeAllGuardianList(af_GuardianList *gl);
+static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func, af_Environment *env);
+static af_GuardianList *freeGuardianList(af_GuardianList *gl, af_Environment *env);
+static void freeAllGuardianList(af_GuardianList *gl, af_Environment *env);
 
 /* 内置顶层消息处理器 */
 static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
@@ -263,7 +263,7 @@ static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **
     return activity;
 }
 
-static af_Activity *freeActivity(af_Activity *activity) {
+static af_Activity *freeActivity(af_Activity *activity, af_Environment *env){
     pthread_rwlock_wrlock(&activity->gc_lock);
     af_Activity *prev = activity->prev;
 
@@ -275,12 +275,12 @@ static af_Activity *freeActivity(af_Activity *activity) {
 
     if (activity->type == act_guardian) {
         if (activity->gl != NULL)
-            freeAllGuardianList(activity->gl);
+            freeAllGuardianList(activity->gl, env);
     } else {
         freeVarSpaceListCount(activity->count_out_varlist, activity->out_varlist);
         freeVarSpaceListCount(activity->count_macro_varlist, activity->macro_varlist);
 
-        freeAllArgCodeList(activity->acl_start);
+        freeAllArgCodeList(activity->acl_start, env);
         if (activity->fi != NULL)
             freeFuncInfo(activity->fi);
         freeAllLiteralData(activity->ld);
@@ -304,9 +304,9 @@ static void freeActivityTop(af_Activity *activity) {
     free(activity->file);
 }
 
-static void freeAllActivity(af_Activity *activity) {
+static void freeAllActivity(af_Activity *activity, af_Environment *env){
     while (activity != NULL)
-        activity = freeActivity(activity);
+        activity = freeActivity(activity, env);
 }
 
 static void pushActivity(af_Activity *activity, af_Environment *env) {
@@ -581,10 +581,10 @@ void connectMessage(af_Message **base, af_Message *msg) {
     *base = msg;
 }
 
-af_Message *makeNORMALMessage(af_Object *obj) {
+af_Message *makeNORMALMessage(af_Object *obj, af_Environment *env){
     af_Message *msg = makeMessage("NORMAL", sizeof(af_Object *));
     *(af_Object **)msg->msg = obj;
-    gc_addReference(obj);
+    gc_addReference(obj, env);
     return msg;
 }
 
@@ -621,9 +621,9 @@ af_Message *makeERRORMessageFormat(char *type, af_Environment *env, const char *
     return makeERRORMessage(type, buf, env);;
 }
 
-af_Message *makeIMPORTMessage(char *mark, af_Object *obj) {
+af_Message *makeIMPORTMessage(char *mark, af_Object *obj, af_Environment *env){
     af_Message *msg = makeMessage("IMPORT", sizeof(af_ImportInfo *));
-    *(af_ImportInfo **)msg->msg = makeImportInfo(mark, obj);
+    *(af_ImportInfo **)msg->msg = makeImportInfo(mark, obj, env);
     return msg;
 }
 
@@ -748,7 +748,7 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env) {
         writeErrorLog(aFunCoreLogger, "NORMAL msg: %p error", msg->msg);
         return;
     }
-    gc_delReference(*(af_Object **)msg->msg);
+    gc_delReference(*(af_Object **)msg->msg, env);
     if (is_top)
         writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
 }
@@ -761,7 +761,7 @@ static void mp_NORMALThread(af_Message *msg, bool is_top, af_Environment *env) {
 
     pthread_mutex_lock(&env->thread_lock);
     env->result = *(af_Object **)msg->msg;
-    gc_delReference(env->result);
+    gc_delReference(env->result, env);
     pthread_mutex_unlock(&env->thread_lock);
 
     if (is_top)
@@ -779,7 +779,7 @@ static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env) {
         else
             fprintfErrorInfoStderr(*(af_ErrorInfo **) msg->msg);
     }
-    freeErrorInfo(*(af_ErrorInfo **)msg->msg);
+    freeErrorInfo(*(af_ErrorInfo **) msg->msg, env);
 }
 
 static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env) {
@@ -798,7 +798,7 @@ static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env) {
         writeDebugLog(aFunCoreLogger, "IMPORT point: [%s] %p", ii->mark, ii->obj);
     } else
         writeDebugLog(aFunCoreLogger, "IMPORT point: <no-name> %p", ii->obj);
-    freeImportInfo(ii);
+    freeImportInfo(ii, env);
 }
 
 static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env) {
@@ -853,11 +853,11 @@ static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, a
             af_Message *msg;
             if (EQ_STR("NORMAL", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
-                gc_delReference(*(af_Object **)msg->msg);
+                gc_delReference(*(af_Object **)msg->msg, env);
                 freeMessage(msg);
             } else if (EQ_STR("ERROR", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
-                freeErrorInfo(*(af_ErrorInfo **)msg->msg);
+                freeErrorInfo(*(af_ErrorInfo **) msg->msg, env);
                 freeMessage(msg);
             }
         }
@@ -1012,7 +1012,7 @@ bool freeEnvironment(af_Environment *env) {
     if (!env->is_derive && env->status != core_creat)
         res = iterDestruct(10, env);
 
-    freeAllActivity(env->activity);
+    freeAllActivity(env->activity, env);
     freeAllTopMsgProcess(env->process);
     freeAllGuardian(env->guardian, env);
     freeAllLiteralRegex(env->lr);
@@ -1495,14 +1495,14 @@ bool setFuncActivityAddVar(af_Environment *env){
                           env->activity->mark, env))
             return false;
         runArgList(al, env->activity->run_varlist, env);
-        freeAllArgList(al);
+        freeAllArgList(al, env);
     }
 
     if (fi->embedded == protect_embedded)
         setVarSpaceProtect(env->activity->belong, env->activity->run_varlist->vs, true);
 
     /* ArgCodeList 在此处被清理 */
-    freeAllArgCodeList(env->activity->acl_start);
+    freeAllArgCodeList(env->activity->acl_start, env);
     env->activity->acl_start = NULL;
     env->activity->acl_done = NULL;
 
@@ -1636,14 +1636,14 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_func || env->activity->type == act_top || env->activity->type == act_top_import) {
         if (msg != NULL && env->activity->return_first) {  // msg有内容, 并且设定了返回首位, 则清除msg内容, 并压入首位(压入的代码在下面)
             if (EQ_STR(msg->type, "NORMAL")) {
-                gc_delReference(*(af_Object **) msg->msg);
+                gc_delReference(*(af_Object **) msg->msg, env);
                 freeMessage(msg);
                 msg = NULL;
             }
         } else if (env->activity->return_first) {  // msg无内容, 并且设定了返回首位, 则检查msg_down是否有normal, 有则清除
             if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
                 af_Message *tmp = getFirstMessage(env);
-                gc_delReference(*(af_Object **) (tmp->msg));
+                gc_delReference(*(af_Object **) (tmp->msg), env);
                 freeMessage(tmp);
             }
         }
@@ -1652,7 +1652,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
             if (env->activity->return_obj == NULL)
                 msg = makeERRORMessage(RUN_ERROR, RETURN_OBJ_NOT_FOUND_INFO, env);
             else
-                msg = makeNORMALMessage(env->activity->return_obj);
+                msg = makeNORMALMessage(env->activity->return_obj, env);
         }
     }
 
@@ -1662,7 +1662,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_top_import && /* import模式, 并且msg_down中有normal, 则把normal替换为belong */
         env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
         af_Message *tmp = getFirstMessage(env);
-        pushMessageDown(makeIMPORTMessage(env->activity->import_mark, env->activity->belong), env);  // 压入belong作为msg
+        pushMessageDown(makeIMPORTMessage(env->activity->import_mark, env->activity->belong, env), env);  // 压入belong作为msg
         pushMessageDown(tmp, env);
     }
 
@@ -1682,7 +1682,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     }
 
     if (env->activity->type != act_top)
-        env->activity = freeActivity(env->activity);
+        env->activity = freeActivity(env->activity, env);
     else
         freeActivityTop(env->activity);  // activity不被释放
 }
@@ -1799,11 +1799,11 @@ af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, 
     return ei;
 }
 
-void freeErrorInfo(af_ErrorInfo *ei) {
+void freeErrorInfo(af_ErrorInfo *ei, af_Environment *env){
     free(ei->error_type);
     free(ei->error);
     if (ei->obj != NULL)
-        gc_delReference(ei->obj);
+        gc_delReference(ei->obj, env);
     freeAllErrorBacktracking(ei->track);
     free(ei);
 }
@@ -2020,48 +2020,48 @@ static char *getActivityTrackBackInfoToBacktracking(af_ActivityTrackBack *atb) {
     return strCopy(info);
 }
 
-af_ImportInfo *makeImportInfo(char *mark, af_Object *obj) {
+af_ImportInfo *makeImportInfo(char *mark, af_Object *obj, af_Environment *env){
     af_ImportInfo *ii = calloc(1, sizeof(af_ImportInfo));
     if (mark != NULL)
         ii->mark = strCopy(mark);
     ii->obj = obj;
-    gc_addReference(obj);
+    gc_addReference(obj, env);
     return ii;
 }
 
-void freeImportInfo(af_ImportInfo *ii) {
+void freeImportInfo(af_ImportInfo *ii, af_Environment *env){
     free(ii->mark);
     if (ii->obj != NULL)
-        gc_delReference(ii->obj);
+        gc_delReference(ii->obj, env);
     free(ii);
 }
 
-static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func) {
+static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func, af_Environment *env){
     af_GuardianList *gl = calloc(1, sizeof(af_GuardianList));
     gl->obj = obj;
     gl->func = func;
     if (obj != NULL)
-        gc_addReference(obj);
-    gc_addReference(func);
+        gc_addReference(obj, env);
+    gc_addReference(func, env);
     return gl;
 }
 
-static af_GuardianList *freeGuardianList(af_GuardianList *gl) {
+static af_GuardianList *freeGuardianList(af_GuardianList *gl, af_Environment *env){
     af_GuardianList *next = gl->next;
     if (gl->obj != NULL)
-        gc_delReference(gl->obj);
-    gc_delReference(gl->func);
+        gc_delReference(gl->obj, env);
+    gc_delReference(gl->func, env);
     free(gl);
     return next;
 }
 
-static void freeAllGuardianList(af_GuardianList *gl) {
+static void freeAllGuardianList(af_GuardianList *gl, af_Environment *env){
     while (gl != NULL)
-        gl = freeGuardianList(gl);
+        gl = freeGuardianList(gl, env);
 }
 
-af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl){
-    *pgl = makeGuardianList(obj, func);
+af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl, af_Environment *env){
+    *pgl = makeGuardianList(obj, func, env);
     return &((*pgl)->next);
 }
 
@@ -2162,11 +2162,11 @@ FileLine getActivityLine(af_Environment *env){
     return env->activity->line;
 }
 
-af_Object *getMsgNormalData(af_Message *msg) {
+af_Object *getMsgNormalData(af_Message *msg, af_Environment *env){
     if (!EQ_STR("NORMAL", msg->type))
         return NULL;
     af_Object *obj = *(af_Object **)msg->msg;
-    gc_delReference(obj);
+    gc_delReference(obj, env);
     *(af_Object **)msg->msg = NULL;
     return obj;
 }
@@ -2197,12 +2197,12 @@ char *getImportMark(af_ImportInfo *ii) {
     return ii->mark;
 }
 
-af_Object *getImportObject(af_ImportInfo *ii) {
+af_Object *getImportObject(af_ImportInfo *ii, af_Environment *env){
     af_Object *obj = ii->obj;
     if (obj == NULL)
         return NULL;
     ii->obj = NULL;
-    gc_delReference(obj);
+    gc_delReference(obj, env);
     return obj;
 }
 

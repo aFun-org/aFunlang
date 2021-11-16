@@ -50,7 +50,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     af_Object *obj = *(af_Object **)((*msg)->msg);
     obj_literalSetting *func = findAPI("obj_literalSetting", getObjectAPI(obj));
     if (func == NULL) {
-        gc_delReference(obj);
+        gc_delReference(obj, env);
         freeMessage(*msg);
         *msg = makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_literalSetting), env);
         return false;
@@ -82,7 +82,7 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 
     af_Object *obj = *(af_Object **)(msg->msg);
     bool re = pushMacroFuncActivity(obj, env);
-    gc_delReference(obj);
+    gc_delReference(obj, env);
     freeMessage(msg);
     if (re)
         return 1;
@@ -203,7 +203,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         }
     }
 
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     setActivityBtNext(env->activity->bt_next->next, env->activity);
     writeTrackLog(aFunCoreLogger, "Get variable %s : %p", code->element.data, obj);
     return false;
@@ -307,7 +307,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
             pushMessageDown(msg, env);
             return true;
         } else if (msg != NULL) {
-            gc_delReference(*(af_Object **) (msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+            gc_delReference(*(af_Object **) (msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
             freeMessage(msg);
         }
     } else if (msg != NULL) {
@@ -317,7 +317,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
             pthread_rwlock_unlock(&env->activity->gc_lock);
         }
-        gc_delReference(*(af_Object **)(msg->msg));  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+        gc_delReference(*(af_Object **)(msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
         freeMessage(msg);
     }
     return false;
@@ -483,7 +483,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 break;
             case act_func_get: {
                 af_Object *func = *(af_Object **) (msg->msg);  // func仍保留了msg的gc计数
-                gc_delReference(func);  // 释放计数
+                gc_delReference(func, env);  // 释放计数
                 freeMessage(msg);
                 if (!setFuncActivityToArg(func, env))
                     popActivity(false, NULL, env);

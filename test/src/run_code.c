@@ -68,7 +68,7 @@ af_GcList *getGcList(char *id, af_Object *obj, void *data) {
 }
 
 bool getAl(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
-    *al = makeArgList("test", getArgCodeListResult(acl));
+    *al = makeArgList("test", getArgCodeListResult(acl), env);
     return true;
 }
 
@@ -89,7 +89,7 @@ af_FuncBody *testFunc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用
         FREE_SYMBOL(literal_set);
     }
 
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     return NULL;
 }
 
@@ -154,7 +154,7 @@ af_FuncBody *testFunc2(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
         FREE_SYMBOL(get_gl);
     }
 
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     return NULL;
 }
 
@@ -186,7 +186,7 @@ af_FuncBody *testFunc4(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
         FREE_SYMBOL(literal_set);
     }
 
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     return NULL;
 }
 
@@ -202,7 +202,7 @@ af_FuncBody *testFunc9(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     af_Object *obj;
     af_FuncBody *fb;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc9(%p): I am testFunc9\n", obj);
 
     DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc9, callFuncBody);
@@ -225,7 +225,7 @@ bool getInfo9(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *m
 af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("obj", true, makeObjectAPI(), true, NULL, true, NULL, env);
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc8(%p): I am testFunc8\n", obj);
     fflush(stdout);
     return NULL;
@@ -234,7 +234,7 @@ af_FuncBody *testFunc8(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
 af_FuncBody *testFunc7(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试用函数
     af_Object *obj;
     obj = makeObject("func", true, makeObjectAPI(), true, NULL, true, NULL, env);
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc7[des](%p): I am testFunc7\n", obj);
     fflush(stdout);
     return NULL;
@@ -283,7 +283,7 @@ af_FuncBody *testFunc6(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     }
 
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc6[des](%p, %p): I am testFunc6\n", obj, des);
     return NULL;
 }
@@ -335,7 +335,7 @@ af_FuncBody *testFunc5(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     }
 
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
-    pushMessageDown(makeNORMALMessage(obj), env);
+    pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc5(%p, %p): I am testFunc5\n", obj, des);
     return NULL;
 }
@@ -380,12 +380,12 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
 
     af_GuardianList *gd = NULL;
     data->no_first = true;
-    pushGuardianList(NULL, data->func, &gd);
+    pushGuardianList(NULL, data->func, &gd, env);
     return gd;
 }
 
 void gd_destruct(char *type, struct GDData *data, af_Environment *env) {
-    gc_delReference(data->func);
+    gc_delReference(data->func, env);
 }
 
 int main(int argc, char **argv) {
@@ -1213,7 +1213,7 @@ INIT_ERROR:
         struct GDData *data = NULL;
         addGuardian("test", false, true, sizeof(struct GDData), func, des, (void **) &data, env);
         data->func = af_func;
-        gc_addReference(af_func);
+        gc_addReference(af_func, env);
         FREE_SYMBOL(func);
         FREE_SYMBOL(des);
 

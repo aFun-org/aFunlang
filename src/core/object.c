@@ -51,7 +51,7 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     }
 
     pthread_rwlock_init(&od->lock, NULL);
-    gc_addObjectData(od, env);
+    gc_addObjectData(od, env->base);
     return od;
 }
 
@@ -60,7 +60,7 @@ static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, boo
     obj->belong = NULL;
     makeObjectData_Pri(id, free_api, api, allow_inherit, obj, env);
     pthread_rwlock_init(&obj->lock, NULL);
-    gc_addObject(obj, env);
+    gc_addObject(obj, env->base);
     return obj;
 }
 

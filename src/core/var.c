@@ -50,7 +50,7 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
     var->permissions[1] = p_posterity;
     var->permissions[2] = p_external;
     pthread_rwlock_init(&var->lock, NULL);
-    gc_addVar(var, env);
+    gc_addVar(var, env->base);
     return var;
 }
 
@@ -135,7 +135,7 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
     vs->permissions[2] = p_external;
 
     pthread_rwlock_init(&vs->lock, NULL);
-    gc_addVarSpace(vs, env);
+    gc_addVarSpace(vs, env->base);
     return vs;
 }
 

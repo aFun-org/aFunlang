@@ -6,95 +6,111 @@
 #include "pthread.h"
 
 /* gc 操控函数 */
-void gc_addObjectData(af_ObjectData *obj, af_Environment *env){
+void gc_addObjectData(af_ObjectData *obj, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.prev = ((void *) 0);
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    if (env->gc_factory->gc_ObjectData != ((void *) 0))
-        env->gc_factory->gc_ObjectData->gc.prev = obj;
-    obj->gc.next = env->gc_factory->gc_ObjectData;
-    env->gc_factory->gc_ObjectData = obj;
-    GcCountAdd1(env);
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    if (base->gc_factory->gc_ObjectData != ((void *) 0))
+        base->gc_factory->gc_ObjectData->gc.prev = obj;
+    obj->gc.next = base->gc_factory->gc_ObjectData;
+    base->gc_factory->gc_ObjectData = obj;
+    GcCountAdd1(base);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_addObjectDataReference(af_ObjectData *obj){
+void gc_addObjectDataReference(af_ObjectData *obj, af_Environment *base){
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference++;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_delObjectDataReference(af_ObjectData *obj){
+void gc_delObjectDataReference(af_ObjectData *obj, af_Environment *base){
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference--;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-GcCount gc_getObjectDataReference(af_ObjectData *obj){
-    return obj->gc.info.reference;
-}
-
-void gc_addObject(af_Object *obj, af_Environment *env){
+void gc_addObject(af_Object *obj, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.prev = ((void *) 0);
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    if (env->gc_factory->gc_Object != ((void *) 0))
-        env->gc_factory->gc_Object->gc.prev = obj;
-    obj->gc.next = env->gc_factory->gc_Object;
-    env->gc_factory->gc_Object = obj;
-    GcCountAdd1(env);
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    if (base->gc_factory->gc_Object != ((void *) 0))
+        base->gc_factory->gc_Object->gc.prev = obj;
+    obj->gc.next = base->gc_factory->gc_Object;
+    base->gc_factory->gc_Object = obj;
+    GcCountAdd1(base);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_addObjectReference(af_Object *obj){
+void gc_addObjectReference(af_Object *obj, af_Environment *base){
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference++;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_delObjectReference(af_Object *obj){
+void gc_delObjectReference(af_Object *obj, af_Environment *base){
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference--;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-GcCount gc_getObjectReference(af_Object *obj){
-    return obj->gc.info.reference;
-}
-
-void gc_addVar(af_Var *obj, af_Environment *env) {
+void gc_addVar(af_Var *obj, af_Environment *base) {
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.prev = ((void *) 0);
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    if (env->gc_factory->gc_Var != ((void *) 0))
-        env->gc_factory->gc_Var->gc.prev = obj;
-    obj->gc.next = env->gc_factory->gc_Var;
-    env->gc_factory->gc_Var = obj;
-    GcCountAdd1(env);
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    if (base->gc_factory->gc_Var != ((void *) 0))
+        base->gc_factory->gc_Var->gc.prev = obj;
+    obj->gc.next = base->gc_factory->gc_Var;
+    base->gc_factory->gc_Var = obj;
+    GcCountAdd1(base);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_addVarReference(af_Var *obj) {
+void gc_addVarReference(af_Var *obj, af_Environment *base) {
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference++;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_delVarReference(af_Var *obj) {
+void gc_delVarReference(af_Var *obj, af_Environment *base) {
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference--;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-GcCount gc_getVarReference(af_Var *obj) {
-    return obj->gc.info.reference;
-}
-
-void gc_addVarSpace(af_VarSpace *obj, af_Environment *env){
+void gc_addVarSpace(af_VarSpace *obj, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.prev = ((void *) 0);
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    if (env->gc_factory->gc_VarSpace != ((void *) 0)) { env->gc_factory->gc_VarSpace->gc.prev = obj; }
-    obj->gc.next = env->gc_factory->gc_VarSpace;
-    env->gc_factory->gc_VarSpace = obj;
-    GcCountAdd1(env);
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    if (base->gc_factory->gc_VarSpace != ((void *) 0)) { base->gc_factory->gc_VarSpace->gc.prev = obj; }
+    obj->gc.next = base->gc_factory->gc_VarSpace;
+    base->gc_factory->gc_VarSpace = obj;
+    GcCountAdd1(base);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_addVarSpaceReference(af_VarSpace *obj) {
+void gc_addVarSpaceReference(af_VarSpace *obj, af_Environment *base) {
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference++;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_delVarSpaceReference(af_VarSpace *obj) {
+void gc_delVarSpaceReference(af_VarSpace *obj, af_Environment *base) {
+    base = base->base;  // 转换为主线程 Env
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
     obj->gc.info.reference--;
-}
-
-GcCount gc_getVarSpaceReference(af_VarSpace *obj) {
-    return obj->gc.info.reference;
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 /* gc_Factory 函数 */
@@ -441,7 +457,7 @@ static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pg
             af_Object *base = od->base;
             pthread_rwlock_unlock(&od->lock);
 
-            *pgl = pushGuardianList(base, func, *pgl);
+            *pgl = pushGuardianList(base, func, *pgl, env);
             plist = reachableObjectData(od, plist);
         }
     }
@@ -493,7 +509,7 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             af_Object *base = od->base;
             pthread_rwlock_unlock(&od->lock);
 
-            pgl = pushGuardianList(base, func, pgl);
+            pgl = pushGuardianList(base, func, pgl, env);
         }
     }
     pthread_mutex_unlock(&env->gc_factory->mutex);
