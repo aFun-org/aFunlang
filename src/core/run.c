@@ -107,10 +107,6 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
         return false;
     }
 
-    pthread_mutex_lock(&env->status_lock);
-    env->status = core_normal_gc;
-    pthread_mutex_unlock(&env->status_lock);
-
     switch (mode) {
         case 0:
             if (env->activity->type != act_top || !codeSemanticCheck(code))
@@ -137,6 +133,10 @@ static bool iterCodeInit(af_Code *code, int mode, af_Environment *env) {
                 return false;
             break;
         case 3:
+            pthread_mutex_lock(&env->status_lock);
+            env->status = core_normal_gc;
+            pthread_mutex_unlock(&env->status_lock);
+
             if (env->activity->type != act_guardian || code != NULL)
                 return false;
             break;

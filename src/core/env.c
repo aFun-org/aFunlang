@@ -941,6 +941,9 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
     pthread_mutex_init(&env->in_run, &attr);  // 检测锁
     pthread_mutexattr_destroy(&attr);
 
+    pthread_mutex_init(&env->thread_lock, NULL);
+    pthread_mutex_init(&env->status_lock, NULL);
+
     env->is_derive = true;
     env->base = base->base;
     pushEnvironmentList(env, base);
@@ -990,7 +993,6 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
         env->status = core_init;
 
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
-    pthread_mutex_init(&env->thread_lock, NULL);
     return env;
 }
 
@@ -1777,10 +1779,10 @@ bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base) {
 
 void pushEnvironmentList(af_Environment *env, af_Environment *base) {
     af_EnvironmentList *envl = makeEnvironmentList(env);
-    pthread_mutex_lock(&env->thread_lock);
+    pthread_mutex_lock(&base->thread_lock);
     envl->next = base->env_list;
     base->env_list = envl;
-    pthread_mutex_unlock(&env->thread_lock);
+    pthread_mutex_unlock(&base->thread_lock);
 }
 
 af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, FilePath path) {
