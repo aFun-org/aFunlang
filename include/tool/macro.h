@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include "base.h"
 
 #ifndef __bool_true_false_are_defined
 #define bool int

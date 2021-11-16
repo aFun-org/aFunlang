@@ -277,7 +277,7 @@ bool isCharUTF8(char *str) {
 FILE *fileOpen(char *path_, char *mode_) {
     if (STR_LEN(mode_) >= 5)
         return NULL;
-#if aFunWIN32_NO_CYGWIN
+#ifdef aFunWIN32_NO_CYGWIN
     FILE *file = NULL;
     wchar_t *path = NULL;
     wchar_t mode[5];

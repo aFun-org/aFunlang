@@ -67,6 +67,7 @@ set(CMAKE_INSTALL_RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH TRUE)
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
+
 set(base_compile_definitions
     aFunVersion="${PROJECT_VERSION}"
     aFunDescription="${PROJECT_DESCRIPTION}"
@@ -86,21 +87,25 @@ set(base_compile_definitions
 
 if (WIN32 OR CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32=1)
+    set(aFunWIN32 1)
 endif()
 
 if (WIN32 AND NOT CYGWIN)
     list(APPEND base_compile_definitions aFunWIN32_NO_CYGWIN=1)
+    set(aFunWIN32_NO_CYGWIN 1)
 endif()
 
 if (CYGWIN)
     list(APPEND base_compile_definitions aFunCYGWIN=1)
+    set(aFunCYGWIN 1)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     list(APPEND base_compile_definitions aFunDEBUG=1)
+    set(aFunDEBUG 1)
 endif()
 
-add_compile_definitions(${base_compile_definitions})
+configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/base.h @ONLY)
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
 include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库

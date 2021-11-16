@@ -32,7 +32,7 @@ char *getTime(time_t *t, char *format) {
         t = &tmp;
 
     time (t);  // 获取时间戳
-#if aFunWIN32_NO_CYGWIN
+#ifdef aFunWIN32_NO_CYGWIN
     struct tm lt;
     if (localtime_s(&lt, t) != 0)
         return NULL;
