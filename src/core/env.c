@@ -41,7 +41,8 @@ static void freeAllTopMsgProcess(af_TopMsgProcess *mp);
 static af_TopMsgProcess *findTopMsgProcessFunc(char *type, af_Environment *env);
 
 /* 守护器 创建与释放 */
-static af_Guardian *makeGuardian(char *type, bool always, size_t size, DLC_SYMBOL(GuardianFunc) func, DLC_SYMBOL(GuardianDestruct) destruct);
+static af_Guardian *makeGuardian(char *type, bool always, bool derive, size_t size, DLC_SYMBOL(GuardianFunc) func,
+                                 DLC_SYMBOL(GuardianDestruct) destruct);
 static af_Guardian *freeGuardian(af_Guardian *gd, af_Environment *env);
 static void freeAllGuardian(af_Guardian *gd, af_Environment *env);
 
@@ -59,7 +60,7 @@ static void freeAllLiteralRegex(af_LiteralRegex *lr);
 
 /* EnvironmentList 创建与释放 */
 static af_EnvironmentList *makeEnvironmentList(af_Environment *env);
-static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *env);
+static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *base);
 
 /* af_ErrorBacktracking 创建与释放 */
 static af_ErrorBacktracking *makeErrorBacktracking(FileLine line, FilePath file, char *note);
@@ -919,11 +920,11 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     /* 设置守护器 */
     DLC_SYMBOL(GuardianFunc) func4 = MAKE_SYMBOL(guardian_Signal, GuardianFunc);
-    addGuardian("SIGNAL", false, 0, func4, NULL, NULL, env);
+    addGuardian("SIGNAL", false, false, 0, func4, NULL, NULL, env);
     FREE_SYMBOL(func4);
 
     DLC_SYMBOL(GuardianFunc) func5 = MAKE_SYMBOL(guardian_GC, GuardianFunc);
-    addGuardian("GC", true, 0, func5, NULL, NULL, env);
+    addGuardian("GC", true, false, 0, func5, NULL, NULL, env);
     FREE_SYMBOL(func5);
 
     env->status = core_init;
@@ -978,8 +979,10 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
     }
 
     if (derive_guardian) {
-        for (af_Guardian *gu = base->guardian; gu != NULL; gu = gu->next)
-            addGuardian(gu->type, gu->always, gu->size, gu->func, gu->destruct, NULL, env);
+        for (af_Guardian *gu = base->guardian; gu != NULL; gu = gu->next) {
+            if (gu->derive)
+                addGuardian(gu->type, gu->always, true, gu->size, gu->func, gu->destruct, NULL, env);
+        }
     }
 
     if (derive_lr) {
@@ -1072,10 +1075,12 @@ bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environ
     return true;
 }
 
-static af_Guardian *makeGuardian(char *type, bool always, size_t size, DLC_SYMBOL(GuardianFunc) func, DLC_SYMBOL(GuardianDestruct) destruct) {
+static af_Guardian *makeGuardian(char *type, bool always, bool derive, size_t size, DLC_SYMBOL(GuardianFunc) func,
+                                 DLC_SYMBOL(GuardianDestruct) destruct){
     af_Guardian *gd = calloc(1, sizeof(af_Guardian));
     gd->type = strCopy(type);
     gd->always = always;
+    gd->derive = derive;
 
     if (size != 0) {
         gd->data = calloc(1, size);
@@ -1115,12 +1120,13 @@ static af_Guardian *findGuardian(char *type, af_Environment *env) {
     return NULL;
 }
 
-bool addGuardian(char *type, bool always, size_t size, DLC_SYMBOL(GuardianFunc) func, DLC_SYMBOL(GuardianDestruct) destruct, void **pdata, af_Environment *env) {
+bool addGuardian(char *type, bool always, bool derive, size_t size, DLC_SYMBOL(GuardianFunc) func,
+                 DLC_SYMBOL(GuardianDestruct) destruct, void **pdata, af_Environment *env){
     af_Guardian *gd = findGuardian(type, env);
     if (gd != NULL)
         return false;
 
-    gd = makeGuardian(type, always, size, func, destruct);
+    gd = makeGuardian(type, always, derive, size, func, destruct);
     gd->next = env->guardian;
     env->guardian = gd;
     if (pdata != NULL)

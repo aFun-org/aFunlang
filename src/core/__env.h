@@ -182,7 +182,8 @@ struct af_Guardian {  // 守护器
     size_t size;
     DLC_SYMBOL(GuardianFunc) func;
     DLC_SYMBOL(GuardianDestruct) destruct;
-    bool always;
+    bool always;  // 是否总是运行
+    bool derive;  // 是否支持派生
     struct af_Guardian *next;
 };
 

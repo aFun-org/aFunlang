@@ -194,7 +194,7 @@ void makeGuardianFromList(const GuardianFuncList gd_list[], af_Environment *env)
         if (pdata == NULL)
             pdata = &tmp;
 
-        if (addGuardian(gdl->type, gdl->always, gdl->size, func, destruct, pdata, env))
+        if (addGuardian(gdl->type, gdl->always, gdl->derive, gdl->size, func, destruct, pdata, env))
             gdl->initData(*pdata, env);
 
         if (free_func_)

@@ -53,6 +53,7 @@ typedef struct GuardianFuncList GuardianFuncList;
 struct GuardianFuncList {
     char *type;
     bool always;
+    bool derive;
     size_t size;
 
     DlcHandle *dlc;  // func/destruct 的 来源

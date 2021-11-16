@@ -1211,7 +1211,7 @@ INIT_ERROR:
         DLC_SYMBOL(GuardianFunc) func = MAKE_SYMBOL(gd_func, GuardianFunc);
         DLC_SYMBOL(GuardianDestruct) des = MAKE_SYMBOL(gd_destruct, GuardianDestruct);
         struct GDData *data = NULL;
-        addGuardian("test", false, sizeof(struct GDData), func, des, (void **) &data, env);
+        addGuardian("test", false, true, sizeof(struct GDData), func, des, (void **) &data, env);
         data->func = af_func;
         gc_addReference(af_func);
         FREE_SYMBOL(func);

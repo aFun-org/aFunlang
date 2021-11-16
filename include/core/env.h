@@ -82,7 +82,7 @@ AFUN_CORE_EXPORT void setEnvVarNumber(char *name, int32_t data, af_Environment *
 AFUN_CORE_EXPORT bool addTopMsgProcess(char *type, DLC_SYMBOL(TopMsgProcessFunc) func, af_Environment *env);
 
 /* 顶层消息处理器 相关操作 */
-AFUN_CORE_EXPORT bool addGuardian(char *type, bool always, size_t size, DLC_SYMBOL(GuardianFunc) func,
+AFUN_CORE_EXPORT bool addGuardian(char *type, bool always, bool derive, size_t size, DLC_SYMBOL(GuardianFunc) func,
                                   DLC_SYMBOL(GuardianDestruct) destruct, void **pdata, af_Environment *env);
 AFUN_CORE_EXPORT bool popGuardian(char *type, af_Environment *env);
 
