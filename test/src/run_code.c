@@ -380,6 +380,8 @@ struct GDData {
 };
 
 af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Environment *env) {
+    printf("gd_func:run-Guardian-func\n");
+
     if (data->no_first)
         return NULL;
 
@@ -387,7 +389,6 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
     data->no_first = true;
     gc_addReference(data->func, env);  // data->func 本身有一次gc引用, 此次再使用一次gc引用, gd_destruct和freeGuardianList时各释放一次
 
-    printf("gd_func:run-Guardian-func\n");
     pushGuardianList(NULL, data->func, &gd, env);
     return gd;
 }
