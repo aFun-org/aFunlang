@@ -1145,7 +1145,7 @@ INIT_ERROR:
 
     {
         printf("TAG S: [string]\n");
-        int exit_code = runCodeFromString("object\ndata\n{func-normal}\nglobal\n", "Tags-string.aun", 1, env);
+        int exit_code = runCodeFromString("str\ndata\n{func-normal}\nglobal\n", "Tags-string.aun", 1, env);
         printf("exit code = %d\n\n", exit_code);
     }
 

@@ -317,6 +317,7 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
  */
 bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
     pthread_rwlock_wrlock(&env->protect->lock);
+    bool is_protect = env->protect->is_protect;
     env->protect->is_protect = false;
     pthread_rwlock_unlock(&env->protect->lock);
 
@@ -327,7 +328,7 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
         gc_delReference(var, env);
 
     pthread_rwlock_wrlock(&env->protect->lock);
-    env->protect->is_protect = true;
+    env->protect->is_protect = is_protect;
     pthread_rwlock_unlock(&env->protect->lock);
     return re;
 }
