@@ -1,5 +1,7 @@
 ﻿#include "__var.h"
+#include "core_init.h"
 #include "tool.h"
+
 
 /* VarNode 创建与释放 */
 static af_VarNode *makeVarNode(af_Object *obj, char *id);
@@ -42,6 +44,8 @@ static void freeAllVarNode(af_VarNode *vn) {
 }
 
 af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
+    pthread_mutex_lock(&env->base->gc_factory->mutex);
+
     af_VarNode *vn = makeVarNode(obj, NULL);
     af_Var *var = calloc(1, sizeof(af_Var));
     var->name = strCopy(name);
@@ -51,6 +55,8 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
     var->permissions[2] = p_external;
     pthread_rwlock_init(&var->lock, NULL);
     gc_addVar(var, env->base);
+
+    pthread_mutex_unlock(&env->base->gc_factory->mutex);
     return var;
 }
 
@@ -128,8 +134,8 @@ static void freeAllVarCup(af_VarCup *vp) {
 }
 
 af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char p_external, af_Environment *env){
-    if (getCoreStatus(env) != core_creat && belong == NULL)
-        return NULL;
+    assertFatalErrorLog(getCoreStatus(env) == core_creat || belong != NULL, aFunCoreLogger, 1, "makeVarSpace error");
+    pthread_mutex_lock(&env->base->gc_factory->mutex);
 
     af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
@@ -139,6 +145,8 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
 
     pthread_rwlock_init(&vs->lock, NULL);
     gc_addVarSpace(vs, env->base);
+
+    pthread_mutex_unlock(&env->base->gc_factory->mutex);
     return vs;
 }
 
@@ -263,12 +271,12 @@ RETURN_FALSE:
     return false;
 }
 
-/*
- * 函数名: makeVarToVarSpace
- * 目标: 创建一个新的var添加到VarSpace中
+/**
+ * 创建一个新的var添加到VarSpace中
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
  * 调用 addVarToVarSpace
+ * 注意: 必须保证 VarSpace被 gc 引用
  */
 bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_VarSpace *vs,
                        af_Object *visitor, af_Environment *env){
@@ -293,11 +301,11 @@ bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *
     return false;
 }
 
-/*
- * 函数名: makeVarToVarSpace
- * 目标: 创建一个新的var到VarSpaceList
+/**
+ * 创建一个新的var到VarSpaceList
  * 自动跳过保护空间
  * 调用 addVarToVarSpaceList -> addVarToVarSpace
+ * 注意: 必须保证 VarSpace被 gc 引用
  */
 bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
                            af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env){
@@ -308,9 +316,8 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
     return false;
 }
 
-/*
- * 函数名: makeVarToProtectVarSpace
- * 目标: 创建一个新的var变量添加到保护空间中
+/**
+ * 创建一个新的var变量添加到保护空间中
  * 若已存在同名Var则返回false不作修改
  * 否则返回true
  * 调用 addVarToVarSpace
@@ -623,7 +630,6 @@ af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base
     af_VarSpace *vs = makeVarSpace(belong, 3, 2, 0, env);
     af_VarSpaceListNode *new = makeVarSpaceList(vs);
     new->next = base;
-    gc_delReference(vs, env);
     return new;
 }
 

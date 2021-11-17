@@ -6,6 +6,7 @@
 struct EnvCode {
     af_Environment *env;
     af_Code *code;
+    bool free_code;
 };
 
 static void *runThread(void *ec);
@@ -17,8 +18,8 @@ static void *runThread(void *ec);
  * @param vs 压入的变量空间
  * @param code 执行的代码
  */
-af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *code,
-                               bool derive_tmp, bool derive_guardian, bool derive_lr, bool enable) {
+af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *code, bool free_code, bool derive_tmp,
+                               bool derive_guardian, bool derive_lr, bool enable){
     af_Environment *base = env->base;
     af_Environment *new = deriveEnvironment(derive_tmp, derive_guardian, derive_lr, enable, base);
 
@@ -34,24 +35,17 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
     new->activity->count_run_varlist++;
     gc_delReference(vs, base);
 
-    if (!enable)  // 如果未Enable, 则暂时不启动线程
-        return new;
-
-    struct EnvCode *ec = calloc(1, sizeof(struct EnvCode));
-    ec->env = new;
-    ec->code = code;
-
-    pthread_t id;
-    pthread_create(&id, NULL, runThread, ec);
-    pthread_detach(id);
+    if (enable)  // 如果未Enable, 则暂时不启动线程
+        startRunThread_(new, code, free_code);
     return new;
 }
 
 
-void tartRunThread_(af_Environment *env, af_Code *code) {
+void startRunThread_(af_Environment *env, af_Code *code, bool free_code){
     struct EnvCode *ec = calloc(1, sizeof(struct EnvCode));
     ec->env = env;
     ec->code = code;
+    ec->free_code = free_code;
 
     pthread_t id;
     pthread_create(&id, NULL, runThread, ec);
@@ -62,6 +56,7 @@ void tartRunThread_(af_Environment *env, af_Code *code) {
 static void *runThread(void *ec) {
     af_Environment *env = ((struct EnvCode *)ec)->env;
     af_Code *code = ((struct EnvCode *)ec)->code;
+    bool free_code = ((struct EnvCode *)ec)->free_code;
     free(ec);
 
     writeInfoLog(aFunCoreLogger, "Thread start");
@@ -69,6 +64,9 @@ static void *runThread(void *ec) {
 
     writeInfoLog(aFunCoreLogger, "Thread free");
     freeEnvironment(env);
+
+    if (free_code)
+        freeAllCode(code);
 
     writeInfoLog(aFunCoreLogger, "Thread end");
     return NULL;

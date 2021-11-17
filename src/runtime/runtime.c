@@ -8,11 +8,12 @@ static const ToolFunc global_tool_list[] = {
         {.name=NULL, .func=NULL},
 };
 
-/*
- * 函数名: runtimeTool
+/**
+ * runtimeTool
  * 目标: 调用指定内置包(tool)
  * 返回 (0)   执行正常
  * 返回 (1)  库不存在
+ * 必须保证 vs 有被 gc 引用
  */
 int runtimeTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
     if (name == NULL || code == NULL || env == NULL || vs == NULL)
@@ -36,7 +37,7 @@ int runtimeTool(char *name, af_Code **code, af_Object *visitor, af_VarSpace *vs,
 int runtimeToolImport(char *name, af_Object **obj, af_Code **code, af_Environment *env) {
     if (name == NULL || code == NULL || env == NULL || obj == NULL)
         return 1;
-    *obj = makeGlobalObject(env);
+    *obj = makeGlobalObject(env);  // 保留 gc 引用
     return runtimeTool(name, code, *obj, getObjectVarSpace((*obj)), env);
 }
 
@@ -64,9 +65,9 @@ af_ObjectAPI *makeAPIFromList(const APIFuncList api_list[]) {
     return api;
 }
 
-/*
- * 函数名: makeObjectFromList
- * 目标: 根据ObjectDefineList生成Object, 并保存到对应位置和变量空间中
+/**
+ * 根据ObjectDefineList生成Object, 并保存到对应位置和变量空间中
+ * 必须保证 VarSpace 有被 gc 引用
  */
 void makeObjectFromList(const ObjectDefineList obj_def[], af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
     for (const ObjectDefineList *od = obj_def; od->id != NULL; od++) {

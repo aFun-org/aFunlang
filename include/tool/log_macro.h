@@ -94,7 +94,10 @@
 
 #endif
 
-#if (!aFunWriteTrack || !defined aFunConsoleTrack)
+#if defined aFunDEBUG
+#undef aFunConsoleTrack
+#define aFunConsoleTrack 1
+#elif (!aFunWriteTrack || !defined aFunConsoleTrack)
 #undef aFunConsoleTrack
 #define aFunConsoleTrack 0
 #endif

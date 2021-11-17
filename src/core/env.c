@@ -84,9 +84,14 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env);
 
+typedef struct guardian_GC_data guardian_GC_data;
+struct guardian_GC_data{
+    time_t last_time;
+};
+
 /* 内置守护器 */
 static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env);
-static af_GuardianList *guardian_GC(char *type, bool is_guard, void *data, af_Environment *env);
+static af_GuardianList *guardian_GC(char *type, bool is_guard, guardian_GC_data *data, af_Environment *env);
 static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env);
 
 /* 变量检查函数 */
@@ -842,11 +847,18 @@ static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char 
  * 函数名: checkRunGC
  * 目标: 检查是否该运行gc, 若是则返回true并运行gc, 否则返回false
  */
-static af_GuardianList *guardian_GC(char *type, bool is_guard, void *data, af_Environment *env) {
+static af_GuardianList *guardian_GC(char *type, bool is_guard, guardian_GC_data *data, af_Environment *env) {
+    time_t now = clock();
+    if ((now - data->last_time) < 1 * CLOCKS_PER_SEC)  // 间隔 1s 再执行
+        return NULL;
+    data->last_time = now;
+
     af_GuardianList *gl = NULL;
     enum GcRunTime grt = getGcRun(env);
     if (grt == grt_always || grt == grt_count && getGcCount(env) >= getGcMax(env)) {
         GcCountToZero(env);  // 清零
+
+        writeDebugLog(aFunCoreLogger, "GC Run");
         gl = gc_RunGC(env);
         if (gl != NULL)
             writeDebugLog(aFunCoreLogger, "GC run destruct function");
@@ -916,7 +928,6 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     /* 创建保护空间 */
     env->protect = makeVarSpace(NULL, 3, 3, 3, env);
-    gc_delReference(env->protect, env);
 
     /* 生成global对象 */
     env->global = makeGlobalObject(env);
@@ -934,19 +945,17 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     addTopMsgProcess("IMPORT", func3, env);
     FREE_SYMBOL(func3);
 
-    /* 设置守护器 */
-    DLC_SYMBOL(GuardianFunc) func4 = MAKE_SYMBOL(guardian_Signal, GuardianFunc);
-    addGuardian("SIGNAL", false, false, 0, func4, NULL, NULL, env);
-    FREE_SYMBOL(func4);
-
-    DLC_SYMBOL(GuardianFunc) func5 = MAKE_SYMBOL(guardian_GC, GuardianFunc);
-    addGuardian("GC", true, false, 0, func5, NULL, NULL, env);
-    FREE_SYMBOL(func5);
-
     env->status = core_init;
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+
     makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
     gc_delReference(env->global, env);
+
+    af_Object *cycle = makeCycleObject(env);
+    makeVarToProtectVarSpace(mg_sys_cycle, 3, 3, 3, cycle, env);
+
+    gc_delReference(env->protect, env);
+    gc_delReference(cycle, env);
     return env;
 }
 
@@ -1018,8 +1027,29 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
 }
 
 void enableEnvironment(af_Environment *env) {
-    setVarSpaceProtect(NULL, env->protect, true);
     env->status = core_normal;
+    if (!env->is_derive) {  // 派生 gc 线程
+        setVarSpaceProtect(NULL, env->protect, true);
+
+        af_Environment *gc_env = startRunThread(env, NULL, NULL, true,
+                                                true, false, true, false);
+
+        /* 设置守护器 */
+        DLC_SYMBOL(GuardianFunc) func1 = MAKE_SYMBOL(guardian_Signal, GuardianFunc);
+        addGuardian("SIGNAL", false, false, 0, func1, NULL, NULL, gc_env);
+        FREE_SYMBOL(func1);
+
+        DLC_SYMBOL(GuardianFunc) func2 = MAKE_SYMBOL(guardian_GC, GuardianFunc);
+        addGuardian("GC", true, false, sizeof(guardian_GC_data),
+                    func2, NULL, NULL, gc_env);
+        FREE_SYMBOL(func2);
+
+        gc_env->status = core_normal;  // 手动启动env
+        af_Code *bt1 = makeElementCode(mg_sys_cycle, NUL, 1, "gc.aun.sys");
+        af_Code *bt2 = makeBlockCode(curly, bt1, NUL, 1, "gc.aun.sys", NULL);
+        startRunThread_(gc_env, bt2, true);
+        env->gc_env = gc_env;
+    }
 }
 
 bool freeEnvironment(af_Environment *env) {
@@ -1496,6 +1526,8 @@ bool setFuncActivityAddVar(af_Environment *env){
         env->activity->run_varlist = tmp;
         env->activity->count_run_varlist++;
         pthread_rwlock_unlock(&env->activity->gc_lock);
+
+        gc_delReference(tmp->vs, env);
     }
 
     if (fi->var_this && env->activity->belong != NULL) {
@@ -2312,6 +2344,9 @@ void waitForEnviromentExit(af_Environment *env) {
     pthread_mutex_lock(&env->status_lock);
     env->status = core_exit;  // 不需要设置 exit_code
     pthread_mutex_unlock(&env->status_lock);
+
+    if (env->gc_env != NULL)
+        setEnviromentExit_out(env->gc_env);
 
     pthread_mutex_lock(&env->thread_lock);
     while (env->env_list != NULL)

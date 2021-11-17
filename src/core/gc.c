@@ -16,6 +16,7 @@ void gc_addObjectData(af_ObjectData *od, af_Environment *base){
     base->gc_factory->gc_ObjectData = od;
     GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
+    writeTrackLog(aFunCoreLogger, "Make ObjectData %p", od);
 }
 
 void gc_addObjectDataReference(af_ObjectData *od, af_Environment *base){
@@ -44,6 +45,7 @@ void gc_addObject(af_Object *obj, af_Environment *base){
     base->gc_factory->gc_Object = obj;
     GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
+    writeTrackLog(aFunCoreLogger, "Make Object %p", obj);
 }
 
 void gc_addObjectReference(af_Object *obj, af_Environment *base){
@@ -63,7 +65,6 @@ void gc_delObjectReference(af_Object *obj, af_Environment *base){
 }
 
 void gc_addVar(af_Var *var, af_Environment *base) {
-    pthread_mutex_lock(&base->gc_factory->mutex);
     var->gc.info.reference = 1;
     var->gc.prev = ((void *) 0);
     if (base->gc_factory->gc_Var != ((void *) 0))
@@ -71,7 +72,7 @@ void gc_addVar(af_Var *var, af_Environment *base) {
     var->gc.next = base->gc_factory->gc_Var;
     base->gc_factory->gc_Var = var;
     GcCountAdd1(base);
-    pthread_mutex_unlock(&base->gc_factory->mutex);
+    writeTrackLog(aFunCoreLogger, "Make Var %p", var);
 }
 
 void gc_addVarReference(af_Var *var, af_Environment *base) {
@@ -90,15 +91,21 @@ void gc_delVarReference(af_Var *var, af_Environment *base) {
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
+/**
+ * 将 VarSpace 添加到 gc 链中
+ * 只能由MakeVarSpace调用
+ * 注意: 不上锁
+ * @param vs
+ * @param base
+ */
 void gc_addVarSpace(af_VarSpace *vs, af_Environment *base){
-    pthread_mutex_lock(&base->gc_factory->mutex);
     vs->gc.info.reference = 1;
     vs->gc.prev = ((void *) 0);
     if (base->gc_factory->gc_VarSpace != ((void *) 0)) { base->gc_factory->gc_VarSpace->gc.prev = vs; }
     vs->gc.next = base->gc_factory->gc_VarSpace;
     base->gc_factory->gc_VarSpace = vs;
     GcCountAdd1(base);
-    pthread_mutex_unlock(&base->gc_factory->mutex);
+    writeTrackLog(aFunCoreLogger, "Make VarSpace %p", vs);
 }
 
 void gc_addVarSpaceReference(af_VarSpace *vs, af_Environment *base) {
@@ -143,6 +150,7 @@ af_GcList *makeGcList(enum af_GcListType type, void *data) {
     af_GcList *gl = calloc(1, sizeof(af_GcList));
     gl->type = type;
     gl->data = data;
+    assertWarningLog(data != NULL, aFunCoreLogger, "GcList not data write.");
     return gl;
 }
 
@@ -215,6 +223,7 @@ static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
     for (NULL; obj != NULL && !obj->gc.info.reachable; obj = obj->belong) {
         obj->gc.info.reachable = true;
+        writeTrackLog(aFunCoreLogger, "Reachable Object %p -> data %p -> vs %p", obj, obj->data, obj->data->var_space);
 
         pthread_rwlock_rdlock(&obj->lock);
         if (!obj->data->gc.info.reachable)
@@ -225,41 +234,58 @@ static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
 }
 
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist) {  // 暂时不考虑API调用
+    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p wait", od);
     if (od->gc.info.reachable)
         return plist;
 
+    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p -> vs %p", od, od->var_space);
     od->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&od->lock);
     plist = reachableVarSpace(od->var_space, plist);
-    if (!od->base->gc.info.reachable)
+    if (!od->base->gc.info.reachable) {
         plist = makeAnalyzed(od->base, plist);
+        writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p add object %p", od, od->base);
+    }
 
     for (af_Inherit *ih = od->inherit; ih != NULL; ih = getInheritNext(ih)) {
         af_Object *obj = getInheritObject(ih);
         af_VarSpace *vs = getInheritVarSpace(ih);
-        if (!obj->gc.info.reachable)
+        if (!obj->gc.info.reachable) {
+            writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p inherit add object %p", od, obj);
             plist = makeAnalyzed(obj, plist);
-        if (!vs->gc.info.reachable)
+        }
+
+        if (!vs->gc.info.reachable) {
+            writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p inherit add varspace %p", od, vs);
             plist = reachableVarSpace(vs, plist);
+        }
     }
 
     obj_getGcList *func = findAPI("obj_getGcList", od->api);
     if (func != NULL) {
         af_GcList *gl = func(od->id, od->base, od->data);
         for (af_GcList *tmp = gl; tmp != NULL; tmp = tmp->next) {
+            if (tmp->data == NULL)
+                continue;
+
             switch (tmp->type) {
                 case glt_obj:
-                    if (!tmp->obj->gc.info.reachable)
-                        plist = makeAnalyzed(od->base, plist);
+                    if (!tmp->obj->gc.info.reachable) {
+                        writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->obj);
+                        plist = makeAnalyzed(tmp->obj, plist);
+                    }
                     break;
                 case glt_var:
+                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->var);
                     plist = reachableVar(tmp->var, plist);
                     break;
                 case glt_vs:
+                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->vs);
                     plist = reachableVarSpace(tmp->vs, plist);
                     break;
                 case glt_vsl:
+                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->vsl);
                     plist = reachableVarSpaceList(tmp->vsl, plist);
                     break;
                 default:
@@ -274,13 +300,19 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 }
 
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist) {
+    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p wait", vs);
     if (vs->gc.info.reachable)
         return plist;
+
+    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p -> %p", vs, vs->belong);
     vs->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&vs->lock);
-    if (vs->belong != NULL)
+    if (vs->belong != NULL) {
         plist = makeAnalyzed(vs->belong, plist);
+        writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p add object %p", vs, vs->belong);
+    }
+
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++) {
         for (af_VarCup *var = vs->var[i]; var != NULL; var = var->next)
             plist = reachableVar(var->var, plist);
@@ -291,14 +323,19 @@ static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist
 }
 
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
+    writeTrackLog(aFunCoreLogger, "Reachable Var %p wait", var);
     if (var->gc.info.reachable)
         return plist;
+
+    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p -> %p [%s]", var, var->vn->obj, var->name);
     var->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&var->lock);
     for (af_VarNode *vn = var->vn; vn != NULL; vn = vn->next) {
-        if (!vn->obj->gc.info.reachable)
+        if (!vn->obj->gc.info.reachable) {
             plist = makeAnalyzed(vn->obj, plist);
+            writeTrackLog(aFunCoreLogger, "Reachable Var %p add object %p", var, vn->obj);
+        }
     }
     pthread_rwlock_unlock(&var->lock);
     return plist;
@@ -373,6 +410,7 @@ static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
         if (activity->parentheses_call != NULL)
             plist = reachableObject(activity->parentheses_call, plist);
 
+        plist = reachableVarSpaceList(activity->out_varlist, plist);
         plist = reachableVarSpaceList(activity->func_varlist, plist);
         plist = reachableVarSpaceList(activity->macro_varlist, plist);
         pthread_rwlock_unlock(&activity->gc_lock);
@@ -411,7 +449,7 @@ static void freeValue(af_Environment *env) {
     for (af_ObjectData *od = env->gc_factory->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
         if (!od->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "ObjectData: %p", od);
+            writeTrackLog(aFunCoreLogger, "GC free ObjectData: %p", od);
             freeObjectData(od, env);
         }
     }
@@ -419,7 +457,7 @@ static void freeValue(af_Environment *env) {
     for (af_Object *obj = env->gc_factory->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
         if (!obj->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "Object: %p", obj);
+            writeTrackLog(aFunCoreLogger, "GC free Object: %p", obj);
             freeObject(obj, env);
         }
     }
@@ -427,7 +465,7 @@ static void freeValue(af_Environment *env) {
     for (af_VarSpace *vs = env->gc_factory->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
         if (!vs->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "VarSpace: %p", vs);
+            writeTrackLog(aFunCoreLogger, "GC free VarSpace: %p [%p]", vs, vs->belong);
             freeVarSpace(vs, env);
         }
     }
@@ -435,7 +473,7 @@ static void freeValue(af_Environment *env) {
     for (af_Var *var = env->gc_factory->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
         if (!var->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "Var: %p", var);
+            writeTrackLog(aFunCoreLogger, "GC free Var: %p [%s]", var, var->name);
             freeVar(var, env);
         }
     }
@@ -476,6 +514,7 @@ af_GuardianList *gc_RunGC(af_Environment *env) {
     paf_GuardianList pgl = &gl;
     af_Environment *base = env->base;
 
+    pthread_mutex_lock(&base->gc_factory->mutex);
     resetGC(base);
     plist = iterLinker(base, plist);  // 临时量分析 (临时量都是通过reference标记的)
     plist = iterEnvironment(base, plist);
@@ -489,6 +528,7 @@ af_GuardianList *gc_RunGC(af_Environment *env) {
     plist = checkDestruct(base, &pgl, plist);  // 在检查析构
     checkAnalyzed(analyzed, plist);  // 在处理 checkDestruct 时产生的新引用
 
+    pthread_mutex_unlock(&base->gc_factory->mutex);
     freeValue(base);
     freeAllAnalyzed(analyzed);
     return gl;
@@ -502,8 +542,10 @@ af_GuardianList *gc_RunGC(af_Environment *env) {
  * @return
  */
 paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    for (af_ObjectData *od = env->gc_factory->gc_ObjectData; od != NULL; od = od->gc.next) {
+    af_Environment *base = env->base;
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    for (af_ObjectData *od = base->gc_factory->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (!od->gc.done_destruct) {
             af_Object *func = findObjectAttributesByObjectData(mg_gc_destruct, NULL, od, env);
             if (func == NULL)
@@ -511,14 +553,13 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             od->gc.done_destruct = true;
 
             pthread_rwlock_rdlock(&od->lock);
-            af_Object *base = od->base;
+            af_Object *base_obj = od->base;
             pthread_rwlock_unlock(&od->lock);
-            gc_addReference(base, env);
-
-            pgl = pushGuardianList(base, func, pgl, env);
+            gc_addReference(base_obj, env);
+            pgl = pushGuardianList(base_obj, func, pgl, env);
         }
     }
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
     return pgl;
 }
 
@@ -527,11 +568,13 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
  * @param env
  */
 void gc_freeAllValueData(af_Environment *env) {
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    for (af_ObjectData *od = env->gc_factory->gc_ObjectData; od != NULL; od = od->gc.next) {
+    af_Environment *base = env->base;
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    for (af_ObjectData *od = base->gc_factory->gc_ObjectData; od != NULL; od = od->gc.next) {
         freeObjectDataData(od, env);
     }
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 /**
@@ -539,27 +582,29 @@ void gc_freeAllValueData(af_Environment *env) {
  * @param env
  */
 void gc_freeAllValue(af_Environment *env) {
-    pthread_mutex_lock(&env->gc_factory->mutex);
-    for (af_ObjectData *od = env->gc_factory->gc_ObjectData, *next; od != NULL; od = next) {
+    af_Environment *base = env->base;
+
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    for (af_ObjectData *od = base->gc_factory->gc_ObjectData, *next; od != NULL; od = next) {
         next = od->gc.next;
         freeObjectData(od, env);
     }
 
-    for (af_Object *obj = env->gc_factory->gc_Object, *next; obj != NULL; obj = next) {
+    for (af_Object *obj = base->gc_factory->gc_Object, *next; obj != NULL; obj = next) {
         next = obj->gc.next;
         freeObject(obj, env);
     }
 
-    for (af_VarSpace *vs = env->gc_factory->gc_VarSpace, *next; vs != NULL; vs = next) {
+    for (af_VarSpace *vs = base->gc_factory->gc_VarSpace, *next; vs != NULL; vs = next) {
         next = vs->gc.next;
         freeVarSpace(vs, env);
     }
 
-    for (af_Var *var = env->gc_factory->gc_Var, *next; var != NULL; var = next) {
+    for (af_Var *var = base->gc_factory->gc_Var, *next; var != NULL; var = next) {
         next = var->gc.next;
         freeVar(var, env);
     }
-    pthread_mutex_unlock(&env->gc_factory->mutex);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 /**
@@ -571,36 +616,36 @@ void printGCByCore(af_Environment *env) {
     bool success = true;
     for (af_ObjectData *od = env->gc_factory->gc_ObjectData; od != NULL; od = od->gc.next) {
         if (od->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "GC Reference ObjectData(%p): %d", od, od->gc.info.reference);
             success = false;
         } else
-            writeTrackLog(aFunCoreLogger, "af_ObjectData(%p) Reference: %d", od, od->gc.info.reference);
+            writeTrackLog(aFunCoreLogger, "GC Reference ObjectData(%p): %d", od, od->gc.info.reference);
     }
 
     for (af_Object *obj = env->gc_factory->gc_Object; obj != NULL; obj = obj->gc.next) {
         if (obj->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "GC Reference Object(%p->%p): %d", obj, obj->data, obj->gc.info.reference);
             success = false;
         } else
-            writeTrackLog(aFunCoreLogger, "af_Object(%p->%p) Reference: %d", obj, obj->data, obj->gc.info.reference);
+            writeTrackLog(aFunCoreLogger, "GC Reference Object(%p->%p): %d", obj, obj->data, obj->gc.info.reference);
     }
 
     for (af_VarSpace *vs = env->gc_factory->gc_VarSpace; vs != NULL; vs = vs->gc.next) {
         if (vs->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "GC Reference VarSpace(%p): %d", vs, vs->gc.info.reference);
             success = false;
         } else
-            writeTrackLog(aFunCoreLogger, "af_VarSpace(%p) Reference: %d", vs, vs->gc.info.reference);
+            writeTrackLog(aFunCoreLogger, "GC Reference VarSpace(%p): %d", vs, vs->gc.info.reference);
     }
 
     for (af_Var *var = env->gc_factory->gc_Var; var != NULL; var = var->gc.next) {
         if (var->gc.info.reference != 0) {
-            writeWarningLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
+            writeWarningLog(aFunCoreLogger, "GC Reference Var(%p): %d", var, var->gc.info.reference);
             success = false;
         } else
-            writeTrackLog(aFunCoreLogger, "af_Var(%p) Reference: %d", var, var->gc.info.reference);
+            writeTrackLog(aFunCoreLogger, "GC Reference Var(%p): %d", var, var->gc.info.reference);
     }
 
     if (!success)
-        writeWarningLog(aFunCoreLogger, "gc warning.");
+        writeWarningLog(aFunCoreLogger, "GC Reference warning.");
 }

@@ -212,6 +212,7 @@ struct af_Environment {  // 运行环境
 
     bool is_derive;  // 是否派生
     struct af_Environment *base;  // 主线程
+    struct af_Environment *gc_env;  // 主线程的 gc线程
 
     struct af_Object *result;  // 线程执行的结果
     struct af_EnvironmentList *env_list;  // 主线程记录所有的子线程

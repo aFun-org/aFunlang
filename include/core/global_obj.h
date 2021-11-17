@@ -4,5 +4,5 @@
 #include "object.h"
 
 AFUN_CORE_EXPORT af_Object *makeGlobalObject(af_Environment *env);
-
+AFUN_CORE_EXPORT af_Object *makeCycleObject(af_Environment *env);
 #endif //AFUN_GLOBAL_OBJ_H

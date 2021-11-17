@@ -2,6 +2,7 @@
 #include "__env.h"
 #include "__gc.h"
 #include "tool.h"
+#include "core_init.h"
 
 /* ObjectData 创建与释放 */
 static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
@@ -34,24 +35,17 @@ static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI 
     od->free_api = free_api;
 
     od->allow_inherit = allow_inherit;
-
     od->var_space = makeVarSpace(base_obj, 3, 2, 0, env);
-    gc_delReference(od->var_space, env);
-
     od->inherit = NULL;
 
     obj_getDataSize *func = findAPI("obj_getDataSize", api);
-    obj_initData *init = findAPI("obj_initData", api);
     if (func != NULL)
         od->size = func(id, base_obj);
     else
         od->size = 0;
 
-    if (od->size != 0) {
+    if (od->size != 0)
         od->data = calloc(1, od->size);
-        if (init != NULL)
-            init(id, base_obj, od->data, env);
-    }
 
     pthread_rwlock_init(&od->lock, NULL);
     gc_addObjectData(od, env->base);
@@ -89,7 +83,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
         if (env->global != NULL)
             ih = makeInherit(env->global);
         else if (status != core_creat)
-            return NULL;
+            writeFatalErrorLog(aFunCoreLogger, 1, "Make object inherit null");
     }
 
     if (belong == NULL) {
@@ -98,7 +92,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
         else if (status == core_init)  // init模式生成: global
             belong = env->global;
         else if (status != core_creat)  // 只有creat可以使用belong=NULL
-            return NULL;
+            writeFatalErrorLog(aFunCoreLogger, 1, "Make object belong null");
     }
 
     af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit, env);
@@ -106,7 +100,13 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
     obj->belong = belong;
     obj->data->inherit = ih;
     obj->data->free_inherit = free_inherit;
-    gc_delReference(obj->data, env);  // od已经被obj引用, 并且不再是临时变量
+
+    if (obj->data->size != 0) {
+        obj_initData *init = findAPI("obj_initData", obj->data->api);
+        if (init != NULL)
+            init(id, obj, obj->data->data, env);
+    }
+
     return obj;
 }
 
@@ -425,6 +425,10 @@ af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj, 
     return NULL;
 }
 
+/**
+ * 添加属性到Object中
+ * 注意: 必须保证 obj 又被 gc 引用
+ */
 bool setObjectAttributes(char *name, char p_self, char p_posterity, char p_external, af_Object *attributes,
                          af_Object *obj, af_Object *visitor, af_Environment *env){
     return makeVarToVarSpace(name, p_self, p_posterity, p_external, attributes, getObjectVarSpace(obj), visitor, env);

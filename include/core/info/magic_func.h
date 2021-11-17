@@ -10,7 +10,7 @@
 
 /* gc模块 */
 #define mg_gc_destruct MAGIC_NAME(gc, destruct)
-
+#define mg_sys_cycle MAGIC_NAME(sys, cycle)
 
 /* 内置环境变量 */
 #define SYS_NAME(job) "sys-" #job

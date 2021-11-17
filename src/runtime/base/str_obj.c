@@ -72,8 +72,7 @@ static af_FuncBody *strFuncBody(af_CallFuncInfo *cfi, af_Environment *env) {
     af_Object *obj = cfi->func;
     ObjectStrFunc *osf = getObjectData(obj);
     af_Object *str = makeObject((char *) string_id, false, osf->api, false, NULL, true, makeInherit(obj), env);
-    af_Message *msg = makeNORMALMessage(str, env);
-    pushMessageDown(msg, env);
+    pushMessageDown(makeNORMALMessage(str, env), env);
     return NULL;
 }
 
@@ -83,6 +82,12 @@ static bool strFuncGetInfo(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *
     makeCFuncBodyToFuncInfo(func, NULL, *fi);
     FREE_SYMBOL(func);
     return true;
+}
+
+static af_GcList *strFuncGetGc(char *id, af_Object *obj, ObjectStrFunc *data) {
+    af_GcList *gl = pushGcList(glt_vsl, data->func_var_list, NULL);
+    gl = pushGcList(glt_vs, data->share_vs, gl);
+    return gl;
 }
 
 static void strFuncDestruct(char *id, af_Object *obj, ObjectStrFunc *data, af_Environment *env) {
@@ -101,6 +106,7 @@ void makeStrFunc(af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
             {.name="obj_funcGetVarList", .func=strFuncVarList, .dlc=NULL},
             {.name="obj_funcGetArgList", .func=strFuncArgList, .dlc=NULL},
             {.name="obj_funcGetInfo", .func=strFuncGetInfo, .dlc=NULL},
+            {.name="obj_getGcList", .func=strFuncGetGc, .dlc=NULL},
             {.name=NULL}
     };
 
