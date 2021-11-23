@@ -275,9 +275,9 @@ static int checkMsg(af_Message *msg, af_Environment *env) {
     pushMessageDown(msg, env);  // msg不弹出
     if (env->activity->status != act_func_normal || !checkInMsgType(msg->type, env)) {  // 非normal模式, 或normal模式下msg_type不匹配该msg
         env->activity->return_first = false;
-        pthread_rwlock_wrlock(&env->activity->gc_lock);
+        pthread_mutex_lock(env->activity->gc_lock);
         env->activity->return_obj = NULL;
-        pthread_rwlock_unlock(&env->activity->gc_lock);
+        pthread_mutex_unlock(env->activity->gc_lock);
         return 0;
     }
 
@@ -319,9 +319,9 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
     } else if (msg != NULL) {
         if (env->activity->bt_next->type == code_block && env->activity->bt_next->block.type == parentheses &&
             env->activity->bt_next->prefix != getPrefix(B_EXEC, env)) {
-            pthread_rwlock_wrlock(&env->activity->gc_lock);
+            pthread_mutex_lock(env->activity->gc_lock);
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
-            pthread_rwlock_unlock(&env->activity->gc_lock);
+            pthread_mutex_unlock(env->activity->gc_lock);
         }
         gc_delReference(*(af_Object **)(msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
         freeMessage(msg);
@@ -407,7 +407,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
         }
 
         /* 切换执行的 var_list */
-        pthread_rwlock_wrlock(&env->activity->gc_lock);
+        pthread_mutex_lock(env->activity->gc_lock);
         if (env->activity->type == act_func && env->activity->status == act_func_arg) {
             if (env->activity->run_in_func && env->activity->func_varlist != NULL)
                 env->activity->run_varlist = env->activity->func_varlist;
@@ -418,7 +418,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
             env->activity->run_varlist = env->activity->out_varlist;
             env->activity->count_run_varlist = 0;
         }
-        pthread_rwlock_unlock(&env->activity->gc_lock);
+        pthread_mutex_unlock(env->activity->gc_lock);
 
         /* 无代码运行 */
         if (env->activity->bt_next == NULL && env->activity->process_msg_first == 0) {  // 无代码运行, 并且非msg_first
@@ -471,9 +471,9 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 continue;  // 下面的代码不再执行
             case 1:  // 正常信号
                 if (env->activity->return_first && env->activity->return_obj == NULL) { // 设置return_first
-                    pthread_rwlock_wrlock(&env->activity->gc_lock);
+                    pthread_mutex_lock(env->activity->gc_lock);
                     env->activity->return_obj = *(af_Object **) msg->msg;
-                    pthread_rwlock_unlock(&env->activity->gc_lock);
+                    pthread_mutex_unlock(env->activity->gc_lock);
                 }
                 break;
             case -1:  // NORMAL模式下, 非正常但可处理 [已经放回]

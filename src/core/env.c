@@ -3,13 +3,18 @@
 #include "__global_obj.h"
 #include "__run.h"
 #include "__sig.h"
+#include "obj_api.h"
 
 /* Activity 创建和释放 */
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong);
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong, af_Environment *env);
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func);
-static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong);
-static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark);
+                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func,
+                                     af_Environment *env);
+static af_Activity *
+makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, af_Environment *env);
+static af_Activity *
+makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark,
+                      af_Environment *env);
 static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env);
 static af_Activity *freeActivity(af_Activity *activity, af_Environment *env);
 static void freeActivityTop(af_Activity *activity);
@@ -198,7 +203,8 @@ void setCoreNormal(af_Environment *env) {
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong) {
+static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong,
+                                 af_Environment *env){
     af_Activity *activity = calloc(1, sizeof(af_Activity));
     activity->msg_up = msg_up;
     activity->msg_up_count = 0;
@@ -206,13 +212,14 @@ static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlis
     activity->count_run_varlist = 0;
     activity->belong = belong;
     activity->line = 1;
-    pthread_rwlock_init(&activity->gc_lock, NULL);
+    activity->gc_lock = &env->base->gc_factory->mutex;
     return activity;
 }
 
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func) {
-    af_Activity *activity = makeActivity(msg_up, out_varlist, belong);
+                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func,
+                                     af_Environment *env){
+    af_Activity *activity = makeActivity(msg_up, out_varlist, belong, env);
 
     activity->type = act_func;
     activity->status = act_func_get;
@@ -228,8 +235,9 @@ static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool re
     return activity;
 }
 
-static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong) {
-    af_Activity *activity = makeActivity(NULL, NULL, belong);
+static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong,
+                                    af_Environment *env){
+    af_Activity *activity = makeActivity(NULL, NULL, belong, env);
 
     activity->type = act_top;
     activity->status = act_func_normal;
@@ -244,8 +252,9 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     return activity;
 }
 
-static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, char *mark) {
-    af_Activity *activity = makeTopActivity(bt_top, bt_start, protect, belong);
+static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong,
+                                          char *mark,af_Environment *env){
+    af_Activity *activity = makeTopActivity(bt_top, bt_start, protect, belong, env);
     activity->type = act_top_import;
     if (mark != NULL)
         activity->import_mark = strCopy(mark);
@@ -253,7 +262,7 @@ static af_Activity *makeTopImportActivity(af_Code *bt_top, af_Code *bt_start, af
 }
 
 static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **pgl, af_Environment *env) {
-    af_Activity *activity = makeActivity(NULL, NULL, env->global);
+    af_Activity *activity = makeActivity(NULL, NULL, env->global, env);
     activity->type = act_guardian;
 
     activity->run_varlist = makeVarSpaceList(getProtectVarSpace(env));
@@ -269,7 +278,7 @@ static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **
 }
 
 static af_Activity *freeActivity(af_Activity *activity, af_Environment *env){
-    pthread_rwlock_wrlock(&activity->gc_lock);
+    pthread_mutex_lock(activity->gc_lock);
     af_Activity *prev = activity->prev;
 
     freeAllMessage(activity->msg_down);  // msg转移后需要将对应成员设置为NULL
@@ -294,8 +303,7 @@ static af_Activity *freeActivity(af_Activity *activity, af_Environment *env){
         free(activity->import_mark);
     }
 
-    pthread_rwlock_unlock(&activity->gc_lock);
-    pthread_rwlock_destroy(&activity->gc_lock);
+    pthread_mutex_unlock(activity->gc_lock);
     free(activity);
     return prev;
 }
@@ -332,7 +340,7 @@ static void clearFuncActivity(af_Activity *activity) {
     /* acl在runArgList之后就被释放了 */
     /* acl在FuncBody暂时不释放 */
 
-    pthread_rwlock_wrlock(&activity->gc_lock);
+    pthread_mutex_lock(activity->gc_lock);
     activity->out_varlist = activity->run_varlist;
     activity->count_out_varlist = activity->count_run_varlist;
     activity->count_run_varlist = 0;
@@ -346,7 +354,7 @@ static void clearFuncActivity(af_Activity *activity) {
     /* 只有FuncBody执行到最后一个(意味着Mark被清理)后才会有尾调用优化 */
     activity->mark = NULL;
     activity->func = NULL;
-    pthread_rwlock_unlock(&activity->gc_lock);
+    pthread_mutex_unlock(activity->gc_lock);
 
     setActivityBtTop(NULL, activity);
     setActivityBtStart(NULL, activity);
@@ -404,9 +412,9 @@ static void tailCallActivity(af_Object *func, af_Activity *activity) {
     clearFuncActivity(activity);
     activity->tb = atb;
 
-    pthread_rwlock_wrlock(&activity->gc_lock);
+    pthread_mutex_lock(activity->gc_lock);
     activity->func = func;
-    pthread_rwlock_unlock(&activity->gc_lock);
+    pthread_mutex_unlock(activity->gc_lock);
 }
 
 /*
@@ -946,7 +954,7 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     FREE_SYMBOL(func3);
 
     env->status = core_init;
-    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global, env);
 
     makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
     gc_delReference(env->global, env);
@@ -1022,7 +1030,7 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
     else
         env->status = core_init;
 
-    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global);
+    env->activity = makeTopActivity(NULL, NULL, env->protect, env->global, env);
     return env;
 }
 
@@ -1206,7 +1214,7 @@ static void newFuncActivity(af_Code *bt, const af_Code *next, bool return_first,
     } else {
         af_Activity *activity = makeFuncActivity(bt, NULL, return_first, env->activity->msg_up,
                                                  env->activity->run_varlist, env->activity->belong,
-                                                 getActivityFunc(env));
+                                                 getActivityFunc(env), env);
         pushActivity(activity, env);
     }
 }
@@ -1264,9 +1272,9 @@ bool pushFuncActivity(af_Code *bt, af_Environment *env) {
     af_Code *func;
     af_Object *parentheses_call = env->activity->parentheses_call;
 
-    pthread_rwlock_wrlock(&env->activity->gc_lock);
+    pthread_mutex_lock(env->activity->gc_lock);
     env->activity->parentheses_call = NULL;
-    pthread_rwlock_unlock(&env->activity->gc_lock);
+    pthread_mutex_unlock(env->activity->gc_lock);
 
     writeDebugLog(aFunCoreLogger, "Run func");
     next = getCodeNext(bt);
@@ -1341,10 +1349,10 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     ActivityCount count = env->activity->count_macro_varlist;
     env->activity->count_macro_varlist = 0;
 
-    pthread_rwlock_wrlock(&env->activity->gc_lock);
+    pthread_mutex_lock(env->activity->gc_lock);
     af_VarSpaceListNode *tmp = env->activity->run_varlist;
     env->activity->run_varlist = NULL;
-    pthread_rwlock_unlock(&env->activity->gc_lock);
+    pthread_mutex_unlock(env->activity->gc_lock);
 
     writeDebugLog(aFunCoreLogger, "Run macro");
     if (!freeVarSpaceListCount(env->activity->count_run_varlist, tmp)) { // 释放外部变量空间
@@ -1357,11 +1365,11 @@ bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     tailCallActivity(func, env->activity);  /* 隐式调用不设置 bt_top */
 
     /* tailCallActivity 会清除 out_varlist 的设定 */
-    pthread_rwlock_wrlock(&env->activity->gc_lock);
+    pthread_mutex_lock(env->activity->gc_lock);
     env->activity->out_varlist = macro_varlist;
     env->activity->count_out_varlist = count;
     env->activity->is_macro_call = true;
-    pthread_rwlock_unlock(&env->activity->gc_lock);
+    pthread_mutex_unlock(env->activity->gc_lock);
     return setFuncActivityToArg(func, env);
 }
 
@@ -1389,7 +1397,7 @@ bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment
     if (tmp == NULL)
         tmp = makeGlobalObject(env);
 
-    af_Activity *activity = makeTopImportActivity(bt, bt, env->protect, tmp, mark);
+    af_Activity *activity = makeTopImportActivity(bt, bt, env->protect, tmp, mark, env);
     pushActivity(activity, env);
 
     if (obj != NULL)
@@ -1406,7 +1414,7 @@ bool pushGuadianFuncActivity(af_GuardianList *gl, af_Environment *env) {
     af_Object *belong = gl->obj != NULL ? gl->obj : env->global;
     /* 隐式调用不设置 bt_top */
     af_Activity *activity = makeFuncActivity(NULL, NULL, false, env->activity->msg_up,
-                                             env->activity->run_varlist, belong, NULL);
+                                             env->activity->run_varlist, belong, NULL, env);
     activity->is_guard_call = true;
     pushActivity(activity, env);
     return setFuncActivityToArg(gl->func, env);
@@ -1434,11 +1442,11 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
         return false;
     }
 
-    pthread_rwlock_wrlock(&env->activity->gc_lock);
+    pthread_mutex_lock(env->activity->gc_lock);
     env->activity->func = func;
     env->activity->belong = belong;
     env->activity->status = act_func_arg;
-    pthread_rwlock_unlock(&env->activity->gc_lock);
+    pthread_mutex_unlock(env->activity->gc_lock);
 
     /* 遇到错误时 get_acl 和 get_var_list 要自行设定msg */
     if (get_acl != NULL) {
@@ -1480,9 +1488,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         return false;
     }
 
-    af_VarSpaceListNode *tmp = NULL;  // 临时变量, 存放内容见代码注释
-    pthread_rwlock_wrlock(&env->activity->gc_lock);
-
+    pthread_mutex_lock(env->activity->gc_lock);
     if (fi->is_macro) {  // 是宏函数则保存变量空间
         env->activity->macro_varlist = env->activity->out_varlist;
         env->activity->count_macro_varlist = env->activity->count_out_varlist;
@@ -1498,37 +1504,24 @@ bool setFuncActivityAddVar(af_Environment *env){
         env->activity->run_varlist = env->activity->func_varlist;
     } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
         env->activity->count_run_varlist = 1;
-        pthread_rwlock_unlock(&env->activity->gc_lock);
-
-        tmp = makeVarSpaceList(env->protect);  // 该过程不加gc锁, 避免死锁
-
-        pthread_rwlock_wrlock(&env->activity->gc_lock);
-        env->activity->run_varlist = tmp;
+        env->activity->run_varlist = makeVarSpaceList(env->protect);
     } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
         env->activity->count_run_varlist = 0;
         env->activity->run_varlist = NULL;
     }
 
     env->activity->func_varlist = NULL;
-    tmp = env->activity->out_varlist;
-    env->activity->out_varlist = NULL;
-
-    pthread_rwlock_unlock(&env->activity->gc_lock);
-
-    freeVarSpaceListCount(env->activity->count_out_varlist, tmp);  // freeVarSpaceListCount 前释放, 避免死锁
+    freeVarSpaceListCount(env->activity->count_out_varlist, env->activity->out_varlist);  // freeVarSpaceListCount 前释放, 避免死锁
     env->activity->count_out_varlist = 0;
+    env->activity->out_varlist = NULL;
 
     if (fi->embedded != super_embedded) {  // 不是超内嵌函数则引入一层新的变量空间
         /* 新层的变量空间应该属于belong而不是func */
-        tmp = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);
-
-        pthread_rwlock_wrlock(&env->activity->gc_lock);
-        env->activity->run_varlist = tmp;
+        env->activity->run_varlist = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);;
         env->activity->count_run_varlist++;
-        pthread_rwlock_unlock(&env->activity->gc_lock);
-
-        gc_delReference(tmp->vs, env);
+        gc_delReference(env->activity->run_varlist->vs, env);
     }
+    pthread_mutex_unlock(env->activity->gc_lock);
 
     if (fi->var_this && env->activity->belong != NULL) {
         if (!makeVarToVarSpaceList("this", 3, 3, 3, env->activity->belong,

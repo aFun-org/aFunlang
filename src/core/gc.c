@@ -1,8 +1,5 @@
 ﻿#include "aFunCore.h"
 #include "__object.h"
-#include "__var.h"
-#include "__gc.h"
-#include "__env.h"
 #include "pthread.h"
 
 /* gc 操控函数 */
@@ -21,9 +18,9 @@ void gc_addObjectData(af_ObjectData *od, af_Environment *base){
 
 void gc_delObjectData(af_ObjectData *od, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((od)->gc.prev != ((void *) 0)) { (od->gc.prev->gc.next = (od)->gc.next; }
+    if ((od)->gc.prev != ((void *) 0)) { (od)->gc.prev->gc.next = (od)->gc.next; }
     else { base->gc_factory->gc_ObjectData = (od)->gc.next; }
-    if ((od)->gc.next != ((void *) 0)) { (od)->gc.next->gc.prev od)->gc.prev; }
+    if ((od)->gc.next != ((void *) 0)) { (od)->gc.next->gc.prev->gc.prev; }
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -58,7 +55,7 @@ void gc_addObject(af_Object *obj, af_Environment *base){
 
 void gc_delObject(af_Object *obj, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((obj)->gc.prev != ((void *) 0)) { (obj->gc.prev->gc.next = (obj)->gc.next; }
+    if ((obj)->gc.prev != ((void *) 0)) { (obj)->gc.prev->gc.next = (obj)->gc.next; }
     else { base->gc_factory->gc_Object = (obj)->gc.next; }
     if ((obj)->gc.next != ((void *) 0)) { (obj)->gc.next->gc.prev = (obj)->gc.prev; }
     pthread_mutex_unlock(&base->gc_factory->mutex);
@@ -422,30 +419,32 @@ static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist) {
 
 static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
     for (NULL; activity != NULL; activity = activity->prev) {
-        pthread_rwlock_rdlock(&activity->gc_lock);
         if (activity->belong != NULL)
             plist = reachableObject(activity->belong, plist);
 
         plist = reachableVarSpaceList(activity->run_varlist, plist);
 
         if (activity->type == act_guardian) {  // gc不执行接下来的检查
-            pthread_rwlock_unlock(&activity->gc_lock);
-            continue;
-        }
+            for (af_GuardianList *gl = activity->gl; gl != NULL; gl = gl->next) {
+                plist = reachableObject(gl->func, plist);
+                if (gl->obj != NULL)
+                    plist = reachableObject(gl->obj, plist);
+            }
+        } else {
 
-        if (activity->func != NULL)
-            plist = reachableObject(activity->func, plist);
+            if (activity->func != NULL)
+                plist = reachableObject(activity->func, plist);
 
-        if (activity->return_obj != NULL)
-            plist = reachableObject(activity->return_obj, plist);
+            if (activity->return_obj != NULL)
+                plist = reachableObject(activity->return_obj, plist);
 
-        if (activity->parentheses_call != NULL)
-            plist = reachableObject(activity->parentheses_call, plist);
+            if (activity->parentheses_call != NULL)
+                plist = reachableObject(activity->parentheses_call, plist);
 
         plist = reachableVarSpaceList(activity->out_varlist, plist);
-        plist = reachableVarSpaceList(activity->func_varlist, plist);
-        plist = reachableVarSpaceList(activity->macro_varlist, plist);
-        pthread_rwlock_unlock(&activity->gc_lock);
+            plist = reachableVarSpaceList(activity->func_varlist, plist);
+            plist = reachableVarSpaceList(activity->macro_varlist, plist);
+        }
     }
     return plist;
 }
