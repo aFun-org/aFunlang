@@ -147,13 +147,13 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
         freeObjectAPI(od->api);
     if (od->free_inherit)
         freeAllInherit(od->inherit);
-    GC_FREE_EXCHANGE(od, ObjectData, env);
+    gc_delObjectData(od, env);
     pthread_rwlock_destroy(&od->lock);
     free(od);
 }
 
 void freeObject(af_Object *obj, af_Environment *env) {
-    GC_FREE_EXCHANGE(obj, Object, env);
+    gc_delObject(obj, env);
     pthread_rwlock_destroy(&obj->lock);
     free(obj);
 }

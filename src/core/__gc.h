@@ -11,13 +11,6 @@ typedef struct af_GcList af_GcList;
 typedef struct gc_Analyzed gc_Analyzed, **pgc_Analyzed;
 typedef struct gc_Factory gc_Factory;
 
-#define GC_FREE_EXCHANGE(obj, Type, Env) do { \
-pthread_mutex_lock(&(Env)->gc_factory->mutex); \
-{if ((obj)->gc.prev != NULL) {(obj)->gc.prev->gc.next = (obj)->gc.next;} \
- else {(Env)->gc_factory->gc_##Type = (obj)->gc.next;}} \
-{if ((obj)->gc.next != NULL) {(obj)->gc.next->gc.prev = (obj)->gc.prev;}} \
-pthread_mutex_unlock(&(Env)->gc_factory->mutex);} while(0)
-
 #define GC_CHAIN(type) struct type *next, *prev
 typedef uint32_t GcCount;
 
@@ -105,6 +98,11 @@ AFUN_CORE_NO_EXPORT void gc_addObject(af_Object *obj, af_Environment *base);
 AFUN_CORE_NO_EXPORT void gc_addVar(af_Var *obj, af_Environment *base);
 AFUN_CORE_NO_EXPORT void gc_addVarSpace(af_VarSpace *obj, af_Environment *base);
 AFUN_CORE_NO_EXPORT void gc_addObjectData(struct af_ObjectData *obj, af_Environment *base);
+
+AFUN_CORE_NO_EXPORT void gc_delObject(af_Object *obj, af_Environment *base);
+AFUN_CORE_NO_EXPORT void gc_delVar(af_Var *obj, af_Environment *base);
+AFUN_CORE_NO_EXPORT void gc_delVarSpace(af_VarSpace *obj, af_Environment *base);
+AFUN_CORE_NO_EXPORT void gc_delObjectData(struct af_ObjectData *obj, af_Environment *base);
 
 /* gc Reference 管理函数 : 涉及af_ObjectData 不对外公开 */
 AFUN_CORE_NO_EXPORT void gc_addObjectDataReference(af_ObjectData *obj, af_Environment *base);

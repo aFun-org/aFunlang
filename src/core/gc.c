@@ -19,6 +19,14 @@ void gc_addObjectData(af_ObjectData *od, af_Environment *base){
     writeTrackLog(aFunCoreLogger, "Make ObjectData %p", od);
 }
 
+void gc_delObjectData(af_ObjectData *od, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    if ((od)->gc.prev != ((void *) 0)) { (od->gc.prev->gc.next = (od)->gc.next; }
+    else { base->gc_factory->gc_ObjectData = (od)->gc.next; }
+    if ((od)->gc.next != ((void *) 0)) { (od)->gc.next->gc.prev od)->gc.prev; }
+    pthread_mutex_unlock(&base->gc_factory->mutex);
+}
+
 void gc_addObjectDataReference(af_ObjectData *od, af_Environment *base){
     base = base->base;  // 转换为主线程 Env
 
@@ -48,6 +56,14 @@ void gc_addObject(af_Object *obj, af_Environment *base){
     writeTrackLog(aFunCoreLogger, "Make Object %p", obj);
 }
 
+void gc_delObject(af_Object *obj, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    if ((obj)->gc.prev != ((void *) 0)) { (obj->gc.prev->gc.next = (obj)->gc.next; }
+    else { base->gc_factory->gc_Object = (obj)->gc.next; }
+    if ((obj)->gc.next != ((void *) 0)) { (obj)->gc.next->gc.prev = (obj)->gc.prev; }
+    pthread_mutex_unlock(&base->gc_factory->mutex);
+}
+
 void gc_addObjectReference(af_Object *obj, af_Environment *base){
     base = base->base;  // 转换为主线程 Env
 
@@ -73,6 +89,14 @@ void gc_addVar(af_Var *var, af_Environment *base) {
     base->gc_factory->gc_Var = var;
     GcCountAdd1(base);
     writeTrackLog(aFunCoreLogger, "Make Var %p", var);
+}
+
+void gc_delVar(af_Var *var, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    if ((var)->gc.prev != ((void *) 0)) { (var)->gc.prev->gc.next = (var)->gc.next; }
+    else { base->gc_factory->gc_Var = (var)->gc.next; }
+    if ((var)->gc.next != ((void *) 0)) { (var)->gc.next->gc.prev = (var)->gc.prev; }
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 void gc_addVarReference(af_Var *var, af_Environment *base) {
@@ -106,6 +130,14 @@ void gc_addVarSpace(af_VarSpace *vs, af_Environment *base){
     base->gc_factory->gc_VarSpace = vs;
     GcCountAdd1(base);
     writeTrackLog(aFunCoreLogger, "Make VarSpace %p", vs);
+}
+
+void gc_delVarSpace(af_VarSpace *vs, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
+    if ((vs)->gc.prev != ((void *) 0)) { (vs)->gc.prev->gc.next = (vs)->gc.next; }
+    else { base->gc_factory->gc_VarSpace = (vs)->gc.next; }
+    if ((vs)->gc.next != ((void *) 0)) { (vs)->gc.next->gc.prev = (vs)->gc.prev; }
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 void gc_addVarSpaceReference(af_VarSpace *vs, af_Environment *base) {
