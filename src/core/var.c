@@ -254,7 +254,7 @@ bool addVarToVarSpace(af_Var *var, af_Object *visitor, af_VarSpace *vs, af_Envir
     *pCup = makeVarCup(var);
     pthread_rwlock_unlock(&vs->lock);
     pthread_rwlock_unlock(&var->lock);
-//    gc_delReference(var, env);
+    gc_delReference(var, env);
     return true;
 
 RETURN_FALSE:
@@ -275,7 +275,7 @@ bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_externa
     af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
     if (addVarToVarSpace(var, visitor, vs, env))
         return true;
-//    gc_delReference(var, env);
+    gc_delReference(var, env);
     return false;
 }
 
@@ -304,7 +304,7 @@ bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_ext
     af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
     if (addVarToVarSpaceList(var, visitor, vsl, env))
         return true;
-//    gc_delReference(var, env);
+    gc_delReference(var, env);
     return false;
 }
 
@@ -321,15 +321,14 @@ bool makeVarToProtectVarSpace(char *name, char p_self, char p_posterity, char p_
     pthread_rwlock_unlock(&env->protect->lock);
 
     af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
-    bool re = addVarToVarSpace(var, env->activity->belong,
-                               env->protect, env);
-//    if (!re)
-//        gc_delReference(var, env);
+    bool ret = addVarToVarSpace(var, env->activity->belong, env->protect, env);
+    if (!ret)
+        gc_delReference(var, env);
 
     pthread_rwlock_wrlock(&env->protect->lock);
     env->protect->is_protect = is_protect;
     pthread_rwlock_unlock(&env->protect->lock);
-    return re;
+    return ret;
 }
 
 /*

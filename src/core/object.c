@@ -90,7 +90,7 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
     }
 
     gc_delReference(od->var_space, env);
-//    gc_delReference(od, env);
+    gc_delReference(od, env);
     return obj;
 }
 
