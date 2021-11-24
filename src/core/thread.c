@@ -26,14 +26,14 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
     if (vs == NULL) {
         af_Object *obj = getGlobal(env);
         vs = makeVarSpace(obj, 3, 3, 3, env);
-        gc_delReference(obj, env);
+//        gc_delReference(obj, env);
     }
 
     af_VarSpaceListNode *vsl = makeVarSpaceList(vs);
     vsl->next = new->activity->run_varlist;
     new->activity->run_varlist = vsl;
     new->activity->count_run_varlist++;
-    gc_delReference(vs, base);
+//    gc_delReference(vs, base);
 
     if (enable)  // 如果未Enable, 则暂时不启动线程
         startRunThread_(new, code, free_code);

@@ -266,7 +266,7 @@ static void writeLogToFactory_(LogLevel level, char *id, pid_t tid, char *ti, ti
  * @param info 日志内容
  */
 static void writeLogToConsole_(LogLevel level, char *id, pid_t tid, char *ti, time_t t, char *file, int line, char *func, char *info) {
-#define FORMAT_SHORT "\r* %s[%d] %d (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
+#define FORMAT_SHORT "\r* %s[%d] %ld (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
 #define STD_BUF_SIZE (STR_LEN(info) + 1024)
     if (level < log_warning) {
         printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], tid, t, file, line, info);

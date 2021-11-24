@@ -4,10 +4,6 @@
 #include "tool.h"
 #include "core_init.h"
 
-/* ObjectData 创建与释放 */
-static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
-                                          af_Environment *env);
-static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env);
 
 /* ObjectData API 创建与释放 */
 static af_ObjectAPINode *makeObjectAPINode(DLC_SYMBOL(objectAPIFunc) func, char *api_name);
@@ -18,48 +14,6 @@ static void freeAllObjectAPINode(af_ObjectAPINode *apin);
 static af_ObjectAPINode *findObjectDataAPINode(char *api_name, af_ObjectData *od);
 static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, char *api_name, af_ObjectData *od);
 
-/*
- * 函数名: makeObjectData_Pri
- * 目标: 创建ObjectData
- * 注意: af_ObjectData不是对外开放的结构体
- * 注意: api不能为NULL
- */
-static af_ObjectData * makeObjectData_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *base_obj,
-                                          af_Environment *env){
-    af_ObjectData *od = calloc(1, sizeof(af_ObjectData));
-    od->base = base_obj;
-    base_obj->data = od;
-    od->id = strCopy(id == NULL ? "Unknown" : id);
-
-    od->api = api;
-    od->free_api = free_api;
-
-    od->allow_inherit = allow_inherit;
-    od->var_space = makeVarSpace(base_obj, 3, 2, 0, env);
-    od->inherit = NULL;
-
-    obj_getDataSize *func = findAPI("obj_getDataSize", api);
-    if (func != NULL)
-        od->size = func(id, base_obj);
-    else
-        od->size = 0;
-
-    if (od->size != 0)
-        od->data = calloc(1, od->size);
-
-    pthread_rwlock_init(&od->lock, NULL);
-    gc_addObjectData(od, env->base);
-    return od;
-}
-
-static af_Object *makeObject_Pri(char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Environment *env){
-    af_Object *obj = calloc(1, sizeof(af_Object));
-    obj->belong = NULL;
-    makeObjectData_Pri(id, free_api, api, allow_inherit, obj, env);
-    pthread_rwlock_init(&obj->lock, NULL);
-    gc_addObject(obj, env->base);
-    return obj;
-}
 
 /*
  * 函数名: 创建一个object
@@ -95,18 +49,48 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
             writeFatalErrorLog(aFunCoreLogger, 1, "Make object belong null");
     }
 
-    af_Object *obj = makeObject_Pri(id, free_api, api, allow_inherit, env);
+    af_Object *obj = calloc(1, sizeof(af_Object));
+    af_ObjectData *od = calloc(1, sizeof(af_ObjectData));
+
+    obj->belong = NULL;
+    od->base = obj;
+    obj->data = od;
+    od->id = strCopy(id == NULL ? "Unknown" : id);
+
+    od->api = api;
+    od->free_api = free_api;
+
+    od->allow_inherit = allow_inherit;
+    od->inherit = NULL;
+
+    obj_getDataSize *func = findAPI("obj_getDataSize", api);
+    if (func != NULL)
+        od->size = func(id, obj);
+    else
+        od->size = 0;
+
+    if (od->size != 0)
+        od->data = calloc(1, od->size);
+
+    pthread_rwlock_init(&od->lock, NULL);
+    pthread_rwlock_init(&obj->lock, NULL);
 
     obj->belong = belong;
     obj->data->inherit = ih;
     obj->data->free_inherit = free_inherit;
 
-    if (obj->data->size != 0) {
+    od->var_space = makeVarSpace(obj, 3, 2, 0, env);
+    gc_addObjectData(od, env->base);
+    gc_addObject(obj, env->base);
+
+    if (obj->data->size != 0) {  // 要在 add_object 之后再运行 init
         obj_initData *init = findAPI("obj_initData", obj->data->api);
         if (init != NULL)
             init(id, obj, obj->data->data, env);
     }
 
+//    gc_delReference(od->var_space, env);
+//    gc_delReference(od, env);
     return obj;
 }
 
@@ -135,6 +119,8 @@ void freeObjectDataData(af_ObjectData *od, af_Environment *env) {
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
  */
 void freeObjectData(af_ObjectData *od, af_Environment *env) {
+    printf("od-free %p\n", od);
+
     if (od->size != 0) {
         obj_destructData *func = findAPI("obj_destructData", od->api);
         if (func != NULL)

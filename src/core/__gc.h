@@ -87,7 +87,8 @@ struct gc_Factory {
                                af_ObjectData *: gc_delObjectDataReference, \
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
-                               af_VarSpace *: gc_delVarSpaceReference))((obj), (env)))
+                               af_VarSpace *: gc_delVarSpaceReference, \
+                               af_VarSpaceListNode *: gc_delVarListReference))((obj), (env)))
 
 /* gc_Factory 创建与释放 */
 AFUN_CORE_NO_EXPORT gc_Factory *makegGcFactory(void);

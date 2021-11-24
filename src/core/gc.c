@@ -2,6 +2,7 @@
 #include "__object.h"
 #include "pthread.h"
 
+
 /* gc 操控函数 */
 void gc_addObjectData(af_ObjectData *od, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
@@ -13,14 +14,16 @@ void gc_addObjectData(af_ObjectData *od, af_Environment *base){
     base->gc_factory->gc_ObjectData = od;
     GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
-    writeTrackLog(aFunCoreLogger, "Make ObjectData %p", od);
 }
 
 void gc_delObjectData(af_ObjectData *od, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((od)->gc.prev != ((void *) 0)) { (od)->gc.prev->gc.next = (od)->gc.next; }
-    else { base->gc_factory->gc_ObjectData = (od)->gc.next; }
-    if ((od)->gc.next != ((void *) 0)) { (od)->gc.next->gc.prev->gc.prev; }
+    if ((od)->gc.prev != ((void *) 0))
+        (od)->gc.prev->gc.next = (od)->gc.next;
+    else
+        base->gc_factory->gc_ObjectData = (od)->gc.next;
+    if ((od)->gc.next != ((void *) 0))
+        (od)->gc.next->gc.prev = (od)->gc.prev;
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -50,14 +53,16 @@ void gc_addObject(af_Object *obj, af_Environment *base){
     base->gc_factory->gc_Object = obj;
     GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
-    writeTrackLog(aFunCoreLogger, "Make Object %p", obj);
 }
 
 void gc_delObject(af_Object *obj, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((obj)->gc.prev != ((void *) 0)) { (obj)->gc.prev->gc.next = (obj)->gc.next; }
-    else { base->gc_factory->gc_Object = (obj)->gc.next; }
-    if ((obj)->gc.next != ((void *) 0)) { (obj)->gc.next->gc.prev = (obj)->gc.prev; }
+    if ((obj)->gc.prev != ((void *) 0))
+        (obj)->gc.prev->gc.next = (obj)->gc.next;
+    else
+        base->gc_factory->gc_Object = (obj)->gc.next;
+    if ((obj)->gc.next != ((void *) 0))
+        (obj)->gc.next->gc.prev = (obj)->gc.prev;
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -78,6 +83,7 @@ void gc_delObjectReference(af_Object *obj, af_Environment *base){
 }
 
 void gc_addVar(af_Var *var, af_Environment *base) {
+    pthread_mutex_lock(&base->gc_factory->mutex);
     var->gc.info.reference = 1;
     var->gc.prev = ((void *) 0);
     if (base->gc_factory->gc_Var != ((void *) 0))
@@ -85,14 +91,17 @@ void gc_addVar(af_Var *var, af_Environment *base) {
     var->gc.next = base->gc_factory->gc_Var;
     base->gc_factory->gc_Var = var;
     GcCountAdd1(base);
-    writeTrackLog(aFunCoreLogger, "Make Var %p", var);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 void gc_delVar(af_Var *var, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((var)->gc.prev != ((void *) 0)) { (var)->gc.prev->gc.next = (var)->gc.next; }
-    else { base->gc_factory->gc_Var = (var)->gc.next; }
-    if ((var)->gc.next != ((void *) 0)) { (var)->gc.next->gc.prev = (var)->gc.prev; }
+    if ((var)->gc.prev != ((void *) 0))
+        (var)->gc.prev->gc.next = (var)->gc.next;
+    else
+        base->gc_factory->gc_Var = (var)->gc.next;
+    if ((var)->gc.next != ((void *) 0))
+        (var)->gc.next->gc.prev = (var)->gc.prev;
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -109,6 +118,7 @@ void gc_delVarReference(af_Var *var, af_Environment *base) {
 
     pthread_mutex_lock(&base->gc_factory->mutex);
     var->gc.info.reference--;
+    writeTrackLog(aFunCoreLogger, "del VarSpace Reference");
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -120,20 +130,26 @@ void gc_delVarReference(af_Var *var, af_Environment *base) {
  * @param base
  */
 void gc_addVarSpace(af_VarSpace *vs, af_Environment *base){
+    pthread_mutex_lock(&base->gc_factory->mutex);
     vs->gc.info.reference = 1;
     vs->gc.prev = ((void *) 0);
-    if (base->gc_factory->gc_VarSpace != ((void *) 0)) { base->gc_factory->gc_VarSpace->gc.prev = vs; }
+    if (base->gc_factory->gc_VarSpace != ((void *) 0))
+        base->gc_factory->gc_VarSpace->gc.prev = vs;
     vs->gc.next = base->gc_factory->gc_VarSpace;
     base->gc_factory->gc_VarSpace = vs;
     GcCountAdd1(base);
-    writeTrackLog(aFunCoreLogger, "Make VarSpace %p", vs);
+    pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
 void gc_delVarSpace(af_VarSpace *vs, af_Environment *base){
     pthread_mutex_lock(&base->gc_factory->mutex);
-    if ((vs)->gc.prev != ((void *) 0)) { (vs)->gc.prev->gc.next = (vs)->gc.next; }
-    else { base->gc_factory->gc_VarSpace = (vs)->gc.next; }
-    if ((vs)->gc.next != ((void *) 0)) { (vs)->gc.next->gc.prev = (vs)->gc.prev; }
+    if ((vs)->gc.prev != ((void *) 0))
+        (vs)->gc.prev->gc.next = (vs)->gc.next;
+    else
+        base->gc_factory->gc_VarSpace = (vs)->gc.next;
+
+    if ((vs)->gc.next != ((void *) 0))
+        (vs)->gc.next->gc.prev = (vs)->gc.prev;
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -151,6 +167,10 @@ void gc_delVarSpaceReference(af_VarSpace *vs, af_Environment *base) {
     pthread_mutex_lock(&base->gc_factory->mutex);
     vs->gc.info.reference--;
     pthread_mutex_unlock(&base->gc_factory->mutex);
+}
+
+void gc_delVarListReference(af_VarSpaceListNode *vsl, af_Environment *base) {
+    gc_delVarSpaceReference(vsl->vs, base);
 }
 
 /* gc_Factory 函数 */
@@ -252,8 +272,6 @@ static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
     for (NULL; obj != NULL && !obj->gc.info.reachable; obj = obj->belong) {
         obj->gc.info.reachable = true;
-        writeTrackLog(aFunCoreLogger, "Reachable Object %p -> data %p -> vs %p", obj, obj->data, obj->data->var_space);
-
         pthread_rwlock_rdlock(&obj->lock);
         if (!obj->data->gc.info.reachable)
             plist = reachableObjectData(obj->data, plist);
@@ -263,32 +281,24 @@ static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
 }
 
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist) {  // 暂时不考虑API调用
-    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p wait", od);
     if (od->gc.info.reachable)
         return plist;
 
-    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p -> vs %p", od, od->var_space);
     od->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&od->lock);
     plist = reachableVarSpace(od->var_space, plist);
-    if (!od->base->gc.info.reachable) {
+    if (!od->base->gc.info.reachable)
         plist = makeAnalyzed(od->base, plist);
-        writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p add object %p", od, od->base);
-    }
 
     for (af_Inherit *ih = od->inherit; ih != NULL; ih = getInheritNext(ih)) {
         af_Object *obj = getInheritObject(ih);
         af_VarSpace *vs = getInheritVarSpace(ih);
-        if (!obj->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p inherit add object %p", od, obj);
+        if (!obj->gc.info.reachable)
             plist = makeAnalyzed(obj, plist);
-        }
 
-        if (!vs->gc.info.reachable) {
-            writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p inherit add varspace %p", od, vs);
+        if (!vs->gc.info.reachable)
             plist = reachableVarSpace(vs, plist);
-        }
     }
 
     obj_getGcList *func = findAPI("obj_getGcList", od->api);
@@ -300,21 +310,16 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 
             switch (tmp->type) {
                 case glt_obj:
-                    if (!tmp->obj->gc.info.reachable) {
-                        writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->obj);
+                    if (!tmp->obj->gc.info.reachable)
                         plist = makeAnalyzed(tmp->obj, plist);
-                    }
                     break;
                 case glt_var:
-                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->var);
                     plist = reachableVar(tmp->var, plist);
                     break;
                 case glt_vs:
-                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->vs);
                     plist = reachableVarSpace(tmp->vs, plist);
                     break;
                 case glt_vsl:
-                    writeTrackLog(aFunCoreLogger, "Reachable ObjectData %p gl add object %p", od, tmp->vsl);
                     plist = reachableVarSpaceList(tmp->vsl, plist);
                     break;
                 default:
@@ -329,18 +334,14 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 }
 
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist) {
-    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p wait", vs);
     if (vs->gc.info.reachable)
         return plist;
 
-    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p -> %p", vs, vs->belong);
     vs->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&vs->lock);
-    if (vs->belong != NULL) {
+    if (vs->belong != NULL)
         plist = makeAnalyzed(vs->belong, plist);
-        writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p add object %p", vs, vs->belong);
-    }
 
     for (int i = 0; i < VAR_HASHTABLE_SIZE; i++) {
         for (af_VarCup *var = vs->var[i]; var != NULL; var = var->next)
@@ -352,19 +353,15 @@ static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist
 }
 
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
-    writeTrackLog(aFunCoreLogger, "Reachable Var %p wait", var);
     if (var->gc.info.reachable)
         return plist;
 
-    writeTrackLog(aFunCoreLogger, "Reachable VarSpace %p -> %p [%s]", var, var->vn->obj, var->name);
     var->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&var->lock);
     for (af_VarNode *vn = var->vn; vn != NULL; vn = vn->next) {
-        if (!vn->obj->gc.info.reachable) {
+        if (!vn->obj->gc.info.reachable)
             plist = makeAnalyzed(vn->obj, plist);
-            writeTrackLog(aFunCoreLogger, "Reachable Var %p add object %p", var, vn->obj);
-        }
     }
     pthread_rwlock_unlock(&var->lock);
     return plist;
@@ -529,7 +526,7 @@ static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pg
             pthread_rwlock_rdlock(&od->lock);
             af_Object *base = od->base;
             pthread_rwlock_unlock(&od->lock);
-            gc_addReference(base, env);
+//            gc_addReference(base, env);
 
             *pgl = pushGuardianList(base, func, *pgl, env);
             plist = reachableObjectData(od, plist);
@@ -586,7 +583,7 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             pthread_rwlock_rdlock(&od->lock);
             af_Object *base_obj = od->base;
             pthread_rwlock_unlock(&od->lock);
-            gc_addReference(base_obj, env);
+//            gc_addReference(base_obj, env);
             pgl = pushGuardianList(base_obj, func, pgl, env);
         }
     }
@@ -616,25 +613,17 @@ void gc_freeAllValue(af_Environment *env) {
     af_Environment *base = env->base;
 
     pthread_mutex_lock(&base->gc_factory->mutex);
-    for (af_ObjectData *od = base->gc_factory->gc_ObjectData, *next; od != NULL; od = next) {
-        next = od->gc.next;
+    for (af_ObjectData *od = base->gc_factory->gc_ObjectData, *next; od != NULL; od = base->gc_factory->gc_ObjectData)
         freeObjectData(od, env);
-    }
 
-    for (af_Object *obj = base->gc_factory->gc_Object, *next; obj != NULL; obj = next) {
-        next = obj->gc.next;
+    for (af_Object *obj = base->gc_factory->gc_Object, *next; obj != NULL; obj = base->gc_factory->gc_Object)
         freeObject(obj, env);
-    }
 
-    for (af_VarSpace *vs = base->gc_factory->gc_VarSpace, *next; vs != NULL; vs = next) {
-        next = vs->gc.next;
+    for (af_VarSpace *vs = base->gc_factory->gc_VarSpace, *next; vs != NULL; vs = base->gc_factory->gc_VarSpace)
         freeVarSpace(vs, env);
-    }
 
-    for (af_Var *var = base->gc_factory->gc_Var, *next; var != NULL; var = next) {
-        next = var->gc.next;
+    for (af_Var *var = base->gc_factory->gc_Var, *next; var != NULL; var = base->gc_factory->gc_Var)
         freeVar(var, env);
-    }
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 

@@ -48,8 +48,8 @@ static void strFuncInit(char *id, af_Object *obj, ObjectStrFunc *data, af_Enviro
         return;
     data->func_var_list = copyVarSpaceList(getRunVarSpaceList(env));
     data->share_vs = makeVarSpace(obj, 3, 2, 0, env);
-    gc_delReference(data->share_vs, env);
     data->api = makeAPIFromList(api_list);
+//    gc_delReference(data->share_vs, env);
 }
 
 static bool strFuncArgCodeList(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, void **mark, af_Environment *env) {

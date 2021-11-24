@@ -777,7 +777,7 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env) {
     }
     if (is_top)
         writeDebugLog(aFunCoreLogger, "NORMAL Point: %p", *(af_Object **)msg->msg);
-    gc_delReference(*(af_Object **)msg->msg, env);
+//    gc_delReference(*(af_Object **)msg->msg, env);
     *(af_Object **)msg->msg = NULL;
 }
 
@@ -792,7 +792,7 @@ static void mp_NORMALThread(af_Message *msg, bool is_top, af_Environment *env) {
 
     pthread_mutex_lock(&env->thread_lock);
     env->result = *(af_Object **)msg->msg;
-    gc_delReference(env->result, env);
+//    gc_delReference(env->result, env);
     *(af_Object **)msg->msg = NULL;
     pthread_mutex_unlock(&env->thread_lock);
 }
@@ -866,7 +866,6 @@ static af_GuardianList *guardian_GC(char *type, bool is_guard, guardian_GC_data 
     if (grt == grt_always || grt == grt_count && getGcCount(env) >= getGcMax(env)) {
         GcCountToZero(env);  // 清零
 
-        writeDebugLog(aFunCoreLogger, "GC Run");
         gl = gc_RunGC(env);
         if (gl != NULL)
             writeDebugLog(aFunCoreLogger, "GC run destruct function");
@@ -889,7 +888,7 @@ static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, a
             af_Message *msg;
             if (EQ_STR("NORMAL", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
-                gc_delReference(*(af_Object **)msg->msg, env);
+//                gc_delReference(*(af_Object **)msg->msg, env);
                 freeMessage(msg);
             } else if (EQ_STR("ERROR", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
@@ -957,13 +956,13 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global, env);
 
     makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
-    gc_delReference(env->global, env);
+//    gc_delReference(env->global, env);
 
     af_Object *cycle = makeCycleObject(env);
     makeVarToProtectVarSpace(mg_sys_cycle, 3, 3, 3, cycle, env);
 
-    gc_delReference(env->protect, env);
-    gc_delReference(cycle, env);
+//    gc_delReference(env->protect, env);
+//    gc_delReference(cycle, env);
     return env;
 }
 
@@ -1238,12 +1237,12 @@ static bool isInfixFunc(af_Code *code, af_Environment *env) {
     af_Object *obj = findVarNode(var, NULL, env);
     obj_isInfixFunc *func = findAPI("obj_isInfixFunc", getObjectAPI(obj));
     if (func == NULL) {
-        gc_delReference(obj, env);
+//        gc_delReference(obj, env);
         return false;
     }
 
     bool res = func(getObjectID(obj), obj);
-    gc_delReference(obj, env);
+//    gc_delReference(obj, env);
     return res;
 }
 
@@ -1402,8 +1401,8 @@ bool pushImportActivity(af_Code *bt, af_Object **obj, char *mark, af_Environment
 
     if (obj != NULL)
         *obj = tmp;
-    else
-        gc_delReference(tmp, env);
+//    else
+//        gc_delReference(tmp, env);
 
     return true;
 }
@@ -1519,7 +1518,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         /* 新层的变量空间应该属于belong而不是func */
         env->activity->run_varlist = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);;
         env->activity->count_run_varlist++;
-        gc_delReference(env->activity->run_varlist->vs, env);
+//        gc_delReference(env->activity->run_varlist, env);
     }
     pthread_mutex_unlock(env->activity->gc_lock);
 
@@ -1687,14 +1686,14 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_func || env->activity->type == act_top || env->activity->type == act_top_import) {
         if (msg != NULL && env->activity->return_first) {  // msg有内容, 并且设定了返回首位, 则清除msg内容, 并压入首位(压入的代码在下面)
             if (EQ_STR(msg->type, "NORMAL")) {
-                gc_delReference(*(af_Object **) msg->msg, env);
+//                gc_delReference(*(af_Object **) msg->msg, env);
                 freeMessage(msg);
                 msg = NULL;
             }
         } else if (env->activity->return_first) {  // msg无内容, 并且设定了返回首位, 则检查msg_down是否有normal, 有则清除
             if (env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
                 af_Message *tmp = getFirstMessage(env);
-                gc_delReference(*(af_Object **) (tmp->msg), env);
+//                gc_delReference(*(af_Object **) (tmp->msg), env);
                 freeMessage(tmp);
             }
         }
@@ -1703,7 +1702,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
             if (env->activity->return_obj == NULL)
                 msg = makeERRORMessage(RUN_ERROR, RETURN_OBJ_NOT_FOUND_INFO, env);
             else {
-                gc_addReference(env->activity->return_obj, env);
+//                gc_addReference(env->activity->return_obj, env);
                 msg = makeNORMALMessage(env->activity->return_obj, env);
                 env->activity->return_obj = NULL;
             }
@@ -1716,7 +1715,7 @@ void popActivity(bool is_normal, af_Message *msg, af_Environment *env) {
     if (env->activity->type == act_top_import && /* import模式, 并且msg_down中有normal, 则把normal替换为belong */
         env->activity->msg_down != NULL && EQ_STR(env->activity->msg_down->type, "NORMAL")) {
         af_Message *tmp = getFirstMessage(env);
-        gc_addReference(env->activity->belong, env);
+//        gc_addReference(env->activity->belong, env);
         pushMessageDown(makeIMPORTMessage(env->activity->import_mark, env->activity->belong, env), env);  // 压入belong作为msg
         pushMessageDown(tmp, env);
     }
@@ -1857,8 +1856,8 @@ af_ErrorInfo *makeErrorInfo(char *type, char *error, char *note, FileLine line, 
 void freeErrorInfo(af_ErrorInfo *ei, af_Environment *env){
     free(ei->error_type);
     free(ei->error);
-    if (ei->obj != NULL)
-        gc_delReference(ei->obj, env);
+//    if (ei->obj != NULL)
+//        gc_delReference(ei->obj, env);
     freeAllErrorBacktracking(ei->track);
     free(ei);
 }
@@ -2093,8 +2092,8 @@ af_ImportInfo *makeImportInfo(char *mark, af_Object *obj, af_Environment *env){
 
 void freeImportInfo(af_ImportInfo *ii, af_Environment *env){
     free(ii->mark);
-    if (ii->obj != NULL)
-        gc_delReference(ii->obj, env);
+//    if (ii->obj != NULL)
+//        gc_delReference(ii->obj, env);
     free(ii);
 }
 
@@ -2115,9 +2114,9 @@ static af_GuardianList *makeGuardianList(af_Object *obj, af_Object *func, af_Env
 
 static af_GuardianList *freeGuardianList(af_GuardianList *gl, af_Environment *env){
     af_GuardianList *next = gl->next;
-    if (gl->obj != NULL)
-        gc_delReference(gl->obj, env);
-    gc_delReference(gl->func, env);
+//    if (gl->obj != NULL)
+//        gc_delReference(gl->obj, env);
+//    gc_delReference(gl->func, env);
     free(gl);
     return next;
 }
@@ -2206,12 +2205,12 @@ af_Object *getGlobal(af_Environment *env) {
     af_Activity *activity = env->activity;
     for (NULL; activity != NULL; activity = activity->prev) {
         if (activity->type == act_top || activity->type == act_top_import) {
-            gc_addReference(activity->belong, env);
+//            gc_addReference(activity->belong, env);
             return activity->belong;
         }
     }
 
-    gc_addReference(env->global, env);
+//    gc_addReference(env->global, env);
     return env->global;
 }
 
@@ -2341,8 +2340,9 @@ void waitForEnviromentExit(af_Environment *env) {
     if (env->gc_env != NULL)
         setEnviromentExit_out(env->gc_env);
 
-    pthread_mutex_lock(&env->thread_lock);
-    while (env->env_list != NULL)
-        pthread_cond_wait(&env->thread_cond, &env->thread_lock);
-    pthread_mutex_unlock(&env->thread_lock);
+    sleep(2);
+//    pthread_mutex_lock(&env->thread_lock);
+//    while (env->env_list != NULL)
+//        pthread_cond_wait(&env->thread_cond, &env->thread_lock);
+//    pthread_mutex_unlock(&env->thread_lock);
 }

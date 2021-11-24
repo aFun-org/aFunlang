@@ -22,7 +22,8 @@ enum af_GcListType {
 #define gc_delReference(obj, env) ((_Generic((obj), \
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
-                               af_VarSpace *: gc_delVarSpaceReference))((obj), (env)))
+                               af_VarSpace *: gc_delVarSpaceReference, \
+                               af_VarSpaceListNode *: gc_delVarListReference))((obj), (env)))
 
 /* GcList 创建与释放 */
 AFUN_CORE_EXPORT af_GcList *makeGcList(enum af_GcListType type, void *data);
@@ -38,4 +39,5 @@ AFUN_CORE_EXPORT void gc_addVarSpaceReference(af_VarSpace *obj, af_Environment *
 AFUN_CORE_EXPORT void gc_delObjectReference(af_Object *obj, af_Environment *base);
 AFUN_CORE_EXPORT void gc_delVarReference(af_Var *obj, af_Environment *base);
 AFUN_CORE_EXPORT void gc_delVarSpaceReference(af_VarSpace *obj, af_Environment *base);
+AFUN_CORE_EXPORT void gc_delVarListReference(af_VarSpaceListNode *vsl, af_Environment *base);
 #endif //AFUN_GC
