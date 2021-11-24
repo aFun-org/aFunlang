@@ -106,7 +106,7 @@ af_Object *findVarNode(af_Var *var, char *id, af_Environment *env){
     af_Object *obj = NULL;
     if (vn != NULL) {
         obj = vn->obj;
-//        gc_addReference(obj, env);
+        gc_addReference(obj, env);
     }
     pthread_rwlock_unlock(&var->lock);
     return obj;

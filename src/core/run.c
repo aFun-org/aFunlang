@@ -50,7 +50,7 @@ static bool checkLiteral(af_Message **msg, af_Environment *env) {
     af_Object *obj = *(af_Object **)((*msg)->msg);
     obj_literalSetting *func = findAPI("obj_literalSetting", getObjectAPI(obj));
     if (func == NULL) {
-//        gc_delReference(obj, env);
+        gc_delReference(obj, env);
         freeMessage(*msg);
         *msg = makeERRORMessage(TYPE_ERROR, API_NOT_FOUND_INFO(obj_literalSetting), env);
         return false;
@@ -82,7 +82,7 @@ static int checkMacro(af_Message *msg, af_Environment *env) {
 
     af_Object *obj = *(af_Object **)(msg->msg);
     bool re = pushMacroFuncActivity(obj, env);
-//    gc_delReference(obj, env);
+    gc_delReference(obj, env);
     freeMessage(msg);
     if (re)
         return 1;
@@ -177,7 +177,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         af_Object *obj = findVarNode(var, NULL, env);
         writeTrackLog(aFunCoreLogger, "Get literal %s : %p", code->element.data, obj);
         bool res = pushLiteralActivity(code, code->element.data, obj, env);
-//        gc_delReference(obj, env);
+        gc_delReference(obj, env);
         return res;
     }
 
@@ -198,13 +198,13 @@ static bool codeElement(af_Code *code, af_Environment *env) {
         char *id = getObjectID(obj);
         if ((is_obj = findAPI("obj_isObjFunc", api)) != NULL && is_obj(id, obj)) {
             bool res = pushVariableActivity(code, obj, env);  // 对象函数
-//            gc_delReference(obj, env);
+            gc_delReference(obj, env);
             return res;
         } else if (env->activity->status != act_func_get && // 在act_func_get 模式下不检查是否为is_infix函数 因为本来就要将其作为函数调用
                  (is_infix = findAPI("obj_isInfixFunc", api)) != NULL && is_infix(id, obj)) {
             pushMessageDown(makeERRORMessageFormat(INFIX_PROTECT, env,
                                                    "Infix protect variable: %s.", code->element.data), env);
-//            gc_delReference(obj, env);
+            gc_delReference(obj, env);
             return false;
         }
     }
@@ -313,7 +313,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
             pushMessageDown(msg, env);
             return true;
         } else if (msg != NULL) {
-//            gc_delReference(*(af_Object **) (msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+            gc_delReference(*(af_Object **) (msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
             freeMessage(msg);
         }
     } else if (msg != NULL) {
@@ -323,7 +323,7 @@ bool checkNormalEnd(af_Message *msg, af_Environment *env) {
             env->activity->parentheses_call = *(af_Object **) (msg->msg);  // 类前缀调用
             pthread_mutex_unlock(env->activity->gc_lock);
         }
-//        gc_delReference(*(af_Object **)(msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
+        gc_delReference(*(af_Object **)(msg->msg), env);  // msg->msg是一个指针, 这个指针的内容是一个af_Object *
         freeMessage(msg);
     }
     return false;
@@ -491,7 +491,7 @@ bool iterCode(af_Code *code, int mode, af_Environment *env){
                 af_Object *func = *(af_Object **) (msg->msg);  // func仍保留了msg的gc计数
                 if (!setFuncActivityToArg(func, env))
                     popActivity(false, NULL, env);
-//                gc_delReference(func, env);  // 释放计数 (setFuncActivityToArg 不需要计数)
+                gc_delReference(func, env);  // 释放计数 (setFuncActivityToArg 不需要计数)
                 freeMessage(msg);
                 break;
             }

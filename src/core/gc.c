@@ -539,7 +539,7 @@ static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pg
             pthread_rwlock_rdlock(&od->lock);
             af_Object *base = od->base;
             pthread_rwlock_unlock(&od->lock);
-//            gc_addReference(base, env);
+            gc_addReference(base, env);
 
             *pgl = pushGuardianList(base, func, *pgl, env);
             plist = reachableObjectData(od, plist);
@@ -598,7 +598,7 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             pthread_rwlock_rdlock(&od->lock);
             af_Object *base_obj = od->base;
             pthread_rwlock_unlock(&od->lock);
-//            gc_addReference(base_obj, env);
+            gc_addReference(base_obj, env);
             pgl = pushGuardianList(base_obj, func, pgl, env);
         }
     }

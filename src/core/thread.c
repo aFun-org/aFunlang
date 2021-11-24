@@ -26,7 +26,7 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
     if (vs == NULL) {
         af_Object *obj = getGlobal(env);
         vs = makeVarSpace(obj, 3, 3, 3, env);
-//        gc_delReference(obj, env);
+        gc_delReference(obj, env);
     }
 
     new->activity->run_varlist = pushVarList(vs, new->activity->run_varlist);
