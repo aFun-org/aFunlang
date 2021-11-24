@@ -956,12 +956,12 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
     env->activity = makeTopActivity(NULL, NULL, env->protect, env->global, env);
 
     makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
-//    gc_delReference(env->global, env);
 
-    af_Object *cycle = makeCycleObject(env);
+    af_Object *cycle = makeCycleObject(env);  // gc 使用的函数 TODO-szh 移动到 runtime-tool 上
     makeVarToProtectVarSpace(mg_sys_cycle, 3, 3, 3, cycle, env);
 
-//    gc_delReference(env->protect, env);
+    gc_delReference(env->protect, env);
+//    gc_delReference(env->global, env);
 //    gc_delReference(cycle, env);
     return env;
 }
@@ -1518,7 +1518,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         /* 新层的变量空间应该属于belong而不是func */
         env->activity->run_varlist = pushNewVarList(env->activity->belong, env->activity->run_varlist, env);;
         env->activity->count_run_varlist++;
-//        gc_delReference(env->activity->run_varlist, env);
+        gc_delReference(env->activity->run_varlist, env);
     }
     pthread_mutex_unlock(env->activity->gc_lock);
 

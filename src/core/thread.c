@@ -33,7 +33,7 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
     vsl->next = new->activity->run_varlist;
     new->activity->run_varlist = vsl;
     new->activity->count_run_varlist++;
-//    gc_delReference(vs, base);
+    gc_delReference(vs, base);
 
     if (enable)  // 如果未Enable, 则暂时不启动线程
         startRunThread_(new, code, free_code);

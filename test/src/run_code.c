@@ -192,7 +192,7 @@ size_t getSize3(char *id, af_Object *obj) {
 
 void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     *data = makeVarSpace(obj, 3, 2, 0, env);
-//    gc_delReference(*data, env);
+    gc_delReference(*data, env);
 }
 
 void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
@@ -895,7 +895,6 @@ INIT_ERROR:
     printf("\n");
     sleep(2);
 
-    /*
     {  // 正常程序
         printf("TAG A: [Normal test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
@@ -1206,7 +1205,7 @@ INIT_ERROR:
 //        freeAllCode(bt1);
 //        printf("\n");
 //    }
-*/
+
     printf("freeEnvironment:\n");
     destructAFunEnvironment(env);
 

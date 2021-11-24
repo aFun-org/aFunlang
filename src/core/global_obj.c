@@ -10,7 +10,7 @@ static char *global_id = "global-object";
 
 static void initGOD(af_Object *obj, GlobalObjectData *data, af_Environment *env) {
     data->share = makeVarSpace(obj, 3, 2, 0, env);
-//    gc_delReference(data->share, env);
+    gc_delReference(data->share, env);
 }
 
 static void freeGOD(GlobalObjectData *god, af_Object  *obj, af_Environment *env) {

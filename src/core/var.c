@@ -626,6 +626,14 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
     return false;
 }
 
+/**
+ * 压入新的空VarSpace
+ * 并且保留gc计数
+ * @param belong
+ * @param base
+ * @param env
+ * @return
+ */
 af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env){
     af_VarSpace *vs = makeVarSpace(belong, 3, 2, 0, env);
     af_VarSpaceListNode *new = makeVarSpaceList(vs);
