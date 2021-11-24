@@ -1112,99 +1112,98 @@ INIT_ERROR:
         int exit_code = runCodeFromString("str\ndata\n{func-normal}\nglobal\n", "Tags-string.aun", 1, env);
         printf("exit code = %d\n\n", exit_code);
     }
-//
-//
-//    {
-//        DLC_SYMBOL(GuardianFunc) func = MAKE_SYMBOL(gd_func, GuardianFunc);
-//        DLC_SYMBOL(GuardianDestruct) des = MAKE_SYMBOL(gd_destruct, GuardianDestruct);
-//        struct GDData *data = NULL;
-//        addGuardian("test", false, true, sizeof(struct GDData), func, des, (void **) &data, env);
-//        data->func = af_func;
-//        gc_addReference(af_func, env);
-//        FREE_SYMBOL(func);
-//        FREE_SYMBOL(des);
-//
-//        printf("TAG U: [guardian]\n");
-//        af_Code *bt1 = makeElementCode("func-normal", 0, 1, "TagU.aun");
-//        af_Code *bt2 = makeElementCode("global", 0, 1, "TagU.aun");
-//        af_Code *bt3 = makeElementCode("global", 0, 1, "TagU.aun");
-//
-//        pushCode(&bt1, bt2);
-//        pushCode(&bt2, bt3);
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//
-//        bool re = popGuardian("test", env);
-//        printf("popGuardian: %d\n\n", re);
-//    }
-//
-//    {
-//        printf("TAG V: [Thread]\n");
-//        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
-//
-//        startRunThread(env, NULL, bt1, false, true, true, true, true);
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
-//
-//    // 错误用例
-//
-//    {  // 中缀调用测试
-//        printf("TAG a: ERROR\n");
-//
-//        af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
-//        af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Taga-error.aun", NULL);
-//
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
-//
-//    {  // 测试错误 (无函数指定)
-//        printf("TAG b: ERROR\n");
-//        af_Code *bt1 = makeBlockCode(curly, NULL, 0, 1, "Tagb-error.aun", NULL);
-//
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
-//
-//    {  // 测试错误 (object2 Var not found)
-//        printf("TAG c: ERROR\n");
-//        af_Code *bt1 = makeElementCode("object2", 0, 1, "Tagc-error.aun");
-//
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
-//
-//    {  // 中缀保护测试
-//        printf("TAG d: ERROR\n");
-//
-//        af_Code *bt1 = makeElementCode("global", 0, 1, "Tagd-error.aun");
-//        af_Code *bt2 = makeElementCode("func-brackets", 0, 2, NULL);
-//
-//        pushCode(&bt1, bt2);
-//
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
-//
-//    {  // 错误回溯测试
-//        printf("TAG e: ERROR\n");
-//
-//        af_Code *bt2 = makeElementCode("func-no-var", 0, 1, NULL);
-//        af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tage-error.aun", NULL);
-//
-//        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
-//        pushCode(&bt1, bt3);
-//
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
+
+    {
+        DLC_SYMBOL(GuardianFunc) func = MAKE_SYMBOL(gd_func, GuardianFunc);
+        DLC_SYMBOL(GuardianDestruct) des = MAKE_SYMBOL(gd_destruct, GuardianDestruct);
+        struct GDData *data = NULL;
+        addGuardian("test", false, true, sizeof(struct GDData), func, des, (void **) &data, env);
+        data->func = af_func;
+        gc_addReference(af_func, env);
+        FREE_SYMBOL(func);
+        FREE_SYMBOL(des);
+
+        printf("TAG U: [guardian]\n");
+        af_Code *bt1 = makeElementCode("func-normal", 0, 1, "TagU.aun");
+        af_Code *bt2 = makeElementCode("global", 0, 1, "TagU.aun");
+        af_Code *bt3 = makeElementCode("global", 0, 1, "TagU.aun");
+
+        pushCode(&bt1, bt2);
+        pushCode(&bt2, bt3);
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+
+        bool re = popGuardian("test", env);
+        printf("popGuardian: %d\n\n", re);
+    }
+
+    {
+        printf("TAG V: [Thread]\n");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
+
+        startRunThread(env, NULL, bt1, false, true, true, true, true);
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    // 错误用例
+
+    {  // 中缀调用测试
+        printf("TAG a: ERROR\n");
+
+        af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Taga-error.aun", NULL);
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 测试错误 (无函数指定)
+        printf("TAG b: ERROR\n");
+        af_Code *bt1 = makeBlockCode(curly, NULL, 0, 1, "Tagb-error.aun", NULL);
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 测试错误 (object2 Var not found)
+        printf("TAG c: ERROR\n");
+        af_Code *bt1 = makeElementCode("object2", 0, 1, "Tagc-error.aun");
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 中缀保护测试
+        printf("TAG d: ERROR\n");
+
+        af_Code *bt1 = makeElementCode("global", 0, 1, "Tagd-error.aun");
+        af_Code *bt2 = makeElementCode("func-brackets", 0, 2, NULL);
+
+        pushCode(&bt1, bt2);
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
+
+    {  // 错误回溯测试
+        printf("TAG e: ERROR\n");
+
+        af_Code *bt2 = makeElementCode("func-no-var", 0, 1, NULL);
+        af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tage-error.aun", NULL);
+
+        af_Code *bt3 = makeElementCode("global", 0, 1, NULL);
+        pushCode(&bt1, bt3);
+
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
 
     printf("freeEnvironment:\n");
     destructAFunEnvironment(env);
