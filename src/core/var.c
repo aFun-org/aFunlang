@@ -44,8 +44,6 @@ static void freeAllVarNode(af_VarNode *vn) {
 }
 
 af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_Object *obj, af_Environment *env){
-    pthread_mutex_lock(&env->base->gc_factory->mutex);
-
     af_VarNode *vn = makeVarNode(obj, NULL);
     af_Var *var = calloc(1, sizeof(af_Var));
     var->name = strCopy(name);
@@ -55,8 +53,6 @@ af_Var *makeVar(char *name, char p_self, char p_posterity, char p_external, af_O
     var->permissions[2] = p_external;
     pthread_rwlock_init(&var->lock, NULL);
     gc_addVar(var, env->base);
-
-    pthread_mutex_unlock(&env->base->gc_factory->mutex);
     return var;
 }
 
@@ -135,8 +131,6 @@ static void freeAllVarCup(af_VarCup *vp) {
 
 af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char p_external, af_Environment *env){
     assertFatalErrorLog(getCoreStatus(env) == core_creat || belong != NULL, aFunCoreLogger, 1, "makeVarSpace error");
-    pthread_mutex_lock(&env->base->gc_factory->mutex);
-
     af_VarSpace *vs = calloc(1, sizeof(af_VarSpace));
     vs->belong = belong;
     vs->permissions[0] = p_self;
@@ -145,8 +139,6 @@ af_VarSpace *makeVarSpace(af_Object *belong, char p_self, char p_posterity, char
 
     pthread_rwlock_init(&vs->lock, NULL);
     gc_addVarSpace(vs, env->base);
-
-    pthread_mutex_unlock(&env->base->gc_factory->mutex);
     return vs;
 }
 

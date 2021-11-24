@@ -117,8 +117,4 @@ AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);
 
 /* gc 信息函数 */
 AFUN_CORE_NO_EXPORT void printGCByCore(af_Environment *env);
-
-/* gc 运行时函数 */
-AFUN_CORE_NO_EXPORT void resetGC(af_Environment *env);
-
 #endif //AFUN_GC_H_

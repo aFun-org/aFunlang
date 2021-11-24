@@ -119,8 +119,6 @@ void freeObjectDataData(af_ObjectData *od, af_Environment *env) {
  * 对外API中, 创建对象的基本单位都是af_Object, 无法直接操控af_ObjectData
  */
 void freeObjectData(af_ObjectData *od, af_Environment *env) {
-    printf("od-free %p\n", od);
-
     if (od->size != 0) {
         obj_destructData *func = findAPI("obj_destructData", od->api);
         if (func != NULL)
