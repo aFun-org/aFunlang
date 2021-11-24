@@ -29,9 +29,7 @@ af_Environment *startRunThread(af_Environment *env, af_VarSpace *vs, af_Code *co
 //        gc_delReference(obj, env);
     }
 
-    af_VarSpaceListNode *vsl = makeVarSpaceList(vs);
-    vsl->next = new->activity->run_varlist;
-    new->activity->run_varlist = vsl;
+    new->activity->run_varlist = pushVarList(vs, new->activity->run_varlist);
     new->activity->count_run_varlist++;
     gc_delReference(vs, base);
 

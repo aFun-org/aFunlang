@@ -42,9 +42,9 @@ struct af_VarSpace {
     GC_VarSpace gc;  // 仅能由 gc 机制访问
 };
 
-struct af_VarSpaceListNode {  // 变量链
+struct af_VarList {  // 变量链
     struct af_VarSpace *vs;
-    struct af_VarSpaceListNode *next;
+    struct af_VarList *next;
 };
 
 

@@ -21,15 +21,15 @@ af_VarSpace *getShareVS(char *id, af_Object *obj) {
 
 
 size_t getSize_Normal(char *id, af_Object *obj) {
-    return sizeof(af_VarSpaceListNode *);
+    return sizeof(af_VarList *);
 }
 
-void initData_Normal(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
-    *data = makeVarSpaceList(getProtectVarSpace(env));
+void initData_Normal(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+    *data = pushProtectVarList(NULL, env);
     printf("initData_Normal(): VarSpace %p\n", *data);
 }
 
-void freeData_Normal(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+void freeData_Normal(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
     printf("freeData_Normal(): vsl = %p\n", *data);
     freeAllVarSpaceList(*data);
 }
@@ -72,13 +72,13 @@ bool getAcl_Normal(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code
     return true;
 }
 
-bool getVsl_Normal(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
-    *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
+bool getVsl_Normal(char *id, af_Object *obj, af_VarList **vsl, void *mark, af_Environment *env) {
+    *vsl = *(af_VarList **)getObjectData(obj);
     return true;
 }
 
 af_GcList *getGcList_Normal(char *id, af_Object *obj, void *data) {
-    af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
+    af_GcList *gl = pushGcList(glt_vsl, *(af_VarList **)data, NULL);
     return gl;
 }
 

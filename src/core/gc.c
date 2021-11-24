@@ -169,7 +169,7 @@ void gc_delVarSpaceReference(af_VarSpace *vs, af_Environment *base) {
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
-void gc_delVarListReference(af_VarSpaceListNode *vsl, af_Environment *base) {
+void gc_delVarListReference(af_VarList *vsl, af_Environment *base) {
     gc_delVarSpaceReference(vsl->vs, base);
 }
 
@@ -251,7 +251,7 @@ static void freeAllAnalyzed(gc_Analyzed *base) {
 /* 可达性分析函数 */
 static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
 static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
-static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist);
+static pgc_Analyzed reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed plist);
 static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
 static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist);
 
@@ -367,7 +367,7 @@ static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
     return plist;
 }
 
-static pgc_Analyzed reachableVarSpaceList(struct af_VarSpaceListNode *vsl, pgc_Analyzed plist) {
+static pgc_Analyzed reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed plist) {
     for (NULL; vsl != NULL; vsl = vsl->next) {
         if (!vsl->vs->gc.info.reachable)
             plist = reachableVarSpace(vsl->vs, plist);

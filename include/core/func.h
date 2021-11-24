@@ -29,7 +29,7 @@ struct af_CallFuncInfo {
 
     af_Object *belong;
     af_Object *func;
-    struct af_VarSpaceListNode *var_list;
+    struct af_VarList *var_list;
 
     enum af_BlockType call_type;
     bool is_gc_call;

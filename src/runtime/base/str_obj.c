@@ -5,7 +5,7 @@ typedef struct ObjectStrFunc ObjectStrFunc;
 struct ObjectStrFunc {
     af_ObjectAPI *api;
     af_VarSpace *share_vs;
-    af_VarSpaceListNode *func_var_list;
+    af_VarList *func_var_list;
 };
 
 static size_t strGetSize(char *id, af_Object *obj) {
@@ -62,7 +62,7 @@ static bool strFuncArgList(char *id, af_Object *obj, af_ArgList **al, af_ArgCode
     return true;
 }
 
-static bool strFuncVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
+static bool strFuncVarList(char *id, af_Object *obj, af_VarList **vsl, void *mark, af_Environment *env) {
     ObjectStrFunc *sf = getObjectData(obj);
     *vsl = sf->func_var_list;
     return true;

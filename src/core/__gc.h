@@ -55,7 +55,7 @@ struct af_GcList {
         struct af_Object *obj;
         struct af_VarSpace *vs;
         struct af_Var *var;
-        struct af_VarSpaceListNode *vsl;
+        struct af_VarList *vsl;
     };
 
     struct af_GcList *next;
@@ -88,7 +88,7 @@ struct gc_Factory {
                                af_Object *: gc_delObjectReference, \
                                af_Var *: gc_delVarReference, \
                                af_VarSpace *: gc_delVarSpaceReference, \
-                               af_VarSpaceListNode *: gc_delVarListReference))((obj), (env)))
+                               af_VarList *: gc_delVarListReference))((obj), (env)))
 
 /* gc_Factory 创建与释放 */
 AFUN_CORE_NO_EXPORT gc_Factory *makegGcFactory(void);

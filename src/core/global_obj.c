@@ -76,14 +76,14 @@ af_Object *makeGlobalObject(af_Environment *env) {
 }
 
 size_t getSizec_Cycle(char *id, af_Object *obj) {
-    return sizeof(af_VarSpaceListNode *);
+    return sizeof(af_VarList *);
 }
 
-void initDatac_Cycle(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
-    *data = makeVarSpaceList(getProtectVarSpace(env));
+void initDatac_Cycle(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+    *data = pushProtectVarList(NULL, env);
 }
 
-void freeDatac_Cycle(char *id, af_Object *obj, af_VarSpaceListNode **data, af_Environment *env) {
+void freeDatac_Cycle(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
     freeAllVarSpaceList(*data);
 }
 
@@ -119,13 +119,13 @@ bool getAclc_Cycle(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code
     return true;
 }
 
-bool getVslc_Cycle(char *id, af_Object *obj, af_VarSpaceListNode **vsl, CycleMark *mark, af_Environment *env) {
-    *vsl = *(af_VarSpaceListNode **)getObjectData(obj);
+bool getVslc_Cycle(char *id, af_Object *obj, af_VarList **vsl, CycleMark *mark, af_Environment *env) {
+    *vsl = *(af_VarList **)getObjectData(obj);
     return true;
 }
 
 af_GcList *getGcListc_Cycle(char *id, af_Object *obj, void *data) {
-    af_GcList *gl = pushGcList(glt_vsl, *(af_VarSpaceListNode **)data, NULL);
+    af_GcList *gl = pushGcList(glt_vsl, *(af_VarList **)data, NULL);
     return gl;
 }
 

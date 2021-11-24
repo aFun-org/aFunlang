@@ -51,7 +51,7 @@ typedef af_VarSpace *obj_getShareVarSpace(BASE_ARG);
 /* 获取参数计算表 */
 typedef bool obj_funcGetArgCodeList(BASE_ARG, af_ArgCodeList **acl, af_Code *code, void **mark, af_Environment *env);
 /* 获取函数变量空间 */
-typedef bool obj_funcGetVarList(BASE_ARG, af_VarSpaceListNode **vsl, void *mark, af_Environment *env);
+typedef bool obj_funcGetVarList(BASE_ARG, af_VarList **vsl, void *mark, af_Environment *env);
 /* 获取参数赋值表 */
 typedef bool obj_funcGetArgList(BASE_ARG, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env);
 /* 获取函数信息 */

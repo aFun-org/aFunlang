@@ -116,7 +116,7 @@ AFUN_CORE_EXPORT af_Object *getGlobal(af_Environment *env);
 AFUN_CORE_EXPORT af_Object *getBelong(af_Environment *env);
 AFUN_CORE_EXPORT FilePath getActivityFile(af_Environment *env);
 AFUN_CORE_EXPORT FileLine getActivityLine(af_Environment *env);
-AFUN_CORE_EXPORT af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env);
+AFUN_CORE_EXPORT af_VarList *getRunVarSpaceList(af_Environment *env);
 AFUN_CORE_EXPORT int isCoreExit(af_Environment *env);
 AFUN_CORE_EXPORT bool getErrorStd(af_Environment *env);
 AFUN_CORE_EXPORT int32_t getCoreExitCode(af_Environment *env);

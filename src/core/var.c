@@ -158,38 +158,38 @@ void freeVarSpace(af_VarSpace *vs, af_Environment *env) {
     free(vs);
 }
 
-af_VarSpaceListNode *makeVarSpaceList(af_VarSpace *vs) {
-    af_VarSpaceListNode *vsl = calloc(1, sizeof(af_VarSpaceListNode));
+af_VarList *makeVarSpaceList(af_VarSpace *vs) {
+    af_VarList *vsl = calloc(1, sizeof(af_VarList));
     vsl->vs = vs;
     return vsl;
 }
 
-af_VarSpaceListNode *copyVarSpaceList(af_VarSpaceListNode *vsl) {
-    af_VarSpaceListNode *base = NULL;
-    af_VarSpaceListNode **pvsl = &base;
+af_VarList *copyVarSpaceList(af_VarList *vsl) {
+    af_VarList *base = NULL;
+    af_VarList **pvsl = &base;
     for (NULL; vsl != NULL; vsl = vsl->next, pvsl = &((*pvsl)->next))
         *pvsl = makeVarSpaceList(vsl->vs);
     return base;
 }
 
-static af_VarSpaceListNode *freeVarSpaceList(af_VarSpaceListNode *vsl){
-    af_VarSpaceListNode *next = vsl->next;
+static af_VarList *freeVarSpaceList(af_VarList *vsl){
+    af_VarList *next = vsl->next;
     free(vsl);
     return next;
 }
 
-void freeAllVarSpaceList(af_VarSpaceListNode *vsl){
+void freeAllVarSpaceList(af_VarList *vsl){
     while (vsl != NULL)
         vsl = freeVarSpaceList(vsl);
 }
 
-af_VarSpace *getVarSpaceFromList(af_VarSpaceListNode *vsl) {
+af_VarSpace *getVarSpaceFromList(af_VarList *vsl) {
     if (vsl != NULL)
         return vsl->vs;
     return NULL;
 }
 
-bool freeVarSpaceListCount(size_t count, af_VarSpaceListNode *vsl) {
+bool freeVarSpaceListCount(size_t count, af_VarList *vsl) {
     for (size_t i = count; i > 0; i--) {
         if (vsl == NULL)  // 发生了错误
             return false;
@@ -293,7 +293,7 @@ bool makeVarToVarSpace(char *name, char p_self, char p_posterity, char p_externa
  * 自动跳过保护空间
  * 调用 addVarToVarSpace
  */
-bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *vsl, af_Environment *env){
+bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarList *vsl, af_Environment *env){
     for (NULL; vsl != NULL; vsl = vsl->next) {
         if (!vsl->vs->is_protect)
             return addVarToVarSpace(var, visitor, vsl->vs, env);
@@ -308,7 +308,7 @@ bool addVarToVarSpaceList(af_Var *var, af_Object *visitor, af_VarSpaceListNode *
  * 注意: 必须保证 VarSpace被 gc 引用
  */
 bool makeVarToVarSpaceList(char *name, char p_self, char p_posterity, char p_external, af_Object *obj,
-                           af_VarSpaceListNode *vsl, af_Object *visitor, af_Environment *env){
+                           af_VarList *vsl, af_Object *visitor, af_Environment *env){
     af_Var *var = makeVar(name, p_self, p_posterity, p_external, obj, env);
     if (addVarToVarSpaceList(var, visitor, vsl, env))
         return true;
@@ -437,7 +437,7 @@ RETRUN_FALSE:
  * 否则返回true
  * 调用delVarFromVarSpace
  */
-bool delVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl) {
+bool delVarFromVarList(char *name, af_Object *visitor, af_VarList *vsl) {
     return delVarFromVarSpace(name, visitor, vsl->vs);
 }
 
@@ -522,7 +522,7 @@ af_Var *findVarFromVarSpace(char *name, af_Object *visitor, af_VarSpace *vs){
  * 目标: 在VarSpaceListNode中搜索var
  * 调用: findVarFromVarSpaceByIndex
  */
-af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarSpaceListNode *vsl) {
+af_Var *findVarFromVarList(char *name, af_Object *visitor, af_VarList *vsl) {
     time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
     af_Var *var = NULL;
 
@@ -602,7 +602,7 @@ bool setVarToVarSpace(char *name, af_Object *obj, af_Object *visitor, af_VarSpac
  * 目标: 在VarSpaceListNode中搜索var并修改其值
  * 调用: findVarFromVarSpaceByIndex
  */
-bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpaceListNode *vsl) {
+bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarList *vsl) {
     time33_t index = time33(name) % VAR_HASHTABLE_SIZE;
     af_Var *var = NULL;
 
@@ -634,9 +634,28 @@ bool setVarToVarList(char *name, af_Object *obj, af_Object *visitor, af_VarSpace
  * @param env
  * @return
  */
-af_VarSpaceListNode *pushNewVarList(af_Object *belong, af_VarSpaceListNode *base, af_Environment *env){
+af_VarList *pushNewVarList(af_Object *belong, af_VarList *base, af_Environment *env){
     af_VarSpace *vs = makeVarSpace(belong, 3, 2, 0, env);
-    af_VarSpaceListNode *new = makeVarSpaceList(vs);
+    af_VarList *new = makeVarSpaceList(vs);
+    new->next = base;
+    return new;
+}
+
+/**
+ * 压入新的空保护空间的VarSpace
+ * @param belong
+ * @param base
+ * @param env
+ * @return
+ */
+af_VarList *pushProtectVarList(af_VarList *base, af_Environment *env){
+    af_VarList *new = makeVarSpaceList(getProtectVarSpace(env));
+    new->next = base;
+    return new;
+}
+
+af_VarList *pushVarList(af_VarSpace *vs, af_VarList *base){
+    af_VarList *new = makeVarSpaceList(vs);
     new->next = base;
     return new;
 }

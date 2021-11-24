@@ -4,7 +4,7 @@
 
 typedef struct QuitFunc QuitFunc;
 struct QuitFunc {
-    af_VarSpaceListNode *func_var_list;
+    af_VarList *func_var_list;
 };
 
 static size_t funcGetSize(char *id, af_Object *obj) {
@@ -27,7 +27,7 @@ static bool funcArgList(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeLis
     return true;
 }
 
-static bool funcVarList(char *id, af_Object *obj, af_VarSpaceListNode **vsl, void *mark, af_Environment *env) {
+static bool funcVarList(char *id, af_Object *obj, af_VarList **vsl, void *mark, af_Environment *env) {
     QuitFunc *sf = getObjectData(obj);
     *vsl = sf->func_var_list;
     return true;

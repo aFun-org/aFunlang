@@ -6,9 +6,9 @@
 #include "obj_api.h"
 
 /* Activity 创建和释放 */
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong, af_Environment *env);
+static af_Activity *makeActivity(af_Message *msg_up, af_VarList *varlist, af_Object *belong, af_Environment *env);
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func,
+                                     af_VarList *out_varlist, af_Object *belong, af_Object *func,
                                      af_Environment *env);
 static af_Activity *
 makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSpace *protect, af_Object *belong, af_Environment *env);
@@ -203,7 +203,7 @@ void setCoreNormal(af_Environment *env) {
     pthread_rwlock_unlock(&env->esv->lock);
 }
 
-static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlist, af_Object *belong,
+static af_Activity *makeActivity(af_Message *msg_up, af_VarList *varlist, af_Object *belong,
                                  af_Environment *env){
     af_Activity *activity = calloc(1, sizeof(af_Activity));
     activity->msg_up = msg_up;
@@ -217,7 +217,7 @@ static af_Activity *makeActivity(af_Message *msg_up, af_VarSpaceListNode *varlis
 }
 
 static af_Activity *makeFuncActivity(af_Code *bt_top, af_Code *bt_start, bool return_first, af_Message *msg_up,
-                                     af_VarSpaceListNode *out_varlist, af_Object *belong, af_Object *func,
+                                     af_VarList *out_varlist, af_Object *belong, af_Object *func,
                                      af_Environment *env){
     af_Activity *activity = makeActivity(msg_up, out_varlist, belong, env);
 
@@ -243,8 +243,8 @@ static af_Activity *makeTopActivity(af_Code *bt_top, af_Code *bt_start, af_VarSp
     activity->status = act_func_normal;
 
     activity->count_run_varlist = 2;
-    activity->run_varlist = makeVarSpaceList(getObjectVarSpace(belong));
-    activity->run_varlist->next = makeVarSpaceList(protect);
+    activity->run_varlist = pushVarList(protect, NULL);
+    activity->run_varlist = pushVarList(getObjectVarSpace(belong), activity->run_varlist);
 
     setActivityBtTop(NULL, activity);  // top-activity直接就在normal, bt_top将不被设定
     setActivityBtStart(bt_start, activity);
@@ -265,7 +265,7 @@ static af_Activity *makeGuardianActivity(af_GuardianList *gl, af_GuardianList **
     af_Activity *activity = makeActivity(NULL, NULL, env->global, env);
     activity->type = act_guardian;
 
-    activity->run_varlist = makeVarSpaceList(getProtectVarSpace(env));
+    activity->run_varlist = pushProtectVarList(NULL, env);
     activity->count_run_varlist = 1;
 
     activity->file = strCopy("guardian.aun.sys");
@@ -1344,12 +1344,12 @@ bool pushVariableActivity(af_Code *bt, af_Object *func, af_Environment *env) {
 bool pushMacroFuncActivity(af_Object *func, af_Environment *env) {
     /* Macro是隐式调用, bt不移动 */
     /* 沿用activity */
-    af_VarSpaceListNode *macro_varlist = env->activity->macro_varlist;
+    af_VarList *macro_varlist = env->activity->macro_varlist;
     ActivityCount count = env->activity->count_macro_varlist;
     env->activity->count_macro_varlist = 0;
 
     pthread_mutex_lock(env->activity->gc_lock);
-    af_VarSpaceListNode *tmp = env->activity->run_varlist;
+    af_VarList *tmp = env->activity->run_varlist;
     env->activity->run_varlist = NULL;
     pthread_mutex_unlock(env->activity->gc_lock);
 
@@ -1433,7 +1433,7 @@ bool setFuncActivityToArg(af_Object *func, af_Environment *env) {
     af_ObjectAPI *api = getObjectAPI(func);
     obj_funcGetArgCodeList *get_acl = findAPI("obj_funcGetArgCodeList", api);
     obj_funcGetVarList *get_var_list = findAPI("obj_funcGetVarList", api);
-    af_VarSpaceListNode *func_varlist = NULL;
+    af_VarList *func_varlist = NULL;
     af_Object *belong = getBelongObject(func);
 
     if (get_var_list == NULL) {
@@ -1503,7 +1503,7 @@ bool setFuncActivityAddVar(af_Environment *env){
         env->activity->run_varlist = env->activity->func_varlist;
     } else if (fi->scope == pure_scope) {  // 纯函数只有 protect 变量空间
         env->activity->count_run_varlist = 1;
-        env->activity->run_varlist = makeVarSpaceList(env->protect);
+        env->activity->run_varlist = pushProtectVarList(NULL, env);
     } else if (fi->scope == super_pure_scope) {  // 超纯函数没有变量空间, 因此不得为超内嵌函数(否则var_list就为NULL了)
         env->activity->count_run_varlist = 0;
         env->activity->run_varlist = NULL;
@@ -2252,7 +2252,7 @@ af_Object *getImportObject(af_ImportInfo *ii, af_Environment *env){
     return obj;
 }
 
-af_VarSpaceListNode *getRunVarSpaceList(af_Environment *env) {
+af_VarList *getRunVarSpaceList(af_Environment *env) {
     return env->activity->run_varlist;
 }
 

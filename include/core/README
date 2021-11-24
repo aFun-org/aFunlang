@@ -151,7 +151,7 @@ run
 var
 af_Var 描述一个变量
 af_VarSpace 描述一个变量空间
-af_VarSpaceListNode 描述变量空间链
+af_VarList 描述变量空间链
 
 创建与释放:
 * makeVar

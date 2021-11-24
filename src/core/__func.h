@@ -61,6 +61,6 @@ struct af_FuncInfo {
 AFUN_CORE_NO_EXPORT bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body);
 
 /* ArgList 相关操作 */
-AFUN_CORE_NO_EXPORT bool runArgList(af_ArgList *al, af_VarSpaceListNode *vsl, af_Environment *env);
+AFUN_CORE_NO_EXPORT bool runArgList(af_ArgList *al, af_VarList *vsl, af_Environment *env);
 
 #endif //AFUN_FUNC_H_
