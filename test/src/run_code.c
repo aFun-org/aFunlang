@@ -1137,15 +1137,15 @@ INIT_ERROR:
         printf("popGuardian: %d\n\n", re);
     }
 
-//    {  // TODO-szh 设置 多线程 code 的释放模式
-//        printf("TAG V: [Thread]\n");
-//        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
-//
-//        startRunThread(env, NULL, bt1, false, true, true, true, true);
-//        runCodeFromMemory(bt1, 0, env);
-//        freeAllCode(bt1);
-//        printf("\n");
-//    }
+    {
+        printf("TAG V: [Thread]\n");
+        af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
+
+        startRunThread(env, NULL, bt1, false, true, true, true, true);
+        runCodeFromMemory(bt1, 0, env);
+        freeAllCode(bt1);
+        printf("\n");
+    }
 
     // 错误用例
 

@@ -30,7 +30,7 @@ AFUN_CORE_EXPORT void freeAllCode(af_Code *bt);
 /* 代码块 相关操作 */
 AFUN_CORE_EXPORT af_Code *pushCode(af_Code **base, af_Code *next);
 AFUN_CORE_EXPORT af_Code *copyAllCode(af_Code *base, FilePath *path);
-AFUN_CORE_EXPORT af_Code *copyCode(af_Code *base, FilePath *path);
+AFUN_CORE_EXPORT af_Code *copyCode(af_Code *base);
 AFUN_CORE_EXPORT bool writeAllCode(af_Code *bt, FILE *file);
 AFUN_CORE_EXPORT bool readAllCode(af_Code **bt, FilePath path, FILE *file);
 

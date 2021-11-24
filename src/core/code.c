@@ -163,7 +163,7 @@ af_Code *copyAllCode(af_Code *base, FilePath *path) {
  * 函数名: copyCode
  * 目标: 拷贝 code, 并为末尾的code设置合适的code_end
  */
-af_Code *copyCode(af_Code *base, FilePath *path) {
+af_Code *copyCode(af_Code *base){
     af_Code *dest = NULL;
     af_Code **pdest = &dest;
     af_Code *prev = NULL;
@@ -197,12 +197,6 @@ af_Code *copyCode(af_Code *base, FilePath *path) {
             layer -= base->code_end;
         }
     }
-
-    if (dest != NULL && path != NULL) {
-        free(dest->path);
-        dest->path = pathCopy(path);
-    }
-
     return dest;
 }
 
