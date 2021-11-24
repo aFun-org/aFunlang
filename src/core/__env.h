@@ -219,7 +219,6 @@ struct af_Environment {  // 运行环境
     bool all_exit;  // 由线程自己控制, 用于通知子线程退出
     bool son_exit;  // 由线程外部控制, 命令线程结束
     pthread_mutex_t thread_lock;  // 保护 father_exit 和 son_exit 和 son_count
-    pthread_cond_t thread_cond;  // 当次线程结束时就发起该条件
 
     enum af_CoreStatus {
         core_creat = 0,

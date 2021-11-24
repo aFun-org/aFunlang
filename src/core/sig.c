@@ -9,9 +9,7 @@ struct af_SignalInfo {
     volatile sig_atomic_t flat_int;  // SIGUSR1 (*nix)
     volatile sig_atomic_t flat_term;  // SIGUSR1 (*nix)
 
-#ifdef aFunWIN32_NO_CYGWIN
-
-#else
+#ifndef aFunWIN32_NO_CYGWIN
     volatile sig_atomic_t flat_u1;  // SIGUSR1 (*nix)
     volatile sig_atomic_t flat_u2;  // SIGUSR1 (*nix)
 

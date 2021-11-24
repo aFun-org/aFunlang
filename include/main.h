@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_MAIN_H
 #define AFUN_MAIN_H
+#include "base.h"
 
 #ifdef aFunWIN32_NO_CYGWIN
 #include <io.h>

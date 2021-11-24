@@ -892,11 +892,9 @@ INIT_ERROR:
         printf("global(%p)\n", obj);
         gc_delReference(obj, env);
     }
-    printf("\n");
-    sleep(2);
 
     {  // 正常程序
-        printf("TAG A: [Normal test]\n");
+        printf("\nTAG A: [Normal test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Taga.aun");
         af_Code *bt2 = makeElementCode("data", 0, 0, NULL);
         pushCode(&bt1, bt2);
@@ -910,13 +908,10 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
-    sleep(2);
-
     {  // 宏函数
-        printf("TAG L: [Macro test]\n");
+        printf("\nTAG L: [Macro test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Tagl.aun");
 
         af_Code *bt3 = makeElementCode("macro", 0, 1, NULL);
@@ -928,11 +923,10 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 测试顺序执行 '(xxx)
-        printf("TAG E: [ex]\n");
+        printf("\nTAG E: [ex]\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
@@ -942,11 +936,10 @@ INIT_ERROR:
 
         runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
-        printf("\n");
     }
 
     {  // 尾调用优化
-        printf("TAG B: [Tail test]\n");
+        printf("\nTAG B: [Tail test]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, NULL);
 
         af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
@@ -957,33 +950,30 @@ INIT_ERROR:
 
         runCodeFromMemory(bt4, 0, env);
         freeAllCode(bt4);
-        printf("\n");
     }
 
     {  // 尾调用优化2
-        printf("TAG C: [Tail test on literal]\n");
+        printf("\nTAG C: [Tail test on literal]\n");
         af_Code *bt1 = makeElementCode("data", 0, 0, "Tagc.aun");
         af_Code *bt2 = makeBlockCode(parentheses, bt1, '\'', 1, "Tagc.aun", NULL);
 
         runCodeFromMemory(bt2, 0, env);
         freeAllCode(bt2);
-        printf("\n");
     }
 
     {  // 测试类前缀调用
-        printf("TAG D: [parentheses-call]\n");
+        printf("\nTAG D: [parentheses-call]\n");
         af_Code *bt1 = makeElementCode("func-normal", 0, 1, "Tagd.aun");
         af_Code *bt2 = makeBlockCode(parentheses, NULL, 0, 1, NULL, NULL);
         pushCode(&bt1, bt2);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
 
     {  // 测试顺序执行 $[xxx]
-        printf("TAG F: [ex-first]\n");
+        printf("\nTAG F: [ex-first]\n");
         af_Code *bt3 = makeElementCode("data2", 0, 0, NULL);
         af_Code *bt4 = makeElementCode("global", 0, 1, NULL);
 
@@ -993,52 +983,47 @@ INIT_ERROR:
 
         runCodeFromMemory(bt5, 0, env);
         freeAllCode(bt5);
-        printf("\n");
     }
 
 
     {  // 双层尾调用优化 （函数内调用函数）
-        printf("TAG I: [Double tail test]\n");
+        printf("\nTAG I: [Double tail test]\n");
         af_Code *bt1 = makeElementCode("func-tail", 0, 1, NULL);
         af_Code *bt2 = makeBlockCode(curly, bt1, 0, 1, "Tagi.aun", NULL);
         af_Code *bt3 = makeBlockCode(parentheses, bt2, '\'', 1, "Tagi.aun", NULL);
 
         runCodeFromMemory(bt3, 0, env);
         freeAllCode(bt3);
-        printf("\n");
     }
 
     {  // 对象函数的调用
-        printf("TAG J: [object]\n");
+        printf("\nTAG J: [object]\n");
         af_Code *bt1 = makeElementCode("func-obj", 0, 1, "Tagj.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 变量引用调用
-        printf("TAG K: [not object]\n");
+        printf("\nTAG K: [not object]\n");
         af_Code *bt1 = makeElementCode("func-obj", '\'', 1, "Tagk.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 对象函数的调用 (尾调用优化)
-        printf("TAG L: [pbject-tail]\n");
+        printf("\nTAG L: [pbject-tail]\n");
         af_Code *bt1 = makeElementCode("func-obj", 0, 1, "Tagl.aun");
         af_Code *bt2 = makeBlockCode(parentheses, bt1, '\'', 1, "Tagi.aun", NULL);
 
         runCodeFromMemory(bt2, 0, env);
         freeAllCode(bt2);
-        printf("\n");
     }
 
 
     {  // gc测试
-        printf("TAG N: [gc-test]\n");
+        printf("\nTAG N: [gc-test]\n");
 
         af_Code *bt2 = makeElementCode("func-gc", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagn.aun", NULL);
@@ -1050,33 +1035,30 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // func_body_dynamic 测试
-        printf("TAG O: [func body dynamic]\n");
+        printf("\nTAG O: [func body dynamic]\n");
 
         af_Code *bt2 = makeElementCode("func-body-dynamic", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tago.aun", NULL);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 中缀调用测试
-        printf("TAG P: [infix-call]\n");
+        printf("\nTAG P: [infix-call]\n");
 
         af_Code *bt2 = makeElementCode("func-brackets", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Tagp.aun", NULL);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // func_body_import 测试
-        printf("TAG Q: [import]\n");
+        printf("\nTAG Q: [import]\n");
 
         af_Code *bt2 = makeElementCode("func-import", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tagq.aun", NULL);
@@ -1086,11 +1068,10 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 导入式运行
-        printf("TAG R: [import-Tagr]\n");
+        printf("\nTAG R: [import-Tagr]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Tagr.aun");
         af_Code *bt2 = makeElementCode("data", 0, 0, NULL);
         pushCode(&bt1, bt2);
@@ -1104,13 +1085,12 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 1, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {
-        printf("TAG S: [string]\n");
+        printf("\nTAG S: [string]\n");
         int exit_code = runCodeFromString("str\ndata\n{func-normal}\nglobal\n", "Tags-string.aun", 1, env);
-        printf("exit code = %d\n\n", exit_code);
+        printf("exit code = %d\n", exit_code);
     }
 
     {
@@ -1123,7 +1103,7 @@ INIT_ERROR:
         FREE_SYMBOL(func);
         FREE_SYMBOL(des);
 
-        printf("TAG U: [guardian]\n");
+        printf("\nTAG U: [guardian]\n");
         af_Code *bt1 = makeElementCode("func-normal", 0, 1, "TagU.aun");
         af_Code *bt2 = makeElementCode("global", 0, 1, "TagU.aun");
         af_Code *bt3 = makeElementCode("global", 0, 1, "TagU.aun");
@@ -1138,48 +1118,44 @@ INIT_ERROR:
     }
 
     {
-        printf("TAG V: [Thread]\n");
+        printf("\nTAG V: [Thread]\n");
         af_Code *bt1 = makeElementCode("object", 0, 1, "Tagv.aun");
 
         startRunThread(env, NULL, bt1, false, true, true, true, true);
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     // 错误用例
 
     {  // 中缀调用测试
-        printf("TAG a: ERROR\n");
+        printf("\nTAG a: ERROR\n");
 
         af_Code *bt2 = makeElementCode("func-normal", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(brackets, bt2, 0, 1, "Taga-error.aun", NULL);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 测试错误 (无函数指定)
-        printf("TAG b: ERROR\n");
+        printf("\nTAG b: ERROR\n");
         af_Code *bt1 = makeBlockCode(curly, NULL, 0, 1, "Tagb-error.aun", NULL);
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 测试错误 (object2 Var not found)
-        printf("TAG c: ERROR\n");
+        printf("\nTAG c: ERROR\n");
         af_Code *bt1 = makeElementCode("object2", 0, 1, "Tagc-error.aun");
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 中缀保护测试
-        printf("TAG d: ERROR\n");
+        printf("\nTAG d: ERROR\n");
 
         af_Code *bt1 = makeElementCode("global", 0, 1, "Tagd-error.aun");
         af_Code *bt2 = makeElementCode("func-brackets", 0, 2, NULL);
@@ -1188,11 +1164,10 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
     {  // 错误回溯测试
-        printf("TAG e: ERROR\n");
+        printf("\nTAG e: ERROR\n");
 
         af_Code *bt2 = makeElementCode("func-no-var", 0, 1, NULL);
         af_Code *bt1 = makeBlockCode(curly, bt2, 0, 1, "Tage-error.aun", NULL);
@@ -1202,10 +1177,9 @@ INIT_ERROR:
 
         runCodeFromMemory(bt1, 0, env);
         freeAllCode(bt1);
-        printf("\n");
     }
 
-    printf("freeEnvironment:\n");
+    printf("\nfreeEnvironment:\n");
     destructAFunEnvironment(env);
 
     undefRunEnv(&ri);

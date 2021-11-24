@@ -63,9 +63,11 @@ static void *runThread(void *ec) {
     writeInfoLog(aFunCoreLogger, "Thread start");
     iterCode(code, 0, env);
 
-    writeInfoLog(aFunCoreLogger, "Thread free");
-    freeEnvironment(env);
+    writeInfoLog(aFunCoreLogger, "Thread free-code");
     freeAllCode(code);
+
+    writeInfoLog(aFunCoreLogger, "Thread free-env");
+    freeEnvironment(env);
 
     writeInfoLog(aFunCoreLogger, "Thread end");
     return NULL;

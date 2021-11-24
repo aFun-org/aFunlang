@@ -178,7 +178,7 @@ void setCoreExitNotExitCode(af_Environment *env) {
                 pthread_cond_signal(&envl->env->monitor->cond);
             pthread_mutex_unlock(&envl->env->thread_lock);
         }
-        pthread_mutex_lock(&env->thread_lock);
+        pthread_mutex_unlock(&env->thread_lock);
     }
 }
 
@@ -1713,12 +1713,12 @@ static bool freeEnvironmentList(af_EnvironmentList *envl, af_Environment *base) 
     free(envl);
 
     pthread_mutex_unlock(&base->thread_lock);
-    pthread_cond_signal(&base->thread_cond);  // 通知主线程
     return true;
 }
 
 bool freeEnvironmentListByEnv(af_Environment *env, af_Environment *base) {
     pthread_mutex_lock(&base->thread_lock);
+
     for (af_EnvironmentList *envl = base->env_list; envl != NULL; envl = envl->next) {
         if (envl->env == env) {
             pthread_mutex_unlock(&base->thread_lock);
@@ -2230,11 +2230,13 @@ void waitForEnviromentExit(af_Environment *env) {
     pthread_mutex_unlock(&env->status_lock);
 
     if (env->gc_env != NULL)
-        setEnviromentExit_out(env->gc_env);
+        setEnviromentExit_out(env->gc_env);  // 设置 gc 线程退出
 
-    sleep(2);
-//    pthread_mutex_lock(&env->thread_lock);
-//    while (env->env_list != NULL)
-//        pthread_cond_wait(&env->thread_cond, &env->thread_lock);
-//    pthread_mutex_unlock(&env->thread_lock);
+    pthread_mutex_lock(&env->thread_lock);
+    while (env->env_list != NULL) {
+        pthread_mutex_unlock(&env->thread_lock);
+        safeSleep(0.1);
+        pthread_mutex_unlock(&env->thread_lock);
+    }
+    pthread_mutex_unlock(&env->thread_lock);
 }

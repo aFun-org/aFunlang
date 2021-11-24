@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_STDIO__H
 #define AFUN_STDIO__H
 #include <stdio.h>
+#include "base.h"
 
 AFUN_TOOL_EXPORT int fgets_stdin(char **dest, int len);
 AFUN_TOOL_EXPORT bool checkStdin(void);

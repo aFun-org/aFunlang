@@ -128,7 +128,6 @@ void gc_delVarReference(af_Var *var, af_Environment *base) {
 
     pthread_mutex_lock(&base->gc_factory->mutex);
     var->gc.info.reference--;
-    writeTrackLog(aFunCoreLogger, "del VarSpace Reference");
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
