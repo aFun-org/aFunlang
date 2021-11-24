@@ -98,10 +98,11 @@ AFUN_CORE_EXPORT void fprintfErrorInfoStdout(af_ErrorInfo *ei);
 AFUN_CORE_EXPORT void pushErrorBacktracking(FileLine line, FilePath file, char *note, af_ErrorInfo *ei);
 
 /* GuardianList 相关操作 */
-af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl, af_Environment *env);
+AFUN_CORE_EXPORT af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl, af_Environment *env);
 
 /* 环境变量 属性访问 */
 AFUN_CORE_EXPORT char *findEnvVarData(char *name, af_Environment *env);
+AFUN_CORE_EXPORT int32_t *findEnvVarNumber(char *name, af_Environment *env);
 
 /* 运行环境 属性访问 */
 AFUN_CORE_EXPORT char getPrefix(size_t name, af_Environment *env);

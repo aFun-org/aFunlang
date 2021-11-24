@@ -109,8 +109,7 @@ AFUN_CORE_NO_EXPORT void gc_delObjectData(struct af_ObjectData *obj, af_Environm
 AFUN_CORE_NO_EXPORT void gc_addObjectDataReference(af_ObjectData *obj, af_Environment *base);
 AFUN_CORE_NO_EXPORT void gc_delObjectDataReference(af_ObjectData *obj, af_Environment *base);
 
-/* gc 操控函数 : gc的启动由解释器完全管理 */
-AFUN_CORE_NO_EXPORT af_GuardianList *gc_RunGC(af_Environment *env);
+/* gc 操控函数 */
 AFUN_CORE_NO_EXPORT paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl);
 AFUN_CORE_NO_EXPORT void gc_freeAllValueData(af_Environment *env);
 AFUN_CORE_NO_EXPORT void gc_freeAllValue(af_Environment *env);

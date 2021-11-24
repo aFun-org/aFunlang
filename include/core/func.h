@@ -73,10 +73,10 @@ AFUN_CORE_EXPORT af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new);
 AFUN_CORE_EXPORT void pushFuncBody(af_FuncBody **base, af_FuncBody *body);
 
 /* FuncInfo 相关操作 */
-AFUN_CORE_EXPORT void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
-AFUN_CORE_EXPORT void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
-AFUN_CORE_EXPORT void makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
-AFUN_CORE_EXPORT void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi);
+AFUN_CORE_EXPORT af_FuncBody *makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi);
+AFUN_CORE_EXPORT af_FuncBody *makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
+AFUN_CORE_EXPORT af_FuncBody *makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi);
+AFUN_CORE_EXPORT af_FuncBody *makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi);
 
 /* af_ArgCodeList 属性获取 */
 AFUN_CORE_EXPORT void *getArgCodeListData(af_ArgCodeList *acl);

@@ -182,20 +182,28 @@ void freeFuncInfo(af_FuncInfo *fi) {  // vsl是不释放的
     free(fi);
 }
 
-void makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi) {
-    pushFuncBody(&fi->body, makeCFuncBody(c_func, msg_type));
+af_FuncBody *makeCFuncBodyToFuncInfo(DLC_SYMBOL(callFuncBody) c_func, char **msg_type, af_FuncInfo *fi) {
+    af_FuncBody *fb = makeCFuncBody(c_func, msg_type);
+    pushFuncBody(&fi->body, fb);
+    return fb;
 }
 
-void makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
-    pushFuncBody(&fi->body, makeCodeFuncBody(code, free_code, msg_type));
+af_FuncBody *makeCodeFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
+    af_FuncBody *fb = makeCodeFuncBody(code, free_code, msg_type);
+    pushFuncBody(&fi->body, fb);
+    return fb;
 }
 
-void makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
-    pushFuncBody(&fi->body, makeImportFuncBody(code, free_code, msg_type));
+af_FuncBody *makeImportFuncBodyToFuncInfo(af_Code *code, bool free_code, char **msg_type, af_FuncInfo *fi) {
+    af_FuncBody *fb = makeImportFuncBody(code, free_code, msg_type);
+    pushFuncBody(&fi->body, fb);
+    return fb;
 }
 
-void makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi) {
-    pushFuncBody(&fi->body, makeDynamicFuncBody());
+af_FuncBody *makeDynamicFuncBodyToFuncInfo(af_FuncInfo *fi) {
+    af_FuncBody *fb = makeDynamicFuncBody();
+    pushFuncBody(&fi->body, fb);
+    return fb;
 }
 
 bool pushDynamicFuncBody(af_FuncBody *new, af_FuncBody *body) {

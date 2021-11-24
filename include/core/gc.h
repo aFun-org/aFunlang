@@ -40,4 +40,7 @@ AFUN_CORE_EXPORT void gc_delObjectReference(af_Object *obj, af_Environment *base
 AFUN_CORE_EXPORT void gc_delVarReference(af_Var *obj, af_Environment *base);
 AFUN_CORE_EXPORT void gc_delVarSpaceReference(af_VarSpace *obj, af_Environment *base);
 AFUN_CORE_EXPORT void gc_delVarListReference(af_VarList *vsl, af_Environment *base);
+
+/* gc 操控函数 : gc的启动由解释器完全管理 */
+AFUN_CORE_EXPORT af_GuardianList *gc_RunGC(af_Environment *env);
 #endif //AFUN_GC

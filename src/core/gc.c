@@ -15,7 +15,6 @@ void gc_addObjectData(af_ObjectData *od, af_Environment *base){
         base->gc_factory->gc_ObjectData->gc.prev = od;
     od->gc.next = base->gc_factory->gc_ObjectData;
     base->gc_factory->gc_ObjectData = od;
-    GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -58,7 +57,6 @@ void gc_addObject(af_Object *obj, af_Environment *base){
         base->gc_factory->gc_Object->gc.prev = obj;
     obj->gc.next = base->gc_factory->gc_Object;
     base->gc_factory->gc_Object = obj;
-    GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -101,7 +99,6 @@ void gc_addVar(af_Var *var, af_Environment *base) {
         base->gc_factory->gc_Var->gc.prev = var;
     var->gc.next = base->gc_factory->gc_Var;
     base->gc_factory->gc_Var = var;
-    GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 
@@ -152,7 +149,6 @@ void gc_addVarSpace(af_VarSpace *vs, af_Environment *base){
         base->gc_factory->gc_VarSpace->gc.prev = vs;
     vs->gc.next = base->gc_factory->gc_VarSpace;
     base->gc_factory->gc_VarSpace = vs;
-    GcCountAdd1(base);
     pthread_mutex_unlock(&base->gc_factory->mutex);
 }
 

@@ -89,16 +89,6 @@ static void mp_NORMAL(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_ERROR(af_Message *msg, bool is_top, af_Environment *env);
 static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env);
 
-typedef struct guardian_GC_data guardian_GC_data;
-struct guardian_GC_data{
-    time_t last_time;
-};
-
-/* 内置守护器 */
-static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env);
-static af_GuardianList *guardian_GC(char *type, bool is_guard, guardian_GC_data *data, af_Environment *env);
-static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env);
-
 /* 变量检查函数 */
 static bool isInfixFunc(af_Code *code, af_Environment *env);
 
@@ -830,78 +820,6 @@ static void mp_IMPORT(af_Message *msg, bool is_top, af_Environment *env) {
     freeImportInfo(ii, env);
 }
 
-static bool checkSignal(int signum, char *sig, char *sigcfg, char *sigerr, char err[], af_Environment *env) {
-    bool re = aFunGetSignal(signum);
-    if (!re)
-        return false;
-    int32_t *p_cfg = findEnvVarNumber(sigcfg, env);
-    int32_t cfg = 0;
-    if (p_cfg != NULL)
-        cfg = *p_cfg;
-
-    if (cfg == 0) {  // 诱发错误
-        strncat(err, sigerr, 218);
-        setEnvVarNumber(sig, 0, env);
-    } else if (cfg == 1) {  // 设置环境变量
-        setEnvVarNumber(sig, 1, env);
-    } else  // 忽略
-        setEnvVarNumber(sig, 0, env);
-
-    writeDebugLog(aFunCoreLogger, "Get %s as cfg %d", sig, cfg);
-    return true;
-}
-
-/*
- * 函数名: checkRunGC
- * 目标: 检查是否该运行gc, 若是则返回true并运行gc, 否则返回false
- */
-static af_GuardianList *guardian_GC(char *type, bool is_guard, guardian_GC_data *data, af_Environment *env) {
-    time_t now = clock();
-    if ((now - data->last_time) < 1 * CLOCKS_PER_SEC)  // 间隔 1s 再执行
-        return NULL;
-    data->last_time = now;
-
-    af_GuardianList *gl = NULL;
-    enum GcRunTime grt = getGcRun(env);
-    if (grt == grt_always || grt == grt_count && getGcCount(env) >= getGcMax(env)) {
-        GcCountToZero(env);  // 清零
-
-        gl = gc_RunGC(env);
-        if (gl != NULL)
-            writeDebugLog(aFunCoreLogger, "GC run destruct function");
-    }
-    return gl;
-}
-
-static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, af_Environment *env) {
-    char error_msg[218] = {NUL};
-    checkSignal(SIGINT, ev_sigint, ev_sigint_cfg, SIGNAL_INT, error_msg, env);
-    checkSignal(SIGTERM, ev_sigterm, ev_sigterm_cfg, SIGNAL_TERM, error_msg, env);
-#if (defined SIGUSR1 && defined SIGUSR2)
-    checkSignal(SIGUSR1, ev_sigu1, ev_sigu1_cfg, SIGNAL_U1, error_msg, env);
-    checkSignal(SIGUSR2, ev_sigu2, ev_sigu2_cfg, SIGNAL_U2, error_msg, env);
-#endif
-
-    if (*error_msg != NUL) {
-        // error_msg 有内容写入, 需要处理
-        if (env->activity->msg_down != NULL) {
-            af_Message *msg;
-            if (EQ_STR("NORMAL", env->activity->msg_down->type)) {
-                msg = getFirstMessage(env);
-                gc_delReference(*(af_Object **)msg->msg, env);
-                freeMessage(msg);
-            } else if (EQ_STR("ERROR", env->activity->msg_down->type)) {
-                msg = getFirstMessage(env);
-                freeErrorInfo(*(af_ErrorInfo **) msg->msg, env);
-                freeMessage(msg);
-            }
-        }
-
-        pushMessageDown(makeERRORMessage(SIGNAL_EXCEPTION, error_msg, env), env);
-    }
-    return NULL;
-}
-
 af_Environment *makeEnvironment(enum GcRunTime grt) {
     af_Environment *env = calloc(1, sizeof(af_Environment));
 
@@ -957,12 +875,8 @@ af_Environment *makeEnvironment(enum GcRunTime grt) {
 
     makeVarToProtectVarSpace("global", 3, 3, 3, env->global, env);
 
-    af_Object *cycle = makeCycleObject(env);  // gc 使用的函数 TODO-szh 移动到 runtime-tool 上
-    makeVarToProtectVarSpace(mg_sys_cycle, 3, 3, 3, cycle, env);
-
     gc_delReference(env->protect, env);
     gc_delReference(env->global, env);
-    gc_delReference(cycle, env);
     return env;
 }
 
@@ -1035,28 +949,6 @@ af_Environment *deriveEnvironment(bool derive_tmp, bool derive_guardian, bool de
 
 void enableEnvironment(af_Environment *env) {
     env->status = core_normal;
-    if (!env->is_derive) {  // 派生 gc 线程
-        setVarSpaceProtect(NULL, env->protect, true);
-
-        af_Environment *gc_env = startRunThread(env, NULL, NULL, true,
-                                                true, false, true, false);
-
-        /* 设置守护器 */
-        DLC_SYMBOL(GuardianFunc) func1 = MAKE_SYMBOL(guardian_Signal, GuardianFunc);
-        addGuardian("SIGNAL", false, false, 0, func1, NULL, NULL, gc_env);
-        FREE_SYMBOL(func1);
-
-        DLC_SYMBOL(GuardianFunc) func2 = MAKE_SYMBOL(guardian_GC, GuardianFunc);
-        addGuardian("GC", true, false, sizeof(guardian_GC_data),
-                    func2, NULL, NULL, gc_env);
-        FREE_SYMBOL(func2);
-
-        gc_env->status = core_normal;  // 手动启动env
-        af_Code *bt1 = makeElementCode(mg_sys_cycle, NUL, 1, "gc.aun.sys");
-        af_Code *bt2 = makeBlockCode(curly, bt1, NUL, 1, "gc.aun.sys", NULL);
-        startRunThread_(gc_env, bt2, true);
-        env->gc_env = gc_env;
-    }
 }
 
 bool freeEnvironment(af_Environment *env) {
