@@ -22,7 +22,7 @@ static af_ArgCodeList *freeArgCodeList(af_ArgCodeList *acl, af_Environment *env)
     if (acl->free_code)
         freeAllCode(acl->code);
     if (acl->result != NULL)
-        gc_delReference(acl->result, env);
+        gc_delObjectReference(acl->result, env);
     free(acl);
     return next;
 }
@@ -50,7 +50,7 @@ af_Object *getArgCodeListResult(af_ArgCodeList *acl) {
     return acl->result;
 }
 
-af_ArgList *makeArgList(char *name, af_Object *obj, af_Environment *env){
+af_ArgList *makeArgList(char *name, af_Object *obj){
     af_ArgList *arg_list = calloc(1, sizeof(af_ArgList));
     arg_list->name = strCopy(name);
     arg_list->obj = obj;
@@ -61,7 +61,7 @@ static af_ArgList *freeArgList(af_ArgList *al, af_Environment *env){
     af_ArgList *next = al->next;
     free(al->name);
     if (al->obj != NULL)
-        gc_delReference(al->obj, env);
+        gc_delObjectReference(al->obj, env);
     free(al);
     return next;
 }
@@ -90,9 +90,9 @@ af_ArgList **pushArgList(af_ArgList **base, af_ArgList *new) {
  */
 af_ArgList *makeArgListFromArgCodeList(char *name, af_ArgCodeList *acl, af_Environment *env) {
     af_Object *obj = getArgCodeListResult(acl);
-    gc_addReference(obj, env);
+    gc_addObjectReference(obj, env);
 
-    af_ArgList *al = makeArgList(name, obj, env);
+    af_ArgList *al = makeArgList(name, obj);
     return al;
 }
 

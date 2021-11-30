@@ -124,7 +124,7 @@ static af_GuardianList *guardian_Signal(char *type, bool is_guard, void *data, a
             af_Message *msg;
             if (EQ_STR("NORMAL", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
-                gc_delReference(*(af_Object **)msg->msg, env);
+                gc_delObjectReference(*(af_Object **)msg->msg, env);
                 freeMessage(msg);
             } else if (EQ_STR("ERROR", env->activity->msg_down->type)) {
                 msg = getFirstMessage(env);
@@ -169,7 +169,7 @@ af_Environment *creatAFunEnvironment(int argc, char **argv){
 
     af_Object *cycle = makeCycleObject(env);  // gc 使用的函数
     makeVarToProtectVarSpace(mg_sys_cycle, 3, 3, 3, cycle, env);
-    gc_delReference(cycle, env);
+    gc_delObjectReference(cycle, env);
 
     enableEnvironment(env);
     if (!env->is_derive) {  // 派生 gc 线程

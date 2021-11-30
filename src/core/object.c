@@ -1,6 +1,4 @@
 ﻿#include "__object.h"
-#include "__env.h"
-#include "__gc.h"
 #include "tool.h"
 #include "core_init.h"
 
@@ -89,8 +87,8 @@ af_Object *makeObject(char *id, bool free_api, af_ObjectAPI *api, bool allow_inh
             init(id, obj, obj->data->data, env);
     }
 
-    gc_delReference(od->var_space, env);
-    gc_delReference(od, env);
+    gc_delVarSpaceReference(od->var_space, env);
+    gc_delObjectDataReference(od, env);
     return obj;
 }
 

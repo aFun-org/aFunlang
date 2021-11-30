@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
     aFunInitInfo info = {.base_dir=base_path,
 #ifdef aFunDEBUG
-                         .level=log_track,
+                         .level=log_debug,
 #else
                          .level=log_info,
 #endif

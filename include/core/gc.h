@@ -13,18 +13,6 @@ enum af_GcListType {
     glt_vsl,
 };
 
-/* gc 引用计数管理函数 */
-#define gc_addReference(obj, env) ((_Generic((obj), \
-                               af_Object *:gc_addObjectReference, \
-                               af_Var *: gc_addVarReference, \
-                               af_VarSpace *: gc_addVarSpaceReference))((obj), (env)))
-
-#define gc_delReference(obj, env) ((_Generic((obj), \
-                               af_Object *: gc_delObjectReference, \
-                               af_Var *: gc_delVarReference, \
-                               af_VarSpace *: gc_delVarSpaceReference, \
-                               af_VarList *: gc_delVarListReference))((obj), (env)))
-
 /* GcList 创建与释放 */
 AFUN_CORE_EXPORT af_GcList *makeGcList(enum af_GcListType type, void *data);
 AFUN_CORE_EXPORT void freeAllGcList(af_GcList *gl);

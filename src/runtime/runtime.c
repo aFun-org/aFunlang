@@ -84,7 +84,7 @@ void makeObjectFromList(const ObjectDefineList obj_def[], af_Object *visitor, af
         if (od->save != NULL)
             *(od->save) = obj;
         else
-            gc_delReference(obj, env);
+            gc_delObjectReference(obj, env);
     }
 }
 

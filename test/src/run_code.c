@@ -192,7 +192,7 @@ size_t getSize3(char *id, af_Object *obj) {
 
 void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     *data = makeVarSpace(obj, 3, 2, 0, env);
-    gc_delReference(*data, env);
+    gc_delVarSpaceReference(*data, env);
 }
 
 void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
@@ -291,7 +291,7 @@ af_FuncBody *testFunc_GcDestruct_a(af_CallFuncInfo *cfi, af_Environment *env) { 
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc_GcDestruct_a[des](%p, %p): I am testFunc_GcDestruct_a\n", obj, des);
-    gc_delReference(des, env);  // obj不需要 delReference, 因为他存在于NORMAL_Message中
+    gc_delObjectReference(des, env);  // obj不需要 delReference, 因为他存在于NORMAL_Message中
     return NULL;
 }
 
@@ -345,7 +345,7 @@ af_FuncBody *testFunc_Gc(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试
     setObjectAttributes(mg_gc_destruct, 3, 3, 3, des, obj, obj, env);
     pushMessageDown(makeNORMALMessage(obj, env), env);
     printf("testFunc_Gc(%p, %p): I am testFunc_Gc\n", obj, des);
-    gc_delReference(des, env);
+    gc_delObjectReference(des, env);
     return NULL;
 }
 
@@ -387,14 +387,14 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
 
     af_GuardianList *gd = NULL;
     data->no_first = true;
-    gc_addReference(data->func, env);  // data->func 本身有一次gc引用, 此次再使用一次gc引用, gd_destruct和freeGuardianList时各释放一次
+    gc_addObjectReference(data->func, env);  // data->func 本身有一次gc引用, 此次再使用一次gc引用, gd_destruct和freeGuardianList时各释放一次
 
     pushGuardianList(NULL, data->func, &gd, env);
     return gd;
 }
 
 void gd_destruct(char *type, struct GDData *data, af_Environment *env) {
-    gc_delReference(data->func, env);
+    gc_delObjectReference(data->func, env);
 }
 
 int main(int argc, char **argv) {
@@ -459,7 +459,7 @@ INIT_ERROR:
         FREE_SYMBOL(getShareVS_);
         FREE_SYMBOL(get_gl3);
         printf("object(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     af_Object *af_func = NULL;
@@ -507,7 +507,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         af_func = obj;
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
         printf("func-normal(%p)\n", obj);
     }
 
@@ -554,7 +554,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("macro(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -600,7 +600,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-tail(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -650,7 +650,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-obj(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -696,7 +696,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-gc(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -742,7 +742,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-body-dynamic(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -792,7 +792,7 @@ INIT_ERROR:
         FREE_SYMBOL(freeData_2);
         FREE_SYMBOL(infix_func);
         printf("func-brackets(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -838,7 +838,7 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-no-var(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
@@ -884,13 +884,13 @@ INIT_ERROR:
         FREE_SYMBOL(initData_2);
         FREE_SYMBOL(freeData_2);
         printf("func-import(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {
         af_Object *obj = getGlobal(env);
         printf("global(%p)\n", obj);
-        gc_delReference(obj, env);
+        gc_delObjectReference(obj, env);
     }
 
     {  // 正常程序
@@ -1099,7 +1099,7 @@ INIT_ERROR:
         struct GDData *data = NULL;
         addGuardian("test", false, true, sizeof(struct GDData), func, des, (void **) &data, env);
         data->func = af_func;
-        gc_addReference(af_func, env);
+        gc_addObjectReference(af_func, env);
         FREE_SYMBOL(func);
         FREE_SYMBOL(des);
 
