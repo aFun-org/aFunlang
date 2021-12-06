@@ -55,7 +55,8 @@ static int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SH
     else if (y > info_->dwSize.Y)
         y = info_->dwSize.Y;
 
-    SetConsoleCursorPosition(std_o, (COORD){.X=(SHORT)x, .Y=(SHORT)y});
+    COORD coord = {.X=(SHORT)x, .Y=(SHORT)y};
+    SetConsoleCursorPosition(std_o, coord);
     return 1;
 }
 

@@ -21,7 +21,7 @@ typedef struct af_EnvironmentList af_EnvironmentList;
 #include "__gc.hpp"
 #include "__func.hpp"
 #include "__monitor.hpp"
-#include "regex.h"
+#include "regex.hpp"
 
 #define DEFAULT_GC_COUNT_MAX (50)
 #define ENV_VAR_HASH_SIZE (8)

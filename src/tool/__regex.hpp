@@ -1,6 +1,6 @@
 ﻿#ifndef TOOL_REGEX_H_
 #define TOOL_REGEX_H_
-#include "regex.h"
+#include "regex.hpp"
 
 struct af_Regex {
     pcre2_code *re;  // 正则表达式
