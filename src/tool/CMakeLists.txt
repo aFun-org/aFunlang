@@ -3,16 +3,16 @@ set(_build_mem ${BUILD_SAFE_MEMORY})
 
 file(GLOB source
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.h)
+     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_tool}"
-     "${build_include_tool}/*.h")
+     "${build_include_tool}/*.hpp")
 
 set(public_h_build)
 set(public_h_install)

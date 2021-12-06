@@ -7,12 +7,17 @@ file(READ ${CMAKE_SOURCE_DIR}/version-info aFunDescription)
 project(aFun
         VERSION ${aFunVersion}
         DESCRIPTION ${aFunDescription}
-        LANGUAGES C)
+        LANGUAGES C CXX)
 
 # CMake系统的相关设定
 set(CMAKE_C_STANDARD 11)
 set(C_EXTENSIONS ON)  # 启动编译器拓展
 set(C_STANDARD_REQUIRED OFF)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CXX_EXTENSIONS ON)  # 启动编译器拓展
+set(CXX_STANDARD_REQUIRED OFF)
+
 set(BUILD_SHARED_LIBS OFF)  # 默认编译静态库 (该设定不可被修改)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -32,12 +37,14 @@ if (MSVC)
         message(FATAL_ERROR "The msvc not support utf-8")
     endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /utf-8")
 else()
     check_c_compiler_flag("-fexec-charset=UTF-8" utf8_work)
     if (NOT utf8_work)
         message(FATAL_ERROR "The compiler not support utf-8")
     endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
 endif()
 
 # 相关参数

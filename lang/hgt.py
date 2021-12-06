@@ -77,7 +77,7 @@ def getFileFromPath(paths: List[str], file_type_: List[str]) -> FileList:
 
 
 # 获取宏 HT_aFunGetText的列表并计算
-file_list: FileList = getFileFromPath(input_dir, ['.c', '.h'])
+file_list: FileList = getFileFromPath(input_dir, ['.c', '.cpp', '.h', '.hpp'])
 pattern = re.compile(f'HT_{base_name}GetText' + r'\(([\S]+),[\s]*(\"[^\"]*\")\)')  # 宏的定义
 flat_list: FlatList = {}
 for file in file_list:

@@ -1,15 +1,15 @@
 ﻿file(GLOB source
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.h)
+     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_core}"
-     "${build_include_core}/*.h")
+     "${build_include_core}/*.hpp")
 
 file(GLOB public_h_info
      LIST_DIRECTORIES FALSE

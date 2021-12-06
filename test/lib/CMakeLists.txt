@@ -1,5 +1,5 @@
 ﻿file(GLOB src_list RELATIVE ${CMAKE_CURRENT_LIST_DIR}
-     ${CMAKE_CURRENT_LIST_DIR}/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
 foreach(src IN LISTS src_list)
     cmake_path(GET src STEM file_name)

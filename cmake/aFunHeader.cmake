@@ -1,5 +1,6 @@
 ﻿include(GenerateExportHeader)
 
+# 导出文件保持使用.h后缀 以供C库使用
 generate_export_header(tool-shared
                        EXPORT_FILE_NAME "${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunToolExport.h"  # 导出的位置
                        BASE_NAME "AFUN_TOOL")

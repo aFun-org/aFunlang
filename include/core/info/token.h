@@ -1,6 +1,6 @@
 ﻿#ifndef AFUN_TOKEN_H
 #define AFUN_TOKEN_H
-#include "tool.h"
+#include "tool.hpp"
 
 enum af_TokenType {
     TK_ERROR = -1,

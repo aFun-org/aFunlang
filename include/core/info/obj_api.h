@@ -9,11 +9,11 @@
 
 #ifndef AFUN_OBJ_API_H
 #define AFUN_OBJ_API_H
-#include "env.h"
-#include "object.h"
-#include "var.h"
-#include "func.h"
-#include "gc.h"
+#include "env.hpp"
+#include "object.hpp"
+#include "var.hpp"
+#include "func.hpp"
+#include "gc.hpp"
 
 /* 定义一些函数原型 */
 /* API函数 */
@@ -23,8 +23,8 @@ typedef void objectAPIFunc();  // 位于object.h (所有Object API函数指针�
 typedef void TopMsgProcessFunc(af_Message *msg, bool is_top, af_Environment *env);  // 位于env.h
 
 /* 守护器处理函数 */
-typedef af_GuardianList *GuardianFunc(char *type, bool is_guard, void *data, af_Environment *env);
-typedef void GuardianDestruct(char *type, void *data, af_Environment *env);
+typedef af_GuardianList *GuardianFunc(const char *type, bool is_guard, void *data, af_Environment *env);
+typedef void GuardianDestruct(const char *type, void *data, af_Environment *env);
 
 /* 回调C函数 */
 typedef struct af_CallFuncInfo af_CallFuncInfo;
@@ -37,7 +37,7 @@ typedef struct af_FuncBody *callFuncBody(af_CallFuncInfo *info, af_Environment *
  * API第三个参数: 通常为void *data [仅与data有关的函数会直接传入该值]
  */
 
-#define BASE_ARG char *id, af_Object *obj /* 基础参数 */
+#define BASE_ARG const char *id, af_Object *obj /* 基础参数 */
 
 /*** Object void *data 管理 ***/
 typedef size_t obj_getDataSize(BASE_ARG);  // 获取data的大小

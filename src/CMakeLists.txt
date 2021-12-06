@@ -30,15 +30,15 @@ add_subdirectory(runtime)  # runtime 依赖 core
 # source在子目录中被使用, 为了避免子目录访问到source, 子目录将在此前面被执行
 file(GLOB source
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.c)
+     ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.h)
+     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 
 file(GLOB include_h
      LIST_DIRECTORIES FALSE
-     "${PROJECT_SOURCE_DIR}/include/*.h")
+     "${PROJECT_SOURCE_DIR}/include/*.hpp")
 
 add_executable(aFun-xx "")  # xx表示均为动态链接
 add_executable(aFun-ct "")  # ct表示均静态链接
