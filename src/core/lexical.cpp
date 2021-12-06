@@ -2,13 +2,13 @@
  * 文件名: lexical
  * 目标: aFunlang词法分析
  */
-#include <ctype.h>
+#include <cctype>
 #include "aFunCore.hpp"
 #include "__parser.hpp"
 #include "parserl_warning_error.h"
 
 #ifndef isascii
-#define isascii (((c) & ~0x7f) == 0)
+#define isascii(c) (((c) & ~0x7f) == 0)
 #endif
 
 #define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || (ch) == ','))  /* 被忽略的符号 */
