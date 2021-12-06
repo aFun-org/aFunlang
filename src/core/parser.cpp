@@ -174,12 +174,13 @@ af_Parser *makeParserByFile(ConstFilePath path){
     return parser;
 }
 
+typedef void (*HandleFunc) (int);
 struct readerDataStdin {
     af_Parser *parser;
     bool no_first;
 
-    __p_sig_fn_t sig_int;
-    __p_sig_fn_t sig_term;
+    HandleFunc sig_int;
+    HandleFunc sig_term;
 
     char *data;
     size_t index;

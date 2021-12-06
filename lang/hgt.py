@@ -130,7 +130,7 @@ with open(os.path.join(output_dir, f"{base_name}_ht.py"), "w", encoding="utf-8")
 
             for i in flat_list:
                 fc.write(f"{export} const char *HT_TEXT_{base_name}_{i} = {flat_list[i][0]};\n")
-                fh.write(f"{export} const char *HT_TEXT_{base_name}_{i};\n")
+                fh.write(f"{export} extern const char *HT_TEXT_{base_name}_{i};\n")
                 fpy.write(f"# {i}: str = \"\"  # {flat_list[i][0]}\n")
 
             fc.write(f'''\n

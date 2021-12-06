@@ -1690,7 +1690,7 @@ bool checkLiteralCode(const char *literal, char **func, bool *in_protect, af_Env
 
 static af_EnvironmentList *makeEnvironmentList(af_Environment *env) {
     static size_t id = 0;
-    static auto mutex = PTHREAD_MUTEX_INITIALIZER;
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     auto envl = calloc(1, af_EnvironmentList);
     envl->env = env;
@@ -1758,7 +1758,7 @@ void freeErrorInfo(af_ErrorInfo *ei, af_Environment *env){
 static void fprintfNote(FILE *file, const char *note) {
     char *ent = nullptr;
     while(true) {
-        ent = strchr(note, '\n');
+        ent = const_cast<char *>(strchr(note, '\n'));
         if (ent != nullptr)
             *ent = NUL;
         fprintf(file, "   #note %s\n", note);
@@ -1783,7 +1783,7 @@ void fprintfErrorInfo(FILE *file, af_ErrorInfo *ei) {
 static void fprintfNoteStderr(const char *note) {
     char *ent = nullptr;
     while(true) {
-        ent = strchr(note, '\n');
+        ent = const_cast<char *>(strchr(note, '\n'));
         if (ent != nullptr)
             *ent = NUL;
         printf_stderr(0, "   #note %s\n", note);
@@ -1808,7 +1808,7 @@ void fprintfErrorInfoStderr(af_ErrorInfo *ei) {
 static void fprintfNoteStdout(const char *note) {
     char *ent = nullptr;
     while(true) {
-        ent = strchr(note, '\n');
+        ent = const_cast<char *>(strchr(note, '\n'));
         if (ent != nullptr)
             *ent = NUL;
         printf_stdout(0, "   #note %s\n", note);

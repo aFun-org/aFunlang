@@ -49,7 +49,7 @@
 .tmp_versions/
 modules.order
 Module.symvers
-Mkfile.old
+Mkfile.old_sigset
 dkms.conf
 
 #IDE

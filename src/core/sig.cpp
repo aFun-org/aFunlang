@@ -2,9 +2,10 @@
 #include "__sig.hpp"
 #include "pthread.h"
 
+typedef void (*HandleFunc) (int);
 struct af_SignalInfo {
-    __p_sig_fn_t sig_int;
-    __p_sig_fn_t sig_term;
+    HandleFunc sig_int;
+    HandleFunc sig_term;
 
     volatile sig_atomic_t flat_int;  // SIGUSR1 (*nix)
     volatile sig_atomic_t flat_term;  // SIGUSR1 (*nix)
@@ -13,10 +14,10 @@ struct af_SignalInfo {
     volatile sig_atomic_t flat_u1;  // SIGUSR1 (*nix)
     volatile sig_atomic_t flat_u2;  // SIGUSR1 (*nix)
 
-    __p_sig_fn_t sig_u1;
-    __p_sig_fn_t sig_u2;
-    sigset_t new;
-    sigset_t old;
+    HandleFunc sig_u1;
+    HandleFunc sig_u2;
+    sigset_t new_sigset;
+    sigset_t old_sigset;
 #endif
 };
 
@@ -64,13 +65,13 @@ void aFunSignalInit() {
     sig_info.sig_term = signal(SIGTERM, SIG_IGN);
     stdio_signal_init(true);
 #else
-    sigemptyset(&sig_info.old);
-    sigemptyset(&sig_info.new);
-    sigaddset(&sig_info.new, SIGINT);
-    sigaddset(&sig_info.new, SIGTERM);
-    sigaddset(&sig_info.new, SIGUSR1);
-    sigaddset(&sig_info.new, SIGUSR2);
-    sigprocmask(SIG_BLOCK, &sig_info.new, &sig_info.old);
+    sigemptyset(&sig_info.old_sigset);
+    sigemptyset(&sig_info.new_sigset);
+    sigaddset(&sig_info.new_sigset, SIGINT);
+    sigaddset(&sig_info.new_sigset, SIGTERM);
+    sigaddset(&sig_info.new_sigset, SIGUSR1);
+    sigaddset(&sig_info.new_sigset, SIGUSR2);
+    sigprocmask(SIG_BLOCK, &sig_info.new_sigset, &sig_info.old_sigset);
 
     sig_info.sig_int = signal(SIGINT, aFunSigFunc);
     sig_info.sig_term = signal(SIGTERM, aFunSigFunc);
@@ -93,7 +94,7 @@ void aFunSignalRecover() {
         return;
     }
 
-    __p_sig_fn_t re;
+    HandleFunc re;
     writeDebugLog(aFunCoreLogger, "Signal recover");
 
     if (sig_info.sig_int != SIG_ERR) {
@@ -118,7 +119,7 @@ void aFunSignalRecover() {
         re = signal(SIGUSR2, sig_info.sig_u2);
         assertWarningLog(re != SIG_ERR, aFunCoreLogger, "SIGUSR2 recover fail");
     }
-    sigprocmask(SIG_SETMASK, &sig_info.old, nullptr);
+    sigprocmask(SIG_SETMASK, &sig_info.old_sigset, nullptr);
 #endif
     pthread_mutex_unlock(&sig_mutex);
 }
@@ -136,9 +137,9 @@ static void aFuncheckSignal() {
         signal(SIGTERM, aFunSigFunc);
         signal(SIGUSR1, aFunSigFunc);
         signal(SIGUSR2, aFunSigFunc);
-        sigprocmask(SIG_SETMASK, &sig_info.old, nullptr);  // 让信号递达
+        sigprocmask(SIG_SETMASK, &sig_info.old_sigset, nullptr);  // 让信号递达
     }
-    sigprocmask(SIG_BLOCK, &sig_info.new, &sig_info.old);
+    sigprocmask(SIG_BLOCK, &sig_info.new_sigset, &sig_info.old_sigset);
 #endif
 }
 
