@@ -191,7 +191,7 @@ function(_cfep_build_inline name)
         message(STATUS "CMake Config ${name}...(Please Wait)")
     endif()
     execute_process(
-                    COMMAND "${CMAKE_COMMAND}" . -B ./build -G ${CMAKE_GENERATOR} ${_cmake_args}
+                    COMMAND "${CMAKE_COMMAND}" . -B ./build -G "${CMAKE_GENERATOR}" ${_cmake_args}
                     WORKING_DIRECTORY "${_cmake_dir}"
                     RESULT_VARIABLE re
                     OUTPUT_VARIABLE _stdout  # stdout的输出内容

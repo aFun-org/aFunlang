@@ -24,7 +24,7 @@ if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
                   CMAKE_DIR ${dlfcn_cmake}
                   EXTERNAL
                   BUILD_CMAKE_CACHE_ARGS
-                      -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                    "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
                   BUILD_DIR "dlfcn")
     set(dlfcn_lib dlfcn-win32::dl)
     get_target_property(dlfcn_include_dir dlfcn-win32::dl INTERFACE_INCLUDE_DIRECTORIES)
@@ -68,7 +68,7 @@ cfep_find_dir(PCRE2
               COMPONENTS 8BIT
               EXTERNAL
               BUILD_CMAKE_CACHE_ARGS
-                  -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
               BUILD_DIR "pcre2")
 unset(PCRE2_USE_STATIC_LIBS)
 set(pcre2_lib PCRE2::8BIT)
@@ -89,7 +89,7 @@ cfep_find_dir(FFlags
                   -DBUILD_SHARED_LIBS=OFF
                   -DFFLAGS_BUILD_TEST=OFF
               BUILD_CMAKE_CACHE_ARGS
-                  -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
               BUILD_DIR "fflags")
 set(fflags_lib FFlags::fflags)
 get_target_property(fflags_include_dir FFlags::fflags INTERFACE_INCLUDE_DIRECTORIES)
@@ -109,7 +109,7 @@ if (MSVC)
                   CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"  # FindPThreadWin32.cmake 文件位置
                   EXTERNAL
                   BUILD_CMAKE_CACHE_ARGS
-                  -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
+                    "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
                   BUILD_DIR "pthread")
     set(pthread_lib PThreadWin32::pthread)
     get_target_property(pthread_include_dir PThreadWin32::pthread INTERFACE_INCLUDE_DIRECTORIES)
