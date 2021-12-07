@@ -27,8 +27,6 @@
 #include "pthread.h"
 #include "fflags.h"
 
-extern "C"{
-    #include "aFun_ht.h"
-}
+#include "aFun_ht.h"
 
 #endif //AFUN_TOOL_HPP

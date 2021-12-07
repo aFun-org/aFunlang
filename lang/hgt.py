@@ -117,6 +117,9 @@ with open(os.path.join(output_dir, f"{base_name}_ht.py"), "w", encoding="utf-8")
             fh.write(head + '\n\n')
             fh.write("#ifndef HT_GETTEXT_H\n")
             fh.write("#define HT_GETTEXT_H\n")
+            fh.write("#ifdef __cplusplus\n")
+            fh.write('extern "C" {\n')
+            fh.write("#endif\n")
 
             fh.write(f"#ifdef HT_{base_name}GetText\n")
             fh.write(f"#error \"Double define HT_{base_name}GetText\"\n")
@@ -155,6 +158,9 @@ int HT_init{base_name}GetText(char *lang) {{
 
             fc.write('    return 0;\n}\n')
 
+            fh.write("#ifdef __cplusplus\n")
+            fh.write('}\n')
+            fh.write("#endif\n")
             fh.write("#endif\n")
 
 for i in flat_list:
