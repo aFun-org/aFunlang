@@ -386,10 +386,11 @@ af_GuardianList *gd_func(char *type, bool is_guard, struct GDData *data, af_Envi
         return nullptr;
 
     af_GuardianList *gd = nullptr;
+    paf_GuardianList pgd = &gd;
+
     data->no_first = true;
     gc_addObjectReference(data->func, env);  // data->func 本身有一次gc引用, 此次再使用一次gc引用, gd_destruct和freeGuardianList时各释放一次
-
-    pushGuardianList(nullptr, data->func, &gd, env);
+    pushGuardianList(nullptr, data->func, pgd, env);
     return gd;
 }
 

@@ -1,4 +1,5 @@
-﻿#include "aFunCore.hpp"
+﻿#include <iostream>
+#include "aFunCore.hpp"
 #include "__object.hpp"
 
 typedef struct GlobalObjectData GlobalObjectData;
@@ -6,7 +7,7 @@ struct GlobalObjectData {
     af_VarSpace *share;
 };
 
-static const std::string global_id = "global-object";
+const std::string global_id = "global-object";
 
 static void initGOD(af_Object *obj, GlobalObjectData *data, af_Environment *env) {
     data->share = makeVarSpace(obj, 3, 2, 0, env);

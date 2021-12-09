@@ -1,6 +1,7 @@
-﻿#include "__base.hpp"
+﻿#include <iostream>
+#include "__base.hpp"
 
-static const std::string func_id = "quit-func";
+const std::string func_id = "quit-func";
 
 typedef struct QuitFunc QuitFunc;
 struct QuitFunc {

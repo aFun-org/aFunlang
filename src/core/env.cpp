@@ -2019,9 +2019,9 @@ static void freeAllGuardianList(af_GuardianList *gl, af_Environment *env){
         gl = freeGuardianList(gl, env);
 }
 
-af_GuardianList **pushGuardianList(af_Object *obj, af_Object *func, af_GuardianList **pgl, af_Environment *env){
-    *pgl = makeGuardianList(obj, func, env);
-    return &((*pgl)->next);
+void pushGuardianList(af_Object *obj, af_Object *func, paf_GuardianList &pal, af_Environment *env){
+    *pal = makeGuardianList(obj, func, env);
+    pal = &((*pal)->next);
 }
 
 af_GuardianList **contectGuardianList(af_GuardianList *new_gl, af_GuardianList **base) {

@@ -234,18 +234,18 @@ af_GcList *pushGcList(enum af_GcListType type, void *data, af_GcList *base) {
 
 /* 分析记录器函数 */
 /* 分析记录器 创建与释放 */
-static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist);
+static void makeAnalyzed(struct af_Object *obj, pgc_Analyzed &plist);
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base);
 static void freeAllAnalyzed(gc_Analyzed *base);
 
 // 关于gc_Analyzed为什么只需要记录Object的解释参见下文 (reachableObject)
-static pgc_Analyzed makeAnalyzed(struct af_Object *obj, pgc_Analyzed plist) {
+static void makeAnalyzed(struct af_Object *obj, pgc_Analyzed &plist) {
     if (obj->gc.info.reachable)
-        return plist;
+        return;
 
     *plist = calloc(1, gc_Analyzed);
     (*plist)->obj = obj;
-    return &((*plist)->next);
+    plist = &((*plist)->next);
 }
 
 static gc_Analyzed *freeAnalyzed(gc_Analyzed *base) {
@@ -261,19 +261,19 @@ static void freeAllAnalyzed(gc_Analyzed *base) {
 
 /* gc 运行时函数 */
 /* 可达性分析函数 */
-static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist);
-static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist);
-static pgc_Analyzed reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed plist);
-static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist);
-static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist);
+static void reachableVar(struct af_Var *var, pgc_Analyzed &plist);
+static void reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed &plist);
+static void reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed &plist);
+static void reachableObjectData(struct af_ObjectData *od, pgc_Analyzed &plist);
+static void reachableObject(struct af_Object *obj, pgc_Analyzed &plist);
 
 /* gc运行函数 */
 static void freeValue(af_Environment *env);
-static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist);
-static pgc_Analyzed iterLinker(af_Environment *env, pgc_Analyzed plist);
-static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist);
-static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed plist);
-static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
+static void reachable(af_Activity *activity, pgc_Analyzed &plist);
+static void iterLinker(af_Environment *env, pgc_Analyzed &plist);
+static void iterEnvironment(af_Environment *env, pgc_Analyzed &plist);
+static void checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed &plist);
+static void checkAnalyzed(pgc_Analyzed *analyzed, pgc_Analyzed &plist);
 
 // 使用 gc_Analyzed 目的是令可达性分析程序不需要使用递归
 // Object->OvjectData->VarSpace->Var; 仅允许单项调用, 不发生递归
@@ -281,36 +281,35 @@ static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist);
 // ObjectData可能要调用API, 因此其需要调用的对象是不确定的, 但只有Object需要gc_Analyzed
 // VarSpace和Var的调用是确定的, 他们不会往回调用除Object外的其他量
 // 所以gc_Analyzed记录Object就足够了
-static pgc_Analyzed reachableObject(struct af_Object *obj, pgc_Analyzed plist) {
+static void reachableObject(struct af_Object *obj, pgc_Analyzed &plist) {
     for(NULL; obj != nullptr && !obj->gc.info.reachable; obj = obj->belong) {
         obj->gc.info.reachable = true;
         pthread_rwlock_rdlock(&obj->lock);
         if (!obj->data->gc.info.reachable)
-            plist = reachableObjectData(obj->data, plist);
+            reachableObjectData(obj->data, plist);
         pthread_rwlock_unlock(&obj->lock);
     }
-    return plist;
 }
 
-static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed plist) {  // 暂时不考虑API调用
+static void reachableObjectData(struct af_ObjectData *od, pgc_Analyzed &plist) {  // 暂时不考虑API调用
     if (od->gc.info.reachable)
-        return plist;
+        return;
 
     od->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&od->lock);
-    plist = reachableVarSpace(od->var_space, plist);
+    reachableVarSpace(od->var_space, plist);
     if (!od->base->gc.info.reachable)
-        plist = makeAnalyzed(od->base, plist);
+        makeAnalyzed(od->base, plist);
 
     for (af_Inherit *ih = od->inherit; ih != nullptr; ih = getInheritNext(ih)) {
         af_Object *obj = getInheritObject(ih);
         af_VarSpace *vs = getInheritVarSpace(ih);
         if (!obj->gc.info.reachable)
-            plist = makeAnalyzed(obj, plist);
+            makeAnalyzed(obj, plist);
 
         if (!vs->gc.info.reachable)
-            plist = reachableVarSpace(vs, plist);
+            reachableVarSpace(vs, plist);
     }
 
     auto func = (obj_getGcList *)findAPI("obj_getGcList", od->api);
@@ -323,16 +322,16 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
             switch (tmp->type) {
                 case glt_obj:
                     if (!tmp->obj->gc.info.reachable)
-                        plist = makeAnalyzed(tmp->obj, plist);
+                        makeAnalyzed(tmp->obj, plist);
                     break;
                 case glt_var:
-                    plist = reachableVar(tmp->var, plist);
+                    reachableVar(tmp->var, plist);
                     break;
                 case glt_vs:
-                    plist = reachableVarSpace(tmp->vs, plist);
+                    reachableVarSpace(tmp->vs, plist);
                     break;
                 case glt_vsl:
-                    plist = reachableVarSpaceList(tmp->vsl, plist);
+                    reachableVarSpaceList(tmp->vsl, plist);
                     break;
                 default:
                     break;
@@ -342,124 +341,115 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
     }
 
     pthread_rwlock_unlock(&od->lock);
-    return plist;
 }
 
-static pgc_Analyzed reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed plist) {
+static void reachableVarSpace(struct af_VarSpace *vs, pgc_Analyzed &plist) {
     if (vs->gc.info.reachable)
-        return plist;
+        return;
 
     vs->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&vs->lock);
     if (vs->belong != nullptr)
-        plist = makeAnalyzed(vs->belong, plist);
+        makeAnalyzed(vs->belong, plist);
 
-    for (int i = 0; i < VAR_HASHTABLE_SIZE; i++) {
-        for (af_VarCup *var = vs->var[i]; var != nullptr; var = var->next)
-            plist = reachableVar(var->var, plist);
+    for (auto var : vs->var) {
+        for (; var != nullptr; var = var->next)
+            reachableVar(var->var, plist);
     }
 
     pthread_rwlock_unlock(&vs->lock);
-    return plist;
 }
 
-static pgc_Analyzed reachableVar(struct af_Var *var, pgc_Analyzed plist) {
+static void reachableVar(struct af_Var *var, pgc_Analyzed &plist) {
     if (var->gc.info.reachable)
-        return plist;
+        return;
 
     var->gc.info.reachable = true;
 
     pthread_rwlock_rdlock(&var->lock);
     for (af_VarNode *vn = var->vn; vn != nullptr; vn = vn->next) {
         if (!vn->obj->gc.info.reachable)
-            plist = makeAnalyzed(vn->obj, plist);
+            makeAnalyzed(vn->obj, plist);
     }
     pthread_rwlock_unlock(&var->lock);
-    return plist;
 }
 
-static pgc_Analyzed reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed plist) {
+static void reachableVarSpaceList(struct af_VarList *vsl, pgc_Analyzed &plist) {
     for(NULL; vsl != nullptr; vsl = vsl->next) {
         if (!vsl->vs->gc.info.reachable)
-            plist = reachableVarSpace(vsl->vs, plist);
+            reachableVarSpace(vsl->vs, plist);
     }
-    return plist;
 }
 
-static pgc_Analyzed iterLinker(af_Environment *env, pgc_Analyzed plist) {
-    plist = reachableVarSpace(env->protect, plist);
+static void iterLinker(af_Environment *env, pgc_Analyzed &plist) {
+    reachableVarSpace(env->protect, plist);
     if (env->global != nullptr)
-        plist = reachableObject(env->global, plist);
+        reachableObject(env->global, plist);
 
     for (af_ObjectData *od = env->gc_factory->gc_ObjectData; od != nullptr; od = od->gc.next) {
         if (od->gc.info.reference > 0 || od->gc.info.not_clear)
-            plist = reachableObjectData(od, plist);
+            reachableObjectData(od, plist);
     }
 
     for (af_Object *obj = env->gc_factory->gc_Object; obj != nullptr; obj = obj->gc.next) {
         if (obj->gc.info.reference > 0 || obj->gc.info.not_clear)
-            plist = reachableObject(obj, plist);
+            reachableObject(obj, plist);
     }
 
     for (af_VarSpace *vs = env->gc_factory->gc_VarSpace; vs != nullptr; vs = vs->gc.next) {
         if (vs->gc.info.reference > 0 || vs->gc.info.not_clear)
-            plist = reachableVarSpace(vs, plist);
+            reachableVarSpace(vs, plist);
     }
 
     for (af_Var *var = env->gc_factory->gc_Var; var != nullptr; var = var->gc.next) {
         if (var->gc.info.reference > 0 || var->gc.info.not_clear)
-            plist = reachableVar(var, plist);
+            reachableVar(var, plist);
     }
-    return plist;
 }
 
-static pgc_Analyzed iterEnvironment(af_Environment *env, pgc_Analyzed plist) {
+static void iterEnvironment(af_Environment *env, pgc_Analyzed &plist) {
     pthread_mutex_lock(&env->thread_lock);
     if (env->result != nullptr)
-        plist = reachableObject(env->result, plist);
+        reachableObject(env->result, plist);
     pthread_mutex_unlock(&env->thread_lock);
 
-    plist = reachable(env->activity, plist);
-    return plist;
+    reachable(env->activity, plist);
 }
 
-static pgc_Analyzed reachable(af_Activity *activity, pgc_Analyzed plist) {
+static void reachable(af_Activity *activity, pgc_Analyzed &plist) {
     for(NULL; activity != nullptr; activity = activity->prev) {
         if (activity->belong != nullptr)
-            plist = reachableObject(activity->belong, plist);
+            reachableObject(activity->belong, plist);
 
-        plist = reachableVarSpaceList(activity->run_varlist, plist);
-
+        reachableVarSpaceList(activity->run_varlist, plist);
         if (activity->type == act_guardian) {  // gc不执行接下来的检查
             for (af_GuardianList *gl = activity->gl; gl != nullptr; gl = gl->next) {
-                plist = reachableObject(gl->func, plist);
+                reachableObject(gl->func, plist);
                 if (gl->obj != nullptr)
-                    plist = reachableObject(gl->obj, plist);
+                    reachableObject(gl->obj, plist);
             }
         } else {
 
             if (activity->func != nullptr)
-                plist = reachableObject(activity->func, plist);
+                reachableObject(activity->func, plist);
 
             if (activity->return_obj != nullptr)
-                plist = reachableObject(activity->return_obj, plist);
+                reachableObject(activity->return_obj, plist);
 
             if (activity->parentheses_call != nullptr)
-                plist = reachableObject(activity->parentheses_call, plist);
+                reachableObject(activity->parentheses_call, plist);
 
-        plist = reachableVarSpaceList(activity->out_varlist, plist);
-            plist = reachableVarSpaceList(activity->func_varlist, plist);
-            plist = reachableVarSpaceList(activity->macro_varlist, plist);
+            reachableVarSpaceList(activity->out_varlist, plist);
+            reachableVarSpaceList(activity->func_varlist, plist);
+            reachableVarSpaceList(activity->macro_varlist, plist);
         }
     }
-    return plist;
 }
 
-static pgc_Analyzed checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed plist) {
+static void checkAnalyzed(gc_Analyzed *analyzed, pgc_Analyzed &plist) {
     for (gc_Analyzed *done = analyzed; done != nullptr; done = done->next)
-        plist = reachableObject(done->obj, plist);
-    return plist;
+        reachableObject(done->obj, plist);
 }
 
 static void resetGC(af_Environment *env) {
@@ -523,7 +513,7 @@ static void freeValue(af_Environment *env) {
  * @param plist
  * @return
  */
-static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed plist) {
+static void checkDestruct(af_Environment *env, paf_GuardianList *pgl, pgc_Analyzed &plist) {
     for (af_ObjectData *od = env->gc_factory->gc_ObjectData; od != nullptr; od = od->gc.next) {
         if (!od->gc.info.reachable && !od->gc.done_destruct) {
             af_Object *func = findObjectAttributesByObjectData(mg_gc_destruct, nullptr, od, env);
@@ -536,11 +526,10 @@ static pgc_Analyzed checkDestruct(af_Environment *env, paf_GuardianList *pgl, pg
             pthread_rwlock_unlock(&od->lock);
             gc_addObjectReference(base, env);
 
-            *pgl = pushGuardianList(base, func, *pgl, env);
-            plist = reachableObjectData(od, plist);
+            pushGuardianList(base, func, *pgl, env);
+            reachableObjectData(od, plist);
         }
     }
-    return plist;
 }
 
 af_GuardianList *gc_RunGC(af_Environment *base) {
@@ -553,16 +542,16 @@ af_GuardianList *gc_RunGC(af_Environment *base) {
     writeTrackLog(aFunCoreLogger, "gc start");
     pthread_mutex_lock(&base->gc_factory->mutex);
     resetGC(base);
-    plist = iterLinker(base, plist);  // 临时量分析 (临时量都是通过reference标记的)
-    plist = iterEnvironment(base, plist);
+    iterLinker(base, plist);  // 临时量分析 (临时量都是通过reference标记的)
+    iterEnvironment(base, plist);
 
     pthread_mutex_lock(&base->thread_lock);
     for (af_EnvironmentList *envl = base->env_list; envl != nullptr; envl = envl->next)
-        plist = iterEnvironment(envl->env, plist);
+        iterEnvironment(envl->env, plist);
     pthread_mutex_unlock(&base->thread_lock);
 
-    plist = checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
-    plist = checkDestruct(base, &pgl, plist);  // 在检查析构
+    checkAnalyzed(analyzed, plist);  // 先处理剩余的Object
+    checkDestruct(base, &pgl, plist);  // 在检查析构
     checkAnalyzed(analyzed, plist);  // 在处理 checkDestruct 时产生的新引用
 
     freeValue(base);
@@ -594,7 +583,7 @@ paf_GuardianList checkAllDestruct(af_Environment *env, paf_GuardianList pgl) {
             af_Object *base_obj = od->base;
             pthread_rwlock_unlock(&od->lock);
             gc_addObjectReference(base_obj, env);
-            pgl = pushGuardianList(base_obj, func, pgl, env);
+            pushGuardianList(base_obj, func, pgl, env);
         }
     }
     pthread_mutex_unlock(&base->gc_factory->mutex);
