@@ -70,7 +70,7 @@ af_ObjectAPI *makeAPIFromList(const APIFuncList api_list[]) {
  * 必须保证 VarSpace 有被 gc 引用
  */
 void makeObjectFromList(const ObjectDefineList obj_def[], af_Object *visitor, af_VarSpace *vs, af_Environment *env) {
-    for (const ObjectDefineList *od = obj_def; od->id != nullptr; od++) {
+    for (const ObjectDefineList *od = obj_def; od->id.size() != 0; od++) {
         af_ObjectAPI *api = od->api;
         if (api == nullptr)
             api = makeAPIFromList(od->api_list);

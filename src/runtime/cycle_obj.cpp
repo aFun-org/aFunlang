@@ -1,15 +1,15 @@
 ﻿#include "aFunlang.hpp"
 #include "__cycle_obj.hpp"
 
-size_t getSizec_Cycle(char *id, af_Object *obj) {
+size_t getSizec_Cycle(const std::string &id, af_Object *obj) {
     return sizeof(af_VarList *);
 }
 
-void initDatac_Cycle(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+void initDatac_Cycle(const std::string &id, af_Object *obj, af_VarList **data, af_Environment *env) {
     *data = pushProtectVarList(nullptr, env);
 }
 
-void freeDatac_Cycle(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+void freeDatac_Cycle(const std::string &id, af_Object *obj, af_VarList **data, af_Environment *env) {
     freeAllVarSpaceList(*data);
 }
 
@@ -26,7 +26,7 @@ af_FuncBody *func_Cycle(af_CallFuncInfo *cfi, af_Environment *env) {  // 测试�
     return nullptr;
 }
 
-bool getInfoc_Cycle(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, CycleMark *mark, af_Environment *env) {
+bool getInfoc_Cycle(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, CycleMark *mark, af_Environment *env) {
     mark->fi = makeFuncInfo(normal_scope, not_embedded, false, false, false);
     *fi = mark->fi;
 
@@ -37,28 +37,28 @@ bool getInfoc_Cycle(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, C
     return true;
 }
 
-bool getAclc_Cycle(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, CycleMark **mark, af_Environment *env) {
+bool getAclc_Cycle(const std::string &id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, CycleMark **mark, af_Environment *env) {
     *acl = nullptr;
     *mark = calloc(1, CycleMark);
     return true;
 }
 
-bool getVslc_Cycle(char *id, af_Object *obj, af_VarList **vsl, CycleMark *mark, af_Environment *env) {
+bool getVslc_Cycle(const std::string &id, af_Object *obj, af_VarList **vsl, CycleMark *mark, af_Environment *env) {
     *vsl = *(af_VarList **)getObjectData(obj);
     return true;
 }
 
-af_GcList *getGcListc_Cycle(char *id, af_Object *obj, void *data) {
+af_GcList *getGcListc_Cycle(const std::string &id, af_Object *obj, void *data) {
     af_GcList *gl = pushGcList(glt_vsl, *(af_VarList **)data, nullptr);
     return gl;
 }
 
-bool getAlc_Cycle(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, CycleMark *mark, af_Environment *env) {
+bool getAlc_Cycle(const std::string &id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, CycleMark *mark, af_Environment *env) {
     *al = nullptr;
     return true;
 }
 
-void freeMarkc_Cycle(char *id, af_Object *obj, CycleMark *mark) {
+void freeMarkc_Cycle(const std::string &id, af_Object *obj, CycleMark *mark) {
     free(mark);
 }
 

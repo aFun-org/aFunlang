@@ -6,7 +6,7 @@ struct GlobalObjectData {
     af_VarSpace *share;
 };
 
-static const char *global_id = "global-object";
+static const std::string global_id = "global-object";
 
 static void initGOD(af_Object *obj, GlobalObjectData *data, af_Environment *env) {
     data->share = makeVarSpace(obj, 3, 2, 0, env);
@@ -17,23 +17,23 @@ static void freeGOD(GlobalObjectData *god, af_Object  *obj, af_Environment *env)
     god->share = nullptr;
 }
 
-static size_t getSize(char *id, af_Object *obj) {  // NOLINT 必备参数
+static size_t getSize(const std::string &id, af_Object *obj) {  // NOLINT 必备参数
     /* 不需要检查 id */
     return sizeof(GlobalObjectData);
 }
 
-static void initData(char *id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
-    if (EQ_STR(id, global_id))
+static void initData(const std::string &id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
+    if (id == global_id)
         initGOD(obj, data, env);
 }
 
-static void freeData(char *id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
-    if (EQ_STR(id, global_id))
+static void freeData(const std::string &id, af_Object *obj, GlobalObjectData *data, af_Environment *env) {
+    if (id == global_id)
         freeGOD(data, obj, env);
 }
 
-static af_GcList *getGcList(char *id, af_Object *obj, GlobalObjectData *data) {  // NOLINT 必备参数
-    if (!EQ_STR(id, global_id))
+static af_GcList *getGcList(const std::string &id, af_Object *obj, GlobalObjectData *data) {  // NOLINT 必备参数
+    if (id != global_id)
         return nullptr;
 
     if (data->share != nullptr)
@@ -42,8 +42,8 @@ static af_GcList *getGcList(char *id, af_Object *obj, GlobalObjectData *data) { 
 }
 
 
-static af_VarSpace *getShareVS(char *id, af_Object *obj) {
-    if (!EQ_STR(id, global_id))
+static af_VarSpace *getShareVS(const std::string &id, af_Object *obj) {
+    if (id != global_id)
         return nullptr;
     return ((GlobalObjectData *)getObjectData(obj))->share;
 }

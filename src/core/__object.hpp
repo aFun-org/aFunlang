@@ -34,7 +34,7 @@ struct af_ObjectAPI {
 };
 
 struct af_ObjectData {
-    char *id;  // 对象类型标识符(一个字符串)
+    std::string id;  // 对象类型标识符(一个字符串)
 
     void *data;
     size_t size;  // 标记data的大小

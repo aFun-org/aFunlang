@@ -315,7 +315,7 @@ static pgc_Analyzed reachableObjectData(struct af_ObjectData *od, pgc_Analyzed p
 
     auto func = (obj_getGcList *)findAPI("obj_getGcList", od->api);
     if (func != nullptr) {
-        af_GcList *gl = func(od->id, od->base, od->data);
+        af_GcList *gl = func(od->id.c_str(), od->base, od->data);
         for (af_GcList *tmp = gl; tmp != nullptr; tmp = tmp->next) {
             if (tmp->data == nullptr)
                 continue;

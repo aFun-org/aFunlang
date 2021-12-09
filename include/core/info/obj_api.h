@@ -9,6 +9,7 @@
 
 #ifndef AFUN_OBJ_API_H
 #define AFUN_OBJ_API_H
+#include <iostream>
 #include "env.hpp"
 #include "object.hpp"
 #include "var.hpp"
@@ -37,7 +38,7 @@ typedef struct af_FuncBody *callFuncBody(af_CallFuncInfo *info, af_Environment *
  * API第三个参数: 通常为void *data [仅与data有关的函数会直接传入该值]
  */
 
-#define BASE_ARG const char *id, af_Object *obj /* 基础参数 */
+#define BASE_ARG const std::string &id, af_Object *obj /* 基础参数 */
 
 /*** Object void *data 管理 ***/
 typedef size_t obj_getDataSize(BASE_ARG);  // 获取data的大小

@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_OBJECT
 #define AFUN_OBJECT
+#include <iostream>
 #include "aFunCoreExport.h"
 #include "tool.hpp"
 
@@ -16,7 +17,7 @@ DEFINE_DLC_SYMBOL(objectAPIFunc);
 #include "var.hpp"
 
 /* 对象创建 */
-AFUN_CORE_EXPORT af_Object * makeObject(const char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit,
+AFUN_CORE_EXPORT af_Object * makeObject(const std::string &id, bool free_api, af_ObjectAPI *api, bool allow_inherit,
                                         af_Object *belong, bool free_inherit, af_Inherit *inherit,
                                         af_Environment *env);
 
@@ -44,7 +45,7 @@ AFUN_CORE_EXPORT af_Inherit **pushInherit(af_Inherit **base, af_Inherit *new_ih)
 AFUN_CORE_EXPORT void *getObjectData(af_Object *obj);
 AFUN_CORE_EXPORT af_Object *getBelongObject(af_Object *object);
 AFUN_CORE_EXPORT af_Object *findObjectAttributes(char *name, af_Object *visitor, af_Object *obj, af_Environment *env);
-AFUN_CORE_EXPORT const char *getObjectID(af_Object *obj);
+AFUN_CORE_EXPORT const std::string &getObjectID(af_Object *obj);
 AFUN_CORE_EXPORT af_ObjectAPI *getObjectAPI(af_Object *obj);
 AFUN_CORE_EXPORT af_Inherit *getObjectInherit(af_Object *obj);
 AFUN_CORE_EXPORT af_VarSpace *getObjectVarSpace(af_Object *obj);

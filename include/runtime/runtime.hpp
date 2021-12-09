@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_RUNTIME_HPP
 #define AFUN_RUNTIME_HPP
+#include <iostream>
 
 typedef struct APIFuncList APIFuncList;
 struct APIFuncList {
@@ -17,7 +18,7 @@ struct InheritDefineList {
 
 typedef struct ObjectDefineList ObjectDefineList;
 struct ObjectDefineList {
-    const char *id;
+    const std::string &id;
 
     bool free_api;
     af_ObjectAPI *api;

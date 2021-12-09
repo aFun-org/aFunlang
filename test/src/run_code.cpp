@@ -1,40 +1,40 @@
 ï»¿#include <cstdio>
 #include "aFun.hpp"
 
-size_t getSize(char *id, af_Object *obj) {
+size_t getSize(const std::string &id, af_Object *obj) {
     return sizeof(int *);
 }
 
-void initData(char *id, af_Object *obj, int **data, af_Environment *env) {
+void initData(const std::string &id, af_Object *obj, int **data, af_Environment *env) {
     *data = calloc(1, int);
     **data = 100;
 }
 
-void freeData(char *id, af_Object *obj, int **data, af_Environment *env) {
+void freeData(const std::string &id, af_Object *obj, int **data, af_Environment *env) {
     printf("freeData(): **data = %d\n", **data);
     free(*data);
 }
 
-af_VarSpace *getShareVS(char *id, af_Object *obj) {
+af_VarSpace *getShareVS(const std::string &id, af_Object *obj) {
     return *(af_VarSpace **)getObjectData(obj);
 }
 
 
-size_t getSize_Normal(char *id, af_Object *obj) {
+size_t getSize_Normal(const std::string &id, af_Object *obj) {
     return sizeof(af_VarList *);
 }
 
-void initData_Normal(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+void initData_Normal(const std::string &id, af_Object *obj, af_VarList **data, af_Environment *env) {
     *data = pushProtectVarList(nullptr, env);
     printf("initData_Normal(): VarSpace %p\n", *data);
 }
 
-void freeData_Normal(char *id, af_Object *obj, af_VarList **data, af_Environment *env) {
+void freeData_Normal(const std::string &id, af_Object *obj, af_VarList **data, af_Environment *env) {
     printf("freeData_Normal(): vsl = %p\n", *data);
     freeAllVarSpaceList(*data);
 }
 
-void literalSet_Data(char *id, af_Object *obj, void *data, char *str, af_Environment *env) {
+void literalSet_Data(const std::string &id, af_Object *obj, void *data, char *str, af_Environment *env) {
     printf("literalSet_Data(): str = %s\n", str);
 }
 
@@ -55,7 +55,7 @@ af_FuncBody *testFunc_Normal(af_CallFuncInfo *cfi, af_Environment *env) {  // æµ
     return nullptr;
 }
 
-bool getInfo_Normal(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Normal(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, nullptr, *fi);
 
@@ -65,29 +65,29 @@ bool getInfo_Normal(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, v
     return true;
 }
 
-bool getAcl_Normal(char *id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, int **mark, af_Environment *env) {
+bool getAcl_Normal(const std::string &id, af_Object *obj, af_ArgCodeList **acl, af_Code *code, int **mark, af_Environment *env) {
     *acl = makeArgCodeList(makeElementCode("object", NUL, 0, "Unknown"), 0, true, false);
     *mark = calloc(1, int);
     **mark = 100;
     return true;
 }
 
-bool getVsl_Normal(char *id, af_Object *obj, af_VarList **vsl, void *mark, af_Environment *env) {
+bool getVsl_Normal(const std::string &id, af_Object *obj, af_VarList **vsl, void *mark, af_Environment *env) {
     *vsl = *(af_VarList **)getObjectData(obj);
     return true;
 }
 
-af_GcList *getGcList_Normal(char *id, af_Object *obj, void *data) {
+af_GcList *getGcList_Normal(const std::string &id, af_Object *obj, void *data) {
     af_GcList *gl = pushGcList(glt_vsl, *(af_VarList **)data, nullptr);
     return gl;
 }
 
-bool getAl_Normal(char *id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
+bool getAl_Normal(const std::string &id, af_Object *obj, af_ArgList **al, af_ArgCodeList *acl, void *mark, af_Environment *env) {
     *al = makeArgListFromArgCodeList("test",acl, env);
     return true;
 }
 
-void freeMark_Normal(char *id, af_Object *obj, int *mark) {
+void freeMark_Normal(const std::string &id, af_Object *obj, int *mark) {
     printf("freeMark_Normal(): mark = %d\n", *mark);
     free(mark);
 }
@@ -142,7 +142,7 @@ af_FuncBody *testFuncMacro(af_CallFuncInfo *cfi, af_Environment *env) {  // æµ‹è
     return nullptr;
 }
 
-bool getInfo_Macro(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Macro(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("test", NUL, 0, "Unknown"), true, nullptr, *fi);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFuncMacro, callFuncBody);
@@ -151,7 +151,7 @@ bool getInfo_Macro(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, vo
     return true;
 }
 
-bool getInfo_Tail(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Tail(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("data3", NUL, 0, "Unknown"), true, nullptr, *fi);
     return true;
@@ -174,7 +174,7 @@ af_FuncBody *testFunc_Obj(af_CallFuncInfo *cfi, af_Environment *env) {  // æµ‹è¯
     return nullptr;
 }
 
-bool getInfo_Obj(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Obj(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_Obj, callFuncBody);
     makeCFuncBodyToFuncInfo(func, nullptr, *fi);
@@ -182,24 +182,24 @@ bool getInfo_Obj(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void
     return true;
 }
 
-bool isObjTrue(char *id, af_Object *obj) {
+bool isObjTrue(const std::string &id, af_Object *obj) {
     return true;
 }
 
-size_t getSize3(char *id, af_Object *obj) {
+size_t getSize3(const std::string &id, af_Object *obj) {
     return sizeof(af_VarSpace *);
 }
 
-void initData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
+void initData3(const std::string &id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     *data = makeVarSpace(obj, 3, 2, 0, env);
     gc_delVarSpaceReference(*data, env);
 }
 
-void freeData3(char *id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
+void freeData3(const std::string &id, af_Object *obj, af_VarSpace **data, af_Environment *env) {
     printf("freeData(): *data = %p\n", *data);
 }
 
-af_GcList *getGcList3(char *id, af_Object *obj, void *data) {
+af_GcList *getGcList3(const std::string &id, af_Object *obj, void *data) {
     af_GcList *gl = pushGcList(glt_vs, *(af_VarSpace **)data, nullptr);
     return gl;
 }
@@ -218,7 +218,7 @@ af_FuncBody *testFunc_Dynamic(af_CallFuncInfo *cfi, af_Environment *env) {  // æ
     return fb;
 }
 
-bool getInfo_Dynamic(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Dynamic(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc_Dynamic, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, nullptr, *fi);
@@ -246,7 +246,7 @@ af_FuncBody *testFunc_GcDestruct_c(af_CallFuncInfo *cfi, af_Environment *env) { 
     return nullptr;
 }
 
-bool getInfo_GcDestruct_2(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_GcDestruct_2(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_GcDestruct_c, callFuncBody);
     makeCFuncBodyToFuncInfo(func, nullptr, *fi);
@@ -295,7 +295,7 @@ af_FuncBody *testFunc_GcDestruct_a(af_CallFuncInfo *cfi, af_Environment *env) { 
     return nullptr;
 }
 
-bool getInfo_GcDestruct(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_GcDestruct(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func1 = MAKE_SYMBOL(testFunc_GcDestruct_a, callFuncBody);
     makeCFuncBodyToFuncInfo(func1, nullptr, *fi);
@@ -349,7 +349,7 @@ af_FuncBody *testFunc_Gc(af_CallFuncInfo *cfi, af_Environment *env) {  // æµ‹è¯•
     return nullptr;
 }
 
-bool getInfo_Gc(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Gc(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     DLC_SYMBOL(callFuncBody) func = MAKE_SYMBOL(testFunc_Gc, callFuncBody);
     makeCFuncBodyToFuncInfo(func, nullptr, *fi);
@@ -358,19 +358,19 @@ bool getInfo_Gc(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void 
     return true;
 }
 
-bool getInfo_NotVar(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_NotVar(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, true, true, true);
     makeCodeFuncBodyToFuncInfo(makeElementCode("no-var", NUL, 1, "func9.info.aun"), true, nullptr, *fi);
     return true;
 }
 
-bool getInfo_Import(char *id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
+bool getInfo_Import(const std::string &id, af_Object *obj, af_FuncInfo **fi, af_Code *code, void *mark, af_Environment *env) {
     *fi = makeFuncInfo(normal_scope, not_embedded, false, true, true);
     makeImportFuncBodyToFuncInfo(makeElementCode("global", NUL, 1, "func9.info.aun"), true, nullptr, *fi);
     return true;
 }
 
-bool isInfixTrue(char *id, af_Object *obj) {
+bool isInfixTrue(const std::string &id, af_Object *obj) {
     return true;
 }
 

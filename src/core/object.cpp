@@ -13,12 +13,7 @@ static af_ObjectAPINode *findObjectDataAPINode(const char *api_name, af_ObjectDa
 static int addAPIToObjectData(DLC_SYMBOL(objectAPIFunc) func, const char *api_name, af_ObjectData *od);
 
 
-/*
- * 函数名: 创建一个object
- * 目标: 生成Object和ObjectData, 并且添加到gc链表中
- * 若处于初始化模式, 则belong, inherit等可以设置为nullptr, 由后期统一填上
- */
-af_Object *makeObject(const char *id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
+af_Object *makeObject(const std::string &id, bool free_api, af_ObjectAPI *api, bool allow_inherit, af_Object *belong,
                       bool free_inherit, af_Inherit *inherit, af_Environment *env){
     enum af_CoreStatus status = getCoreStatus(env);
 
@@ -53,7 +48,7 @@ af_Object *makeObject(const char *id, bool free_api, af_ObjectAPI *api, bool all
     obj->belong = nullptr;
     od->base = obj;
     obj->data = od;
-    od->id = strCopy(id == nullptr ? "Unknown" : id);
+    od->id = id;
 
     od->api = api;
     od->free_api = free_api;
@@ -123,7 +118,6 @@ void freeObjectData(af_ObjectData *od, af_Environment *env) {
             func(od->id, od->base, od->data, env);
     }
 
-    free(od->id);
     free(od->data);
     if (od->free_api)
         freeObjectAPI(od->api);
@@ -254,8 +248,8 @@ af_ObjectAPI *makeObjectAPI() {
 }
 
 void freeObjectAPI(af_ObjectAPI *api) {
-    for (int i = 0; i < API_HASHTABLE_SIZE; i++)
-        freeAllObjectAPINode(api->node[i]);
+    for (auto & i : api->node)
+        freeAllObjectAPINode(i);
     pthread_rwlock_destroy(&api->lock);
     free(api);
 }
@@ -441,13 +435,13 @@ af_Object *findObjectAttributesByObjectData(const char *name, af_Object *visitor
     return nullptr;
 }
 
-const char *getObjectID(af_Object *obj) {
+const std::string &getObjectID(af_Object *obj) {
     pthread_rwlock_rdlock(&obj->lock);
     af_ObjectData *data = obj->data;
     pthread_rwlock_unlock(&obj->lock);
 
     pthread_rwlock_rdlock(&data->lock);
-    char *id = data->id;
+    const std::string &id = data->id;
     pthread_rwlock_unlock(&data->lock);
 
     return id;

@@ -194,7 +194,7 @@ static bool codeElement(af_Code *code, af_Environment *env) {
 
     if (code->prefix != getPrefix(E_QUOTE, env)) {
         af_ObjectAPI *api = getObjectAPI(obj);
-        const char *id = getObjectID(obj);
+        const std::string &id = getObjectID(obj);
         if ((is_obj = (obj_isObjFunc *)findAPI("obj_isObjFunc", api)) != nullptr && is_obj(id, obj)) {
             bool res = pushVariableActivity(code, obj, env);  // 对象函数
             gc_delObjectReference(obj, env);
