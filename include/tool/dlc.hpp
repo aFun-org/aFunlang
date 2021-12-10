@@ -1,7 +1,9 @@
 ﻿#ifndef AFUN_DLC_HPP
 #define AFUN_DLC_HPP
+#include <iostream>
 #include "aFunToolExport.h"
 #include "dlfcn.h"  // CMake 处理 dlfcn.h 的位置
+
 
 /* 动态库工具(dlc): 处理动态库的使用 */
 
@@ -19,28 +21,97 @@
  * dlcExit: 释放所有动态库
  */
 
-#define DEFINE_DLC_SYMBOL(NAME) typedef struct DLC##NAME##SYMBOL *pDLC##NAME##SYMBOL
-#define NEW_DLC_SYMBOL(TYPE, NAME) typedef struct DLC##NAME##SYMBOL { TYPE *symbol; struct DlcHandle *dlc; } DLC##NAME##SYMBOL, *pDLC##NAME##SYMBOL
+namespace aFuntool {
+    class DlcHandle;
 
-typedef struct DlcSymbol_ DlcSymbol_;
-typedef struct DlcHandle DlcHandle;
+    template <typename SYMBOL>
+    class DlcSymbol;
 
-#define DLC_SYMBOL(NAME) pDLC##NAME##SYMBOL
-#define GET_SYMBOL(SYMBOL) (*((SYMBOL)->symbol))
-#define MAKE_SYMBOL(symbol, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_(nullptr, (DlcSymbol_ *)(symbol))))
-#define MAKE_SYMBOL_FROM_HANDLE(symbol, handle, TYPE) ((pDLC##TYPE##SYMBOL) (makeSymbol_((handle), (DlcSymbol_ *)(symbol))))
-#define COPY_SYMBOL(ds, TYPE) ((pDLC##TYPE##SYMBOL) (copySymbol_((DlcSymbol_ *)(ds))))
-#define READ_SYMBOL(dlc, name, TYPE) ((pDLC##TYPE##SYMBOL) (getSymbol_((dlc), (name))))
-#define FREE_SYMBOL(symbol) ((symbol) != nullptr ? (freeSymbol_((DlcSymbol_ *)(symbol)), nullptr) : nullptr)
+    AFUN_TOOL_EXPORT DlcHandle *openLibrary(const char *file, int mode);
+    AFUN_TOOL_EXPORT void dlcExit();
 
-AFUN_TOOL_EXPORT DlcHandle *openLibary(const char *file, int mode);
-AFUN_TOOL_EXPORT DlcSymbol_ *makeSymbol_(DlcHandle *dlc, void *symbol);
-AFUN_TOOL_EXPORT DlcSymbol_ *copySymbol_(DlcSymbol_ *ds);
-AFUN_TOOL_EXPORT DlcSymbol_ *getSymbol_(DlcHandle *dlc, const char *name);
+    /**
+     * DlcHandle: 动态库句柄
+     * 注意: 仅能通过 openLibrary生成
+     * 不需要 delete 释放 (自动管理释放)
+     */
+    class DlcHandle {
+        friend void dlcExit();
+        friend DlcHandle *openLibrary(const char *file, int mode);
 
-AFUN_TOOL_EXPORT void freeSymbol_(DlcSymbol_ *symbol);
-AFUN_TOOL_EXPORT bool freeLibary(DlcHandle *dlc);
-AFUN_TOOL_EXPORT void dlcExit();
+        explicit DlcHandle(void *handle);  // 仅 openLibary 可用
+        void *handle;
+        int link;  // 引用计数
+        struct DlcHandle *next;
+        struct DlcHandle *prev;
+    public:
+        ~DlcHandle();
 
+        /**
+         * 获得动态库中指定名字的符号
+         * @tparam SYMBOL 符号类型
+         * @param name 名字
+         * @return 符号
+         */
+        template<typename SYMBOL>
+        DlcSymbol<SYMBOL> *get_symbol(const std::string &name) {
+            auto symbol = (SYMBOL *)dlsym(handle, name.c_str());
+            if (symbol == nullptr)
+                return nullptr;
+            return new DlcSymbol<SYMBOL>(symbol, this);
+        }
+
+        /**
+         * 关闭动态库句柄
+         */
+        void close();
+        int operator++(int);
+        int operator--(int);
+    };
+
+    /**
+     * 符号句柄
+     * 注意: 不适用符号后需要 delete
+     * @tparam SYMBOL 符号类型
+     */
+    template <typename SYMBOL>
+    class DlcSymbol {
+        SYMBOL *symbol;
+        class DlcHandle *dlc = nullptr;
+
+    public:
+        /**
+         * 从句柄和符号指针创建一个符号
+         * @param symbol 符号指针
+         * @param dlc 句柄
+         */
+        explicit DlcSymbol(SYMBOL *symbol, class DlcHandle *dlc) {
+            this->symbol = symbol;
+            this->dlc = dlc;
+            if (this->dlc != nullptr)
+                this->dlc++;
+        }
+
+        /**
+         * 复制符号
+         * @param symbol
+         */
+        explicit DlcSymbol(class DlcSymbol<SYMBOL> *symbol) {
+            this->symbol = symbol->symbol;
+            this->dlc = symbol->dlc;
+            if (this->dlc != nullptr)
+                this->dlc++;
+        }
+
+        ~DlcSymbol(){
+            if (dlc != nullptr)
+                dlc--;
+        }
+
+        SYMBOL *getSymbol() const {
+            return symbol;
+        }
+    };
+}
 
 #endif //AFUN_DLC_HPP

@@ -1,30 +1,18 @@
 ﻿#include "tool.hpp"
+#include "dlc.hpp"
+using namespace aFuntool;
 
-#ifndef GC_SZIE
-#define GC_SZIE (0)
-#endif
+static DlcHandle *dlc_l = nullptr;
 
-static bool freeLibary_(struct DlcHandle *dlc);
-
-struct DlcSymbol_ {
-    void *symbol;
-    struct DlcHandle *dlc;
-};
-
-struct DlcHandle {
-    void *handle;
-    long long int link;  // 引用计数
-    long long int count;  // 开启计数
-    struct DlcHandle *next;
-    struct DlcHandle *last;
-};
-
-static struct DlcHandle *dlc_l = nullptr;
-static int gc_count = 0;
-
-struct DlcHandle *openLibary(const char *file, int mode) {
+/**
+ * 打开动态库
+ * @param file 动态库路径
+ * @param mode 模式
+ * @return
+ */
+DlcHandle *aFuntool::openLibrary(const char *file, int mode) {
     void *handle = dlopen(file, mode);
-    struct DlcHandle *dlc;
+    DlcHandle *dlc;
 
     if (handle == nullptr)
         return nullptr;
@@ -32,124 +20,65 @@ struct DlcHandle *openLibary(const char *file, int mode) {
     for (struct DlcHandle *tmp = dlc_l; tmp != nullptr; tmp = tmp->next) {
         if (tmp->handle == handle) {
             dlclose(handle);  // 减少dlopen时对handle的引用计数
-            tmp->count++;
+            tmp++;
             return tmp;
         }
     }
 
-    dlc = calloc(1, struct DlcHandle);
-    dlc->handle = handle;
+    dlc = new DlcHandle(handle);
 
-    dlc->count = 1;
     dlc->next = dlc_l;
-    dlc->last = nullptr;
+    dlc->prev = nullptr;
     if (dlc_l != nullptr)
-        dlc_l->last = dlc;
+        dlc_l->prev = dlc;
     dlc_l = dlc;
 
     return dlc;
 }
 
-bool freeLibary(struct DlcHandle *dlc) {
-    if (dlc->count == 0)
-        return false;
-    dlc->count--;
-    return true;
+aFuntool::DlcHandle::DlcHandle(void *handle){
+    this->handle = handle;
+    this->link = 1;
+    this->next = nullptr;
+    this->prev = nullptr;
 }
 
-static bool freeLibary_(struct DlcHandle *dlc){
-    if (dlc->link != 0)  // f - 强制释放
-        return false;
 
-    dlclose(dlc->handle);
+aFuntool::DlcHandle::~DlcHandle() {
+    dlclose(handle);
 
-    if (dlc->last == nullptr)
-        dlc_l = dlc->next;
+    if (prev == nullptr)
+        dlc_l = next;
     else
-        dlc->last->next = dlc->next;
+        prev->next = next;
 
-    if (dlc->next != nullptr)
-        dlc->next->last = dlc->last;
-
-    free(dlc);
-    return true;
+    if (next != nullptr)
+        next->prev = prev;
 }
 
-static bool freeLibary_Exit(struct DlcHandle *dlc) {
-    if (dlc->last == nullptr)
-        dlc_l = dlc->next;
-    else
-        dlc->last->next = dlc->next;
 
-    /* atexit函数中不使用dlclose */
-
-    if (dlc->next != nullptr)
-        dlc->next->last = dlc->last;
-
-    free(dlc);
-    return true;
+void aFuntool::DlcHandle::close() {
+    this->operator--(1);
 }
 
-static void blindSymbol(struct DlcSymbol_ *ds, struct DlcHandle *dlc) {
-    if (ds->dlc != nullptr)
-        ds->dlc->link--;
 
-    ds->dlc = dlc;
-    dlc->link++;
+int aFuntool::DlcHandle::operator++(int){
+    return link++;
 }
 
-struct DlcSymbol_ *makeSymbol_(DlcHandle *dlc, void *symbol) {
-    auto ds = calloc(1, struct DlcSymbol_);
-    ds->symbol = symbol;
 
-    if (dlc != nullptr)
-        blindSymbol(ds, dlc);
-    return ds;
+int aFuntool::DlcHandle::operator--(int){
+    int ret = link--;
+    if (link == 0)
+        delete this;  // 删除自己
+    return ret;
 }
 
-struct DlcSymbol_ *copySymbol_(struct DlcSymbol_ *ds) {
-    if (ds == nullptr)
-        return nullptr;
-
-    auto new_symbol = calloc(1, struct DlcSymbol_);
-    new_symbol->symbol = ds->symbol;
-    if (ds->dlc != nullptr)
-        blindSymbol(new_symbol, ds->dlc);
-    return new_symbol;
-}
-
-struct DlcSymbol_ *getSymbol_(struct DlcHandle *dlc, const char *name) {
-    void *symbol = dlsym(dlc->handle, name);
-    if (symbol == nullptr)
-        return nullptr;
-
-    auto ds = calloc(1, struct DlcSymbol_);
-    ds->symbol = symbol;
-    blindSymbol(ds, dlc);
-    return ds;
-}
-
-void dlcGC() {
-    for (struct DlcHandle *tmp = dlc_l, *next; tmp != nullptr; tmp = next) {
-        next = tmp->next;
-        if (tmp->link == 0 && tmp->count == 0)
-            freeLibary_(tmp);
-    }
-}
-
-void freeSymbol_(struct DlcSymbol_ *symbol) {
-    if (symbol->dlc != nullptr) {
-        symbol->dlc->link--;
-        gc_count++;
-    }
-
-    free(symbol);
-
-    if (gc_count >= GC_SZIE)
-        dlcGC();
-}
-
-void dlcExit() {
+/**
+ * 退出函数
+ * 需要使用at_exit注册
+ */
+void aFuntool::dlcExit() {
     while (dlc_l != nullptr) {
         auto next = dlc_l->next;
         free(dlc_l);

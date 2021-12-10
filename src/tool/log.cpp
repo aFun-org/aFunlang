@@ -17,6 +17,7 @@
 #include <cstdarg>
 #include <cstring>
 #include "tool.hpp"
+using namespace aFuntool;
 
 #ifdef aFunWIN32
 #include <windows.h>
@@ -32,47 +33,43 @@
 
 #undef calloc
 
-typedef struct LogNode LogNode;
-struct LogNode {  // 日志信息记录节点
-    LogLevel level;
-    const char *id;
-    pid_t tid;
-    char *date;  // 需要释放
-    time_t time;
-    const char *file;
-    int line;
-    const char *func;
-    char *info;  // 需要释放
+namespace aFuntool {
+    typedef struct LogNode LogNode;
+    struct LogNode {  // 日志信息记录节点
+        LogLevel level = log_info;
+        const char *id = "SYSTEM";
+        pid_t tid = 0;
+        char *date = nullptr;  // 需要释放
+        time_t time = 0;
+        const char *file = "unknown";
+        int line = 1;
+        const char *func = "unknown";
+        char *info = nullptr;  // 需要释放
 
-    LogNode *next;
+        LogNode *next = nullptr;
+    };
+
+    LogFactory log_factory {};  // NOLINT
+}
+
+struct ansyData {
+    pthread_mutex_t *mutex;
 };
 
-static struct LogFactory {
-    bool init;  // 是否已经初始化
-    pid_t pid;
+static void destructLogSystemAtExit(void *);
+static void *ansyWritrLog(void *);
 
-    FILE *log;  // 记录文件输出的位置
-    FILE *csv;
+aFuntool::LogFactory::LogFactory() {  // NOLINT cond 通过 pthread_cond_init 实现初始化
+    init=false;
+    pid=0;
+    log = nullptr;
+    csv = nullptr;
 
-    Logger sys_log;
-
-    bool asyn;  // 异步
-    pthread_t pt;
-    pthread_cond_t cond;  // 有日志
-    LogNode *log_buf;
-    LogNode **plog_buf;  // 指向 log_buf的末端
-} log_factory = {.init=false};
-static pthread_mutex_t log_factory_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define MUTEX (&log_factory_mutex)
-
-static void destructLogSystemAtExit(void *_);
-static void *ansyWritrLog_(void *_);
-
-/**
- * 输出日志系统的相关信息, Debug使用
- */
-void printLogSystemInfo() {
-    printf("Log system on %p\n", &log_factory);
+    asyn=false;
+    pt = 0;
+    pthread_cond_init(&cond, nullptr);
+    log_buf = nullptr;
+    plog_buf = nullptr;
 }
 
 /**
@@ -85,115 +82,118 @@ void printLogSystemInfo() {
  *
  * 该程序线程不安全
  * @param path 日志保存的地址
- * @param asyn 是否启用异步
+ * @param is_asyn 是否启用异步
  * @return
  */
-int initLogSystem(FilePath path, bool asyn){
-    if (strlen(path) >= 218)  // 路径过长
+int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
+    if (path.size() >= 218)  // 路径过长
         return 0;
 
     int re = 1;
-    pthread_mutex_lock(MUTEX);
-    if (log_factory.init) {
-        pthread_mutex_unlock(MUTEX);
+    pthread_mutex_lock(&mutex);
+    if (init) {
+        pthread_mutex_unlock(&mutex);
         return 2;
     }
 
     char log_path[218] = {0};
     char csv_path[218] = {0};
-    log_factory.pid = getpid();  // 获取进程ID
+    pid = getpid();  // 获取进程ID
 
     char *ti = getTime(nullptr, (char *)"%Y-%m-%d%z");
-    snprintf(log_path, 218, "%s-%s.log", path, ti);
-    snprintf(csv_path, 218, "%s-%s.csv", path, ti);
+    snprintf(log_path, 218, "%s-%s.log", path.c_str(), ti);
+    snprintf(csv_path, 218, "%s-%s.csv", path.c_str(), ti);
     free(ti);
 
     uintmax_t log_size = getFileSize(log_path);
     uintmax_t csv_size = getFileSize(csv_path);
     bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
-    log_factory.log = fileOpen(log_path, (char *)"a");
-    if (log_factory.log == nullptr) {
+    log = fileOpen(log_path, (char *)"a");
+    if (log == nullptr) {
         perror("ERROR: ");
         printf("log_path = %s\n", log_path);
-        pthread_mutex_unlock(MUTEX);
+        pthread_mutex_unlock(&mutex);
         return 0;
     }
 
-    log_factory.csv = fileOpen(csv_path, (char *)"a");
-    if (log_factory.csv == nullptr) {
-        pthread_mutex_unlock(MUTEX);
+    csv = fileOpen(csv_path, (char *)"a");
+    if (csv == nullptr) {
+        pthread_mutex_unlock(&mutex);
         return 0;
     }
 
 #define CSV_FORMAT "%s,%s,%d,%d,%s,%ld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
     if (csv_head_write) {
-        fprintf(log_factory.csv, CSV_TITLE);  // 设置 cvs 标题
-        fflush(log_factory.csv);
+        fprintf(csv, CSV_TITLE);  // 设置 cvs 标题
+        fflush(csv);
     }
 #undef CSV_TITLE
 
-    log_factory.init = true;
-    log_factory.asyn = asyn;
-    if (log_factory.asyn) {
-        log_factory.plog_buf = &log_factory.log_buf;
-        pthread_cond_init(&log_factory.cond, nullptr);
-        pthread_create(&log_factory.pt, nullptr, ansyWritrLog_, nullptr);
+    init = true;
+    asyn = is_asyn;
+    if (is_asyn) {
+        plog_buf = &log_buf;
+        pthread_cond_init(&cond, nullptr);
+
+        auto *data = new ansyData;
+        data->mutex = &mutex;
+        pthread_create(&pt, nullptr, ansyWritrLog, data);
     }
 
-    initLogger(&(log_factory.sys_log), "SYSTEM", log_info);  // 设置为 debug, 记录 success 信息
-    pthread_mutex_unlock(MUTEX);
-    writeInfoLog(nullptr, "Log system init success");
-    writeInfoLog(nullptr, "Log .log size %lld", log_size);
-    writeInfoLog(nullptr, "Log .csv size %lld", csv_size);
+    sys_log = Logger("SYSTEM", log_info);  // 设置为 debug, 记录 success 信息
+    pthread_mutex_unlock(&mutex);
+    infoLog(nullptr, "Log system init success");
+    infoLog(nullptr, "Log .log size %lld", log_size);
+    infoLog(nullptr, "Log .csv size %lld", csv_size);
     aFunAtExit(destructLogSystemAtExit, nullptr);
     return re;
 }
 
-static void destructLogSystemAtExit(void *_) {
-    destructLogSystem();
+static void destructLogSystemAtExit(void *) {
+    log_factory.destruct();
 }
 
-int destructLogSystem() {
-    int re = 1;
-    pthread_mutex_lock(MUTEX);
-    if (!log_factory.init) {
-        re = 2;
+aFuntool::LogFactory::~LogFactory(){
+    destruct();
+}
+
+bool aFuntool::LogFactory::destruct() {
+    bool re = true;
+    pthread_mutex_lock(&mutex);
+    if (!init) {
+        re = false;
         goto RETURN;
     }
-    pthread_mutex_unlock(MUTEX);
 
-    writeInfoLog(nullptr, "Log system destruct by exit.");  // 需要用锁
+    pthread_mutex_unlock(&mutex);
 
-    pthread_mutex_lock(MUTEX);
-    log_factory.init = false;
-    if (log_factory.asyn) {
-        pthread_mutex_unlock(MUTEX);
-        pthread_cond_signal(&log_factory.cond);
+    infoLog(nullptr, "Log system destruct by exit.");  // 需要用锁
 
-        pthread_join(log_factory.pt, nullptr);
+    pthread_mutex_lock(&mutex);
+    init = false;
+    if (asyn) {
+        pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&cond);
 
-        pthread_mutex_lock(MUTEX);
-        pthread_cond_destroy(&log_factory.cond);
-        if (log_factory.log_buf != nullptr)
+        pthread_join(pt, nullptr);
+
+        pthread_mutex_lock(&mutex);
+        pthread_cond_destroy(&cond);
+        if (log_buf != nullptr)
             printf_stderr(0, "Logsystem destruct error.");
     }
 
-    fileClose(log_factory.log);
-    fileClose(log_factory.csv);
-    log_factory.log = nullptr;
-    log_factory.csv = nullptr;
+    fileClose(log);
+    fileClose(csv);
+    log = nullptr;
+    csv = nullptr;
 RETURN:
-    pthread_mutex_unlock(MUTEX);
+    pthread_mutex_unlock(&mutex);
     return re;
 }
 
-void initLogger(Logger *logger, const char *id, LogLevel level) {
-    memset(logger, 0, sizeof(Logger));
-    logger->id = id;
-    logger->level = level;
-}
 
 /* LogLevel和字符串的转换 */
 static const char *LogLevelName[] = {
@@ -229,20 +229,20 @@ static const char *LogLevelNameLong[] = {
  * @param func 函数名
  * @param info 日志内容
  */
-static void writeLogToFactory_(LogLevel level,
+void aFuntool::LogFactory::writeLog(LogLevel level,
                                const char *id, pid_t tid,
                                const char *ti, time_t t,
                                const char *file, int line, const char *func,
                                const char *info) {
 #define FORMAT "%s/[%s] %d %d {%s %ld} (%s:%d at %s) : '%s' \n"
     /* 写入文件日志 */
-    if (log_factory.log != nullptr) {
-        fprintf(log_factory.log, FORMAT, LogLevelName[level], id, log_factory.pid, tid, ti, t, file, line, func, info);
-        fflush(log_factory.log);
+    if (log != nullptr) {
+        fprintf(log, FORMAT, LogLevelName[level], id, pid, tid, ti, t, file, line, func, info);
+        fflush(log);
     }
-    if (log_factory.csv != nullptr) {
-        fprintf(log_factory.csv, CSV_FORMAT, LogLevelName[level], id, log_factory.pid, tid, ti, t, file, line, func, info);
-        fflush(log_factory.csv);
+    if (csv != nullptr) {
+        fprintf(csv, CSV_FORMAT, LogLevelName[level], id, pid, tid, ti, t, file, line, func, info);
+        fflush(csv);
     }
 
 #undef FORMAT
@@ -261,13 +261,13 @@ static void writeLogToFactory_(LogLevel level,
  * @param func 函数名
  * @param info 日志内容
  */
-static void writeLogToConsole_(LogLevel level,
-                               const char *id, pid_t tid,
-                               const char *ti, time_t t,
-                               const char *file, int line, const char *func,
-                               const char *info) {
+void aFuntool::LogFactory::writeConsole(LogLevel level,
+                                        const char *id, pid_t tid,
+                                        const char *ti, time_t t,
+                                        const char *file, int line, const char *func,
+                                        const char *info) {
 #define FORMAT_SHORT "\r* %s[%d] %s %ld (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
-#define STD_BUF_SIZE (STR_LEN(info) + 1024)
+#define STD_BUF_SIZE (strlen(info) + 1024)
     if (level < log_warning) {
         printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], tid, ti, t, file, line, info);
         fflush(stdout);
@@ -291,12 +291,12 @@ static void writeLogToConsole_(LogLevel level,
  * @param func 函数名
  * @param info 日志内容
  */
-static void writeLogToAsyn_(LogLevel level,
-                            const char *id, pid_t tid,
-                            const char *ti, time_t t,
-                            const char *file, int line, const char *func, const char *info) {
-#define D(i) (*(log_factory.plog_buf))->i
-    *(log_factory.plog_buf) = (LogNode *)calloc(1, sizeof(LogNode));
+void aFuntool::LogFactory::writeLogAsyn(LogLevel level,
+                                        const char *id, pid_t tid,
+                                        const char *ti, time_t t,
+                                        const char *file, int line, const char *func, const char *info) {
+#define D(i) (*(plog_buf))->i
+    *(plog_buf) = new aFuntool::LogNode;
     D(level) = level;
     D(id) = id;
     D(tid) = tid;
@@ -310,30 +310,41 @@ static void writeLogToAsyn_(LogLevel level,
 #undef D
 }
 
+
+aFuntool::LogNode *aFuntool::LogFactory::pop(){
+    struct LogNode *n = log_buf;
+    if (n != nullptr) {
+        log_buf = n->next;
+        if (log_buf == nullptr)
+            plog_buf = &log_buf;
+    }
+    return n;
+}
+
+
 /**
  * 异步写入日志程序
- * @param _ 无意义
  * @return
  */
-static void *ansyWritrLog_(void *_) {
-    pthread_mutex_lock(MUTEX);
+static void *ansyWritrLog(void *d) {
+    auto *data = (struct ansyData *)d;
+    pthread_mutex_lock(data->mutex);
     while (true) {
-        while (log_factory.init && log_factory.log_buf == nullptr)
-            pthread_cond_wait(&log_factory.cond, MUTEX);
-        if (!log_factory.init && log_factory.log_buf == nullptr)
+        while (!log_factory.news())
+            log_factory.wait();
+        if (log_factory.stop())
             break;
-#define D(i) log_factory.log_buf->i
-        writeLogToFactory_(D(level), D(id), D(tid), D(date), D(time), D(file), D(line), D(func), D(info));
+
+        LogNode *tmp = log_factory.pop();
+#define D(i) tmp->i
+        log_factory.writeLog(D(level), D(id), D(tid), D(date), D(time), D(file), D(line), D(func), D(info));
 #undef D
-        LogNode *tmp = log_factory.log_buf->next;
-        free(log_factory.log_buf->date);
-        free(log_factory.log_buf->info);
-        free(log_factory.log_buf);
-        log_factory.log_buf = tmp;
-        if (tmp == nullptr)
-            log_factory.plog_buf = &log_factory.log_buf;
+        free(tmp->date);
+        free(tmp->info);
+        delete tmp;
     }
-    pthread_mutex_unlock(MUTEX);
+    pthread_mutex_unlock(data->mutex);
+    delete data;
     return nullptr;
 }
 
@@ -349,142 +360,132 @@ static void *ansyWritrLog_(void *_) {
  * @param ap 格式字符串内容
  * @return
  */
-static int writeLog_(Logger *logger, 
-                     bool pc, 
-                     LogLevel level, 
-                     const char *file, int line, const char *func,
-                     const char *format, va_list ap){
+int aFuntool::LogFactory::newLog(Logger *logger,
+                                 bool pc,
+                                 LogLevel level,
+                                 const char *file, int line, const char *func,
+                                 const char *format, va_list ap){
     if (logger->level > level)
         return 2;
 
-    pthread_mutex_lock(MUTEX);
-    if (!log_factory.init || log_factory.log == nullptr) {
-        pthread_mutex_unlock(MUTEX);
+    pthread_mutex_lock(&mutex);
+    if (!init || log == nullptr) {
+        pthread_mutex_unlock(&mutex);
         return 1;
     }
-    CLEAR_FERROR(log_factory.log);
+    clear_ferror(log);
 
     // 输出 head 信息
     time_t t = 0;
-    char *ti = getTime(&t, "%Y-%m-%d %H:%M:%S");
+    char *ti = getTime(&t, ("%Y-%m-%d %H:%M:%S"));
     pid_t tid = gettid();
 
     char tmp[2048] = {0};
     vsnprintf(tmp, 1024, format, ap);  // ap只使用一次
     va_end(ap);
 
-    if (log_factory.asyn)
-        writeLogToAsyn_(level, logger->id, tid, ti, t, file, line, func, tmp);
+    if (asyn)
+        writeLogAsyn(level, logger->id.c_str(), tid, ti, t, file, line, func, tmp);
     else
-        writeLogToFactory_(level, logger->id, tid, ti, t, file, line, func, tmp);
+        writeLog(level, logger->id.c_str(), tid, ti, t, file, line, func, tmp);
 
     if (pc)
-        writeLogToConsole_(level, logger->id, tid, ti, t, file, line, func, tmp);
+        writeConsole(level, logger->id.c_str(), tid, ti, t, file, line, func, tmp);
 
-    pthread_mutex_unlock(MUTEX);
-    if (log_factory.asyn)
-        pthread_cond_signal(&log_factory.cond);
+    pthread_mutex_unlock(&mutex);
+    if (asyn)
+        pthread_cond_signal(&cond);
     free(ti);
     return 0;
 }
 
 #define CHECK_LOGGER() do {if (logger == nullptr) {logger = &(log_factory.sys_log);} \
-                           if (logger == nullptr || logger->id == nullptr) return -1;} while(0)
+                           if (logger == nullptr) return -1;} while(0)
 
-int writeTrackLog_(Logger *logger,
-                   const char *file, int line, const char *func,
-                   const char *format, ...) {
+aFuntool::Logger::Logger(const std::string &id, LogLevel level, bool exit) {
+    this->id = id;
+    this->level = level;
+    this->exit = exit;
+}
+
+#undef trackLog
+int aFuntool::Logger::writeTrackLog(const char *file, int line, const char *func,
+                                    const char *format, ...) {
 #if aFunWriteTrack
-    CHECK_LOGGER();
-
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, aFunConsoleTrack, log_track, file, line, func, format, ap);
+    return log_factory.newLog(this, aFunConsoleTrack, log_track, file, line, func, format, ap);
 #endif
 }
 
-int writeDebugLog_(Logger *logger,
-                   const char *file, int line, const char *func,
-                   const char *format, ...) {
+#undef debugLog
+int aFuntool::Logger::writeDebugLog(const char *file, int line, const char *func,
+                                    const char *format, ...) {
 #if aFunWriteDebug
-    CHECK_LOGGER();
-
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, aFunConsoleDebug, log_debug, file, line, func, format, ap);
+    return log_factory.newLog(this, aFunConsoleDebug, log_debug, file, line, func, format, ap);
 #endif
 }
 
-int writeInfoLog_(Logger *logger,
-                  const char *file, int line, const char *func,
-                  const char *format, ...) {
+#undef infoLog
+int aFuntool::Logger::writeInfoLog(const char *file, int line, const char *func,
+                                   const char *format, ...) {
 #if aFunWriteInfo
-    CHECK_LOGGER();
-
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, aFunConsoleInfo, log_info, file, line, func, format, ap);
+    return log_factory.newLog(this, aFunConsoleInfo, log_info, file, line, func, format, ap);
 #endif
 }
 
-int writeWarningLog_(Logger *logger,
-                     const char *file, int line, const char *func,
-                     const char *format, ...) {
+#undef warningLog
+int aFuntool::Logger::writeWarningLog(const char *file, int line, const char *func,
+                                      const char *format, ...) {
 #if !aFunIgnoreWarning
-    CHECK_LOGGER();
-
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, aFunConsoleWarning, log_warning, file, line, func, format, ap);
+    return log_factory.newLog(this, aFunConsoleWarning, log_warning, file, line, func, format, ap);
 #endif
 }
 
-int writeErrorLog_(Logger *logger,
-                   const char *file, int line, const char *func,
-                   const char *format, ...) {
+#undef errorLog
+int aFuntool::Logger::writeErrorLog(const char *file, int line, const char *func,
+                                    const char *format, ...) {
 #if !aFunIgnoreError
-    CHECK_LOGGER();
-
     va_list ap;
     va_start(ap, format);
-    return writeLog_(logger, aFunConsoleError, log_error, file, line, func, format, ap);
+    return log_factory.newLog(this, aFunConsoleError, log_error, file, line, func, format, ap);
 #endif
 }
 
-int writeSendErrorLog_(Logger *logger,
-                       const char *file, int line, const char *func,
-                       const char *format, ...) {
+#undef sendErrorLog
+int aFuntool::Logger::writeSendErrorLog(const char *file, int line, const char *func,
+                                        const char *format, ...) {
 #ifndef aFunOFFAllLog
-    CHECK_LOGGER();
 #if !aFunIgnoreSendError
     va_list ap;
     va_start(ap, format);
-    jmp_buf *buf = logger->buf;
-    writeLog_(logger, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
+    log_factory.newLog(this, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
 #endif
 
-    destructLogSystem();
-    if (buf != nullptr) {
-        initLogger(logger, nullptr, LogLevel(0));  // 清零
-        longjmp(*buf, 1);
-    } else
-        aFunExit(aFunExitFail);
+    if (this->exit)
+        throw LogFatalError("Log Fatal Error");
+    aFuntool::log_factory.destruct();
+    aFunExit(EXIT_FAILURE);
 #endif
 }
 
-int writeFatalErrorLog_(Logger *logger,
-                        const char *file, int line, const char *func,
-                        int exit_code, const char *format, ...) {
+#undef fatalErrorLog
+int aFuntool::Logger::writeFatalErrorLog(const char *file, int line, const char *func,
+                                         int exit_code, const char *format, ...) {
 #ifndef aFunOFFAllLog
-    CHECK_LOGGER();
-
 #if !aFunIgnoreFatal
     va_list ap;
     va_start(ap, format);
-    writeLog_(logger, aFunConsoleFatalError, log_fatal_error, file, line, func, format, ap);
+    log_factory.newLog(this, aFunConsoleFatalError, log_fatal_error, file, line, func, format, ap);
 #endif
 
-    destructLogSystem();
+    aFuntool::log_factory.destruct();
     if (exit_code == EXIT_SUCCESS)
         abort();
     else

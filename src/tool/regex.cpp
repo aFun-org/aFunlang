@@ -3,42 +3,29 @@
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
-#include "__regex.hpp"
+#include "regex.hpp"
+using namespace aFuntool;
 
-af_Regex *makeRegex(const char *pattern, char **error) {
-    if (error)
-        *error = nullptr;
-    if (!isCharUTF8(pattern)) {
-        *error = strCopy("Pattern not utf-8");
-        return nullptr;
-    }
+aFuntool::Regex::Regex(const std::string &pattern) {
+    if (!isCharUTF8(pattern))
+        throw RegexException("Pattern not utf-8");
 
     int error_code;
     size_t erroroffset;
     char regex_error[REGEX_ERROR_SIZE];
-    pcre2_code *re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, nullptr);
 
+    this->pattern = pattern;
+    this->re = pcre2_compile((PCRE2_SPTR)pattern.c_str(), PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, nullptr);
     if (re == nullptr) {
-        if (error) {
-            PCRE2_UCHAR buffer[256];
-            pcre2_get_error_message(error_code, buffer, sizeof(buffer));
-
-            snprintf(regex_error, sizeof(regex_error), "Regex failed: %d: %s\n", (int) erroroffset, buffer);
-            *error = strCopy(regex_error);
-        }
-        return nullptr;
+        PCRE2_UCHAR buffer[256];
+        pcre2_get_error_message(error_code, buffer, sizeof(buffer));
+        snprintf(regex_error, sizeof(regex_error), "R%d: %s\n", (int) erroroffset, buffer);
+        throw RegexException(regex_error);
     }
-
-    auto rg = calloc(1, af_Regex);
-    rg->pattern = strCopy(pattern);
-    rg->re = re;
-    return rg;
 }
 
-void freeRegex(af_Regex *rg) {
-    pcre2_code_free(rg->re);
-    free(rg->pattern);
-    free(rg);
+aFuntool::Regex::~Regex() {
+    pcre2_code_free(re);
 }
 
 /*
@@ -48,50 +35,39 @@ void freeRegex(af_Regex *rg) {
  * 返回  (0) - 不可完全匹配或不可匹配
  * 返回 (>0) - 失败
  */
-int matchRegex(const char *subject, af_Regex *rg, char **error) {
-    if (error != nullptr)
-        *error = nullptr;
-    if (!isCharUTF8(subject)) {
-        if (error != nullptr)
-            *error = strCopy("Subject not utf-8");
-        return 0;
-    }
+int aFuntool::Regex::match(const char *subject) {
+    if (!isCharUTF8(subject))
+        throw RegexException("Subject not utf-8");
 
     char regex_error[REGEX_ERROR_SIZE];
-    auto sub = (PCRE2_SPTR)subject;
     PCRE2_SIZE sub_len = strlen(subject);
-    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(rg->re, nullptr);
-    int rc = pcre2_match(rg->re, sub, sub_len, 0, 0, match_data, nullptr);
+    pcre2_match_data *match_data = pcre2_match_data_create_from_pattern(re, nullptr);
+    int rc = pcre2_match(re, (PCRE2_SPTR)subject, sub_len, 0, 0, match_data, nullptr);
 
     if (rc < 0) {
         pcre2_match_data_free(match_data);
         if (rc == PCRE2_ERROR_NOMATCH)
             return 0;
         else {
-            if (error != nullptr) {
-                snprintf(regex_error, sizeof(regex_error), "Regex match '%s' failed by '%s'\n", subject, rg->pattern);
-                *error = strCopy(regex_error);
-            }
-            return -1;
+            snprintf(regex_error, sizeof(regex_error),
+                     "Regex match '%s' failed by '%s'\n", subject, pattern.c_str());
+            throw RegexException(regex_error);
         }
     }
 
     PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(match_data);
     if (ovector[0] > ovector[1]) {
-        if (error != nullptr) {
-            snprintf(regex_error, sizeof(regex_error),
-                     "\\K was used in an assertion to set the match start after its end.\n"
-                     "From end to start the match was: %.*s\n",
-                     (int) (ovector[0] - ovector[1]), (char *) (subject + ovector[1]));
-            *error = strCopy(regex_error);
-        }
+        snprintf(regex_error, sizeof(regex_error),
+                 "\\K was used in an assertion to set the match start after its end.\n"
+                 "From end to start the match was: %.*s\n",
+                 (int) (ovector[0] - ovector[1]), (char *) (subject + ovector[1]));
         pcre2_match_data_free(match_data);
-        return -2;
+        throw RegexException(regex_error);
     }
 
-    int result = 0;
+    int ret = 0;
     if (ovector[0] == 0 && ovector[1] == sub_len) // 完全匹配
-        result = 1;
+        ret = 1;
     pcre2_match_data_free(match_data);
-    return result;
+    return ret;
 }

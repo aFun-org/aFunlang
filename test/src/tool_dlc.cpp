@@ -1,48 +1,43 @@
-﻿#include <stdio.h>
-#include <stdlib.h>
+﻿#include <cstdio>
+#include <cstdlib>
 #include "tool.hpp"
+using namespace aFuntool;
 
 int test_func() {
     return 100;
 }
 
 int main(int argc, char **argv) {
-    char *lib = nullptr;
     atexit(dlcExit);
 
     if (argc != 2)
         return EXIT_FAILURE;
 
-    lib = argv[1];
-    DlcHandle *dlc = openLibary(lib, RTLD_NOW);  // TEST_LIB_PATH 传进来的分隔符 都是 "/"
+    char *lib = argv[1];
+    DlcHandle *dlc = openLibrary(lib, RTLD_NOW);  // TEST_LIB_PATH 传进来的分隔符 都是 "/"
     if (dlc == nullptr) {
         fprintf(stderr, "libary not found!\n");
         return EXIT_FAILURE;
     }
 
-    typedef int func(int a);
-    typedef int test(void);
-    NEW_DLC_SYMBOL(int, INT);
-    NEW_DLC_SYMBOL(func, FUNC);
-    NEW_DLC_SYMBOL(test, TEST);
+    typedef int (func)(int a);
+    typedef int (test)();
 
-    DLC_SYMBOL(INT) a;
-    DLC_SYMBOL(FUNC) fun;
-    DLC_SYMBOL(TEST) test_fun;
+    DlcSymbol<int> *a;
+    DlcSymbol<func> *fun;
+    DlcSymbol<test> *test_fun;
 
-    a = READ_SYMBOL(dlc, "num", INT);
-    fun = READ_SYMBOL(dlc, "test", FUNC);
-    test_fun = MAKE_SYMBOL(test_func, TEST);
+    a = dlc->get_symbol<int>("num");
+    fun = dlc->get_symbol<func>("test");
+    test_fun = new DlcSymbol<test>(test_func, nullptr);
 
-    int test_func_result = GET_SYMBOL(test_fun)();
+    int test_func_result = test_fun->getSymbol()();
 
-    printf("a = %d, test = %d\n", GET_SYMBOL(a), GET_SYMBOL(fun)(test_func_result));
+    printf("a = %d, test = %d\n", *(a->getSymbol()), fun->getSymbol()(test_func_result));
 
-    FREE_SYMBOL(a);
-    FREE_SYMBOL(fun);
-    FREE_SYMBOL(test_fun);
-
-    if (!freeLibary(dlc))
-        return EXIT_FAILURE;
+    delete a;
+    delete fun;
+    delete test_fun;
+    dlc->close();
     return EXIT_SUCCESS;
 }

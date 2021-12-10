@@ -1,119 +1,162 @@
 ﻿#ifndef AFUN_LOG_HPP
 #define AFUN_LOG_HPP
-#include <csetjmp>
+#include <iostream>
 #include "aFunToolExport.h"
 #include "macro.hpp"
-#include "log_macro.hpp"
+#include "log_m.hpp"
+#include "iostream"
 
-enum LogLevel {
-    log_track = 0,
-    log_debug = 1,
-    log_info = 2,
-    log_warning = 3,
-    log_error = 4,
-    log_send_error = 5,
-    log_fatal_error = 6,
-};
-typedef enum LogLevel LogLevel;
+using namespace aFuntool;
 
-enum LogFactoryPrintConsole {
-    log_pc_all = 1,
-    log_pc_w = 2,
-    log_pc_e = 3,
-    log_pc_quite = 4,
-};
-typedef enum LogFactoryPrintConsole LogFactoryPrintConsole;
+namespace aFuntool {
+    enum LogLevel {
+        log_track = 0,
+        log_debug = 1,
+        log_info = 2,
+        log_warning = 3,
+        log_error = 4,
+        log_send_error = 5,
+        log_fatal_error = 6,
+    };
+    typedef enum LogLevel LogLevel;
 
-struct Logger {
-    const char *id;
-    LogLevel level;
-    jmp_buf *buf;
-};
-typedef struct Logger Logger;
+    class LogFatalError : public std::exception {
+        std::string message;
+    public:
+        explicit LogFatalError(const char *msg) {message = msg;}
+        virtual const char *what() {return message.c_str();}
+    };
 
-AFUN_TOOL_EXPORT void printLogSystemInfo();
-AFUN_TOOL_EXPORT int initLogSystem(FilePath path, bool asyn);
-AFUN_TOOL_EXPORT int destructLogSystem();
+    class LogFactory;
 
-AFUN_TOOL_EXPORT void initLogger(Logger *logger, const char *id, LogLevel level);
-AFUN_TOOL_EXPORT void destructLogger(Logger *logger);
+    class Logger {
+        std::string id;
+        LogLevel level = log_debug;
+        bool exit = true;
+        friend class LogFactory;
 
-AFUN_TOOL_EXPORT int writeTrackLog_(Logger *logger,
-                                    const char *file, int line, const char *func,
-                                    const char *format, ...);
-AFUN_TOOL_EXPORT int writeDebugLog_(Logger *logger,
-                                    const char *file, int line, const char *func,
-                                    const char *format, ...);
-AFUN_TOOL_EXPORT int writeInfoLog_(Logger *logger,
-                                   const char *file, int line, const char *func,
-                                   const char *format, ...);
-AFUN_TOOL_EXPORT int writeWarningLog_(Logger *logger,
-                                      const char *file, int line, const char *func,
-                                      const char *format, ...);
-AFUN_TOOL_EXPORT int writeErrorLog_(Logger *logger,
-                                    const char *file, int line, const char *func,
-                                    const char *format, ...);
-AFUN_TOOL_EXPORT int writeSendErrorLog_(Logger *logger,
-                                        const char *file, int line, const char *func,
-                                        const char *format, ...);
-AFUN_TOOL_EXPORT int writeFatalErrorLog_(Logger *logger,
-                                         const char *file, int line, const char *func,
-                                         int exit_code, const char *format, ...);
+    public:
+        explicit Logger(const std::string &id, LogLevel level=log_warning, bool exit=true);
+        int writeTrackLog(const char *file, int line, const char *func,
+                          const char *format, ...);
+        int writeDebugLog(const char *file, int line, const char *func,
+                          const char *format, ...);
+        int writeInfoLog(const char *file, int line, const char *func,
+                         const char *format, ...);
+        int writeWarningLog(const char *file, int line, const char *func,
+                            const char *format, ...);
+        int writeErrorLog(const char *file, int line, const char *func,
+                          const char *format, ...);
+        int writeSendErrorLog(const char *file, int line, const char *func,
+                              const char *format, ...);
+        int writeFatalErrorLog(const char *file, int line, const char *func,
+                               int exit_code, const char *format, ...);
+    };
 
-#ifdef __FILENAME__
-#define file_line (char *)__FILENAME__ , (int)__LINE__
-#else
-#define file_line (char *)"xx", (int)__LINE__
-#endif
+
+    class LogFactory {
+        bool init;  // 是否已经初始化
+        pid_t pid;
+
+        FILE *log;  // 记录文件输出的位置
+        FILE *csv;
+
+        bool asyn;  // 异步
+        pthread_t pt;
+        pthread_cond_t cond;  // 有日志
+        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+        struct LogNode *log_buf;
+        struct LogNode **plog_buf;  // 指向 log_buf的末端
+
+    public:
+        Logger sys_log = Logger("SYSTEM");
+
+        LogFactory();
+        ~LogFactory();
+        int initLogSystem(ConstFilePath path, bool is_asyn=true);
+        bool destruct();
+        void writeLog(LogLevel level,
+                      const char *id, pid_t tid,
+                      const char *ti, time_t t,
+                      const char *file, int line, const char *func,
+                      const char *info);
+        static void writeConsole(LogLevel level,
+                          const char *id, pid_t tid,
+                          const char *ti, time_t t,
+                          const char *file, int line, const char *func,
+                          const char *info);
+        void writeLogAsyn(LogLevel level,
+                          const char *id, pid_t tid,
+                          const char *ti, time_t t,
+                          const char *file, int line, const char *func, const char *info);
+        int newLog(Logger *logger,
+                    bool pc,
+                    LogLevel level,
+                    const char *file, int line, const char *func,
+                    const char *format, va_list ap);
+        bool news() {return !init || log_buf != nullptr;}
+        int wait() {return pthread_cond_wait(&cond, &mutex);}
+        bool stop() {return !init && log_buf == nullptr;}
+        struct LogNode *pop();
+    };
+
+
+    extern LogFactory log_factory;
+}
+
+#ifndef NO_DEFINE_LOG_MACRO
+
+#define getLogger(logger) ((logger) == nullptr ? &aFuntool::log_factory.sys_log : (logger))
 
 #if aFunWriteTrack
-#define writeTrackLog(logger, ...) writeTrackLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
+#define trackLog(logger, ...) getLogger(logger)->writeTrackLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #else
-#define writeTrackLog(logger, ...) (nullptr)
+#define trackLog(logger, ...) (nullptr)
 #endif
 
 #if aFunWriteDebug
-#define writeDebugLog(logger, ...) writeDebugLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
-#define assertDebugLog(c, logger, ...) ((c) || writeDebugLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define debugLog(logger, ...) getLogger(logger)->writeDebugLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define assertDebugLog(c, logger, ...) ((c) || debugLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
-#define writeDebugLog(logger, ...) (nullptr)
+#define debugLog(logger, ...) (nullptr)
 #define assertDebugLog(c, logger, ...) (c)
 #endif
 
 #if aFunWriteInfo
-#define writeInfoLog(logger, ...) writeInfoLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
-#define assertInfoLog(c, logger, ...) ((c) || writeInfoLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define infoLog(logger, ...) getLogger(logger)->writeInfoLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define assertInfoLog(c, logger, ...) ((c) || infoLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
-#define writeInfoLog(logger, ...) (nullptr)
+#define infoLog(logger, ...) (nullptr)
 #define assertInfoLog(c, logger, ...) (c)
 #endif
 
 #if !aFunIgnoreWarning
-#define writeWarningLog(logger, ...) writeWarningLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
-#define assertWarningLog(c, logger, ...) ((c) || writeWarningLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define warningLog(logger, ...) getLogger(logger)->writeWarningLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define assertWarningLog(c, logger, ...) ((c) || warningLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
-#define writeWarningLog(logger, ...) (nullptr)
+#define warningLog(logger, ...) (nullptr)
 #define assertWarningLog(c, logger, ...) (c)
 #endif
 
 #if !aFunIgnoreError
-#define writeErrorLog(logger, ...) writeErrorLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
-#define assertErrorLog(c, logger, ...) ((c) || writeErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define errorLog(logger, ...) getLogger(logger)->writeErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define assertErrorLog(c, logger, ...) ((c) || errorLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
-#define writeErrorLog(logger, ...) (nullptr)
+#define errorLog(logger, ...) (nullptr)
 #define assertErrorLog(c, logger, ...) (c)
 #endif
 
 #if !aFunOFFAllLog
-#define writeSendErrorLog(logger, ...) writeSendErrorLog_(logger, file_line, __FUNCTION__, __VA_ARGS__)
-#define writeFatalErrorLog(logger, exit_code, ...) writeFatalErrorLog_(logger, file_line, __FUNCTION__, exit_code, __VA_ARGS__)
-#define assertSendErrorLog(c, logger, ...) ((c) || writeSendErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
-#define assertFatalErrorLog(c, logger, exit_code, ...) ((c) || writeFatalErrorLog(logger, exit_code, "Assert " #c " error : " __VA_ARGS__))
+#define sendErrorLog(logger, ...) getLogger(logger)->writeSendErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define fatalErrorLog(logger, exit_code, ...) getLogger(logger)->writeFatalErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, exit_code, __VA_ARGS__)
+#define assertSendErrorLog(c, logger, ...) ((c) || sendErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
+#define assertFatalErrorLog(c, logger, exit_code, ...) ((c) || fatalErrorLog(logger, exit_code, "Assert " #c " error : " __VA_ARGS__))
 #else
-#define writeSendErrorLog(logger, ...) (nullptr)
-#define writeFatalErrorLog(logger, exit_code, ...) (nullptr)
+#define sendErrorLog(logger, ...) (nullptr)
+#define fatalErrorLog(logger, exit_code, ...) (nullptr)
 #define assertSendErrorLog(c, logger, ...) (c)
 #define assertFatalErrorLog(c, logger, exit_code, ...) (c)
 #endif
 
+#endif
 #endif //AFUN_LOG_HPP

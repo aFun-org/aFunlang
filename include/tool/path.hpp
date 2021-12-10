@@ -5,22 +5,28 @@
 /* 路径工具 */
 #ifdef aFunWIN32_NO_CYGWIN
 
-#define SEP "\\"
-#define SEP_CH '\\'
+namespace aFuntool {
+    static const char *SEP = "\\";
+    static const char SEP_CH = '\\';
+}
 
 #else
 
-#define SEP "/"
-#define SEP_CH '/'
+namespace aFuntool {
+    const char *SEP = "/";
+    const char SEP_CH = '/';
+}
 
 #endif
 
-#define SHARED_PREFIX aFunSharePrefix
-#define SHARED_SUFFIX aFunShareSuffix
+namespace aFuntool {
+    static const char *SHARED_PREFIX = aFunSharePrefix;
+    static const char *SHARED_SUFFIX = aFunShareSuffix;
 
-#define STATIC_PREFIX aFunStaticPrefix
-#define STATIC_SUFFIX aFunStaticSuffix
+    static const char *STATIC_PREFIX = aFunStaticPrefix;
+    static const char *STATIC_SUFFIX = aFunStaticSuffix;
 
-#define EXE_SUFFIX aFunExeSuffix
+    static const char *EXE_SUFFIX = aFunExeSuffix;
+}
 
 #endif //AFUN_PATH_HPP

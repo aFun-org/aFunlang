@@ -7,12 +7,15 @@
 
 #include "tool.hpp"
 #include "__md5.hpp"
+using namespace aFuntool;
 
-struct MD5_CTX {
-    unsigned int count[2];
-    unsigned int state[4];
-    unsigned char buffer[64];
-};
+namespace aFuntool {
+    struct MD5_CTX {
+        unsigned int count[2];
+        unsigned int state[4];
+        unsigned char buffer[64];
+    };
+}
 
 static void MD5Transform(unsigned int state[4],unsigned char block[64]);
 static void MD5Encode(unsigned char *output,const unsigned int *input,unsigned int len);
@@ -25,8 +28,8 @@ unsigned char PADDING[] = {
                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
         };
 
-MD5_CTX *MD5Init(void) {
-    MD5_CTX *context = calloc(1, MD5_CTX);
+MD5_CTX *aFuntool::MD5Init() {
+    auto context = calloc(1, MD5_CTX);
     context->count[0] = 0;
     context->count[1] = 0;
     context->state[0] = 0x67452301;
@@ -36,7 +39,7 @@ MD5_CTX *MD5Init(void) {
     return context;
 }
 
-void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len) {
+void aFuntool::MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len) {
     unsigned int i;
     unsigned int index;
     unsigned int part_len;
@@ -63,7 +66,7 @@ void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len) {
     memcpy(&context->buffer[index], &input[i], input_len - i);
 }
 
-void MD5Final(MD5_CTX *context, unsigned char digest[16]) {
+void aFuntool::MD5Final(MD5_CTX *context, unsigned char digest[16]) {
     unsigned int index;
     unsigned int pad_len;
     unsigned char bits[8];
@@ -187,7 +190,8 @@ static void MD5Transform(unsigned int state[4], unsigned char block[64]) {
 }
 
 
-char *getFileMd5(char *path) {
+template <typename T>
+T aFuntool::getFileMd5(T &path) {
     FILE *fd;
 
     unsigned long ret;
@@ -195,11 +199,11 @@ char *getFileMd5(char *path) {
     unsigned char md5_value[MD5_SIZE];
 
     if ((fd = fileOpen(path, "rb")) == nullptr)
-        return nullptr;
+        throw aFuntool::FileOpenException();
 
     char *md5str = calloc(MD5_STRING, char);
     MD5_CTX *md5 = MD5Init();
-    while (1) {
+    while (true) {
         ret = fread(data, 1, READ_DATA_SIZE, fd);
         MD5Update(md5, data, ret);
         if (ret < READ_DATA_SIZE)
@@ -214,3 +218,6 @@ char *getFileMd5(char *path) {
 
     return md5str;
 }
+
+template AFUN_TOOL_EXPORT char *aFuntool::getFileMd5(char *&path);
+template AFUN_TOOL_EXPORT std::string aFuntool::getFileMd5(std::string &path);

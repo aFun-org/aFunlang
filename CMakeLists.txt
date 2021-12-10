@@ -119,82 +119,82 @@ include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
 add_subdirectory(src)
 include(aFunHeader)
 
-install(EXPORT aFunlang
-        NAMESPACE "aFunlang::"
-        DESTINATION ${INSTALL_CMAKEDIR}
-        COMPONENT dev)
-
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
-                                 VERSION ${aFunVersion}
-                                 COMPATIBILITY SameMinorVersion)
-
-# 生成Config.cmake文件
-set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
-set(BINDIR ${INSTALL_BINDIR})
-set(LIBDIR ${INSTALL_LIBDIR})
-set(CMAKEDIR ${INSTALL_CMAKEDIR})
-set(INCLUDEDIR ${INSTALL_INCLUDEDIR})
-
-if (MSVC)
-    set(pthread_INSTALL_DIR ${deps_install_dir})
-    set(pthread_CMAKEDIR pthread_cmake)
-    set(path_var pthread_INSTALL_DIR pthread_CMAKEDIR)
-else()
-    set(path_var)
-endif()
-if (WIN32 AND NOT CYGWIN)  # cygwin 不需要编译 dl
-    foreach(tgt dlfcn pcre2 fflags)
-        set(${tgt}_INSTALL_DIR ${deps_install_dir})
-        set(${tgt}_CMAKEDIR ${deps_install_dir}/${${tgt}_cmake})
-        list(APPEND path_var ${tgt}_INSTALL_DIR ${tgt}_CMAKEDIR)
-    endforeach()
-else()
-    foreach(tgt pcre2 fflags)
-        set(${tgt}_INSTALL_DIR ${deps_install_dir})
-        set(${tgt}_CMAKEDIR ${deps_install_dir}/${${tgt}_cmake})
-        list(APPEND path_var ${tgt}_INSTALL_DIR ${tgt}_CMAKEDIR)
-    endforeach()
-
-    set(dlfcn_INSTALL_DIR \"\")  # 空字符串
-    set(dlfcn_CMAKEDIR \"\")  # 空字符串
-endif()
-
-configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/aFunlangConfig.cmake.in
-                              ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfig.cmake
-                              INSTALL_DESTINATION ${INSTALL_CMAKEDIR}
-                              PATH_VARS INSTALL_DIR BINDIR LIBDIR CMAKEDIR INCLUDEDIR ${path_var}
-                              INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})  # 指定安装目录 (用于生成相对路径)
-unset(INSTALL_DIR)
-unset(BINDIR)
-unset(LIBDIR)
-unset(CMAKEDIR)
-unset(INCLUDEDIR)
-foreach(tgt dlfcn pcre2 fflags)
-    unset(${tgt}_INSTALL_DIR)
-    unset(${tgt}_CMAKEDIR)
-endforeach()
-unset(path_var)
-
-install(FILES
-        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfig.cmake
-        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
-        DESTINATION ${INSTALL_CMAKEDIR})
-
-function(install_directory dir)
-    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
-    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
-endfunction()
-
-install_directory(${INSTALL_LOGDIR})
-install_directory(${INSTALL_LOCALSTATEDIR})
-install_directory(${INSTALL_LANGDIR})
-
+#install(EXPORT aFunlang
+#        NAMESPACE "aFunlang::"
+#        DESTINATION ${INSTALL_CMAKEDIR}
+#        COMPONENT dev)
+#
+#include(CMakePackageConfigHelpers)
+#write_basic_package_version_file(${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
+#                                 VERSION ${aFunVersion}
+#                                 COMPATIBILITY SameMinorVersion)
+#
+## 生成Config.cmake文件
+#set(INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
+#set(BINDIR ${INSTALL_BINDIR})
+#set(LIBDIR ${INSTALL_LIBDIR})
+#set(CMAKEDIR ${INSTALL_CMAKEDIR})
+#set(INCLUDEDIR ${INSTALL_INCLUDEDIR})
+#
+#if (MSVC)
+#    set(pthread_INSTALL_DIR ${deps_install_dir})
+#    set(pthread_CMAKEDIR pthread_cmake)
+#    set(path_var pthread_INSTALL_DIR pthread_CMAKEDIR)
+#else()
+#    set(path_var)
+#endif()
+#if (WIN32 AND NOT CYGWIN)  # cygwin 不需要编译 dl
+#    foreach(tgt dlfcn pcre2 fflags)
+#        set(${tgt}_INSTALL_DIR ${deps_install_dir})
+#        set(${tgt}_CMAKEDIR ${deps_install_dir}/${${tgt}_cmake})
+#        list(APPEND path_var ${tgt}_INSTALL_DIR ${tgt}_CMAKEDIR)
+#    endforeach()
+#else()
+#    foreach(tgt pcre2 fflags)
+#        set(${tgt}_INSTALL_DIR ${deps_install_dir})
+#        set(${tgt}_CMAKEDIR ${deps_install_dir}/${${tgt}_cmake})
+#        list(APPEND path_var ${tgt}_INSTALL_DIR ${tgt}_CMAKEDIR)
+#    endforeach()
+#
+#    set(dlfcn_INSTALL_DIR \"\")  # 空字符串
+#    set(dlfcn_CMAKEDIR \"\")  # 空字符串
+#endif()
+#
+#configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/aFunlangConfig.cmake.in
+#                              ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfig.cmake
+#                              INSTALL_DESTINATION ${INSTALL_CMAKEDIR}
+#                              PATH_VARS INSTALL_DIR BINDIR LIBDIR CMAKEDIR INCLUDEDIR ${path_var}
+#                              INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})  # 指定安装目录 (用于生成相对路径)
+#unset(INSTALL_DIR)
+#unset(BINDIR)
+#unset(LIBDIR)
+#unset(CMAKEDIR)
+#unset(INCLUDEDIR)
+#foreach(tgt dlfcn pcre2 fflags)
+#    unset(${tgt}_INSTALL_DIR)
+#    unset(${tgt}_CMAKEDIR)
+#endforeach()
+#unset(path_var)
+#
+#install(FILES
+#        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfig.cmake
+#        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
+#        DESTINATION ${INSTALL_CMAKEDIR})
+#
+#function(install_directory dir)
+#    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
+#    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
+#endfunction()
+#
+#install_directory(${INSTALL_LOGDIR})
+#install_directory(${INSTALL_LOCALSTATEDIR})
+#install_directory(${INSTALL_LANGDIR})
+#
 set(BUILD_TEST FALSE CACHE BOOL "Enable run test program")
 set(_build_test ${BUILD_TEST})
 if (_build_test)
     enable_testing()
 endif()
 add_subdirectory(test)  # test的相关内容仍会被构建
-
-include(info)
+#
+#include(info)

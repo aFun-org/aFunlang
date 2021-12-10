@@ -1,6 +1,6 @@
-﻿#include <stdio.h>
-#include "aFun.hpp"
+﻿#include <cstdio>
 #include "tool.hpp"
+using namespace aFuntool;
 
 
 #define TEST_WRITE(test, type) do{\
@@ -20,7 +20,7 @@ int main() {
     int16_t test16 = 20;
     int32_t test32 = 30;
     int64_t test64 = 40;
-    const char *testStr = "test";
+    const std::string testStr = "test";
 
     getEndian();
 
@@ -30,10 +30,10 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    TEST_WRITE(byteWriteInt_8(file, test8), uint8_t);
-    TEST_WRITE(byteWriteInt_16(file, test16), uint16_t);
-    TEST_WRITE(byteWriteInt_32(file, test32), uint32_t);
-    TEST_WRITE(byteWriteInt_64(file, test64), uint64_t);
+    TEST_WRITE(byteWriteInt(file, test8), uint8_t);
+    TEST_WRITE(byteWriteInt(file, test16), uint16_t);
+    TEST_WRITE(byteWriteInt(file, test32), uint32_t);
+    TEST_WRITE(byteWriteInt(file, test64), uint64_t);
     TEST_WRITE(byteWriteStr(file, testStr), str);
 
     fileClose(file);
@@ -42,7 +42,7 @@ int main() {
     int16_t rtest16;
     int32_t rtest32;
     int64_t rtest64;
-    char *rtestStr;
+    std::string rtestStr;
 
     file = fileOpen("test.byte", "rb");
     if (file == nullptr) {
@@ -50,23 +50,22 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    TEST_READ(byteReadInt_8(file, &rtest8), uint8_t);
-    TEST_READ(byteReadInt_16(file, &rtest16), uint16_t);
-    TEST_READ(byteReadInt_32(file, &rtest32), uint32_t);
-    TEST_READ(byteReadInt_64(file, &rtest64), uint64_t);
-    TEST_READ(byteReadStr(file, &rtestStr), str);
+    TEST_READ(byteReadInt(file, (uint8_t *)&rtest8), uint8_t);
+    TEST_READ(byteReadInt(file, (uint16_t *)&rtest16), uint16_t);
+    TEST_READ(byteReadInt(file, (uint32_t *)&rtest32), uint32_t);
+    TEST_READ(byteReadInt(file, (uint64_t *)&rtest64), uint64_t);
+    TEST_READ(byteReadStr(file, rtestStr), str);
 
-    if (rtest8 != test8 || rtest16 != test16 || rtest32 != test32 || rtest64 != test64 || !EQ_STR(rtestStr, testStr)) {
+    if (rtest8 != test8 || rtest16 != test16 || rtest32 != test32 || rtest64 != test64 || rtestStr != testStr) {
         printf("error.\n");
-        printf("rtest8 = %d , test = %d\n", rtest8, test8);
+        printf("rtest8 = %d, test = %d\n", rtest8, test8);
         printf("rtest16 = %d, test = %d\n", rtest16, test16);
         printf("rtest32 = %d, test = %d\n", rtest32, test32);
         printf("rtest64 = %ld, test = %ld\n", rtest64, test64);
-        printf("rtestStr = %s\ntestStr = %s\n", rtestStr, testStr);
+        printf("rtestStr = %s\ntestStr = %s\n", rtestStr.c_str(), testStr.c_str());
         return EXIT_FAILURE;
     }
 
-    free(rtestStr);
     fileClose(file);
     printf("success.\n");
     return EXIT_SUCCESS;

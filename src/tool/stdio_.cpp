@@ -9,6 +9,7 @@
 #include <cstdarg>
 #include <csignal>
 #include "tool.hpp"
+using namespace aFuntool;
 
 /* 注意:
  * checkStdin在Windows和Linux之前行为具有差别, 本质目标时检查缓冲区是否有内容
@@ -21,7 +22,7 @@
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
 
-#define BUFF_SIZE (40960)
+const int BUFF_SIZE = 40960;
 static char buffer[BUFF_SIZE + 1] = "";
 static size_t index = 0;
 static size_t next = 0;
@@ -215,7 +216,7 @@ static int fcheck_stdin(HANDLE std_i, HANDLE std_o) {
     return 1;
 }
 
-int fgetc_stdin() {
+int aFuntool::fgetc_stdin() {
     if (!_isatty(_fileno(stdin)))
         return fgetc(stdin);
 
@@ -239,7 +240,7 @@ RETURN:
     return re;
 }
 
-char *fgets_stdin_(char *buf, size_t len) {
+char *aFuntool::fgets_stdin_(char *buf, size_t len) {
     if (!_isatty(_fileno(stdin)))
         return fgets(buf, (int)len, stdin);
 
@@ -271,7 +272,7 @@ RETURN:
     return buf;
 }
 
-bool fclear_stdin() {
+bool aFuntool::fclear_stdin() {
     if (!_isatty(_fileno(stdin))) {
         rewind(stdin);  // 仅 winAPI 可用
         return true;
@@ -291,7 +292,11 @@ bool fclear_stdin() {
     return false;
 }
 
-void stdio_signal_init(bool signal) {
+/**
+ * 接管ctrl+c信号初始化
+ * @param signal 初始化/还原
+ */
+void aFuntool::stdio_signal_init(bool signal) {
     HANDLE std_i = GetStdHandle(STD_INPUT_HANDLE);
     DWORD  mode;
     GetConsoleMode(std_i, &mode);
@@ -302,7 +307,10 @@ void stdio_signal_init(bool signal) {
     SetConsoleMode(std_i, mode);
 }
 
-bool stdio_check_signal() {
+/**
+ * 检查是否有ctrl+c信号
+ */
+bool aFuntool::stdio_check_signal() {
     HANDLE std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE) {
@@ -317,7 +325,7 @@ bool stdio_check_signal() {
     return res;
 }
 
-int convertMultiByte(char **dest, const char *str, UINT from, UINT to) {
+int aFuntool::convertMultiByte(char **dest, const char *str, UINT from, UINT to) {
     if (str == nullptr || dest == nullptr)
         return 0;
 
@@ -340,7 +348,7 @@ int convertMultiByte(char **dest, const char *str, UINT from, UINT to) {
     return re;
 }
 
-int convertWideByte(wchar_t **dest, const char *str, UINT from) {
+int aFuntool::convertWideByte(wchar_t **dest, const char *str, UINT from) {
     if (str == nullptr || dest == nullptr)
         return 0;
 
@@ -352,7 +360,7 @@ int convertWideByte(wchar_t **dest, const char *str, UINT from) {
     return MultiByteToWideChar(from, 0, str, -1, *dest, tmp_len);
 }
 
-int convertFromWideByte(char **dest, const wchar_t *str, UINT to) {
+int aFuntool::convertFromWideByte(char **dest, const wchar_t *str, UINT to) {
     if (str == nullptr || dest == nullptr)
         return 0;
 
@@ -364,10 +372,10 @@ int convertFromWideByte(char **dest, const wchar_t *str, UINT to) {
     return WideCharToMultiByte(to, 0, str, -1, *dest, dest_len, nullptr, nullptr);
 }
 
-int fgets_stdin(char **dest, int len) {
+int aFuntool::fgets_stdin(char **dest, int len) {
     int re = 0;
     if (!_isatty(_fileno(stdin))) {
-        *dest = NEW_STR(len);
+        *dest = calloc(len + 1, char);
         re = fgets(*dest, len, stdin) != nullptr;
         if (!re)
             free(*dest);
@@ -381,7 +389,7 @@ int fgets_stdin(char **dest, int len) {
     return re;
 }
 
-int fungetc_stdin(int ch) {
+int aFuntool::fungetc_stdin(int ch) {
     if (!_isatty(_fileno(stdin)))
         return ungetc(ch, stdin);
 
@@ -411,7 +419,7 @@ int fungetc_stdin(int ch) {
  * 有内容则返回true
  * 无内容则返回false
  */
-bool checkStdin() {
+bool aFuntool::checkStdin() {
     HANDLE std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE std_o = GetStdHandle(STD_OUTPUT_HANDLE);
     pthread_mutex_lock(&buffer_mutex);
@@ -422,7 +430,7 @@ bool checkStdin() {
     return true;
 }
 
-int fputs_std_(const char *str, FILE *std) {
+int aFuntool::fputs_std_(const char *str, FILE *std) {
     if (std == nullptr)
         return 0;
 
@@ -439,7 +447,7 @@ int fputs_std_(const char *str, FILE *std) {
     return re;
 }
 
-size_t vprintf_std_(FILE *std, size_t buf_len, const char *format, va_list ap) {
+size_t aFuntool::vprintf_std_(FILE *std, size_t buf_len, const char *format, va_list ap) {
     if (std == nullptr)
         return 0;
 
@@ -457,32 +465,18 @@ size_t vprintf_std_(FILE *std, size_t buf_len, const char *format, va_list ap) {
     return re;
 }
 
-size_t printf_stdout(size_t buf_len, const char *format, ...) {
-    va_list ap;
-    va_start(ap, format);
-    size_t re = vprintf_std_(stdout, buf_len, format, ap);
-    va_end(ap);
-    return re;
-}
-
-size_t printf_stderr(size_t buf_len, const char *format, ...) {
-    va_list ap;
-    va_start(ap, format);
-    size_t re = vprintf_std_(stderr, buf_len, format, ap);
-    va_end(ap);
-    return re;
-}
-
 #else
 #include <unistd.h>
 #include <fcntl.h>
 
-static pthread_mutex_t fcntl_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
+namespace aFuntool {
+    static pthread_mutex_t fcntl_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
+}
 
 // 用于Linux平台的IO函数
 // 默认Linux平台均使用utf-8
 
-int fgets_stdin(char **dest, int len) {
+int aFuntool::fgets_stdin(char **dest, int len) {
     *dest = calloc(len, char);
     if (fgets(*dest, len, stdin) == nullptr)
         return 0;
@@ -496,7 +490,7 @@ int fgets_stdin(char **dest, int len) {
  *
  * 参考自: https://gist.github.com/SuperH-0630/a4190b89d21c349a8d6882ca71453ae6
  */
-bool checkStdin(void) {
+bool aFuntool::checkStdin(void) {
     if (!isatty(fileno(stdin)))
         return true;
     bool re = false;
@@ -518,7 +512,7 @@ bool checkStdin(void) {
     return re;
 }
 
-bool fclear_stdin(void) {
+bool aFuntool::fclear_stdin(void) {
     if (!isatty(fileno(stdin)))
         return true;
 

@@ -6,8 +6,18 @@
 #include <cstdlib>
 #include <cstring>
 #include "tool.hpp"
+using namespace aFuntool;
 
-char *charToStr(char ch) {
+#define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
+#define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
+
+#define NEW_STR(size) calloc((size) + 1, char)
+#define NEW_WSTR(size) calloc((size) + 1, wchar_t)
+
+#define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
+#define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))
+
+char *aFuntool::charToStr(char ch) {
     if (ch == NUL)
         return nullptr;
     char *tmp = NEW_STR(1);
@@ -15,7 +25,7 @@ char *charToStr(char ch) {
     return tmp;
 }
 
-char *strCopy(const char *str){
+char *aFuntool::strCopy(const char *str){
     char *tmp = NEW_STR(STR_LEN(str));
     if (str != nullptr)
         strcpy(tmp, str);
@@ -27,7 +37,7 @@ char *strCopy(const char *str){
  * 函数名: strJoin
  * 目标: 拼接两个字符串
  */
-char *strJoin(const char *first, const char *second, bool free_first, bool free_last) {
+char *aFuntool::strJoin(const char *first, const char *second, bool free_first, bool free_last) {
     if (first == nullptr && second == nullptr)
         return nullptr;
     else if (first == nullptr){
@@ -55,32 +65,10 @@ char *strJoin(const char *first, const char *second, bool free_first, bool free_
 }
 
 /*
- * 函数名: strJoin_
- * 目标: 拼接两个字符串, 比 strJoin 更快
- */
-char *strJoin_(const char *first, const char *second, bool free_first, bool free_last) {
-    char *new_str = NEW_STR(STR_LEN(first) + STR_LEN(second));
-    strcat(new_str, first);
-    if (second != nullptr)
-        strcat(new_str, second);
-
-    if (free_first) {
-        auto free_ = const_cast<char *>(first);
-        free(free_);
-    }
-
-    if (free_last) {
-        auto free_ = const_cast<char *>(first);
-        free(free_);
-    }
-    return new_str;
-}
-
-/*
  * 函数名: convertToWstr
  * 目标: char *转换为wchar_t *
  */
-wchar_t *convertToWstr(const char *str, bool free_old) {
+wchar_t *aFuntool::convertToWstr(const char *str, bool free_old) {
     size_t len = STR_LEN(str);
     auto tmp = NEW_WSTR(len);
     mbstowcs(tmp, str, len);
@@ -96,7 +84,7 @@ wchar_t *convertToWstr(const char *str, bool free_old) {
  * 函数名: convertToStr
  * 目标: wchar_t *转换为char *
  */
-char *convertToStr(const wchar_t *wstr, bool free_old) {
+char *aFuntool::convertToStr(const wchar_t *wstr, bool free_old) {
     size_t len = WSTR_LEN(wstr);
     auto tmp = NEW_STR(len);
     wcstombs(tmp, wstr, len);

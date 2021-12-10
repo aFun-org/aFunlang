@@ -4,10 +4,18 @@
  */
 
 #include "tool.hpp"
+using namespace aFuntool;
 
-time33_t time33(const char *str) {
+time33_t aFuntool::time33(const char *str) {
     unsigned int hash = 5381;
     while(*str)
         hash += (hash << 5 ) + (*str++);
-    return (hash & 0x7FFFFFFF);
+    return (hash & 0x7FFFFFFF);  // NOLINT
+}
+
+time33_t aFuntool::time33(const std::string &str) {
+    unsigned int hash = 5381;
+    for (auto ch : str)
+        hash += (hash << 5 ) + ch;
+    return (hash & 0x7FFFFFFF);  // NOLINT
 }

@@ -3,18 +3,26 @@
 #include "aFunToolExport.h"
 
 /* 文件处理工具 */
-AFUN_TOOL_EXPORT int checkFile(const char *path);
-AFUN_TOOL_EXPORT time_t getFileMTime(const char *path);
-AFUN_TOOL_EXPORT char *joinPath(const char *path, const char *name, const char *suffix);
-AFUN_TOOL_EXPORT char *getFileName(const char *path_1);
-AFUN_TOOL_EXPORT char *getFileNameWithPath(const char *path_1);
-AFUN_TOOL_EXPORT char *getFilePath(const char *path_1, int dep);
-AFUN_TOOL_EXPORT char *getFileSurfix(const char *path);
-AFUN_TOOL_EXPORT char *fileNameToVar(char *name, bool need_free);
-AFUN_TOOL_EXPORT char *findPath(char *path, const char *env, bool need_free);
-AFUN_TOOL_EXPORT char *getExedir(int dep);
-AFUN_TOOL_EXPORT uintmax_t getFileSize(const char *path);
-AFUN_TOOL_EXPORT bool isCharUTF8(const char *str);
-AFUN_TOOL_EXPORT FILE *fileOpen(const char *path_, const char *mode_);
-AFUN_TOOL_EXPORT int fileClose(FILE *file);
+namespace aFuntool {
+    class FileOpenException : public std::exception {
+        virtual const char *what() {return "File cannot open";}
+    };
+
+    AFUN_TOOL_EXPORT int checkFile(const std::string &path);
+    AFUN_TOOL_EXPORT time_t getFileMTime(const std::string &path);
+    AFUN_TOOL_EXPORT std::string joinPath(const std::string &path, const std::string &name, const std::string &suffix);
+    AFUN_TOOL_EXPORT std::string getFileName(const std::string &path);
+    AFUN_TOOL_EXPORT std::string getFilePathName(const std::string &path);
+    AFUN_TOOL_EXPORT std::string getFilePath(const std::string &path_1, int dep);
+    AFUN_TOOL_EXPORT std::string getFileSurfix(const std::string &path);
+    AFUN_TOOL_EXPORT std::string fileNameToVar(const std::string &name);
+    AFUN_TOOL_EXPORT std::string findPath(const std::string &path, const std::string &env);
+    AFUN_TOOL_EXPORT std::string getExedir(int dep);
+    AFUN_TOOL_EXPORT uintmax_t getFileSize(const std::string &path);
+    AFUN_TOOL_EXPORT bool isCharUTF8(const char *str);
+    AFUN_TOOL_EXPORT bool isCharUTF8(const std::string &str);
+    AFUN_TOOL_EXPORT FILE *fileOpen(const std::string &path_, const char *mode_);
+    AFUN_TOOL_EXPORT FILE *fileOpen(const char *path_, const char *mode_);
+    AFUN_TOOL_EXPORT int fileClose(FILE *file);
+}
 #endif //AFUN_FILE_HPP

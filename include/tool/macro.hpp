@@ -19,8 +19,10 @@
 #define NUL ((char)0)
 #define W_NUL ((wchar_t)0)
 
-typedef uint32_t FileLine;  // 文件行号
-typedef char *FilePath;  // 文件路径
-typedef const char *ConstFilePath;  // 文件路径
+namespace aFuntool {
+    typedef uint32_t FileLine;  // 文件行号
+    typedef std::string &FilePath;  // 文件路径
+    typedef const std::string &ConstFilePath;  // 文件路径
+}
 
 #endif //AFUN_MACRO_HPP

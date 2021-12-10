@@ -5,11 +5,11 @@
 
 #include <sys/stat.h>
 #include <cctype>
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 
 #include "tool.hpp"
+using namespace aFuntool;
 
 #ifdef aFunWIN32_NO_CYGWIN
 #ifdef _MSC_VER
@@ -36,13 +36,19 @@ typedef struct stat aFun_stat;
 typedef char aFun_path;
 #endif
 
-static int get_stat(aFun_stat *stat_, const char *path_){
+/**
+ * 获取文件的stat结构体
+ * @param stat stat 保存地址
+ * @param path 路径 (utf-8)
+ * @return
+ */
+static int get_stat(aFun_stat &stat_, const std::string &path_){
     int re;
 #ifdef aFunWIN32_NO_CYGWIN
     aFun_path *tmp = nullptr;
-    if (convertWideByte(&tmp, path_, CP_UTF8) == 0)
+    if (convertWideByte(&tmp, path_.c_str(), CP_UTF8) == 0)
         return -1;
-    re = _wstat64(tmp, stat_);
+    re = _wstat64(tmp, &stat_);
     free(tmp);  // 如果 path 为nullptr, 则释放最新生成的 wchat_t
 #else
     re = stat(path_, stat_);
@@ -50,17 +56,16 @@ static int get_stat(aFun_stat *stat_, const char *path_){
     return re;
 }
 
-/*
- * 函数名: checkFile
+/**
  * 目标判断文件类型, 若是普通文件返回1, 若是文件夹返回2, 其他遇到错误返回0
  */
-int checkFile(const char *path_){
-    if (path_ == nullptr)
+int aFuntool::checkFile(const std::string &path){
+    if (path.empty())
         return 0;
 
     int re = 0;
     aFun_stat stat;
-    if (get_stat(&stat, path_) != 0)
+    if (get_stat(stat, path) != 0)
         re = 0;
     else if (S_ISREG(stat.st_mode))  // 普通文件
         re = 1;
@@ -69,156 +74,135 @@ int checkFile(const char *path_){
     return re;
 }
 
-time_t getFileMTime(const char *path) {
+/**
+ * 获取文件最后修改时间
+ */
+time_t aFuntool::getFileMTime(const std::string &path) {
     aFun_stat stat;
-    if (path == nullptr || get_stat(&stat, path) != 0)
+    if (path.empty() || get_stat(stat, path) != 0)
         return 0;
     return stat.st_mtime;
 }
 
-char *joinPath(const char *path, const char *name, const char *suffix) {
-    char *name_suffix = strJoin(name, suffix, false, false);
-    char *res;
-
-    if (path != nullptr && path[STR_LEN(path) - 1] == SEP_CH)
-        res = strJoin(path, name_suffix, false, true);
-    else if (path != nullptr) {
-        res = strJoin(path, SEP, false, false);
-        res = strJoin(res, name_suffix, true, true);
-    } else
-        res = name_suffix;
-
-    /* name_suffix已经在上述的strJoin释放 */
-    return res;
+/**
+ * 拼接路径
+ * @param path 路径
+ * @param name 文件名
+ * @param suffix 后缀
+ * @return
+ */
+std::string aFuntool::joinPath(const std::string &path, const std::string &name, const std::string &suffix) {
+    std::string name_suffix = name + suffix;
+    if (!path.empty() && *(path.end()) == SEP_CH)
+        return path + name_suffix;
+    else if (!path.empty())
+        return path + SEP + name_suffix;
+    return name_suffix;
 }
 
-/*
- * 函数: getFileName
- * 目标: 给定路径获取该路径所指定的文件名
+/**
+ * 给定路径获取该路径所指定的文件名
  */
-char *getFileName(const char *path_1){
-    char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
-    char *slash;  // 名字开始的字符的指针
-    char *point;  // 后缀名.所在的字符的指针
+std::string aFuntool::getFileName(const std::string &path){
+    int sep = 0;
+    if (*(path.end()) == SEP_CH)  // 若路径的最后一个字符为SEP, 则忽略此SEP
+        sep = -1;
 
-    if (path[STR_LEN(path) - 1] == SEP_CH)  // 若路径的最后一个字符为SEP, 则忽略此SEP
-        path[STR_LEN(path) - 1] = NUL;
-
-    if ((slash = strrchr(path, SEP_CH)) == nullptr)
-        slash = path;
+    auto slash = path.find_last_of('/');
+    if (slash == std::string::npos)
+        slash = 0;
     else
         slash++;
 
-    if ((point = getFileSurfix(path)) != nullptr)
-        *point = NUL;
-
-    char *res = strCopy(slash);
-    free(path);
-    return res;
+    return path.substr(path.size() - slash + sep, slash);
 }
 
-/*
- * 函数名: getFileNameWithPath
- * 目标: 取出指定路径的文件后缀
+/**
+ * 获取 文件路径+文件名（排除后缀）
  */
-char *getFileNameWithPath(const char *path_1){
-    char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
-    char *point;  // 后缀名.所在的字符的指针
-    char *res;
-
-    if ((point = getFileSurfix(path)) != nullptr)
-        *point = NUL;
-
-    res = strCopy(path);
-    free(path);
-    return res;
+std::string aFuntool::getFilePathName(const std::string &path){
+    auto point = path.find_last_of('.');
+    if (point == std::string::npos)
+        return path;
+    return path.substr(point);
 }
 
-char *getFilePath(const char *path_1, int dep){
-    char *path = strCopy(path_1);  // 复制数组, 避免path_1是常量字符串导致无法修改其值
-    char *slash;  // 后缀名.所在的字符的指针
-    char *res;
-
-    if (path[STR_LEN(path) - 1] == SEP_CH)  // 若路径的最后一个字符为SEP, 则忽略此SEP
-        path[STR_LEN(path) - 1] = NUL;
-
-    for(NULL; dep > 0; dep--) {
-        if ((slash = strrchr(path, SEP_CH)) != nullptr)
-            *slash = NUL;
+/**
+ * 获取文件路径(不包含文件名)
+ */
+std::string aFuntool::getFilePath(const std::string &path, int dep){
+    std::string::size_type point = path.size();
+    for (int i = 0; i < dep; i++) {
+        auto tmp = path.rfind('.', point);
+        if (tmp == std::string::npos)
+            break;
+        point = tmp;
     }
-
-    res = strCopy(path);
-    free(path);
-    return res;
+    return path.substr(point);
 }
 
-/*
- * 函数名: getFileSurfix
- * 目标: 获取文件后缀 (不会生成新字符串)
+/**
+ * 获取文件后缀
  */
-char *getFileSurfix(const char *path) {
-    const char *last_ = strrchr(path, SEP_CH);
-    char *ret;
-
-    if (last_ != nullptr)
-        ret = const_cast<char *>(strrchr(last_ + 1, '.'));
+std::string aFuntool::getFileSurfix(const std::string &path) {
+    auto point = path.find_last_of('.');
+    if (point == std::string::npos)
+        point = 0;
     else
-        ret = const_cast<char *>(strrchr(path, '.'));
+        point++;
+
+    std::string ret = path.substr(path.size() - point, point);
     return ret;
 }
 
-/*
- * 函数名: fileNameToVar
- * 目标: 把一个文件名转换为合法的变量名(替换不合法字符为_)
+/**
+ * 把一个文件名转换为合法的变量名(替换不合法字符为_)
+ * @param name 路径
+ * @param need_free 是否需要释放
  */
-char *fileNameToVar(char *name, bool need_free){
-    char *var;
-    if (need_free)
-        var = name;  // 在原数据上修改
-    else
-        var = strCopy(name);  // 复制新的数据再修改
+std::string aFuntool::fileNameToVar(const std::string &name){
+    char *var = strCopy(name.c_str());  // 复制新的数据再修改
 
     if (!isalpha(*var) && *var != '_')
         var = strJoin("_", var, false, true);
     for (char *tmp = var; *tmp != 0; tmp++)
         if (!isalnum(*tmp) &&'_' != *tmp)
             *tmp = '_';
-    return var;
+    std::string ret = var;
+    free(var);
+    return ret;
 }
 
-/*
- * 函数名: findPath
- * 目标: 转换路径为合法路径（相对路径->绝对路径, 绝对路径保持不变）
+/**
+ * 转换路径为合法路径（相对路径->绝对路径, 绝对路径保持不变）
+ * @param path 文件路径
+ * @param env 环境 必须以 / 结尾
+ * @param need_free 是否需要释放 path
  */
-char *findPath(char *path, const char *env, bool need_free){
-    assert(env[STR_LEN(env) - 1] == SEP_CH);  // env 必须以 SEP 结尾
+std::string aFuntool::findPath(const std::string &path, const std::string &env){
 #ifdef __linux
-    if (path[0] != SEP_CH) { // 不以 / 开头
+    if (path[0] != SEP_CH) // 不以 / 开头
 #else
-    if (!(isupper(path[0]) && (path)[1] == ':')) {  // 不以盘符开头
+    if (!(isupper(path[0]) && (path)[1] == ':'))  // 不以盘符开头
 #endif
-        return strJoin(env, path, false, need_free);  // 调整为相对路径模式
-    } else if (!need_free) { // 若设置了need_free为true, 则等于先复制在释放原来的, 等于没有复制， 所以不做操作
-        return strCopy(path);
-    } else {
-        return path;
-    }
+        return env + path;  // 调整为相对路径模式
+    return path;
 }
 
-/*
- * 函数名: 获取可执行程序目录
- * dep表示从可执行程序往回跳出的层数
+/**
+ * 获取可执行程序目录
+ * @param dep 从可执行程序往回跳出的层数
  */
-char *getExedir(int dep) {
+std::string aFuntool::getExedir(int dep) {
     aFun_path exepath[218] = {0};
 #ifdef aFunWIN32_NO_CYGWIN
     DWORD ret = GetModuleFileNameW(nullptr, exepath, 217);  // 预留一位给NUL
-    if (ret == 0 || WSTR_LEN(exepath) == 0)
-        return nullptr;
+    if (ret == 0 || wcslen(exepath) == 0)
+        return "";
     char *path = nullptr;
     if (convertFromWideByte(&path, exepath, CP_UTF8) == 0)
-        return nullptr;
-    char *re = getFilePath(path, dep + 1);
+        return "";
+    std::string re = getFilePath(path, dep + 1);
     free(path);
     return re;
 #else
@@ -229,21 +213,24 @@ char *getExedir(int dep) {
 #endif
 }
 
-uintmax_t getFileSize(const char *path) {
+/**
+ * @param path 文件路径 (utf-8)
+ * @return 文件大小
+ */
+uintmax_t aFuntool::getFileSize(const std::string &path) {
     aFun_stat stat;
     int ret;
-    ret = get_stat(&stat, path);
+    ret = get_stat(stat, path);
     if(ret != 0)
         return 0;  // 获取失败。
     return (uintmax_t)stat.st_size;  // 返回文件大小
-
 }
 
-/*
- * 函数名: isCharUTF8
- * 目标: 检查给定字符串是否utf-8编码
+/**
+ * 检查给定字符串是否utf-8编码
+ * @param str 字符串
  */
-bool isCharUTF8(const char *str) {
+bool aFuntool::isCharUTF8(const char *str) {
     int code = 0;  // utf-8 多字节数
     for (const char *ch = str; *ch != NUL; ch++) {
         unsigned char c = *ch;
@@ -274,8 +261,18 @@ bool isCharUTF8(const char *str) {
     return true;
 }
 
-FILE *fileOpen(const char *path_, const char *mode_) {
-    if (STR_LEN(mode_) >= 5)
+bool aFuntool::isCharUTF8(const std::string &str) {
+    return isCharUTF8(str.c_str());
+}
+
+/**
+ * 打开指定文件
+ * @param path_ 路径 (utf-8)
+ * @param mode_ 模式
+ * @return
+ */
+FILE *aFuntool::fileOpen(const char *path_, const char *mode_) {
+    if (strlen(mode_) >= 5)
         return nullptr;
 #ifdef aFunWIN32_NO_CYGWIN
     FILE *file = nullptr;
@@ -294,6 +291,15 @@ FILE *fileOpen(const char *path_, const char *mode_) {
 #endif
 }
 
-int fileClose(FILE *file) {
+FILE *aFuntool::fileOpen(const std::string &path_, const char *mode_) {
+    return fileOpen(path_.c_str(), mode_);
+}
+
+/**
+ * 关闭文件, 本质和fclose一样
+ * @param file FILE
+ * @return
+ */
+int aFuntool::fileClose(FILE *file) {
     return fclose(file);
 }
