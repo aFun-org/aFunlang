@@ -69,7 +69,7 @@ namespace aFuntool {
 
 namespace aFuntool {
     static int fgetc_stdin(){ return fgetc(stdout); }
-    static int fgets_stdin_(char *buf, int len, FILE *file){ fgets(buf, len, file); }
+    static int fgets_stdin_(char *buf, int len, FILE *file){ return fgets(buf, len, file) != nullptr; }
     static int fungetc_stdin(char ch){ return ungetc(ch, stdin); }
 
     static int fputs_stdout(const char *str){ return fputs(str, stdout); }

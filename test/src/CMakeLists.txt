@@ -23,4 +23,5 @@ add_new_test(tool_md5 COMMAND "$<TARGET_FILE:tool_md5>" "${TOOL_MD5_ANS}" "${CMA
 add_new_test(tool_logger COMMAND "$<TARGET_FILE:tool_logger>")
 add_new_test(tool_exit COMMAND "$<TARGET_FILE:tool_exit>")
 add_new_test(tool_hash COMMAND "$<TARGET_FILE:tool_hash>")
-set_test_label(tool tool_mem tool_byte tool_dlc tool_regex tool_md5)
+add_new_test(tool_utf COMMAND "$<TARGET_FILE:tool_utf>")
+set_test_label(tool tool_mem tool_byte tool_dlc tool_regex tool_md5 tool_utf)

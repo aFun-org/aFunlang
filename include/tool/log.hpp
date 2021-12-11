@@ -100,7 +100,6 @@ namespace aFuntool {
         struct LogNode *pop();
     };
 
-
     extern LogFactory log_factory;
 }
 

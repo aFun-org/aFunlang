@@ -490,7 +490,7 @@ int aFuntool::fgets_stdin(char **dest, int len) {
  *
  * 参考自: https://gist.github.com/SuperH-0630/a4190b89d21c349a8d6882ca71453ae6
  */
-bool aFuntool::checkStdin(void) {
+bool aFuntool::checkStdin() {
     if (!isatty(fileno(stdin)))
         return true;
     bool re = false;
@@ -500,7 +500,7 @@ bool aFuntool::checkStdin(void) {
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
     int ch = fgetc(stdin);
-    CLEAR_FERROR(stdin);
+    clear_ferror(stdin);
 
     if (ch != EOF) {
         ungetc(ch, stdin);
@@ -512,7 +512,7 @@ bool aFuntool::checkStdin(void) {
     return re;
 }
 
-bool aFuntool::fclear_stdin(void) {
+bool aFuntool::fclear_stdin() {
     if (!isatty(fileno(stdin)))
         return true;
 
@@ -523,7 +523,7 @@ bool aFuntool::fclear_stdin(void) {
     int ch;
     do {
         ch = fgetc(stdin);
-        CLEAR_FERROR(stdin);
+        clear_ferror(stdin);
     } while (ch != EOF);
 
     fcntl(STDIN_FILENO, F_SETFL, oldf);

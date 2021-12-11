@@ -13,8 +13,8 @@ namespace aFuntool {
 #else
 
 namespace aFuntool {
-    const char *SEP = "/";
-    const char SEP_CH = '/';
+    static const char *SEP = "/";
+    static const char SEP_CH = '/';
 }
 
 #endif

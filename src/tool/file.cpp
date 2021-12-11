@@ -51,7 +51,7 @@ static int get_stat(aFun_stat &stat_, const std::string &path_){
     re = _wstat64(tmp, &stat_);
     free(tmp);  // 如果 path 为nullptr, 则释放最新生成的 wchat_t
 #else
-    re = stat(path_, stat_);
+    re = stat(path_.c_str(), &stat_);
 #endif
     return re;
 }
@@ -133,12 +133,12 @@ std::string aFuntool::getFilePathName(const std::string &path){
 std::string aFuntool::getFilePath(const std::string &path, int dep){
     std::string::size_type point = path.size();
     for (int i = 0; i < dep; i++) {
-        auto tmp = path.rfind('.', point);
+        auto tmp = path.rfind(SEP_CH, point);
         if (tmp == std::string::npos)
             break;
         point = tmp;
     }
-    return path.substr(point);
+    return path.substr(0, point);
 }
 
 /**
@@ -207,8 +207,8 @@ std::string aFuntool::getExedir(int dep) {
     return re;
 #else
     ssize_t ret =  readlink("/proc/self/exe", exepath, 217);  // 预留一位给NUL
-    if (ret == -1 || STR_LEN(exepath) == 0)
-        return nullptr;
+    if (ret == -1 || strlen(exepath) == 0)
+        return "";
     return getFilePath(exepath, dep + 1);
 #endif
 }
