@@ -12,7 +12,9 @@
 
 /* 取代calloc函数 */
 namespace aFuntool {
-    static void *safeFree(void *&ptr) {if (ptr != nullptr) free(ptr); ptr = nullptr; return nullptr;}
+    template <typename T>
+    static void *safeFree(T *&ptr) {if (ptr != nullptr) free((void *)ptr); ptr = nullptr; return nullptr;}
+
     static void *safeCalloc(size_t n, size_t size){
         void *re = calloc(n, size);
         if (re == nullptr)
@@ -20,7 +22,7 @@ namespace aFuntool {
         return re;
     }
 
-    template <class T>
+    template <typename T>
     static void *safeCalloc(size_t n, T &t){
         void *re = calloc(n, sizeof(decltype(*t)));  // 自动推断类型
         if (re == nullptr)

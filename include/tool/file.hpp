@@ -4,10 +4,6 @@
 
 /* 文件处理工具 */
 namespace aFuntool {
-    class FileOpenException : public std::exception {
-        virtual const char *what() {return "File cannot open";}
-    };
-
     AFUN_TOOL_EXPORT int checkFile(const std::string &path);
     AFUN_TOOL_EXPORT time_t getFileMTime(const std::string &path);
     AFUN_TOOL_EXPORT std::string joinPath(const std::string &path, const std::string &name, const std::string &suffix);

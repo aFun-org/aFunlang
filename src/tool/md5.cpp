@@ -199,7 +199,7 @@ T aFuntool::getFileMd5(T &path) {
     unsigned char md5_value[MD5_SIZE];
 
     if ((fd = fileOpen(path, "rb")) == nullptr)
-        throw aFuntool::FileOpenException();
+        throw FileOpenException(path);
 
     char *md5str = calloc(MD5_STRING, char);
     MD5_CTX *md5 = MD5Init();

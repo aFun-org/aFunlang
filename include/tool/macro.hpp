@@ -5,9 +5,9 @@
 
 #ifndef AFUN_MACRO_HPP
 #define AFUN_MACRO_HPP
-#include <stdbool.h>
-#include <inttypes.h>
-#include <stdarg.h>
+#include <iostream>
+#include <cinttypes>
+#include <cstdarg>
 #include "base.h"
 
 #ifndef __bool_true_false_are_defined
@@ -21,7 +21,7 @@
 
 namespace aFuntool {
     typedef uint32_t FileLine;  // 文件行号
-    typedef std::string &FilePath;  // 文件路径
+    typedef std::string FilePath;  // 文件路径
     typedef const std::string &ConstFilePath;  // 文件路径
 }
 

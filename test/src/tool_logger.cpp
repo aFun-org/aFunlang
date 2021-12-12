@@ -10,5 +10,8 @@ int main(int argc, char **argv){
 
     setlocale(LC_ALL, "");
     log_factory.initLogSystem(base_path + SEP + "aFunlog");
+
+    static auto logger = Logger("Test", aFuntool::log_info);
+    infoLog(&logger, "Test logger");
     aFunExit(0);
 }

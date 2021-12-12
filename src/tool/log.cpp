@@ -109,10 +109,9 @@ int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
     uintmax_t csv_size = getFileSize(csv_path);
     bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
-    log = fileOpen(log_path, (char *)"a");
+    log = fileOpen(log_path, "a");
     if (log == nullptr) {
         perror("ERROR: ");
-        printf("log_path = %s\n", log_path);
         pthread_mutex_unlock(&mutex);
         return 0;
     }
@@ -266,13 +265,13 @@ void aFuntool::LogFactory::writeConsole(LogLevel level,
                                         const char *ti, time_t t,
                                         const char *file, int line, const char *func,
                                         const char *info) {
-#define FORMAT_SHORT "\r* %s[%d] %s %ld (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
+#define FORMAT_SHORT "\r* %s[%s] %d %s %ld (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
 #define STD_BUF_SIZE (strlen(info) + 1024)
     if (level < log_warning) {
-        printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], tid, ti, t, file, line, info);
+        printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], id, tid, ti, t, file, line, info);
         fflush(stdout);
     } else {
-        printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], tid, ti, t, file, line, info);
+        printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], id, tid, ti, t, file, line, info);
         fflush(stderr);
     }
 #undef FORMAT_SHORT

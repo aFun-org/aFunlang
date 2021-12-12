@@ -133,7 +133,7 @@ std::string aFuntool::getFilePathName(const std::string &path){
 std::string aFuntool::getFilePath(const std::string &path, int dep){
     std::string::size_type point = path.size();
     for (int i = 0; i < dep; i++) {
-        auto tmp = path.rfind(SEP_CH, point);
+        auto tmp = path.rfind(SEP_CH, point - 1);
         if (tmp == std::string::npos)
             break;
         point = tmp;

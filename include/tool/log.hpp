@@ -20,13 +20,6 @@ namespace aFuntool {
     };
     typedef enum LogLevel LogLevel;
 
-    class LogFatalError : public std::exception {
-        std::string message;
-    public:
-        explicit LogFatalError(const char *msg) {message = msg;}
-        virtual const char *what() {return message.c_str();}
-    };
-
     class LogFactory;
 
     class Logger {
