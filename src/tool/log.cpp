@@ -59,7 +59,7 @@ struct ansyData {
 static void destructLogSystemAtExit(void *);
 static void *ansyWritrLog(void *);
 
-aFuntool::LogFactory::LogFactory() {  // NOLINT cond 通过 pthread_cond_init 实现初始化
+aFuntool::LogFactory::LogFactory() : sys_log("SYSTEM", log_info) {  // NOLINT cond 通过 pthread_cond_init 实现初始化
     init=false;
     pid=0;
     log = nullptr;
@@ -141,7 +141,6 @@ int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
         pthread_create(&pt, nullptr, ansyWritrLog, data);
     }
 
-    sys_log = Logger("SYSTEM", log_info);  // 设置为 debug, 记录 success 信息
     pthread_mutex_unlock(&mutex);
     infoLog(nullptr, "Log system init success");
     infoLog(nullptr, "Log .log size %lld", log_size);
@@ -401,10 +400,9 @@ int aFuntool::LogFactory::newLog(Logger *logger,
 #define CHECK_LOGGER() do {if (logger == nullptr) {logger = &(log_factory.sys_log);} \
                            if (logger == nullptr) return -1;} while(0)
 
-aFuntool::Logger::Logger(const std::string &id, LogLevel level, bool exit) {
-    this->id = id;
-    this->level = level;
-    this->exit = exit;
+aFuntool::Logger::Logger(const std::string &id_, LogLevel level_, bool exit_) : id {id_} {
+    this->level = level_;
+    this->exit = exit_;
 }
 
 #undef trackLog

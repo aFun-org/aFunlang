@@ -76,8 +76,8 @@ namespace aFuntool {
      */
     template <typename SYMBOL>
     class DlcSymbol {
-        SYMBOL *symbol;
-        class DlcHandle *dlc = nullptr;
+        const SYMBOL *symbol;
+        const DlcHandle *dlc = nullptr;
 
     public:
         /**
@@ -85,9 +85,7 @@ namespace aFuntool {
          * @param symbol 符号指针
          * @param dlc 句柄
          */
-        explicit DlcSymbol(SYMBOL *symbol, class DlcHandle *dlc) {
-            this->symbol = symbol;
-            this->dlc = dlc;
+        explicit DlcSymbol(SYMBOL *symbol_, class DlcHandle *dlc_) : symbol {symbol_}, dlc {dlc_} {
             if (this->dlc != nullptr)
                 this->dlc++;
         }

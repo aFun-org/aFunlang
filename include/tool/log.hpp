@@ -23,13 +23,13 @@ namespace aFuntool {
     class LogFactory;
 
     class Logger {
-        std::string id;
+        const std::string id;
         LogLevel level = log_debug;
         bool exit = true;
         friend class LogFactory;
 
     public:
-        explicit Logger(const std::string &id, LogLevel level=log_warning, bool exit=true);
+        explicit Logger(const std::string &id_, LogLevel level_=log_warning, bool exit_=true);
         int writeTrackLog(const char *file, int line, const char *func,
                           const char *format, ...);
         int writeDebugLog(const char *file, int line, const char *func,

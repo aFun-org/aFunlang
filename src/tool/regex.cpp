@@ -6,7 +6,7 @@
 #include "regex.hpp"
 using namespace aFuntool;
 
-aFuntool::Regex::Regex(const std::string &pattern) {
+aFuntool::Regex::Regex(const std::string &pattern_) : pattern {pattern_} {
     if (!isCharUTF8(pattern))
         throw RegexException("Pattern not utf-8");
 
@@ -14,7 +14,6 @@ aFuntool::Regex::Regex(const std::string &pattern) {
     size_t erroroffset;
     char regex_error[REGEX_ERROR_SIZE];
 
-    this->pattern = pattern;
     this->re = pcre2_compile((PCRE2_SPTR)pattern.c_str(), PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, nullptr);
     if (re == nullptr) {
         PCRE2_UCHAR buffer[256];

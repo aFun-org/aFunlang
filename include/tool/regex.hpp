@@ -11,9 +11,9 @@ namespace aFuntool {
 
     class Regex {
         pcre2_code *re;  // 正则表达式
-        std::string pattern;  // 正则表达式的字符串
+        const std::string pattern;  // 正则表达式的字符串
     public:
-        explicit Regex (const std::string &pattern);
+        explicit Regex (const std::string &pattern_);
         ~Regex ();
         int match(const char *subject);
     };
