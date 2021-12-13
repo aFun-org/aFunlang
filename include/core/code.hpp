@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_CODE_H
-#define AFUN_CODE_H
+﻿#ifndef AFUN_CODE_HPP
+#define AFUN_CODE_HPP
 #include "tool.hpp"
 
 namespace aFuncore {
@@ -71,4 +71,4 @@ namespace aFuncore {
     };
 }
 
-#endif //AFUN_CODE_H
+#endif //AFUN_CODE_HPP
