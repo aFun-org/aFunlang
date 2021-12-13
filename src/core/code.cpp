@@ -10,9 +10,10 @@ using namespace aFuntool;
  */
 Code::Code(FileLine line, ConstFilePath file){  // NOLINT 不初始化 element, block_type, son
     this->type = code_start;
-    if (file.empty())
+    if (file.empty()) {
+        errorLog(aFunCoreLogger, "Make `start` code without FilePath");
         this->file = nullptr;
-    else
+    } else
         this->file = strCopy(file.c_str());
     this->line = line;
 }
@@ -351,6 +352,144 @@ Code *Code::read_v1(FILE *f, bool debug, int8_t read_type, bool to_son) {
     } else
         connect(ret);
     return ret;
+}
+
+#undef Done
+
+std::string Code::getMD5_v1() const {
+    char md5str[MD5_STR_LEN + 1] {};
+    char md5_value[MD5_SIZE];
+    MD5_CTX *md5 = MD5Init();
+
+    char head[] = {(char)type, prefix, 'x', 'x', NUL};
+    if (prefix == NUL)
+        head[1] = '-';
+    if (type == code_block) {
+        head[2] = son == nullptr ? 'n' : 's';
+        head[3] = block_type;
+    }
+
+    MD5Update(md5, (unsigned char *)head, strlen((char *)head));
+    if (type == code_element)
+        MD5Update(md5, (unsigned char *)element, strlen((char *)element));
+    else if (type == code_block)
+        MD5Update(md5, (unsigned char *)"block", 5);
+    else
+        MD5Update(md5, (unsigned char *)"start", 5);
+
+    MD5Final(md5, (unsigned char *)md5_value);
+    for(int i = 0; i < MD5_SIZE; i++)
+        snprintf((char *)md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
+    return md5str;
+}
+
+std::string Code::getMD5All_v1() const {
+    if (this->type != code_start) {
+        errorLog(aFunCoreLogger, "Code get md5 all did not with `start`");
+        return "";
+    }
+
+    char md5str[MD5_STR_LEN + 1] {};
+    char md5_value[MD5_SIZE];
+    MD5_CTX *md5 = MD5Init();
+
+    const Code *tmp = this;
+    while (tmp != nullptr) {
+        std::string code_md5 = tmp->getMD5_v1();
+        MD5Update(md5, (unsigned char *)code_md5.c_str(), code_md5.size());
+
+        if (tmp->type == code_block && tmp->son != nullptr){
+            tmp = tmp->son;
+            continue;
+        }
+
+        if (tmp->next == nullptr) {
+            do {
+                tmp = tmp->father;
+            } while(tmp != nullptr && tmp->next == nullptr);
+            if (tmp == nullptr)
+                break;
+            tmp = tmp->next;
+        } else
+            tmp = tmp->next;
+    }
+
+    MD5Final(md5, (unsigned char *)md5_value);
+    for(int i = 0; i < MD5_SIZE; i++)
+        snprintf((char *)md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
+    return md5str;
+}
+
+static const std::string ByteCodeHead = "aFunByteCode";  // NOLINT
+static const int MaxByteCodeVersion = 1;  // 字节码版本号, 有别于 aFun 版本号
+
+#define Done(write) do{if(!(write)){goto RETURN_FALSE;}}while(0)
+bool Code::writeByteCode(ConstFilePath file_path, bool debug) const {
+    if (this->type != code_start) {
+        errorLog(aFunCoreLogger, "ByteCode write all did not with `start`");
+        return false;
+    }
+
+    FILE *f = fileOpen(file_path, "wb");
+    if (f == nullptr) {
+        warningLog(aFunCoreLogger, "Write ByteCode create file error.");
+        return false;
+    }
+
+    Done(byteWriteStr(f, ByteCodeHead));
+    Done(byteWriteInt(f, int16_t(MaxByteCodeVersion)));
+    Done(byteWriteStr(f, getMD5All_v1()));
+    Done(byteWriteInt(f, int8_t(debug)));
+    Done(writeAll_v1(f, debug));
+    fileClose(f);
+    return true;
+
+RETURN_FALSE:
+    fileClose(f);
+    return false;
+}
+
+bool Code::readByteCode(ConstFilePath file_path){
+    if (this->type != code_start) {
+        errorLog(aFunCoreLogger, "ByteCode read all did not with `start`");
+        return false;
+    }
+
+    FILE *f = fileOpen(file_path, "rb");
+    if (f == nullptr) {
+        warningLog(aFunCoreLogger, "Read ByteCode read file error.");
+        return false;
+    }
+
+    std::string head;
+    Done(byteReadStr(f, head));
+    if (head != ByteCodeHead)
+        return false;
+
+    int16_t version;
+    Done(byteReadInt(f, &version));
+    switch (version) {  // NOLINT 为拓展方便, 使用switch-case而不是if-else
+        case 1: {
+            std::string md5;
+            int8_t debug;
+            Done(byteReadStr(f, md5));
+            Done(byteReadInt(f, &debug));
+
+            Done(readAll_v1(f, debug));
+            std::string md5_ = getMD5All_v1();
+            if (md5_ != md5)
+                goto RETURN_FALSE;
+            return true;
+        }
+        default:
+            goto RETURN_FALSE;
+    }
+    fileClose(f);
+    return true;
+
+RETURN_FALSE:
+    fileClose(f);
+    return false;
 }
 
 #undef Done

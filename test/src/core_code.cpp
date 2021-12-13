@@ -4,24 +4,22 @@ using namespace aFuntool;
 
 int main() {
     Code *start = new Code(1, "test.aun");
-    start->connect(new Code("Test", 1))->connect(new Code(block_p, new Code(block_p, new Code("Test2", 2), 2), 2));
+    start->connect(new Code("Test", 1))->connect(new Code(block_p, new Code(block_p, new Code("Test3", 2), 2), 2));
     start->displayAll();
+    std::string md5 = start->getMD5All_v1();
+    printf("md5: %s\n", md5.c_str());
 
     getEndian();
 
-    FILE *file = fileOpen("text.aun", "wb");
-    start->writeAll_v1(file);
-    fileClose(file);
-
+    start->writeByteCode("test.aun");
     start->destructAll();
     start = new Code(1, "test.aun");
 
-    file = fileOpen("text.aun", "rb");
-    start->readAll_v1(file);
-    fileClose(file);
+    start->readByteCode("test.aun");
 
-    printf("writr: \n");
     start->displayAll();
+    md5 = start->getMD5All_v1();
+    printf("md5: %s\n", md5.c_str());
     start->destructAll();
 
     return 0;

@@ -52,7 +52,10 @@ namespace aFuncore {
         bool writeAll_v1(FILE *f, bool debug=false) const;
         Code *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
         bool readAll_v1(FILE *f, bool debug=false);
-
+        [[nodiscard]] std::string getMD5_v1() const;
+        [[nodiscard]] std::string getMD5All_v1() const;
+        bool writeByteCode(ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
+        bool readByteCode(ConstFilePath file_path);
 
         [[nodiscard]] CodeType getType() const {return type;}
         [[nodiscard]] char getPrefix() const {return prefix;}
