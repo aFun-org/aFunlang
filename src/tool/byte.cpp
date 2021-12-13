@@ -124,6 +124,11 @@ bool aFuntool::byteReadStr(FILE *file, char *&str) {
     if (!byteReadInt<uint16_t>(file, &len))
         return false;
 
+    if (len == 0) {
+        str = nullptr;
+        return true;
+    }
+
     str = calloc(len + 1, char);
     return fread(str, sizeof(char), len, file) == len;
 }
@@ -135,6 +140,11 @@ bool aFuntool::byteReadStr(FILE *file, std::string &str) {
     uint16_t len;
     if (!byteReadInt<uint16_t>(file, &len))
         return false;
+
+    if (len == 0) {
+        str = "";
+        return true;
+    }
 
     char *tmp = calloc(len + 1, char);
     size_t ret = fread(tmp, sizeof(char), len, file);

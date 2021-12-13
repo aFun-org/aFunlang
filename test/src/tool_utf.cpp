@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
 
     setlocale(LC_ALL, "");
 
+#ifdef aFunWIN32_NO_CYGWIN
     convertWideByte(&tmp, tmp3, CP_UTF8);
 
     std::wcout << tmp << std::endl;
@@ -25,6 +26,6 @@ int main(int argc, char **argv) {
     for (int i = 0; i < strlen(tmp3); i++)
         printf("%x ", (unsigned int)tmp3[i]);
     printf("\n");
-
+#endif
     return 0;
 }

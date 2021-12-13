@@ -20,7 +20,7 @@ namespace aFuncore {
     typedef class Code Code;
     class Code {
         CodeType type;
-        char perfix=NUL;
+        char prefix=NUL;
 
         union {
             char *element;  // union 内不使用 std::string
@@ -35,9 +35,9 @@ namespace aFuncore {
         Code *next = nullptr;;
         Code *prev = nullptr;;
 
-    public:
         aFuntool::FileLine line;
         aFuntool::FilePath file;
+    public:
 
         explicit Code(FileLine line, ConstFilePath file="");
         Code (const std::string &element, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
@@ -45,21 +45,28 @@ namespace aFuncore {
         ~Code();
 
         Code *connect(Code *code);
-        void destruct();
-        void display();
-        void displayAll();
+        void destructAll();
+        void display() const;
+        void displayAll() const;
+        bool write_v1(FILE *f, bool debug=false) const;
+        bool writeAll_v1(FILE *f, bool debug=false) const;
+        Code *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
+        bool readAll_v1(FILE *f, bool debug=false);
+
 
         [[nodiscard]] CodeType getType() const {return type;}
-        [[nodiscard]] char getPrefix() const {return perfix;}
+        [[nodiscard]] char getPrefix() const {return prefix;}
 
-        [[nodiscard]] const char *getElement() const {if (type != code_element) throw aFuncore::AttributesError("Code.Element"); return element;}
-        [[nodiscard]] BlockType getBlockType() const {if (type != code_block) throw aFuncore::AttributesError("Code.BlockType"); return block_type;}
+        [[nodiscard]] const char *getElement() const {if (type != code_element) return ""; return element;}
+        [[nodiscard]] BlockType getBlockType() const {if (type != code_block) return block_p; return block_type;}
         [[nodiscard]] Code *getSon() const {if (type != code_block) return nullptr; return son;}
 
         [[nodiscard]] Code *toNext() const {return next;}
         [[nodiscard]] Code *toPrev() const {return prev;}
         [[nodiscard]] Code *toFather() const {return father;}
 
+        [[nodiscard]] aFuntool::FileLine getFileLine() const {return line;}
+        [[nodiscard]] aFuntool::StringFilePath getFilePath() const {return file;}
     };
 }
 

@@ -13,7 +13,7 @@
 /* 取代calloc函数 */
 namespace aFuntool {
     template <typename T>
-    static void *safeFree(T *&ptr) {if (ptr != nullptr) free((void *)ptr); ptr = nullptr; return nullptr;}
+    static void *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
 
     static void *safeCalloc(size_t n, size_t size){
         void *re = calloc(n, size);
@@ -31,7 +31,10 @@ namespace aFuntool {
     }
 }
 
+#ifndef MEM_NOT_DEFINE
+#define free(p) (safeFree((p)))
 #define calloc(n, obj) (obj *)(aFuntool::safeCalloc(n, sizeof(obj)))
 #define calloc_size(n, size) (aFuntool::safeCalloc(n, size))
+#endif
 
 #endif  // AFUN_MEM_HPP

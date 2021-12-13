@@ -26,10 +26,12 @@ char *aFuntool::charToStr(char ch) {
 }
 
 char *aFuntool::strCopy(const char *str){
-    char *tmp = NEW_STR(STR_LEN(str));
-    if (str != nullptr)
+    if (str != nullptr) {
+        char *tmp = NEW_STR(STR_LEN(str));
         strcpy(tmp, str);
-    return tmp;
+        return tmp;
+    }
+    return nullptr;
 }
 
 

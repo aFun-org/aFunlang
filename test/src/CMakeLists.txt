@@ -27,3 +27,4 @@ add_new_test(tool_utf COMMAND "$<TARGET_FILE:tool_utf>")
 set_test_label(tool tool_mem tool_byte tool_dlc tool_regex tool_md5 tool_utf)
 
 add_new_test(core_init COMMAND "$<TARGET_FILE:core_init>")
+add_new_test(core_code COMMAND "$<TARGET_FILE:core_code>")
