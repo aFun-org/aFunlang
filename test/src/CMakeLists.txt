@@ -28,3 +28,4 @@ set_test_label(tool tool_mem tool_byte tool_dlc tool_regex tool_md5 tool_utf)
 
 add_new_test(core_init COMMAND "$<TARGET_FILE:core_init>")
 add_new_test(core_code COMMAND "$<TARGET_FILE:core_code>")
+add_new_test(core-env-var COMMAND "$<TARGET_FILE:core-env-var>")

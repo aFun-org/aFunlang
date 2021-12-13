@@ -1,8 +1,6 @@
 ﻿#ifndef AFUN_CODE_H
 #define AFUN_CODE_H
-#include "iostream"
 #include "tool.hpp"
-#include "exception.hpp"
 
 namespace aFuncore {
     typedef enum CodeType {

@@ -3,7 +3,7 @@
 #include <iostream>
 #include "aFunToolExport.h"
 #include "macro.hpp"
-#include "log_m.hpp"
+#include "log-m.hpp"
 #include "iostream"
 
 using namespace aFuntool;

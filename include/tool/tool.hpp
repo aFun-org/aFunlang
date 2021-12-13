@@ -46,7 +46,7 @@ namespace aFuntool {
 #include "path.hpp"
 #include "regex.hpp"
 #include "str.hpp"
-#include "time_s.hpp"
+#include "time_.hpp"
 #include "log.hpp"
 
 #include "pthread.h"
