@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_ENV_VAR_HPP
 #define AFUN_ENV_VAR_HPP
 #include "tool.hpp"
+#include "aFunCoreExport.h"
 
 namespace aFuncore {
     static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
@@ -22,7 +23,7 @@ namespace aFuncore {
         EnvVarSpace();
         ~EnvVarSpace();
 
-        [[nodiscard]]  size_t getCount() const {return count;}
+        [[nodiscard]] size_t getCount() const {return count;}
 
         bool findString(const std::string &name, std::string &str) const;
         bool findNumber(const std::string &name, int32_t &num) const;

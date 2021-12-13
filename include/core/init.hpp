@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_INIT_HPP
 #define AFUN_INIT_HPP
 #include "tool.hpp"
+#include "aFunCoreExport.h"
 
 namespace aFuncore {
     struct InitInfo {

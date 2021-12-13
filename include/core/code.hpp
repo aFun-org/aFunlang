@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_CODE_HPP
 #define AFUN_CODE_HPP
 #include "tool.hpp"
+#include "aFunCoreExport.h"
 
 namespace aFuncore {
     typedef enum CodeType {
@@ -36,7 +37,6 @@ namespace aFuncore {
         aFuntool::FileLine line;
         aFuntool::FilePath file;
     public:
-
         explicit Code(FileLine line, ConstFilePath file="");
         Code (const std::string &element, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
         Code (BlockType block_type, Code *son, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);

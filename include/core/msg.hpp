@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_MSG_HPP
 #define AFUN_MSG_HPP
 #include "tool.hpp"
+#include "aFunCoreExport.h"
 
 namespace aFuncore {
     class MessageStream;
