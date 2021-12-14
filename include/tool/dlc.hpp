@@ -106,7 +106,7 @@ namespace aFuntool {
                 dlc--;
         }
 
-        SYMBOL *getSymbol() const {
+        const SYMBOL *getSymbol() const {
             return symbol;
         }
     };

@@ -34,6 +34,10 @@ namespace aFuntool {
     };
 }
 
+#include "pthread.h"
+#include "fflags.h"
+#include "aFun_ht.h"
+
 #include "mem.hpp"
 
 #include "stdio_.hpp"
@@ -48,9 +52,5 @@ namespace aFuntool {
 #include "str.hpp"
 #include "time_.hpp"
 #include "log.hpp"
-
-#include "pthread.h"
-#include "fflags.h"
-#include "aFun_ht.h"
 
 #endif //AFUN_TOOL_HPP

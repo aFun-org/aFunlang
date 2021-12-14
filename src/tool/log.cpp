@@ -66,7 +66,6 @@ aFuntool::LogFactory::LogFactory() : sys_log("SYSTEM", log_info) {  // NOLINT co
     csv = nullptr;
 
     asyn=false;
-    pt = 0;
     pthread_cond_init(&cond, nullptr);
     log_buf = nullptr;
     plog_buf = nullptr;
