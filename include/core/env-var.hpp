@@ -20,16 +20,16 @@ namespace aFuncore {
         pthread_rwlock_t lock;
 
     public:
-        EnvVarSpace();
-        ~EnvVarSpace();
+        AFUN_CORE_EXPORT EnvVarSpace();
+        AFUN_CORE_EXPORT ~EnvVarSpace();
 
         [[nodiscard]] size_t getCount() const {return count;}
 
-        bool findString(const std::string &name, std::string &str) const;
-        bool findNumber(const std::string &name, int32_t &num) const;
+        AFUN_CORE_EXPORT bool findString(const std::string &name, std::string &str) const;
+        AFUN_CORE_EXPORT bool findNumber(const std::string &name, int32_t &num) const;
 
-        void setString(const std::string &name, const std::string &str);
-        void setNumber(const std::string &name, int32_t num);
+        AFUN_CORE_EXPORT void setString(const std::string &name, const std::string &str);
+        AFUN_CORE_EXPORT void setNumber(const std::string &name, int32_t num);
     };
 }
 

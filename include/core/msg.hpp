@@ -14,19 +14,19 @@ namespace aFuncore {
     friend class UpMessage;
 
     public:
-        explicit Message(const std::string &type);
-        virtual ~Message() = default;
+        AFUN_CORE_EXPORT explicit Message(const std::string &type);
+        AFUN_CORE_EXPORT virtual ~Message() = default;
         [[nodiscard]] const std::string &getType() const {return type;}
     };
 
     class MessageStream {
     protected:
         Message *stream;
-        [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
+        [[nodiscard]] AFUN_CORE_EXPORT virtual Message *_getMessage(const std::string &type) const;
 
     public:
-        MessageStream();
-        virtual ~MessageStream();
+        AFUN_CORE_EXPORT MessageStream();
+        AFUN_CORE_EXPORT virtual ~MessageStream();
 
         template<class T>
         [[nodiscard]] T *getMessage(const std::string &type) const {
@@ -35,17 +35,17 @@ namespace aFuncore {
             return ret;
         }
 
-        virtual Message *popMessage(const std::string &type);
-        void pushMessage(Message *msg);
+        virtual AFUN_CORE_EXPORT Message *popMessage(const std::string &type);
+        AFUN_CORE_EXPORT void pushMessage(Message *msg);
     };
 
     class UpMessage : public MessageStream {
     protected:
         Message *old;
     public:
-        explicit UpMessage(const UpMessage *old);
-        ~UpMessage() override;
-        Message *popMessage(const std::string &type) override;
+        AFUN_CORE_EXPORT explicit UpMessage(const UpMessage *old);
+        AFUN_CORE_EXPORT ~UpMessage() override;
+        AFUN_CORE_EXPORT Message *popMessage(const std::string &type) override;
     };
 
     class DownMessage : public MessageStream {};

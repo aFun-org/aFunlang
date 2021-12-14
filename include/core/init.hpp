@@ -11,12 +11,12 @@ namespace aFuncore {
         aFuntool::LogLevel level;
     };
 
-    extern std::string log_path;
-    extern std::string lang_path;
-    extern std::string varlib_path;
-    extern aFuntool::Logger *aFunCoreLogger;
+    AFUN_CORE_EXPORT extern std::string log_path;
+    AFUN_CORE_EXPORT extern std::string lang_path;
+    AFUN_CORE_EXPORT extern std::string varlib_path;
+    AFUN_CORE_EXPORT extern aFuntool::Logger *aFunCoreLogger;
 
-    bool aFunCoreInit(InitInfo *info);
+    AFUN_CORE_EXPORT bool aFunCoreInit(InitInfo *info);
 }
 
 #endif //AFUN_INIT_HPP
