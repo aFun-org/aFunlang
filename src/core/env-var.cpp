@@ -2,15 +2,16 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
-aFuncore::EnvVarSpace::EnvVarSpace() {  // NOLINT lock 通过 pthread_rwlock_init 初始化
-    count = 0;
+aFuncore::EnvVarSpace::EnvVarSpace() : count {0} {  // NOLINT lock 通过 pthread_rwlock_init 初始化
     pthread_rwlock_init(&lock, nullptr);
 }
 
 aFuncore::EnvVarSpace::~EnvVarSpace() {
     for (auto &i : var) {
-        for (auto tmp = i; tmp != nullptr; tmp = tmp->next)
+        for (EnvVar *tmp = i, *next; tmp != nullptr; tmp = next) {
+            next = tmp->next;
             delete tmp;
+        }
     }
     pthread_rwlock_destroy(&lock);
 }
@@ -66,4 +67,19 @@ void EnvVarSpace::setNumber(const std::string &name, int32_t num){
     (*tmp)->name = name;
     (*tmp)->num = num;
 }
+
+EnvVarSpace::EnvVar *EnvVarSpace::findVar(const std::string &name){
+    size_t index = time33(name) % ENV_VAR_HASH_SIZE;
+    auto tmp = &var[index];
+    for (NULL; *tmp != nullptr; tmp = &((*tmp)->next)) {
+        if (name == (*tmp)->name) {
+            return *tmp;
+        }
+    }
+
+    (*tmp) = new EnvVar;
+    (*tmp)->name = name;
+    return (*tmp);
+}
+
 

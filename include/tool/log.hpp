@@ -30,28 +30,21 @@ namespace aFuntool {
         friend class LogFactory;
 
     public:
-        explicit Logger(const std::string &id_, LogLevel level_ = log_warning, bool exit_ = true);
-
-        int writeTrackLog(const char *file, int line, const char *func,
-                          const char *format, ...);
-
-        int writeDebugLog(const char *file, int line, const char *func,
-                          const char *format, ...);
-
-        int writeInfoLog(const char *file, int line, const char *func,
-                         const char *format, ...);
-
-        int writeWarningLog(const char *file, int line, const char *func,
-                            const char *format, ...);
-
-        int writeErrorLog(const char *file, int line, const char *func,
-                          const char *format, ...);
-
-        int writeSendErrorLog(const char *file, int line, const char *func,
-                              const char *format, ...);
-
-        int writeFatalErrorLog(const char *file, int line, const char *func,
-                               int exit_code, const char *format, ...);
+        AFUN_TOOL_EXPORT explicit Logger(const std::string &id_, LogLevel level_ = log_warning, bool exit_ = true);
+        AFUN_TOOL_EXPORT int writeTrackLog(const char *file, int line, const char *func,
+                                           const char *format, ...);
+        AFUN_TOOL_EXPORT int writeDebugLog(const char *file, int line, const char *func,
+                                           const char *format, ...);
+        AFUN_TOOL_EXPORT int writeInfoLog(const char *file, int line, const char *func,
+                                          const char *format, ...);
+        AFUN_TOOL_EXPORT int writeWarningLog(const char *file, int line, const char *func,
+                                             const char *format, ...);
+        AFUN_TOOL_EXPORT int writeErrorLog(const char *file, int line, const char *func,
+                                           const char *format, ...);
+        AFUN_TOOL_EXPORT int writeSendErrorLog(const char *file, int line, const char *func,
+                                               const char *format, ...);
+        AFUN_TOOL_EXPORT int writeFatalErrorLog(const char *file, int line, const char *func,
+                                               int exit_code, const char *format, ...);
     };
 
 

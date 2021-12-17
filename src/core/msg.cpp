@@ -2,18 +2,15 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
-aFuncore::Message::Message(const std::string &type){
-    this->type = type;
-    next = nullptr;
-}
-
 MessageStream::MessageStream(){
     stream = nullptr;
 }
 
 MessageStream::~MessageStream(){
-    for (Message *msg = stream; msg != nullptr; msg = msg->next)
+    for (Message *msg = stream, *tmp; msg != nullptr; msg = tmp) {
+        tmp = msg->next;
         delete msg;
+    }
 }
 
 void MessageStream::pushMessage(Message *msg){
@@ -70,4 +67,15 @@ Message *UpMessage::popMessage(const std::string &type){
         }
     }
     return nullptr;
+}
+
+void DownMessage::joinMsg(DownMessage *msg){
+    Message *m = stream;
+    if (m == nullptr)
+        return;
+    while (m->next != nullptr)
+        m = m->next;
+    m->next = msg->stream;
+    msg->stream = m;
+    stream = nullptr;
 }

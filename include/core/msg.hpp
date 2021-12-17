@@ -12,9 +12,10 @@ namespace aFuncore {
 
     friend class MessageStream;
     friend class UpMessage;
+    friend class DownMessage;
 
     public:
-        AFUN_CORE_EXPORT explicit Message(const std::string &type);
+        AFUN_CORE_EXPORT explicit Message(const std::string &type_) : type {type_}, next {nullptr} {};
         AFUN_CORE_EXPORT virtual ~Message() = default;
         [[nodiscard]] const std::string &getType() const {return type;}
     };
@@ -43,12 +44,15 @@ namespace aFuncore {
     protected:
         Message *old;
     public:
-        AFUN_CORE_EXPORT explicit UpMessage(const UpMessage *old);
+        AFUN_CORE_EXPORT explicit UpMessage(const UpMessage *old=nullptr);
         AFUN_CORE_EXPORT ~UpMessage() override;
         AFUN_CORE_EXPORT Message *popMessage(const std::string &type) override;
     };
 
-    class DownMessage : public MessageStream {};
+    class DownMessage : public MessageStream {
+    public:
+        AFUN_CORE_EXPORT void joinMsg(DownMessage *msg);
+    };
 }
 
 

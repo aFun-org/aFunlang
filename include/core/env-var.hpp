@@ -5,8 +5,8 @@
 
 namespace aFuncore {
     static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
-
     class EnvVarSpace {  // 环境变量
+        friend class Inter;
 
         struct EnvVar {  // 环境变量
             std::string name;
@@ -19,6 +19,7 @@ namespace aFuncore {
         EnvVar *var[ENV_VAR_HASH_SIZE] {};
         pthread_rwlock_t lock;
 
+        EnvVar *findVar(const std::string &name);
     public:
         AFUN_CORE_EXPORT EnvVarSpace();
         AFUN_CORE_EXPORT ~EnvVarSpace();
