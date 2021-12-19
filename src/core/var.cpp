@@ -33,6 +33,7 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *
     (*tmp) = new VarCup;
     (*tmp)->name = name;
     (*tmp)->var = new Var(data, inter);
+    count++;
     return vof_success;
 }
 
@@ -46,6 +47,7 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *dat
     (*tmp) = new VarCup;
     (*tmp)->name = name;
     (*tmp)->var = data;
+    count++;
     return vof_success;
 }
 
@@ -67,6 +69,7 @@ VarOperationFlat aFuncore::VarSpace::delVar(const std::string &name){
             auto del = tmp->next;
             tmp->next = del->next;
             delete del;  // 删除 VarCup
+            count--;
             return vof_success;
         }
     }
@@ -111,7 +114,7 @@ Var *aFuncore::VarList::findVar(const std::string &name){
     Var *ret = nullptr;
     for (auto tmp = this; tmp != nullptr && ret == nullptr; tmp = tmp->next)
         ret = tmp->varspace->findVar(name);
-    return nullptr;
+    return ret;
 }
 
 bool aFuncore::VarList::defineVar(const std::string &name, Object *data){

@@ -5,19 +5,39 @@
 
 namespace aFuncore {
     class MessageStream;
+    class Message;
+    class NormalMessage;
+    class UpMessage;
+    class DownMessage;
+}
 
+#include "value.hpp"
+
+namespace aFuncore {
     class Message {
-        std::string type;  // 消息类型标注
+        friend class MessageStream;
+        friend class UpMessage;
+        friend class DownMessage;
+
         Message *next;  // 下一条消息
-
-    friend class MessageStream;
-    friend class UpMessage;
-    friend class DownMessage;
-
     public:
-        AFUN_CORE_EXPORT explicit Message(const std::string &type_) : type {type_}, next {nullptr} {};
+        const std::string type;  // 消息类型标注
+        AFUN_CORE_EXPORT explicit Message(const std::string &type_) : type {type_}, next {nullptr} {}
         AFUN_CORE_EXPORT virtual ~Message() = default;
-        [[nodiscard]] const std::string &getType() const {return type;}
+    };
+
+    class TopMessage : public Message {
+    public:
+        explicit TopMessage(const std::string &type_) : Message(type_) {}
+        virtual void topProgress()=0;
+    };
+
+    class NormalMessage : public TopMessage {
+        Object *obj;
+    public:
+        AFUN_CORE_EXPORT explicit NormalMessage(Object *obj);
+        AFUN_CORE_EXPORT ~NormalMessage() override;
+        void topProgress() override;
     };
 
     class MessageStream {
@@ -38,6 +58,13 @@ namespace aFuncore {
 
         virtual AFUN_CORE_EXPORT Message *popMessage(const std::string &type);
         AFUN_CORE_EXPORT void pushMessage(Message *msg);
+
+        template <typename T>
+        AFUN_CORE_EXPORT void forEach(void (*func)(Message *, T), T arg) {
+            for (Message *msg = stream; msg != nullptr; msg = msg->next) {
+                func(msg, arg);
+            }
+        }
     };
 
     class UpMessage : public MessageStream {

@@ -2,6 +2,18 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
+NormalMessage::NormalMessage(Object *obj) : TopMessage("NORMAL") {
+    this->obj = obj;
+}
+
+NormalMessage::~NormalMessage(){
+    this->obj = nullptr;
+}
+
+void NormalMessage::topProgress(){
+    printf_stdout(0, "NORMAL: %p\n", obj);
+}
+
 MessageStream::MessageStream(){
     stream = nullptr;
 }

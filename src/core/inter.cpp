@@ -1,11 +1,12 @@
 ﻿#include "inter.hpp"
+#include "init.hpp"
 #include "__gc.hpp"
 
 using namespace aFuncore;
 using namespace aFuntool;
 
 
-Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor_lock{}, monitor_cond{} {
+Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor{}, monitor_lock{}, monitor_cond{} {
     status = inter_creat;
     pthread_mutex_init(&status_lock, nullptr);
 
@@ -15,6 +16,7 @@ Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor_lock{}
     gc->varspace = nullptr;
 
     activation = nullptr;
+    literal = new std::list<LiteralRegex>;
 
     envvar = new EnvVarSpace();
     gc_runtime = envvar->findVar("sys:gc-runtime");
@@ -38,8 +40,6 @@ Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor_lock{}
     base = this;
     result = nullptr;
     son_inter = new std::list<Inter *>;
-
-    monitor = 0;
 
     exit_flat = ef_none;
     exit_mode = em;
@@ -65,6 +65,7 @@ Inter::~Inter(){
         Var::destruct(gc->var);
         VarSpace::destruct(gc->varspace);
 
+        delete literal;
         delete gc;
         delete son_inter;
         delete envvar;
@@ -78,30 +79,94 @@ void Inter::enable(){
     }
 }
 
-Var *Inter::findGlobalVar(const std::string &name) {
-    return global->findVar(name);
+bool Inter::isExit() const{
+    bool ret = (status == inter_exit || status == inter_stop);
+    return ret;
 }
 
-VarOperationFlat Inter::defineGlobalVar(const std::string &name, Object *data) {
-    return global->defineVar(name, data);
-}
+bool Inter::runCode(){
+    while (activation != nullptr) {
+        if (isExit()) {
+            // TODO-szh 弹出所有activation
+            return false;
+        }
 
-VarOperationFlat Inter::defineGlobalVar(const std::string &name, Var *data) {
-    return global->defineVar(name, data);
-}
+        Code *code = activation->getCode();
+        if (code == nullptr) {  // activation 执行完成
+            Activation *prev = activation->toPrev();
+            delete activation;
+            activation = prev;
+            continue;
+        }
 
-VarOperationFlat Inter::setGlobalVar(const std::string &name, Object *data) {
-    return global->setVar(name, data);
-}
+        auto code_type = code->getType();
+        if (code_type == code_start)
+            continue;
 
-VarOperationFlat Inter::delGlobalVar(const std::string &name) {
-    return global->delVar(name);
-}
+        Message *msg = activation->getDownStream()->popMessage("NORMAL");
+        if (msg == nullptr) {
+            // ... 出现异常
+        }
 
-Object *Inter::findGlobalObject(const std::string &name) {
-    return global->findObject(name);
+        delete msg;
+
+        if (code_type == code_element) {
+            std::string func;
+            bool in_protect = false;
+            if (checkLiteral(code->getElement(), func, in_protect)) {
+                // ...
+            } else {
+                auto varlist = activation->getVarlist();
+                Object *obj = nullptr;
+                if (varlist != nullptr)
+                    obj = varlist->findObject(code->getElement());
+                if (obj != nullptr)
+                    activation->getDownStream()->pushMessage(new NormalMessage(obj));
+            }
+
+        } else switch (code->getBlockType()) {
+            case block_p:
+                break;
+            case block_b:
+                break;
+            case block_c:
+                break;
+            default:
+                errorLog(aFunCoreLogger, "Error block type.");
+                break;
+        }
+    }
+    return true;
 }
 
 bool Inter::runCode(Code *code){
-    return 0;
+    if (activation != nullptr) {
+        errorLog(aFunCoreLogger, "Run code with activation");
+        return false;
+    }
+
+    new TopActivation(code, this);
+    return runCode();
 }
+
+bool Inter::checkLiteral(const std::string &element, std::string &func, bool &in_protect) const {
+    if (literal->empty())
+        return false;
+
+    auto it = literal->begin();
+    auto end = literal->end();
+
+    for(NULL;it != end;it++){
+        try {
+            if (it->rg->match(element) != 1)
+                continue;
+            func = it->func;
+            in_protect = it->in_protect;
+            return true;
+        } catch (RegexException &e) {
+            continue;
+        }
+    }
+    return false;
+}
+

@@ -12,10 +12,10 @@ namespace aFuncore {
 
 namespace aFuncore {
     class Object : public GcObject<class Object> {
-        friend class Inter;
-        Inter *inter;
     public:
+        Inter *const inter;
         const std::string type;  // 标识 Object 的字符串
+
         AFUN_CORE_EXPORT explicit Object(const std::string &type, Inter *inter_);
         AFUN_CORE_EXPORT ~Object() override =default;
     };

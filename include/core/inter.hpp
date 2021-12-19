@@ -26,6 +26,15 @@ namespace aFuncore {
         em_activity = ef_activity,  // 主动退出
         em_passive = ef_passive,  // 被动退出
     } ExitMode;
+
+    static const int PrefixCount = 2;
+    typedef enum Prefix {
+        prefix_quote = 0,  // 变量引用
+        prefix_exec_first = 1,
+    } Prefix;
+    static const std::string E_PREFIX = "$`'";  /* NOLINT element前缀 */
+    static const std::string B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+
 }
 
 #include "env-var.hpp"
@@ -36,11 +45,11 @@ namespace aFuncore {
 
 namespace aFuncore {
     class Inter {
-        /* 解释器原信息记录 */
         friend class Object;
         friend class Var;
         friend class VarSpace;
 
+        /* 解释器原信息记录 */
         pthread_mutex_t status_lock;  // status 可能被外部使用, 因此需要用锁保护
         InterStatus status;
 
@@ -50,6 +59,7 @@ namespace aFuncore {
             Var *var;
             VarSpace *varspace;
         } *gc;
+        [[nodiscard]] struct GcRecord *getGcRecord() const {return gc;}
 
         /* 运行相关 */
         ProtectVarSpace *protect;  // 保护变量空间
@@ -63,7 +73,7 @@ namespace aFuncore {
             char *func;  // 调用的函数
             bool in_protect;  // 是否在protect空间
         };
-        std::list<LiteralRegex *> *literal;
+        std::list<LiteralRegex> *literal;
 
         /* 配置信息记录器 */
         EnvVarSpace *envvar;
@@ -74,13 +84,14 @@ namespace aFuncore {
         EnvVarSpace::EnvVar *error_std;  // Error输出的位置 0-stdout 其他-stderr
 
         /* 线程信息 */
-        bool is_derive;  // 是否派生
-        Inter *base;  // 主线程
+    public:
+        const bool is_derive;  // 是否派生
+        Inter *const base;  // 主线程
+    private:
         Object *result;  // 线程执行的结果
         std::list<Inter *> *son_inter;  // 派生线程链表, 由主线程负责管理
 
         pthread_t monitor;  // 守护线程
-
         ExitFlat exit_flat;  // 外部设置退出
         ExitMode exit_mode;  // 退出模式
         pthread_mutex_t monitor_lock;
@@ -90,13 +101,23 @@ namespace aFuncore {
         ~Inter();
         void enable();
 
-        Var *findGlobalVar(const std::string &name);
-        VarOperationFlat defineGlobalVar(const std::string &name, Object *data);
-        VarOperationFlat defineGlobalVar(const std::string &name, Var *data);
-        VarOperationFlat setGlobalVar(const std::string &name, Object *data);
-        VarOperationFlat delGlobalVar(const std::string &name);
-        Object *findGlobalObject(const std::string &name);
+        [[nodiscard]] InterStatus getStatus() const {return status;}
+        [[nodiscard]] bool isExit() const {return (status == inter_exit || status == inter_stop);}
 
+        [[nodiscard]] VarList *getGlobalVarlist() const {return global_varlist;}
+        [[nodiscard]] Activation *getActivation() const {return activation;}
+        [[nodiscard]] bool checkLiteral(const std::string &element, std::string &func, bool &in_protect) const;
+
+        [[nodiscard]] EnvVarSpace *getEnvVarSpace() const {return envvar;}
+        [[nodiscard]] int getGcRuntime() const {return gc_runtime->num;}
+        [[nodiscard]] char getPrefx(enum Prefix pre) const {return prefix->str[pre];}
+        [[nodiscard]] int getExitCode() const {return exit_code->num;}
+        [[nodiscard]] int getArgc() const {return argc->num;}
+        [[nodiscard]] int getErrorStd() const {return error_std->num == 1;}
+
+        void pushActivation(Activation *new_activation) {activation = new_activation;}
+
+        bool runCode();
         bool runCode(Code *code);
     };
 }

@@ -6,16 +6,11 @@ using namespace aFuntool;
 int main() {
     auto *inter = new Inter();
     auto *obj = new Object("Object", inter);
-    inter->defineGlobalVar("test-var", obj);
-
-    std::cout << "test-var = " << inter->findGlobalObject("test-var")
-              << " non-var = " << inter->findGlobalObject("non-var")
-              << " obj = " << obj
-              << std::endl;
+    inter->getGlobalVarlist()->defineVar("test-var", obj);
 
     auto *code = (new Code(0, "run-code.aun"));
     code->connect(new Code("test-var", 1));
-
+    inter->runCode(code);
     code->destructAll();
     delete inter;
     return 0;

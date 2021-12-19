@@ -16,6 +16,7 @@ namespace aFuntool {
         AFUN_TOOL_EXPORT explicit Regex (const std::string &pattern_);
         AFUN_TOOL_EXPORT ~Regex ();
         AFUN_TOOL_EXPORT int match(const char *subject);
+        AFUN_TOOL_EXPORT int match(const std::string &subject) {return match(subject.c_str());}
     };
 }
 

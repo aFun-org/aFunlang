@@ -17,31 +17,40 @@ namespace aFuncore {
     class Activation {
     protected:
         Activation *prev;
-        Inter *inter;
-
-        UpMessage *up;
-        DownMessage *down;
 
         VarList *varlist;
         VarList *old_varlist;
 
+        UpMessage *up;
+        DownMessage *down;
+    public:
+        Inter *const inter;
+
         StringFilePath path;
         FileLine line;
-    public:
-        Activation(Inter *inter_, Activation *prev_);
+
+        explicit Activation(Inter *inter_);
         virtual ~Activation();
+
         virtual Code *getCode()=0;
-        [[nodiscard]] StringFilePath getFilePath() const {return path;}
-        [[nodiscard]] FileLine getFileLine() const {return line;}
+        virtual bool onTail()=0;
+
+        [[nodiscard]] VarList *getVarlist() const {return varlist;}
+        [[nodiscard]] Activation *toPrev() const {return prev;}
+        [[nodiscard]] UpMessage *getUpStream() const {return up;}
+        [[nodiscard]] DownMessage *getDownStream() const {return down;}
     };
 
-    class TopActivation {
+    class TopActivation : public Activation {
         Code *start;
         Code *next;
     public:
-        Code *getCode();
-    };
+        explicit TopActivation(Code *code, Inter *inter_);
+        ~TopActivation() override;
 
+        Code *getCode() override;
+        bool onTail() override {return false;}
+    };
 }
 
 #endif //AFUN_ACTIVATION_HPP
