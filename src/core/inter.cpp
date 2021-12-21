@@ -6,7 +6,8 @@ using namespace aFuncore;
 using namespace aFuntool;
 
 
-Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor{}, monitor_lock{}, monitor_cond{} {
+Inter::Inter(int argc, char **argv, ExitMode em)
+     : base{this}, is_derive{false}, status_lock{}, monitor{}, monitor_lock{}, monitor_cond{} {
     status = inter_creat;
     pthread_mutex_init(&status_lock, nullptr);
 
@@ -36,8 +37,6 @@ Inter::Inter(int argc, char **argv, ExitMode em) : status_lock{}, monitor{}, mon
         tmp->str = argv[i];
     }
 
-    is_derive = false;
-    base = this;
     result = nullptr;
     son_inter = new std::list<Inter *>;
 
@@ -77,11 +76,6 @@ void Inter::enable(){
         protect->setProtect(true);
         status = inter_normal;
     }
-}
-
-bool Inter::isExit() const{
-    bool ret = (status == inter_exit || status == inter_stop);
-    return ret;
 }
 
 bool Inter::runCode(){

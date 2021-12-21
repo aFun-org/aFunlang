@@ -7,11 +7,11 @@ using namespace aFuntool;
 
 
 aFuncore::Var::Var(Object *data_, Inter *inter_) : data{data_}, inter{inter_->base} {
-    addObject(inter->gc->var);
+    addObject(inter->getGcRecord()->var);
 }
 
 aFuncore::VarSpace::VarSpace(Inter *inter_) : count{0}, var{}, inter{inter_->base} {
-    addObject(inter->gc->varspace);
+    addObject(inter->getGcRecord()->varspace);
 }
 
 Var *aFuncore::VarSpace::findVar(const std::string &name){

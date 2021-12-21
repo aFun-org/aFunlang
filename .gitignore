@@ -57,3 +57,4 @@ dkms.conf
 .vs
 .vscode
 cmake-*
+out
