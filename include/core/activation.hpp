@@ -39,6 +39,7 @@ namespace aFuncore {
 
         virtual ActivationStatus getCode(Code *&code)=0;
         virtual bool onTail()=0;
+        virtual void runCode(Code *code);
 
         [[nodiscard]] VarList *getVarlist() const {return varlist;}
         [[nodiscard]] Activation *toPrev() const {return prev;}
@@ -55,6 +56,8 @@ namespace aFuncore {
 
         ActivationStatus getCode(Code *&code) override;
         bool onTail() override {return false;}
+
+        [[nodiscard]] Code *getStart() const {return start;}
     };
 }
 

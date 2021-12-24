@@ -1,4 +1,7 @@
 ﻿#include "activation.hpp"
+#include "value.hpp"
+#include "init.hpp"
+
 using namespace aFuncore;
 using namespace aFuntool;
 
@@ -33,6 +36,38 @@ Activation::~Activation(){
         down->joinMsg(prev->down);
     delete up;
     delete down;
+}
+
+void Activation::runCode(Code *code){
+    auto code_type = code->getType();
+    if (code_type == code_start) {  // start 不处理 msg
+        auto *none = new Object("None", inter);
+        down->pushMessage(new NormalMessage(none));
+    } else {
+        if (code_type == code_element) {
+            std::string func;
+            bool in_protect = false;
+            if (inter->checkLiteral(code->getElement(), func, in_protect)) {
+                // ...
+            } else {
+                Object *obj = nullptr;
+                if (varlist != nullptr)
+                    obj = varlist->findObject(code->getElement());
+                if (obj != nullptr)
+                    down->pushMessage(new NormalMessage(obj));
+            }
+        } else switch (code->getBlockType()) {
+            case block_p:  // 顺序执行
+                break;
+            case block_b:
+                break;
+            case block_c:
+                break;
+            default:
+                errorLog(aFunCoreLogger, "Error block type.");
+                break;
+        }
+    }
 }
 
 TopActivation::TopActivation(Code *code, Inter *inter_)

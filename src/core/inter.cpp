@@ -91,42 +91,19 @@ bool Inter::runCode(){
 
         Code *code = nullptr;
         ActivationStatus as = activation->getCode(code);
-        if (as == as_end) {  // activation 执行完成
-            Activation *prev = activation->toPrev();
-            delete activation;
-            activation = prev;
-        } else {
-            auto code_type = code->getType();
-            if (code_type == code_start) {  // start 不处理 msg
-                auto *none = new Object("None", this);
-                activation->getDownStream()->pushMessage(new NormalMessage(none));
-            } else {
-                if (code_type == code_element) {
-                    std::string func;
-                    bool in_protect = false;
-                    if (checkLiteral(code->getElement(), func, in_protect)) {
-                        // ...
-                    } else {
-                        auto varlist = activation->getVarlist();
-                        Object *obj = nullptr;
-                        if (varlist != nullptr)
-                            obj = varlist->findObject(code->getElement());
-                        if (obj != nullptr)
-                            activation->getDownStream()->pushMessage(new NormalMessage(obj));
-                    }
-
-                } else switch (code->getBlockType()) {
-                    case block_p:  // 顺序执行
-                        break;
-                    case block_b:
-                        break;
-                    case block_c:
-                        break;
-                    default:
-                        errorLog(aFunCoreLogger, "Error block type.");
-                        break;
-                }
+        switch (as) {
+            case as_end: {
+                Activation *prev = activation->toPrev();
+                delete activation;
+                activation = prev;
+                break;
             }
+            case as_run:
+                activation->runCode(code);
+                break;
+            default:
+                errorLog(aFunCoreLogger, "Error activation status.");
+                break;
         }
     }
     return true;

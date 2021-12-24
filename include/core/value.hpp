@@ -16,7 +16,7 @@ namespace aFuncore {
         Inter *const inter;
         const std::string type;  // 标识 Object 的字符串
 
-        AFUN_CORE_EXPORT explicit Object(const std::string &type, Inter *inter_);
+        AFUN_CORE_EXPORT explicit Object(const std::string &type_, Inter *inter_);
         AFUN_CORE_EXPORT ~Object() override =default;
     };
 };
