@@ -47,17 +47,22 @@ namespace aFuncore {
         [[nodiscard]] DownMessage *getDownStream() const {return down;}
     };
 
-    class TopActivation : public Activation {
+    class ExeActivation : public Activation {
         Code *start;
         Code *next;
+        bool first=true;
+    public:
+        explicit ExeActivation(Code *code, Inter *inter_) : Activation(inter_), start{code}, next{code} {}
+        ActivationStatus getCode(Code *&code) override;
+        bool onTail() override {return next == nullptr;}
+        [[nodiscard]] Code *getStart() const {return start;}
+    };
+
+    class TopActivation : public ExeActivation {
     public:
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
-
-        ActivationStatus getCode(Code *&code) override;
         bool onTail() override {return false;}
-
-        [[nodiscard]] Code *getStart() const {return start;}
     };
 }
 

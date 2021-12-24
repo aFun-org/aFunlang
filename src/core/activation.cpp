@@ -58,6 +58,7 @@ void Activation::runCode(Code *code){
             }
         } else switch (code->getBlockType()) {
             case block_p:  // 顺序执行
+                new ExeActivation(code->getSon(), inter);
                 break;
             case block_b:
                 break;
@@ -70,8 +71,26 @@ void Activation::runCode(Code *code){
     }
 }
 
-TopActivation::TopActivation(Code *code, Inter *inter_)
-    : Activation(inter_), start{code}, next{code} {
+ActivationStatus ExeActivation::getCode(Code *&code){
+    code = next;
+    if (code == nullptr)
+        return as_end;
+
+    if (!first) {
+        Message *msg = down->getMessage<NormalMessage>("NORMAL");
+        if (msg == nullptr) {
+            return as_end;
+        } else
+            msg = down->popMessage("NORMAL");
+        delete msg;
+    }
+
+    first = false;
+    next = code->toNext();
+    return as_run;
+}
+
+TopActivation::TopActivation(Code *code, Inter *inter_) : ExeActivation(code, inter_) {
     varlist = inter_->getGlobalVarlist();
     old_varlist = varlist;
 }
@@ -84,22 +103,4 @@ static void ActivationTopProgress(Message *msg, void *) {
 
 TopActivation::~TopActivation() {
     down->forEach<void *>(ActivationTopProgress, nullptr);
-}
-
-ActivationStatus TopActivation::getCode(Code *&code) {
-    code = next;
-    if (code == nullptr)
-        return as_end;
-
-    if (code->getType() != code_start) {
-        Message *msg = down->getMessage<NormalMessage>("NORMAL");
-        if (msg == nullptr) {
-            return as_end;
-        } else
-            msg = down->popMessage("NORMAL");
-        delete msg;
-    }
-
-    next = code->toNext();
-    return as_run;
 }

@@ -9,7 +9,7 @@ int main() {
     inter->getGlobalVarlist()->defineVar("test-var", obj);
 
     auto *code = (new Code(0, "run-code.aun"));
-    code->connect(new Code("test-var", 1));
+    code->connect(new Code(block_p, new Code("test-var", 1), 0));
     inter->runCode(code);
     code->destructAll();
     delete inter;
