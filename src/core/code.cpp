@@ -356,6 +356,10 @@ Code *Code::read_v1(FILE *f, bool debug, int8_t read_type, bool to_son) {
 
 #undef Done
 
+/**
+ * 计算代码的MD5值（版本：1）
+ * @return md5
+ */
 std::string Code::getMD5_v1() const {
     char md5str[MD5_STR_LEN + 1] {};
     char md5_value[MD5_SIZE];
@@ -383,6 +387,10 @@ std::string Code::getMD5_v1() const {
     return md5str;
 }
 
+/**
+ * 计算代码（子、兄）的MD5值（版本：1）
+ * @return md5
+ */
 std::string Code::getMD5All_v1() const {
     if (this->type != code_start) {
         errorLog(aFunCoreLogger, "Code get md5 all did not with `start`");
@@ -424,6 +432,13 @@ static const std::string ByteCodeHead = "aFunByteCode";  // NOLINT
 static const int MaxByteCodeVersion = 1;  // 字节码版本号, 有别于 aFun 版本号
 
 #define Done(write) do{if(!(write)){goto RETURN_FALSE;}}while(0)
+
+/**
+ * 生成字节码文件（版本: MaxByteCodeVersion）
+ * @param file_path
+ * @param debug
+ * @return
+ */
 bool Code::writeByteCode(ConstFilePath file_path, bool debug) const {
     if (this->type != code_start) {
         errorLog(aFunCoreLogger, "ByteCode write all did not with `start`");
@@ -449,6 +464,11 @@ RETURN_FALSE:
     return false;
 }
 
+/**
+ * 读取字节码文件（版本: 自动识别）
+ * @param file_path
+ * @return
+ */
 bool Code::readByteCode(ConstFilePath file_path){
     if (this->type != code_start) {
         errorLog(aFunCoreLogger, "ByteCode read all did not with `start`");

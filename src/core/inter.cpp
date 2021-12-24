@@ -1,10 +1,8 @@
 ﻿#include "inter.hpp"
 #include "init.hpp"
 #include "__gc.hpp"
-
 using namespace aFuncore;
 using namespace aFuntool;
-
 
 Inter::Inter(int argc, char **argv, ExitMode em)
      : base{this}, is_derive{false}, status_lock{}, monitor{}, monitor_lock{}, monitor_cond{} {
@@ -20,21 +18,16 @@ Inter::Inter(int argc, char **argv, ExitMode em)
     literal = new std::list<LiteralRegex>;
 
     envvar = new EnvVarSpace();
-    gc_runtime = envvar->findVar("sys:gc-runtime");
-    gc_runtime->num = 2;
-    prefix = envvar->findVar("sys:prefix");
-    exit_code = envvar->findVar("sys:exit-code");
-    exit_code->num = 0;
-    this->argc = envvar->findVar("sys:gc-runtime");
-    this->argc->num = argc;
-    error_std = envvar->findVar("sys:gc-runtime");
-    error_std->num = 0;
+    envvar->setNumber("sys:gc-runtime", 2);
+    envvar->setString("sys:prefix", "''");  // 引用，顺序执行
+    envvar->setNumber("sys:exit-code", 0);
+    envvar->setNumber("sys:argc", argc);
+    envvar->setNumber("sys:error_std", 0);
 
     for (int i = 0; i < argc; i++) {
         char buf[20];
         snprintf(buf, 10, "sys:arg%d", i);
-        auto tmp = envvar->findVar(buf);
-        tmp->str = argv[i];
+        envvar->setString(buf, argv[i]);
     }
 
     result = nullptr;
@@ -71,6 +64,9 @@ Inter::~Inter(){
     }
 }
 
+/**
+ * 使能 (激活解释器)
+ */
 void Inter::enable(){
     if (status == inter_init) {
         protect->setProtect(true);
@@ -78,6 +74,10 @@ void Inter::enable(){
     }
 }
 
+/**
+ * 运行代码（直接运行activation）
+ * @return
+ */
 bool Inter::runCode(){
     while (activation != nullptr) {
         if (isExit()) {
@@ -109,6 +109,11 @@ bool Inter::runCode(){
     return true;
 }
 
+/**
+ * 运行代码
+ * @param code 代码
+ * @return
+ */
 bool Inter::runCode(Code *code){
     if (activation != nullptr) {
         errorLog(aFunCoreLogger, "Run code with activation");
@@ -119,6 +124,13 @@ bool Inter::runCode(Code *code){
     return runCode();
 }
 
+/**
+ * 检查字面量正则匹配
+ * @param element 字面量
+ * @param func 函数
+ * @param in_protect 是否保护空间
+ * @return
+ */
 bool Inter::checkLiteral(const std::string &element, std::string &func, bool &in_protect) const {
     if (literal->empty())
         return false;

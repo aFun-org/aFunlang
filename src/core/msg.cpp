@@ -25,11 +25,20 @@ MessageStream::~MessageStream(){
     }
 }
 
+/**
+ * 压入 Message
+ * @param msg Message
+ */
 void MessageStream::pushMessage(Message *msg){
     msg->next = stream;
     stream = msg;
 }
 
+/**
+ * 获取 Message
+ * @param type 类型
+ * @return Message
+ */
 Message *MessageStream::_getMessage(const std::string &type) const{
     for (Message *msg = stream; msg != nullptr; msg = msg->next) {
         if (msg->type == type)
@@ -38,6 +47,11 @@ Message *MessageStream::_getMessage(const std::string &type) const{
     return nullptr;
 }
 
+/**
+ * 弹出Message (使Message脱离数据流)
+ * @param type 类型
+ * @return Message
+ */
 Message *MessageStream::popMessage(const std::string &type) {
     for (Message **msg = &stream; *msg != nullptr; msg = &((*msg)->next)) {
         if ((*msg)->type == type) {
@@ -68,6 +82,12 @@ UpMessage::~UpMessage(){
     }
 }
 
+/**
+ * 弹出Message (使Message脱离数据流)
+ * 注意: 不会弹出继承的Message
+ * @param type 类型
+ * @return Message
+ */
 Message *UpMessage::popMessage(const std::string &type){
     for (Message **msg = &stream; *msg != nullptr; msg = &((*msg)->next)) {
         if ((*msg) == old)
@@ -81,6 +101,10 @@ Message *UpMessage::popMessage(const std::string &type){
     return nullptr;
 }
 
+/**
+ * 拼接数据流
+ * @param msg
+ */
 void DownMessage::joinMsg(DownMessage *msg){
     Message *m = stream;
     if (m == nullptr)

@@ -14,6 +14,11 @@ aFuncore::VarSpace::VarSpace(Inter *inter_) : count{0}, var{}, inter{inter_->bas
     addObject(inter->getGcRecord()->varspace);
 }
 
+/**
+ * 访问指定变量
+ * @param name 变量名
+ * @return
+ */
 Var *aFuncore::VarSpace::findVar(const std::string &name){
     size_t index = time33(name) % VAR_HASH_SIZE;
     for (auto tmp = var[index]; tmp != nullptr; tmp = tmp->next) {
@@ -23,6 +28,12 @@ Var *aFuncore::VarSpace::findVar(const std::string &name){
     return nullptr;
 }
 
+/**
+ * 定义变量
+ * @param name 变量名
+ * @param data 变量（Object）
+ * @return
+ */
 VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     auto tmp = &var[index];
@@ -37,6 +48,12 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *
     return vof_success;
 }
 
+/**
+ * 定义变量
+ * @param name 变量名
+ * @param data 变量（Var）
+ * @return
+ */
 VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     auto tmp = &var[index];
@@ -51,6 +68,12 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *dat
     return vof_success;
 }
 
+/**
+ * 设定变量的值
+ * @param name 变量名
+ * @param data 变量
+ * @return
+ */
 VarOperationFlat aFuncore::VarSpace::setVar(const std::string &name, Object *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     for (auto tmp = var[index]; tmp != nullptr; tmp = tmp->next) {
@@ -62,6 +85,11 @@ VarOperationFlat aFuncore::VarSpace::setVar(const std::string &name, Object *dat
     return vof_not_var;
 }
 
+/**
+ * 删除变量
+ * @param name 变量名
+ * @return
+ */
 VarOperationFlat aFuncore::VarSpace::delVar(const std::string &name){
     size_t index = time33(name) % VAR_HASH_SIZE;
     for (auto tmp = var[index]; tmp != nullptr && tmp->next != nullptr; tmp = tmp->next) {
@@ -85,31 +113,67 @@ aFuncore::VarSpace::~VarSpace(){
     }
 }
 
+/**
+ * 定义变量
+ * 若启用保护且变量名存在，则返回错误redefine
+ * 若启用保护则返回错误fail
+ * @param name 变量名
+ * @param data 变量（Object）
+ * @return
+ */
 VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Object *data){
     if (is_protect)
         return findVar(name) ? vof_redefine_var : vof_fail;
     return VarSpace::defineVar(name, data);
 }
 
+/**
+ * 定义变量
+ * 若启用保护且变量名存在，则返回错误redefine
+ * 若启用保护则返回错误fail
+ * @param name 变量名
+ * @param data 变量（Var）
+ * @return
+ */
 VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Var *data){
     if (is_protect)
         return findVar(name) ? vof_redefine_var : vof_fail;
     return VarSpace::defineVar(name, data);
 }
 
+/**
+ * 设定变量的值
+ * 若启用保护且变量名存在，则返回错误fail
+ * 若启用保护则返回错误 not_var
+ * @param name 变量名
+ * @param data 变量（Var）
+ * @return
+ */
 VarOperationFlat aFuncore::ProtectVarSpace::setVar(const std::string &name, Object *data){
     if (is_protect)
         return findVar(name) ? vof_fail : vof_not_var;
     return VarSpace::setVar(name, data);
 }
 
+/**
+ * 删除变量
+ * 若启用保护且变量名存在，则返回错误fail
+ * 若启用保护则返回错误 not_var
+ * @param name 变量名
+ * @param data 变量（Var）
+ * @return
+ */
 VarOperationFlat aFuncore::ProtectVarSpace::delVar(const std::string &name){
     if (is_protect)
         return findVar(name) ? vof_fail : vof_not_var;
     return VarSpace::delVar(name);
 }
 
-
+/**
+ * 访问变量
+ * @param name 变量名
+ * @return
+ */
 Var *aFuncore::VarList::findVar(const std::string &name){
     Var *ret = nullptr;
     for (auto tmp = this; tmp != nullptr && ret == nullptr; tmp = tmp->next)
@@ -117,6 +181,14 @@ Var *aFuncore::VarList::findVar(const std::string &name){
     return ret;
 }
 
+/**
+ * 定义变量
+ * 若定义出现redefine则退出报错
+ * 若出现fail则跳到下一个变量空间尝试定义
+ * @param name 变量名
+ * @param data 变量（Object）
+ * @return
+ */
 bool aFuncore::VarList::defineVar(const std::string &name, Object *data){
     VarOperationFlat ret = vof_fail;
     for (auto tmp = this; tmp != nullptr && ret == vof_fail; tmp = tmp->next)
@@ -124,6 +196,14 @@ bool aFuncore::VarList::defineVar(const std::string &name, Object *data){
     return ret == vof_success;
 }
 
+/**
+ * 定义变量
+ * 若定义出现redefine则退出报错
+ * 若出现fail则跳到下一个变量空间尝试定义
+ * @param name 变量名
+ * @param data 变量（Var）
+ * @return
+ */
 bool aFuncore::VarList::defineVar(const std::string &name, Var *data){
     VarOperationFlat ret = vof_fail;
     for (auto tmp = this; tmp != nullptr && ret == vof_fail; tmp = tmp->next)
@@ -131,6 +211,14 @@ bool aFuncore::VarList::defineVar(const std::string &name, Var *data){
     return ret == vof_success;
 }
 
+/**
+ * 设置变量的值
+ * 若not_var则跳到下一个变量空间
+ * 若fail则结束
+ * @param name 变量名
+ * @param data 数据
+ * @return
+ */
 bool aFuncore::VarList::setVar(const std::string &name, Object *data){
     VarOperationFlat ret = vof_not_var;
     for (auto tmp = this; tmp != nullptr && ret == vof_not_var; tmp = tmp->next)
@@ -138,6 +226,13 @@ bool aFuncore::VarList::setVar(const std::string &name, Object *data){
     return ret == vof_success;
 }
 
+/**
+ * 删除变量
+ * 若not_var则跳到下一个变量空间
+ * 若fail则结束
+ * @param name
+ * @return
+ */
 bool aFuncore::VarList::delVar(const std::string &name){
     VarOperationFlat ret = vof_not_var;
     for (auto tmp = this; tmp != nullptr && ret == vof_not_var; tmp = tmp->next)
@@ -145,6 +240,10 @@ bool aFuncore::VarList::delVar(const std::string &name){
     return ret == vof_success;
 }
 
+/**
+ * 在指定位置断开varlist
+ * @param varlist
+ */
 void aFuncore::VarList::disconnect(VarList *varlist){
     for (VarList *tmp = this; tmp != nullptr; tmp = tmp->next) {
         if (tmp->next == varlist) {
@@ -154,6 +253,9 @@ void aFuncore::VarList::disconnect(VarList *varlist){
     }
 }
 
+/**
+ * 删除所有varlist
+ */
 void VarList::destructAll(){
     for (VarList *tmp=this, *n; tmp != nullptr; tmp = n) {
         n = tmp->next;

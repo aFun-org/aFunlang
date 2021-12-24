@@ -10,6 +10,11 @@ namespace aFuncore {
     aFuntool::Logger *aFunCoreLogger;
 };
 
+/**
+ * 初始化程序
+ * @param info 初始化信息
+ * @return 是否初始化成功
+ */
 bool aFuncore::aFunCoreInit(aFuncore::InitInfo *info) {
     if (info == nullptr) {
         static InitInfo info_default = {.base_dir=".",

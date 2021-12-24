@@ -77,11 +77,6 @@ namespace aFuncore {
 
         /* 配置信息记录器 */
         EnvVarSpace *envvar;
-        EnvVarSpace::EnvVar *gc_runtime;
-        EnvVarSpace::EnvVar *prefix;
-        EnvVarSpace::EnvVar *exit_code;  // 退出代码
-        EnvVarSpace::EnvVar *argc;  // 参数个数
-        EnvVarSpace::EnvVar *error_std;  // Error输出的位置 0-stdout 其他-stderr
 
         /* 线程信息 */
     public:
