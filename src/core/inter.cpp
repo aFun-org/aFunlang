@@ -81,53 +81,52 @@ void Inter::enable(){
 bool Inter::runCode(){
     while (activation != nullptr) {
         if (isExit()) {
-            // TODO-szh 弹出所有activation
+            while (activation != nullptr) {
+                Activation *prev = activation->toPrev();
+                delete activation;
+                activation = prev;
+            }
             return false;
         }
 
-        Code *code = activation->getCode();
-        if (code == nullptr) {  // activation 执行完成
+        Code *code = nullptr;
+        ActivationStatus as = activation->getCode(code);
+        if (as == as_end) {  // activation 执行完成
             Activation *prev = activation->toPrev();
             delete activation;
             activation = prev;
-            continue;
-        }
-
-        auto code_type = code->getType();
-        if (code_type == code_start)
-            continue;
-
-        Message *msg = activation->getDownStream()->popMessage("NORMAL");
-        if (msg == nullptr) {
-            // ... 出现异常
-        }
-
-        delete msg;
-
-        if (code_type == code_element) {
-            std::string func;
-            bool in_protect = false;
-            if (checkLiteral(code->getElement(), func, in_protect)) {
-                // ...
+        } else {
+            auto code_type = code->getType();
+            if (code_type == code_start) {  // start 不处理 msg
+                auto *none = new Object("None", this);
+                activation->getDownStream()->pushMessage(new NormalMessage(none));
             } else {
-                auto varlist = activation->getVarlist();
-                Object *obj = nullptr;
-                if (varlist != nullptr)
-                    obj = varlist->findObject(code->getElement());
-                if (obj != nullptr)
-                    activation->getDownStream()->pushMessage(new NormalMessage(obj));
-            }
+                if (code_type == code_element) {
+                    std::string func;
+                    bool in_protect = false;
+                    if (checkLiteral(code->getElement(), func, in_protect)) {
+                        // ...
+                    } else {
+                        auto varlist = activation->getVarlist();
+                        Object *obj = nullptr;
+                        if (varlist != nullptr)
+                            obj = varlist->findObject(code->getElement());
+                        if (obj != nullptr)
+                            activation->getDownStream()->pushMessage(new NormalMessage(obj));
+                    }
 
-        } else switch (code->getBlockType()) {
-            case block_p:
-                break;
-            case block_b:
-                break;
-            case block_c:
-                break;
-            default:
-                errorLog(aFunCoreLogger, "Error block type.");
-                break;
+                } else switch (code->getBlockType()) {
+                    case block_p:  // 顺序执行
+                        break;
+                    case block_b:
+                        break;
+                    case block_c:
+                        break;
+                    default:
+                        errorLog(aFunCoreLogger, "Error block type.");
+                        break;
+                }
+            }
         }
     }
     return true;

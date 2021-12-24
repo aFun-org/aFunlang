@@ -6,6 +6,11 @@
 namespace aFuncore {
     class Activation;
     class TopActivation;
+
+    typedef enum ActivationStatus {
+        as_run = 0,
+        as_end = 1,
+    } ActivationStatus;
 }
 
 #include "msg.hpp"
@@ -32,7 +37,7 @@ namespace aFuncore {
         explicit Activation(Inter *inter_);
         virtual ~Activation();
 
-        virtual Code *getCode()=0;
+        virtual ActivationStatus getCode(Code *&code)=0;
         virtual bool onTail()=0;
 
         [[nodiscard]] VarList *getVarlist() const {return varlist;}
@@ -48,7 +53,7 @@ namespace aFuncore {
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
 
-        Code *getCode() override;
+        ActivationStatus getCode(Code *&code) override;
         bool onTail() override {return false;}
     };
 }

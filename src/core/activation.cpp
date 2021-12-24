@@ -51,11 +51,20 @@ TopActivation::~TopActivation() {
     down->forEach<void *>(ActivationTopProgress, nullptr);
 }
 
-Code *TopActivation::getCode(){
-    Code *ret = next;
-    if (ret == nullptr)
-        return nullptr;
+ActivationStatus TopActivation::getCode(Code *&code) {
+    code = next;
+    if (code == nullptr)
+        return as_end;
 
-    next = ret->toNext();
-    return ret;
+    if (code->getType() != code_start) {
+        Message *msg = down->getMessage<NormalMessage>("NORMAL");
+        if (msg == nullptr) {
+            return as_end;
+        } else
+            msg = down->popMessage("NORMAL");
+        delete msg;
+    }
+
+    next = code->toNext();
+    return as_run;
 }
