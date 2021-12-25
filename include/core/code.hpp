@@ -2,29 +2,16 @@
 #define AFUN_CODE_HPP
 #include "tool.hpp"
 #include "aFunCoreExport.h"
+#include "core.hpp"
 
 namespace aFuncore {
-    typedef enum CodeType {
-        code_start = 0,
-        code_element = 1,
-        code_block = 2,
-    } CodeType;
-
-    typedef enum BlockType {
-        block_p = '(',
-        block_b = '[',
-        block_c = '{',
-    } BlockType;
-
-    typedef class Code Code;
     class Code {
         CodeType type;
         char prefix=NUL;
 
         union {
-            char *element;  // union 内不使用 std::string
-
-            struct {
+            char *element = nullptr;  // union 内不使用 std::string
+            struct {  // NOLINT 不需要初始化
                 BlockType block_type;
                 Code *son;
             };

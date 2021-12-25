@@ -2,21 +2,8 @@
 #define AFUN_ACTIVATION_HPP
 #include "tool.hpp"
 #include "aFunCoreExport.h"
-
-namespace aFuncore {
-    class Activation;
-    class TopActivation;
-
-    typedef enum ActivationStatus {
-        as_run = 0,
-        as_end = 1,
-    } ActivationStatus;
-}
-
-#include "msg.hpp"
-#include "code.hpp"
-#include "inter.hpp"
-#include "var.hpp"
+#include "core.hpp"
+#include "value.hpp"
 
 namespace aFuncore {
     class Activation {
@@ -63,6 +50,29 @@ namespace aFuncore {
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
         bool onTail() override {return false;}
+    };
+
+    class FuncActivation : public Activation {
+        enum {
+            func_first = 0,
+            func_get_func = 1,
+            func_get_arg = 2,
+        } status = func_first;
+
+        bool on_tail = false;
+        Code *call;
+
+        Function *func = nullptr;
+        Function::CallFunction *call_func = nullptr;
+
+        std::list<Function::CallFunction::ArgCodeList> *acl = nullptr;
+        std::list<Function::CallFunction::ArgCodeList>::iterator acl_begin;
+        std::list<Function::CallFunction::ArgCodeList>::iterator acl_end;
+    public:
+        explicit FuncActivation(Code *code, Inter *inter_) : Activation(inter_), call{code,} {}
+        ~FuncActivation() override;
+        ActivationStatus getCode(Code *&code) override;
+        bool onTail() override {return on_tail;}
     };
 }
 

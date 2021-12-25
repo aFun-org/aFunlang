@@ -2,16 +2,7 @@
 #define AFUN_MSG_HPP
 #include "tool.hpp"
 #include "aFunCoreExport.h"
-
-namespace aFuncore {
-    class MessageStream;
-    class Message;
-    class NormalMessage;
-    class UpMessage;
-    class DownMessage;
-}
-
-#include "value.hpp"
+#include "core.hpp"
 
 namespace aFuncore {
     class Message {
@@ -38,6 +29,7 @@ namespace aFuncore {
         AFUN_CORE_EXPORT explicit NormalMessage(Object *obj);
         AFUN_CORE_EXPORT ~NormalMessage() override;
         void topProgress() override;
+        Object *getObject() {return obj;}
     };
 
     class MessageStream {

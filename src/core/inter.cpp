@@ -1,6 +1,10 @@
 ﻿#include "inter.hpp"
+#include "activation.hpp"
 #include "init.hpp"
+#include "env-var.hpp"
+#include "var.hpp"
 #include "__gc.hpp"
+
 using namespace aFuncore;
 using namespace aFuntool;
 

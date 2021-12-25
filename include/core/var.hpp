@@ -2,23 +2,8 @@
 #define AFUN_VAR_HPP
 #include "tool.hpp"
 #include "aFunCoreExport.h"
-
-namespace aFuncore {
-    typedef enum VarOperationFlat {
-        vof_success = 0,  // 成功
-        vof_not_var = 1,  // 变量不存在
-        vof_redefine_var = 2,  // 变量重复定义
-        vof_fail = 3,  // 存在其他错误
-    } VarOperationFlat;
-
-    class Var;
-    class VarSpace;
-    class VarList;
-    class ProtectVarSpace;
-}
-
+#include "core.hpp"
 #include "gc.hpp"
-#include "value.hpp"
 
 namespace aFuncore {
     class Var : public GcObject<class Var> {

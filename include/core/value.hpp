@@ -2,13 +2,9 @@
 #define AFUN_VALUE_HPP
 #include "tool.hpp"
 #include "aFunCoreExport.h"
-
-namespace aFuncore {
-    class Object;
-};
-
+#include "list"
+#include "core.hpp"
 #include "gc.hpp"
-#include "inter.hpp"
 
 namespace aFuncore {
     class Object : public GcObject<class Object> {
@@ -18,6 +14,22 @@ namespace aFuncore {
 
         AFUN_CORE_EXPORT explicit Object(const std::string &type_, Inter *inter_);
         AFUN_CORE_EXPORT ~Object() override =default;
+    };
+
+    class Function : public Object {
+    public:
+        Function(const std::string &type_, Inter *inter_) : Object(type_, inter_) {}
+        class CallFunction {
+        public:
+            struct ArgCodeList {
+                Code *code = nullptr;
+                Object *ret = nullptr;
+            };
+            virtual ~CallFunction()=default;
+            virtual std::list<ArgCodeList> *getArgCodeList()=0;
+            virtual ActivationStatus runFunction()=0;
+        };
+        virtual CallFunction *getCallFunction(Code *code, Inter *inter)=0;
     };
 };
 

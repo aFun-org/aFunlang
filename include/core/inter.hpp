@@ -3,45 +3,7 @@
 #include <list>
 #include "tool.hpp"
 #include "aFunCoreExport.h"
-
-namespace aFuncore {
-    class Inter;
-
-    enum InterStatus {
-        inter_creat = 0,
-        inter_init = 1,  // 执行初始化程序
-        inter_normal = 2,  // 正常执行
-        inter_stop = 3,  // 当前运算退出
-        inter_exit = 4,  // 解释器退出
-    };
-    typedef enum InterStatus InterStatus;
-
-    typedef enum ExitFlat {
-        ef_activity = 0,  // 主动退出
-        ef_passive = 1,  // 被动退出
-        ef_none = 2,
-    } ExitFlat;
-
-    typedef enum ExitMode {
-        em_activity = ef_activity,  // 主动退出
-        em_passive = ef_passive,  // 被动退出
-    } ExitMode;
-
-    static const int PrefixCount = 2;
-    typedef enum Prefix {
-        prefix_quote = 0,  // 变量引用
-        prefix_exec_first = 1,
-    } Prefix;
-    static const std::string E_PREFIX = "$`'";  /* NOLINT element前缀 */
-    static const std::string B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
-
-}
-
-#include "env-var.hpp"
-#include "code.hpp"
-#include "var.hpp"
-#include "value.hpp"
-#include "activation.hpp"
+#include "core.hpp"
 
 namespace aFuncore {
     class Inter {
@@ -102,13 +64,7 @@ namespace aFuncore {
         [[nodiscard]] VarList *getGlobalVarlist() const {return global_varlist;}
         [[nodiscard]] Activation *getActivation() const {return activation;}
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &func, bool &in_protect) const;
-
         [[nodiscard]] EnvVarSpace *getEnvVarSpace() const {return envvar;}
-        [[nodiscard]] int getGcRuntime() const {return gc_runtime->num;}
-        [[nodiscard]] char getPrefx(enum Prefix pre) const {return prefix->str[pre];}
-        [[nodiscard]] int getExitCode() const {return exit_code->num;}
-        [[nodiscard]] int getArgc() const {return argc->num;}
-        [[nodiscard]] int getErrorStd() const {return error_std->num == 1;}
 
         void pushActivation(Activation *new_activation) {activation = new_activation;}
 
