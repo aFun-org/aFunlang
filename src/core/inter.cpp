@@ -129,6 +129,30 @@ bool Inter::runCode(Code *code){
 }
 
 /**
+ * 检查字面量是否匹配
+ * @param element 字面量
+ * @return
+ */
+bool Inter::checkLiteral(const std::string &element) const {
+    if (literal->empty())
+        return false;
+
+    auto it = literal->begin();
+    auto end = literal->end();
+
+    for(NULL;it != end;it++){
+        try {
+            if (it->rg->match(element) != 1)
+                continue;
+            return true;
+        } catch (RegexException &e) {
+            continue;
+        }
+    }
+    return false;
+}
+
+/**
  * 检查字面量正则匹配
  * @param element 字面量
  * @param func 函数

@@ -5,6 +5,7 @@
 #include "msg.hpp"
 #include "var.hpp"
 #include "code.hpp"
+#include "env-var.hpp"
 
 using namespace aFuncore;
 using namespace aFuntool;
@@ -125,8 +126,25 @@ ActivationStatus FuncActivation::getCode(Code *&code){
             case block_c:
                 code = call->getSon();
                 return as_run;
-            case block_b:
+            case block_b: {
+                std::string prefix;
+                if (!inter->getEnvVarSpace()->findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
+                    prefix = "''";
+                char quote = prefix[prefix_quote];
+                for (Code *var = call->getSon(); var != nullptr; var = var->toNext()) {
+                    if (var->getType() != code_element || var->getPrefix() == quote || inter->checkLiteral(var->getElement()))
+                        continue;
+                    Object *obj = varlist->findObject(var->getElement());
+                    if (obj == nullptr || !dynamic_cast<Function *>(obj) || !dynamic_cast<Function *>(obj)->isInfix())
+                        continue;
+                    func = dynamic_cast<Function *>(obj);
+                    if (func == nullptr || !func->isInfix())
+                        continue;
+                    status = func_get_func;
+                    break;  /* 跳转到: 执行变量获取前的准备 */
+                }
                 break;
+            }
             default:
                 errorLog(aFunCoreLogger, "Error FuncActivation block type");
                 return as_end;
@@ -134,17 +152,20 @@ ActivationStatus FuncActivation::getCode(Code *&code){
     }
 
     if (status == func_get_func) {
-        status = func_get_arg;
-        auto *msg = down->getMessage<NormalMessage>("NORMAL");
-        if (msg == nullptr)
-            return as_end;
-        else
-            down->popMessage("NORMAL");
-        func = dynamic_cast<Function *>(msg->getObject());
-        delete msg;
-        if (func == nullptr)
-            return as_end;
+        if (func == nullptr) {
+            auto *msg = down->getMessage<NormalMessage>("NORMAL");
+            if (msg == nullptr)
+                return as_end;
+            else
+                down->popMessage("NORMAL");
+            func = dynamic_cast<Function *>(msg->getObject());
+            delete msg;
+            if (func == nullptr)
+                return as_end;
+        }
 
+        /* Label: 执行变量获取前的准备 */
+        status = func_get_arg;
         call_func = func->getCallFunction(call, inter);
         acl = call_func->getArgCodeList();
         acl_begin = acl->begin();

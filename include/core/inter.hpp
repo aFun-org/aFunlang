@@ -63,6 +63,7 @@ namespace aFuncore {
 
         [[nodiscard]] VarList *getGlobalVarlist() const {return global_varlist;}
         [[nodiscard]] Activation *getActivation() const {return activation;}
+        [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &func, bool &in_protect) const;
         [[nodiscard]] EnvVarSpace *getEnvVarSpace() const {return envvar;}
 

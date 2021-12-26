@@ -43,13 +43,15 @@ public:
         func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
     }
 
-    ~Func1() {
+    ~Func1() override {
         func_code->destructAll();
     }
 
     CallFunction *getCallFunction(Code *code, Inter *inter) override {
         return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
     }
+
+    bool isInfix() override {return true;}
 };
 
 int main() {
@@ -75,6 +77,16 @@ int main() {
 
         auto code = (new Code(0, "run-code.aun"));
         code->connect(new Code(block_c, arg, 0));
+        inter->runCode(code);
+        code->destructAll();
+    }
+
+    {
+        auto arg = new Code("test-var", 1);
+        arg->connect(new Code("test-func", 1));
+
+        auto code = (new Code(0, "run-code.aun"));
+        code->connect(new Code(block_b, arg, 0));
         inter->runCode(code);
         code->destructAll();
     }

@@ -36,7 +36,7 @@ namespace aFuncore {
         em_passive = ef_passive,  // 被动退出
     } ExitMode;
 
-    static const int PrefixCount = 2;
+    static const int PREFIX_COUNT = 2;
     typedef enum Prefix {
         prefix_quote = 0,  // 变量引用
         prefix_exec_first = 1,

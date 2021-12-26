@@ -30,6 +30,7 @@ namespace aFuncore {
             virtual ActivationStatus runFunction()=0;
         };
         virtual CallFunction *getCallFunction(Code *code, Inter *inter)=0;
+        virtual bool isInfix() {return false;}
     };
 };
 
