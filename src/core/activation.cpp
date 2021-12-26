@@ -11,32 +11,17 @@ using namespace aFuntool;
 
 /**
  * 创建基本Activation
- * 若上层Activation已到结尾则尾调用优化
  * 自动继承上层VarList和UpMessage
  * 自动压入inter
  * @param inter_
  */
 Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
     Activation *prev_ = inter->getActivation();
-    if (prev_ != nullptr && prev_->onTail()) {
-        prev = prev_->prev;
-        up = prev_->up;
-        down = prev_->down;
-        old_varlist = prev_->old_varlist;
-        varlist = prev_->varlist;
-
-        prev_->up = nullptr;
-        prev_->down = nullptr;
-        prev_->old_varlist = nullptr;
-        prev_->varlist = nullptr;
-        delete prev_;
-    } else {
-        prev = prev_;
-        old_varlist = prev ? prev->varlist : nullptr;
-        varlist = old_varlist;
-        down = new DownMessage();
-        up = new UpMessage(prev ? prev->up : nullptr);
-    }
+    prev = prev_;
+    old_varlist = prev ? prev->varlist : nullptr;
+    varlist = old_varlist;
+    down = new DownMessage();
+    up = new UpMessage(prev ? prev->up : nullptr);
     inter->pushActivation(this);
 }
 
@@ -186,5 +171,7 @@ ActivationStatus FuncActivation::getCode(Code *&code){
     }
 
     on_tail = true;
-    return call_func->runFunction();
+    if (call_func->runFunction() == as_run)
+        return inter->getActivation()->getCode(code);
+    return as_end;
 }

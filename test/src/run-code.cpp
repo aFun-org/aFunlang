@@ -10,11 +10,12 @@ using namespace aFuntool;
 
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
+        Code *func_code;
         Code *code;
         Inter *inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code *code_, Inter *inter_) : code{code_}, inter{inter_} {
+        CallFunc1(Code *func_code_, Code *code_, Inter *inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
             ArgCodeList agr1 = {code_->getSon()->toNext()};
             acl->push_front(agr1);
@@ -26,9 +27,8 @@ class Func1 : public Function {
 
         ActivationStatus runFunction() override {
             printf_stdout(0, "runFunction : %p\n", acl->begin()->ret);
-            auto *none = new Object("None", inter);
-            inter->getActivation()->getDownStream()->pushMessage(new NormalMessage(none));
-            return aFuncore::as_end;
+            new ExeActivation(func_code, inter);
+            return aFuncore::as_run;
         }
 
         ~CallFunc1() override {
@@ -36,10 +36,19 @@ class Func1 : public Function {
         }
     };
 
+    Code *func_code;
 public:
-    explicit Func1(Inter *inter_) : Function("Function", inter_) {}
+    explicit Func1(Inter *inter_) : Function("Function", inter_) {
+        func_code = (new Code(0, "run-code.aun"));
+        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+    }
+
+    ~Func1() {
+        func_code->destructAll();
+    }
+
     CallFunction *getCallFunction(Code *code, Inter *inter) override {
-        return dynamic_cast<CallFunction *>(new CallFunc1(code, inter));
+        return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
     }
 };
 

@@ -25,7 +25,6 @@ namespace aFuncore {
         virtual ~Activation();
 
         virtual ActivationStatus getCode(Code *&code)=0;
-        virtual bool onTail()=0;
         virtual void runCode(Code *code);
 
         [[nodiscard]] VarList *getVarlist() const {return varlist;}
@@ -41,7 +40,6 @@ namespace aFuncore {
     public:
         explicit ExeActivation(Code *code, Inter *inter_) : Activation(inter_), start{code}, next{code} {}
         ActivationStatus getCode(Code *&code) override;
-        bool onTail() override {return next == nullptr;}
         [[nodiscard]] Code *getStart() const {return start;}
     };
 
@@ -49,7 +47,6 @@ namespace aFuncore {
     public:
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
-        bool onTail() override {return false;}
     };
 
     class FuncActivation : public Activation {
@@ -72,7 +69,6 @@ namespace aFuncore {
         explicit FuncActivation(Code *code, Inter *inter_) : Activation(inter_), call{code,} {}
         ~FuncActivation() override;
         ActivationStatus getCode(Code *&code) override;
-        bool onTail() override {return on_tail;}
     };
 }
 
