@@ -66,7 +66,7 @@ public:
     }
 
     void getObject(const std::string &literal, char prefix) override {
-        printf("Literaler1: %s %c\n", literal.c_str(), prefix);
+        printf_stdout(0, "Literaler1: %s %c\n", literal.c_str(), prefix == NUL ? '-' : prefix);
         new ExeActivation(func_code, inter);
     }
 };
@@ -84,15 +84,15 @@ public:
     }
 
     void callBack() override {
-        printf("CallBackVar callback\n");
+        printf_stdout(0, "CallBackVar callback\n");
         new ExeActivation(func_code, inter);
     }
 };
 
 int main() {
-    auto *inter = new Inter();
+    auto inter = new Inter();
 
-    auto *obj = new Object("Object", inter);
+    auto obj = new Object("Object", inter);
     inter->getGlobalVarlist()->defineVar("test-var", obj);
     printf_stdout(0, "obj: %p\n", obj);
 
@@ -113,7 +113,7 @@ int main() {
         code->connect(new Code(block_p, new Code("test-var", 1), 0));
         inter->runCode(code);
         code->destructAll();
-        printf("\n");
+        fputs_stdout("\n");
     }
 
     {
@@ -124,7 +124,7 @@ int main() {
         code->connect(new Code(block_c, arg, 0));
         inter->runCode(code);
         code->destructAll();
-        printf("\n");
+        fputs_stdout("\n");
     }
 
     {
@@ -135,7 +135,7 @@ int main() {
         code->connect(new Code(block_b, arg, 0));
         inter->runCode(code);
         code->destructAll();
-        printf("\n");
+        fputs_stdout("\n");
     }
 
     {
@@ -144,7 +144,7 @@ int main() {
         code->connect(new Code("data3", 1));
         inter->runCode(code);
         code->destructAll();
-        printf("\n");
+        fputs_stdout("\n");
     }
 
     {
@@ -152,7 +152,7 @@ int main() {
         code->connect(new Code("test-cbv", 1));
         inter->runCode(code);
         code->destructAll();
-        printf("\n");
+        fputs_stdout("\n");
     }
 
     delete inter;
