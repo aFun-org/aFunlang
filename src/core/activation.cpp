@@ -66,8 +66,13 @@ void Activation::runCode(Code *code){
                 if (varlist != nullptr)
                     obj = varlist->findObject(code->getElement());
                 trackLog(aFunCoreLogger, "Find Var %s -> %p", code->getElement(), obj);
-                if (obj != nullptr)
-                    down->pushMessage(new NormalMessage(obj));
+                if (obj != nullptr) {
+                    auto cbv = dynamic_cast<CallBackVar *>(obj);
+                    if (cbv != nullptr && cbv->isCallBack())
+                        cbv->callBack();
+                    else
+                        down->pushMessage(new NormalMessage(obj));
+                }
             }
         } else switch (code->getBlockType()) {
             case block_p:  // 顺序执行

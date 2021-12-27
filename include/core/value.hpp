@@ -38,6 +38,13 @@ namespace aFuncore {
         Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
         virtual void getObject(const std::string &literal, char prefix)=0;
     };
+
+    class CallBackVar : public Object {
+    public:
+        CallBackVar(const std::string &type_, Inter *inter_) : Object(type_ + ":CallBackVar", inter_) {}
+        virtual bool isCallBack() {return true;}
+        virtual void callBack()=0;
+    };
 };
 
 #endif //AFUN_VALUE_HPP

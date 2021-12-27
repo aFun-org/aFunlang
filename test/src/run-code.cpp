@@ -71,6 +71,24 @@ public:
     }
 };
 
+class CBV1 : public CallBackVar {
+    Code *func_code;
+public:
+    explicit CBV1(Inter *inter_) : CallBackVar("CBV1", inter_) {
+        func_code = (new Code(0, "run-code.aun"));
+        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+    }
+
+    ~CBV1() override {
+        func_code->destructAll();
+    }
+
+    void callBack() override {
+        printf("CallBackVar callback\n");
+        new ExeActivation(func_code, inter);
+    }
+};
+
 int main() {
     auto *inter = new Inter();
 
@@ -86,11 +104,16 @@ int main() {
     inter->getGlobalVarlist()->defineVar("test-literaler", literaler);
     printf_stdout(0, "literaler: %p\n", literaler);
 
+    auto cbv = new CBV1(inter);
+    inter->getGlobalVarlist()->defineVar("test-cbv", cbv);
+    printf_stdout(0, "cbv: %p\n", cbv);
+
     {
         auto code = (new Code(0, "run-code.aun"));
         code->connect(new Code(block_p, new Code("test-var", 1), 0));
         inter->runCode(code);
         code->destructAll();
+        printf("\n");
     }
 
     {
@@ -101,6 +124,7 @@ int main() {
         code->connect(new Code(block_c, arg, 0));
         inter->runCode(code);
         code->destructAll();
+        printf("\n");
     }
 
     {
@@ -111,6 +135,7 @@ int main() {
         code->connect(new Code(block_b, arg, 0));
         inter->runCode(code);
         code->destructAll();
+        printf("\n");
     }
 
     {
@@ -119,6 +144,15 @@ int main() {
         code->connect(new Code("data3", 1));
         inter->runCode(code);
         code->destructAll();
+        printf("\n");
+    }
+
+    {
+        auto code = (new Code(0, "run-code.aun"));
+        code->connect(new Code("test-cbv", 1));
+        inter->runCode(code);
+        code->destructAll();
+        printf("\n");
     }
 
     delete inter;

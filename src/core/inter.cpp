@@ -63,7 +63,6 @@ Inter::~Inter(){
 
         for (auto &it : *literal)
             delete it.rg;
-
         delete literal;
         delete gc;
         delete son_inter;
