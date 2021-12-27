@@ -61,6 +61,9 @@ Inter::~Inter(){
         Var::destruct(gc->var);
         VarSpace::destruct(gc->varspace);
 
+        for (auto &it : *literal)
+            delete it.rg;
+
         delete literal;
         delete gc;
         delete son_inter;
@@ -104,6 +107,9 @@ bool Inter::runCode(){
             }
             case as_run:
                 activation->runCode(code);
+                break;
+            case as_end_run:
+                activation->endRun();
                 break;
             default:
                 errorLog(aFunCoreLogger, "Error activation status.");
@@ -155,11 +161,11 @@ bool Inter::checkLiteral(const std::string &element) const {
 /**
  * 检查字面量正则匹配
  * @param element 字面量
- * @param func 函数
+ * @param literaler 函数
  * @param in_protect 是否保护空间
  * @return
  */
-bool Inter::checkLiteral(const std::string &element, std::string &func, bool &in_protect) const {
+bool Inter::checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const {
     if (literal->empty())
         return false;
 
@@ -170,7 +176,7 @@ bool Inter::checkLiteral(const std::string &element, std::string &func, bool &in
         try {
             if (it->rg->match(element) != 1)
                 continue;
-            func = it->func;
+            literaler = it->literaler;
             in_protect = it->in_protect;
             return true;
         } catch (RegexException &e) {
@@ -178,5 +184,15 @@ bool Inter::checkLiteral(const std::string &element, std::string &func, bool &in
         }
     }
     return false;
+}
+
+bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect){
+    try {
+        Regex *rg =  new Regex(pattern);
+        literal->push_front({rg, pattern, literaler, in_protect});
+    } catch (RegexException &e) {
+        return false;
+    }
+    return true;
 }
 

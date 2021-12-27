@@ -51,12 +51,18 @@ void Activation::runCode(Code *code){
         down->pushMessage(new NormalMessage(none));
     } else {
         if (code_type == code_element) {
-            std::string func;
+            std::string literaler_name;
             bool in_protect = false;
-            if (inter->checkLiteral(code->getElement(), func, in_protect)) {
-                // ...
+            Object *obj = nullptr;
+            if (inter->checkLiteral(code->getElement(), literaler_name, in_protect)) {
+                if (in_protect)
+                    obj = inter->getProtectVarSpace()->findObject(literaler_name);
+                else
+                    obj = varlist->findObject(literaler_name);
+                auto literaler = dynamic_cast<Literaler *>(obj);
+                if (literaler != nullptr)
+                    literaler->getObject(code->getElement(), code->getPrefix());
             } else {
-                Object *obj = nullptr;
                 if (varlist != nullptr)
                     obj = varlist->findObject(code->getElement());
                 trackLog(aFunCoreLogger, "Find Var %s -> %p", code->getElement(), obj);
@@ -179,8 +185,7 @@ ActivationStatus FuncActivation::getCode(Code *&code){
     auto *msg = down->getMessage<NormalMessage>("NORMAL");
     if (msg == nullptr)
         return as_end;
-    else
-        down->popMessage("NORMAL");
+    down->popMessage("NORMAL");
 
     acl_begin->ret = msg->getObject();
     delete msg;
@@ -192,7 +197,9 @@ ActivationStatus FuncActivation::getCode(Code *&code){
     }
 
     on_tail = true;
-    if (call_func->runFunction() == as_run)
-        return inter->getActivation()->getCode(code);
-    return as_end;
+    return as_end_run;
+}
+
+void FuncActivation::endRun(){
+    call_func->runFunction();
 }

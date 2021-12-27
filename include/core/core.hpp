@@ -58,6 +58,7 @@ namespace aFuncore {
     typedef enum ActivationStatus {
         as_run = 0,
         as_end = 1,
+        as_end_run = 2,
     } ActivationStatus;
 
     class GcList;

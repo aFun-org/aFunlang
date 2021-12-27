@@ -18,7 +18,7 @@ namespace aFuncore {
 
     class Function : public Object {
     public:
-        Function(const std::string &type_, Inter *inter_) : Object(type_, inter_) {}
+        Function(const std::string &type_, Inter *inter_) : Object(type_ + ":Function", inter_) {}
         class CallFunction {
         public:
             struct ArgCodeList {
@@ -27,10 +27,16 @@ namespace aFuncore {
             };
             virtual ~CallFunction()=default;
             virtual std::list<ArgCodeList> *getArgCodeList()=0;
-            virtual ActivationStatus runFunction()=0;
+            virtual void runFunction()=0;
         };
         virtual CallFunction *getCallFunction(Code *code, Inter *inter)=0;
         virtual bool isInfix() {return false;}
+    };
+
+    class Literaler : public Object {
+    public:
+        Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
+        virtual void getObject(const std::string &literal, char prefix)=0;
     };
 };
 

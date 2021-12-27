@@ -25,10 +25,9 @@ class Func1 : public Function {
             return acl;
         }
 
-        ActivationStatus runFunction() override {
+        void runFunction() override {
             printf_stdout(0, "runFunction : %p\n", acl->begin()->ret);
             new ExeActivation(func_code, inter);
-            return aFuncore::as_run;
         }
 
         ~CallFunc1() override {
@@ -54,8 +53,27 @@ public:
     bool isInfix() override {return true;}
 };
 
+class Literaler1 : public Literaler {
+    Code *func_code;
+public:
+    explicit Literaler1(Inter *inter_) : Literaler("Data", inter_) {
+        func_code = (new Code(0, "run-code.aun"));
+        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+    }
+
+    ~Literaler1() override {
+        func_code->destructAll();
+    }
+
+    void getObject(const std::string &literal, char prefix) override {
+        printf("Literaler1: %s %c\n", literal.c_str(), prefix);
+        new ExeActivation(func_code, inter);
+    }
+};
+
 int main() {
     auto *inter = new Inter();
+
     auto *obj = new Object("Object", inter);
     inter->getGlobalVarlist()->defineVar("test-var", obj);
     printf_stdout(0, "obj: %p\n", obj);
@@ -63,6 +81,10 @@ int main() {
     auto func = new Func1(inter);
     inter->getGlobalVarlist()->defineVar("test-func", func);
     printf_stdout(0, "func: %p\n", func);
+
+    auto literaler = new Literaler1(inter);
+    inter->getGlobalVarlist()->defineVar("test-literaler", literaler);
+    printf_stdout(0, "literaler: %p\n", literaler);
 
     {
         auto code = (new Code(0, "run-code.aun"));
@@ -87,6 +109,14 @@ int main() {
 
         auto code = (new Code(0, "run-code.aun"));
         code->connect(new Code(block_b, arg, 0));
+        inter->runCode(code);
+        code->destructAll();
+    }
+
+    {
+        inter->pushLiteral("data[0-9]", "test-literaler", false);
+        auto code = (new Code(0, "run-code.aun"));
+        code->connect(new Code("data3", 1));
         inter->runCode(code);
         code->destructAll();
     }

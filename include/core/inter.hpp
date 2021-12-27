@@ -10,6 +10,7 @@ namespace aFuncore {
         friend class Object;
         friend class Var;
         friend class VarSpace;
+        friend class Activation;
 
         /* 解释器原信息记录 */
         pthread_mutex_t status_lock;  // status 可能被外部使用, 因此需要用锁保护
@@ -28,11 +29,12 @@ namespace aFuncore {
         VarSpace *global;  // 全局变量空间
         VarList *global_varlist;  // global + protect
         Activation *activation;  // 活动记录
+        void pushActivation(Activation *new_activation) {activation = new_activation;}
 
         struct LiteralRegex {
             Regex *rg;
             std::string pattern;  // 派生 LiteralRegex 时使用
-            char *func;  // 调用的函数
+            std::string literaler;  // 调用的函数
             bool in_protect;  // 是否在protect空间
         };
         std::list<LiteralRegex> *literal;
@@ -61,13 +63,15 @@ namespace aFuncore {
         [[nodiscard]] InterStatus getStatus() const {return status;}
         [[nodiscard]] bool isExit() const {return (status == inter_exit || status == inter_stop);}
 
+        [[nodiscard]] ProtectVarSpace *getProtectVarSpace() const {return protect;}
+        [[nodiscard]] VarSpace *getGlobalVarSpace() const {return global;}
         [[nodiscard]] VarList *getGlobalVarlist() const {return global_varlist;}
         [[nodiscard]] Activation *getActivation() const {return activation;}
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
-        [[nodiscard]] bool checkLiteral(const std::string &element, std::string &func, bool &in_protect) const;
+        [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
         [[nodiscard]] EnvVarSpace *getEnvVarSpace() const {return envvar;}
 
-        void pushActivation(Activation *new_activation) {activation = new_activation;}
+        bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
         bool runCode();
         bool runCode(Code *code);

@@ -24,7 +24,8 @@ aFuntool::Regex::Regex(const std::string &pattern_) : pattern {pattern_} {
 }
 
 aFuntool::Regex::~Regex() {
-    pcre2_code_free(re);
+    if (re != nullptr)
+        pcre2_code_free(re);
 }
 
 /*

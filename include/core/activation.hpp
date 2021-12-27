@@ -26,6 +26,7 @@ namespace aFuncore {
 
         virtual ActivationStatus getCode(Code *&code)=0;
         virtual void runCode(Code *code);
+        virtual void endRun() {}
 
         [[nodiscard]] VarList *getVarlist() const {return varlist;}
         [[nodiscard]] Activation *toPrev() const {return prev;}
@@ -69,6 +70,7 @@ namespace aFuncore {
         explicit FuncActivation(Code *code, Inter *inter_) : Activation(inter_), call{code,} {}
         ~FuncActivation() override;
         ActivationStatus getCode(Code *&code) override;
+        void endRun() override;
     };
 }
 
