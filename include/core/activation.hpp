@@ -15,11 +15,11 @@ namespace aFuncore {
 
         UpMessage *up;
         DownMessage *down;
-    public:
-        Inter *const inter;
 
         StringFilePath path;
         FileLine line;
+    public:
+        Inter *const inter;
 
         explicit Activation(Inter *inter_);
         virtual ~Activation();
@@ -32,6 +32,9 @@ namespace aFuncore {
         [[nodiscard]] Activation *toPrev() const {return prev;}
         [[nodiscard]] UpMessage *getUpStream() const {return up;}
         [[nodiscard]] DownMessage *getDownStream() const {return down;}
+
+        [[nodiscard]] FileLine getFileLine() {return line;}
+        [[nodiscard]] StringFilePath &getFilePath() {return path;}
     };
 
     class ExeActivation : public Activation {

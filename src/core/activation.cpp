@@ -23,6 +23,10 @@ Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
     varlist = old_varlist;
     down = new DownMessage();
     up = new UpMessage(prev ? prev->up : nullptr);
+    if (prev != nullptr) {
+        line = prev->line;
+        path = prev->path;
+    }
     inter->pushActivation(this);
 }
 
@@ -62,17 +66,19 @@ void Activation::runCode(Code *code){
                 auto literaler = dynamic_cast<Literaler *>(obj);
                 if (literaler != nullptr)
                     literaler->getObject(code->getElement(), code->getPrefix());
+                else
+                    down->pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
             } else {
                 if (varlist != nullptr)
                     obj = varlist->findObject(code->getElement());
-                trackLog(aFunCoreLogger, "Find Var %s -> %p", code->getElement(), obj);
                 if (obj != nullptr) {
                     auto cbv = dynamic_cast<CallBackVar *>(obj);
                     if (cbv != nullptr && cbv->isCallBack())
                         cbv->callBack();
                     else
                         down->pushMessage(new NormalMessage(obj));
-                }
+                } else
+                    down->pushMessage(new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.", this));
             }
         } else switch (code->getBlockType()) {
             case block_p:  // 顺序执行
@@ -104,6 +110,9 @@ ActivationStatus ExeActivation::getCode(Code *&code){
     }
 
     first = false;
+    line = code->getFileLine();
+    if (code->getFilePath() != nullptr)
+        path = code->getFilePath();
     next = code->toNext();
     return as_run;
 }
@@ -132,10 +141,18 @@ ActivationStatus FuncActivation::getCode(Code *&code){
         return as_end;
 
     if (status == func_first) {
-        status = func_get_func;
         switch (call->getBlockType()) {
             case block_c:
+                status = func_get_func;
                 code = call->getSon();
+                if (code == nullptr) {
+                    line = 0;
+                    down->pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                    return as_end;
+                }
+                line = code->getFileLine();
+                if (code->getFilePath() != nullptr)
+                    path = code->getFilePath();
                 return as_run;
             case block_b: {
                 std::string prefix;
@@ -154,10 +171,17 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                     status = func_get_func;
                     break;  /* 跳转到: 执行变量获取前的准备 */
                 }
+                if (status != func_get_func) {
+                    line = 0;
+                    down->pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                    return as_end;
+                }
                 break;
             }
             default:
                 errorLog(aFunCoreLogger, "Error FuncActivation block type");
+                line = 0;
+                down->pushMessage(new ErrorMessage("RuntimeError", "Error FuncActivation block type.", this));
                 return as_end;
         }
     }
@@ -171,8 +195,10 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 down->popMessage("NORMAL");
             func = dynamic_cast<Function *>(msg->getObject());
             delete msg;
-            if (func == nullptr)
+            if (func == nullptr) {
+                down->pushMessage(new ErrorMessage("TypeError", "Callback without function.", this));
                 return as_end;
+            }
         }
 
         /* Label: 执行变量获取前的准备 */
@@ -181,27 +207,36 @@ ActivationStatus FuncActivation::getCode(Code *&code){
         acl = call_func->getArgCodeList();
         acl_begin = acl->begin();
         acl_end = acl->end();
-        if (acl_begin != acl_end) {
+        if (acl_begin != acl_end) {  // 如果有参数需要计算
             code = acl_begin->code;
+            line = code->getFileLine();
+            if (code->getFilePath() != nullptr)
+                path = code->getFilePath();
             return as_run;
         }
     }
 
-    auto *msg = down->getMessage<NormalMessage>("NORMAL");
-    if (msg == nullptr)
-        return as_end;
-    down->popMessage("NORMAL");
+    if (acl_begin != acl_end) {  // 获取参数计算结果
+        auto *msg = down->getMessage<NormalMessage>("NORMAL");
+        if (msg == nullptr)
+            return as_end;
+        down->popMessage("NORMAL");
 
-    acl_begin->ret = msg->getObject();
-    delete msg;
+        acl_begin->ret = msg->getObject();
+        delete msg;
 
-    acl_begin++;
-    if (acl_begin != acl_end) {
-        code = acl_begin->code;
-        return as_run;
+        acl_begin++;
+        if (acl_begin != acl_end) {
+            code = acl_begin->code;
+            line = code->getFileLine();
+            if (code->getFilePath() != nullptr)
+                path = code->getFilePath();
+            return as_run;
+        }
     }
 
     on_tail = true;
+    line = 0;
     return as_end_run;
 }
 

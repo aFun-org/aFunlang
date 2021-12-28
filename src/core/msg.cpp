@@ -1,10 +1,10 @@
 ﻿#include "msg.hpp"
+#include "activation.hpp"
+#include "inter.hpp"
+#include "env-var.hpp"
+
 using namespace aFuncore;
 using namespace aFuntool;
-
-NormalMessage::NormalMessage(Object *obj) : TopMessage("NORMAL") {
-    this->obj = obj;
-}
 
 NormalMessage::~NormalMessage(){
     this->obj = nullptr;
@@ -12,6 +12,30 @@ NormalMessage::~NormalMessage(){
 
 void NormalMessage::topProgress(){
     printf_stdout(0, "NORMAL: %p\n", obj);
+}
+
+ErrorMessage::ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation)
+        : TopMessage("ERROR"), error_type{error_type_}, error_info{error_info_}, inter{activation->inter} {
+    for (NULL; activation != nullptr; activation = activation->toPrev()) {
+        if (activation->getFileLine() != 0)
+            trackback.push_front({activation->getFilePath(), activation->getFileLine()});
+    }
+}
+
+void ErrorMessage::topProgress(){
+    int32_t error_std = 0;
+    inter->getEnvVarSpace()->findNumber("sys:error_std", error_std);
+    if (error_std == 0) {
+        printf_stderr(0, "Error TrackBack\n");
+        for (auto begin = trackback.rbegin(), end = trackback.rend(); begin != end; begin++)
+            printf_stderr(0, "  File \"%s\", line %d\n", begin->path.c_str(), begin->line);
+        printf_stderr(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
+    } else {
+        printf_stdout(0, "Error TrackBack\n");
+        for (auto begin = trackback.rbegin(), end = trackback.rend(); begin != end; begin++)
+            printf_stdout(0, "  File \"%s\", line %d\n", begin->path.c_str(), begin->line);
+        printf_stdout(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
+    }
 }
 
 MessageStream::MessageStream(){

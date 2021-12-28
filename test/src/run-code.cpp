@@ -155,6 +155,14 @@ int main() {
         fputs_stdout("\n");
     }
 
+    {
+        auto code = (new Code(0, "run-code.aun"));
+        code->connect(new Code("test-not-var", 1));
+        inter->runCode(code);
+        code->destructAll();
+        fputs_stdout("\n");
+    }
+
     delete inter;
     return 0;
 }

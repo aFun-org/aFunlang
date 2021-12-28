@@ -46,6 +46,7 @@ namespace aFuncore {
 
     class Message;
     class NormalMessage;
+    class ErrorMessage;
 
     class MessageStream;
     class UpMessage;

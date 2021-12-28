@@ -54,7 +54,7 @@ namespace aFuncore {
         [[nodiscard]] Code *toFather() const {return father;}
 
         [[nodiscard]] aFuntool::FileLine getFileLine() const {return line;}
-        [[nodiscard]] aFuntool::StringFilePath getFilePath() const {return file;}
+        [[nodiscard]] aFuntool::FilePath getFilePath() const {return file;}
     };
 }
 

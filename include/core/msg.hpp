@@ -3,6 +3,7 @@
 #include "tool.hpp"
 #include "aFunCoreExport.h"
 #include "core.hpp"
+#include "list"
 
 namespace aFuncore {
     class Message {
@@ -26,10 +27,27 @@ namespace aFuncore {
     class NormalMessage : public TopMessage {
         Object *obj;
     public:
-        AFUN_CORE_EXPORT explicit NormalMessage(Object *obj);
+        AFUN_CORE_EXPORT explicit NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {}
         AFUN_CORE_EXPORT ~NormalMessage() override;
         void topProgress() override;
         Object *getObject() {return obj;}
+    };
+
+    class ErrorMessage : public TopMessage {
+        Inter *inter;
+
+        std::string error_type;
+        std::string error_info;
+        struct TrackBack{
+            StringFilePath path;
+            FileLine line;
+        };
+        std::list<TrackBack> trackback;
+    public:
+        AFUN_CORE_EXPORT explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
+        void topProgress() override;
+        std::string getErrorType() {return error_type;}
+        std::string getErrorInfo() {return error_info;}
     };
 
     class MessageStream {

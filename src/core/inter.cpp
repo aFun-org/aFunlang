@@ -3,6 +3,7 @@
 #include "init.hpp"
 #include "env-var.hpp"
 #include "var.hpp"
+#include "msg.hpp"
 #include "__gc.hpp"
 
 using namespace aFuncore;
@@ -86,15 +87,6 @@ void Inter::enable(){
  */
 bool Inter::runCode(){
     while (activation != nullptr) {
-        if (isExit()) {
-            while (activation != nullptr) {
-                Activation *prev = activation->toPrev();
-                delete activation;
-                activation = prev;
-            }
-            return false;
-        }
-
         Code *code = nullptr;
         ActivationStatus as = activation->getCode(code);
         switch (as) {
@@ -112,7 +104,17 @@ bool Inter::runCode(){
                 break;
             default:
                 errorLog(aFunCoreLogger, "Error activation status.");
+                activation->getDownStream()->pushMessage(new ErrorMessage("RuntimeError", "Error activation status.", activation));
                 break;
+        }
+
+        if (isExit()) {
+            while (activation != nullptr) {
+                Activation *prev = activation->toPrev();
+                delete activation;
+                activation = prev;
+            }
+            return false;
         }
     }
     return true;
@@ -187,7 +189,7 @@ bool Inter::checkLiteral(const std::string &element, std::string &literaler, boo
 
 bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect){
     try {
-        Regex *rg =  new Regex(pattern);
+        auto rg =  new Regex(pattern);
         literal->push_front({rg, pattern, literaler, in_protect});
     } catch (RegexException &e) {
         return false;
