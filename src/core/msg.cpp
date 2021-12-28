@@ -27,13 +27,13 @@ void ErrorMessage::topProgress(){
     inter->getEnvVarSpace()->findNumber("sys:error_std", error_std);
     if (error_std == 0) {
         printf_stderr(0, "Error TrackBack\n");
-        for (auto begin = trackback.rbegin(), end = trackback.rend(); begin != end; begin++)
-            printf_stderr(0, "  File \"%s\", line %d\n", begin->path.c_str(), begin->line);
+        for (auto & begin : trackback)
+            printf_stderr(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
         printf_stderr(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
     } else {
         printf_stdout(0, "Error TrackBack\n");
-        for (auto begin = trackback.rbegin(), end = trackback.rend(); begin != end; begin++)
-            printf_stdout(0, "  File \"%s\", line %d\n", begin->path.c_str(), begin->line);
+        for (auto & begin : trackback)
+            printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
         printf_stdout(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
     }
 }
