@@ -4,7 +4,7 @@
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
-    class EnvVarSpace {  // 环境变量
+    AFUN_CORE_EXPORT class EnvVarSpace {  // 环境变量
         static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
         struct EnvVar {  // 环境变量
             std::string name;
@@ -17,15 +17,17 @@ namespace aFuncore {
         EnvVar *var[ENV_VAR_HASH_SIZE] {};
         pthread_rwlock_t lock;
     public:
-        AFUN_CORE_EXPORT EnvVarSpace();
-        AFUN_CORE_EXPORT ~EnvVarSpace();
+        EnvVarSpace();
+        ~EnvVarSpace();
+        EnvVarSpace(const EnvVarSpace &)=delete;
+        EnvVarSpace &operator=(const EnvVarSpace &)=delete;
 
         [[nodiscard]] size_t getCount() const {return count;}
-        AFUN_CORE_EXPORT bool findString(const std::string &name, std::string &str) const;
-        AFUN_CORE_EXPORT bool findNumber(const std::string &name, int32_t &num) const;
+        bool findString(const std::string &name, std::string &str) const;
+        bool findNumber(const std::string &name, int32_t &num) const;
 
-        AFUN_CORE_EXPORT void setString(const std::string &name, const std::string &str);
-        AFUN_CORE_EXPORT void setNumber(const std::string &name, int32_t num);
+        void setString(const std::string &name, const std::string &str);
+        void setNumber(const std::string &name, int32_t num);
     };
 }
 

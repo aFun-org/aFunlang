@@ -38,12 +38,12 @@ class Func1 : public Function {
     Code *func_code;
 public:
     explicit Func1(Inter *inter_) : Function("Function", inter_) {
-        func_code = (new Code(0, "run-code.aun"));
-        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+        func_code = (Code::create(0, "run-code.aun"));
+        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
 
     ~Func1() override {
-        func_code->destructAll();
+        Code::destruct(func_code);
     }
 
     CallFunction *getCallFunction(Code *code, Inter *inter) override {
@@ -57,12 +57,12 @@ class Literaler1 : public Literaler {
     Code *func_code;
 public:
     explicit Literaler1(Inter *inter_) : Literaler("Data", inter_) {
-        func_code = (new Code(0, "run-code.aun"));
-        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+        func_code = (Code::create(0, "run-code.aun"));
+        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
 
     ~Literaler1() override {
-        func_code->destructAll();
+        Code::destruct(func_code);
     }
 
     void getObject(const std::string &literal, char prefix) override {
@@ -75,12 +75,12 @@ class CBV1 : public CallBackVar {
     Code *func_code;
 public:
     explicit CBV1(Inter *inter_) : CallBackVar("CBV1", inter_) {
-        func_code = (new Code(0, "run-code.aun"));
-        func_code->connect(new Code(block_p, new Code("test-var", 1), 0));
+        func_code = (Code::create(0, "run-code.aun"));
+        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
 
     ~CBV1() override {
-        func_code->destructAll();
+        Code::destruct(func_code);
     }
 
     void callBack() override {
@@ -107,59 +107,60 @@ int main() {
     auto cbv = new CBV1(inter);
     inter->getGlobalVarlist()->defineVar("test-cbv", cbv);
     printf_stdout(0, "cbv: %p\n", cbv);
+    fputs_stdout("\n");
 
     {
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code(block_p, new Code("test-var", 1), 0));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto arg = new Code("test-func", 1);
-        arg->connect(new Code("test-var", 1));
+        auto arg = Code::create("test-func", 1);
+        arg->connect(Code::create("test-var", 1));
 
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code(block_c, arg, 0));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create(block_c, arg, 0));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto arg = new Code("test-var", 1);
-        arg->connect(new Code("test-func", 1));
+        auto arg = Code::create("test-var", 1);
+        arg->connect(Code::create("test-func", 1));
 
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code(block_b, arg, 0));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create(block_b, arg, 0));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
         inter->pushLiteral("data[0-9]", "test-literaler", false);
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code("data3", 1));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create("data3", 1));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code("test-cbv", 1));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create("test-cbv", 1));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto code = (new Code(0, "run-code.aun"));
-        code->connect(new Code("test-not-var", 1));
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create("test-not-var", 1));
         inter->runCode(code);
-        code->destructAll();
+        Code::destruct(code);
         fputs_stdout("\n");
     }
 

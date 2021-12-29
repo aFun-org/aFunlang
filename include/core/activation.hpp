@@ -6,7 +6,7 @@
 #include "value.hpp"
 
 namespace aFuncore {
-    class Activation {
+    AFUN_CORE_EXPORT class Activation {
     protected:
         Activation *prev;
 
@@ -23,6 +23,7 @@ namespace aFuncore {
 
         explicit Activation(Inter *inter_);
         virtual ~Activation();
+        Activation &operator=(const Activation &)=delete;
 
         virtual ActivationStatus getCode(Code *&code)=0;
         virtual void runCode(Code *code);
@@ -33,11 +34,11 @@ namespace aFuncore {
         [[nodiscard]] UpMessage *getUpStream() const {return up;}
         [[nodiscard]] DownMessage *getDownStream() const {return down;}
 
-        [[nodiscard]] FileLine getFileLine() {return line;}
-        [[nodiscard]] StringFilePath &getFilePath() {return path;}
+        [[nodiscard]] FileLine getFileLine() const {return line;}
+        [[nodiscard]] const StringFilePath &getFilePath() const {return path;}
     };
 
-    class ExeActivation : public Activation {
+    AFUN_CORE_EXPORT class ExeActivation : public Activation {
         Code *start;
         Code *next;
         bool first=true;
@@ -47,13 +48,13 @@ namespace aFuncore {
         [[nodiscard]] Code *getStart() const {return start;}
     };
 
-    class TopActivation : public ExeActivation {
+    AFUN_CORE_EXPORT class TopActivation : public ExeActivation {
     public:
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
     };
 
-    class FuncActivation : public Activation {
+    AFUN_CORE_EXPORT class FuncActivation : public Activation {
         enum {
             func_first = 0,
             func_get_func = 1,

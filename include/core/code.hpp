@@ -5,7 +5,7 @@
 #include "core.hpp"
 
 namespace aFuncore {
-    class Code {
+    AFUN_CORE_EXPORT class Code {
         CodeType type;
         char prefix=NUL;
 
@@ -23,24 +23,43 @@ namespace aFuncore {
 
         aFuntool::FileLine line;
         aFuntool::FilePath file;
-    public:
-        AFUN_CORE_EXPORT explicit Code(FileLine line, ConstFilePath file="");
-        AFUN_CORE_EXPORT Code (const std::string &element, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
-        AFUN_CORE_EXPORT Code (BlockType block_type, Code *son, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
-        AFUN_CORE_EXPORT ~Code();
 
-        AFUN_CORE_EXPORT Code *connect(Code *code);
-        AFUN_CORE_EXPORT void destructAll();
-        AFUN_CORE_EXPORT void display() const;
-        AFUN_CORE_EXPORT void displayAll() const;
-        AFUN_CORE_EXPORT bool write_v1(FILE *f, bool debug=false) const;
-        AFUN_CORE_EXPORT bool writeAll_v1(FILE *f, bool debug=false) const;
-        AFUN_CORE_EXPORT Code *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
-        AFUN_CORE_EXPORT bool readAll_v1(FILE *f, bool debug=false);
-        [[nodiscard]] AFUN_CORE_EXPORT std::string getMD5_v1() const;
-        [[nodiscard]] AFUN_CORE_EXPORT std::string getMD5All_v1() const;
-        AFUN_CORE_EXPORT bool writeByteCode(ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
-        AFUN_CORE_EXPORT bool readByteCode(ConstFilePath file_path);
+    protected:
+        explicit Code(FileLine line, ConstFilePath file="");
+        Code (const std::string &element, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
+        Code (BlockType block_type, Code *son, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
+        ~Code();
+    public:
+        Code(const Code &)=delete;
+        Code &operator=(const Code &)=delete;
+
+        static Code *create(FileLine line, ConstFilePath file="") {
+            return new Code(line, file);
+        }
+
+        static Code *create(const std::string &element,
+                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL) {
+            return new Code(element, line, file, prefix);
+        }
+
+        static Code *create(BlockType block_type, Code *son,
+                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL) {
+            return new Code(block_type, son, line, file);
+        }
+
+        static void destruct(Code *code);
+
+        Code *connect(Code *code);
+        void display() const;
+        void displayAll() const;
+        bool write_v1(FILE *f, bool debug=false) const;
+        bool writeAll_v1(FILE *f, bool debug=false) const;
+        Code *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
+        bool readAll_v1(FILE *f, bool debug=false);
+        [[nodiscard]] std::string getMD5_v1() const;
+        [[nodiscard]] std::string getMD5All_v1() const;
+        bool writeByteCode(ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
+        bool readByteCode(ConstFilePath file_path);
 
         [[nodiscard]] CodeType getType() const {return type;}
         [[nodiscard]] char getPrefix() const {return prefix;}

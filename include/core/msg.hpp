@@ -6,7 +6,7 @@
 #include "list"
 
 namespace aFuncore {
-    class Message {
+    AFUN_CORE_EXPORT class Message {
         friend class MessageStream;
         friend class UpMessage;
         friend class DownMessage;
@@ -14,8 +14,9 @@ namespace aFuncore {
         Message *next;  // 下一条消息
     public:
         const std::string type;  // 消息类型标注
-        AFUN_CORE_EXPORT explicit Message(const std::string &type_) : type {type_}, next {nullptr} {}
-        AFUN_CORE_EXPORT virtual ~Message() = default;
+        explicit Message(const std::string &type_) : type {type_}, next {nullptr} {}
+        virtual ~Message() = default;
+        Message &operator=(const Message &)=delete;
     };
 
     class TopMessage : public Message {
@@ -24,40 +25,40 @@ namespace aFuncore {
         virtual void topProgress()=0;
     };
 
-    class NormalMessage : public TopMessage {
+    AFUN_CORE_EXPORT class NormalMessage : public TopMessage {
         Object *obj;
     public:
-        AFUN_CORE_EXPORT explicit NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {}
-        AFUN_CORE_EXPORT ~NormalMessage() override;
+        explicit NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {}
+        ~NormalMessage() override;
         void topProgress() override;
         Object *getObject() {return obj;}
     };
 
-    class ErrorMessage : public TopMessage {
+    AFUN_CORE_EXPORT class ErrorMessage : public TopMessage {
         Inter *inter;
 
         std::string error_type;
         std::string error_info;
         struct TrackBack{
-            StringFilePath path;
+            const StringFilePath path;
             FileLine line;
         };
         std::list<TrackBack> trackback;
     public:
-        AFUN_CORE_EXPORT explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
+        explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
         void topProgress() override;
         std::string getErrorType() {return error_type;}
         std::string getErrorInfo() {return error_info;}
     };
 
-    class MessageStream {
+    AFUN_CORE_EXPORT class MessageStream {
     protected:
         Message *stream;
-        [[nodiscard]] AFUN_CORE_EXPORT virtual Message *_getMessage(const std::string &type) const;
-
+        [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
     public:
-        AFUN_CORE_EXPORT MessageStream();
-        AFUN_CORE_EXPORT virtual ~MessageStream();
+        MessageStream();
+        virtual ~MessageStream();
+        MessageStream &operator=(const MessageStream &)=delete;
 
         template<class T>
         [[nodiscard]] T *getMessage(const std::string &type) const {
@@ -66,29 +67,30 @@ namespace aFuncore {
             return ret;
         }
 
-        virtual AFUN_CORE_EXPORT Message *popMessage(const std::string &type);
-        AFUN_CORE_EXPORT void pushMessage(Message *msg);
+        virtual Message *popMessage(const std::string &type);
+        void pushMessage(Message *msg);
 
         template <typename T>
-        AFUN_CORE_EXPORT void forEach(void (*func)(Message *, T), T arg) {
+        void forEach(void (*func)(Message *, T), T arg) {
             for (Message *msg = stream; msg != nullptr; msg = msg->next) {
                 func(msg, arg);
             }
         }
     };
 
-    class UpMessage : public MessageStream {
+    AFUN_CORE_EXPORT class UpMessage : public MessageStream {
     protected:
         Message *old;
     public:
-        AFUN_CORE_EXPORT explicit UpMessage(const UpMessage *old=nullptr);
-        AFUN_CORE_EXPORT ~UpMessage() override;
-        AFUN_CORE_EXPORT Message *popMessage(const std::string &type) override;
+        explicit UpMessage(const UpMessage *old=nullptr);
+        ~UpMessage() override;
+
+        Message *popMessage(const std::string &type) override;
     };
 
-    class DownMessage : public MessageStream {
+    AFUN_CORE_EXPORT class DownMessage : public MessageStream {
     public:
-        AFUN_CORE_EXPORT void joinMsg(DownMessage *msg);
+        void joinMsg(DownMessage *msg);
     };
 }
 

@@ -23,6 +23,40 @@ aFuntool::Regex::Regex(const std::string &pattern_) : pattern {pattern_} {
     }
 }
 
+Regex::Regex(const Regex &regex){
+    int error_code;
+    size_t erroroffset;
+    char regex_error[REGEX_ERROR_SIZE];
+
+    this->re = pcre2_compile((PCRE2_SPTR)regex.pattern.c_str(), PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, nullptr);
+    if (re == nullptr) {
+        PCRE2_UCHAR buffer[256];
+        pcre2_get_error_message(error_code, buffer, sizeof(buffer));
+        snprintf(regex_error, sizeof(regex_error), "R%d: %s\n", (int) erroroffset, buffer);
+        throw RegexException(regex_error);
+    }
+}
+
+Regex &Regex::operator=(const Regex &regex){
+    if (this == &regex)
+        return *this;
+
+    this->~Regex();
+
+    int error_code;
+    size_t erroroffset;
+    char regex_error[REGEX_ERROR_SIZE];
+
+    this->re = pcre2_compile((PCRE2_SPTR)regex.pattern.c_str(), PCRE2_ZERO_TERMINATED, 0, &error_code, &erroroffset, nullptr);
+    if (re == nullptr) {
+        PCRE2_UCHAR buffer[256];
+        pcre2_get_error_message(error_code, buffer, sizeof(buffer));
+        snprintf(regex_error, sizeof(regex_error), "R%d: %s\n", (int) erroroffset, buffer);
+        throw RegexException(regex_error);
+    }
+    return *this;
+}
+
 aFuntool::Regex::~Regex() {
     if (re != nullptr)
         pcre2_code_free(re);

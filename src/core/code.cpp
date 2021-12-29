@@ -99,31 +99,30 @@ Code *Code::connect(Code *code){
 /**
  * 删除自己以及其子、兄代码块
  */
-void Code::destructAll(){
-    if (this->type != code_start) {
+void Code::destruct(Code *code){
+    if (code->type != code_start) {
         errorLog(aFunCoreLogger, "Code delete did not with `start`");
         return;
     }
 
-    Code *tmp = this;
     Code *next_tmp;
-    while (tmp != nullptr) {
-        if (tmp->type != code_block || tmp->son == nullptr) {
-            if (tmp->next == nullptr) {
-                if (tmp->father == nullptr)
+    while (code != nullptr) {
+        if (code->type != code_block || code->son == nullptr) {
+            if (code->next == nullptr) {
+                if (code->father == nullptr)
                     next_tmp = nullptr;
                 else {
-                    next_tmp = tmp->father;
+                    next_tmp = code->father;
                     next_tmp->son = nullptr;
                 }
             } else
-                next_tmp = tmp->next;
-            delete tmp;
-            tmp = next_tmp;
+                next_tmp = code->next;
+            delete code;
+            code = next_tmp;
         } else
-            tmp = tmp->son;
+            code = code->son;
     }
-    delete tmp;
+    delete code;
 }
 
 /**
@@ -314,7 +313,7 @@ Code *Code::read_v1(FILE *f, bool debug, int8_t read_type, bool to_son) {
             std::string element_;
             Done(byteReadInt(f, &prefix_));
             Done(byteReadStr(f, element_));
-            ret = new Code(element_, 0, "", char(prefix_));
+            ret = Code::create(element_, 0, "", char(prefix_));
             break;
         }
         case 4:
@@ -323,7 +322,7 @@ Code *Code::read_v1(FILE *f, bool debug, int8_t read_type, bool to_son) {
             int8_t block_type = NUL;
             Done(byteReadInt(f, &prefix_));
             Done(byteReadInt(f, &block_type));
-            ret = new Code(BlockType(block_type), nullptr, 0, "", char(prefix_));
+            ret = Code::create(BlockType(block_type), nullptr, 0, "", char(prefix_));
             break;
         }
         default:

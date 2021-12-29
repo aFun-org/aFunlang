@@ -35,7 +35,7 @@ namespace aFuntool {
      * 注意: 仅能通过 openLibrary生成
      * 不需要 delete 释放 (自动管理释放)
      */
-    class DlcHandle {
+    AFUN_TOOL_EXPORT class DlcHandle {
         friend AFUN_TOOL_EXPORT void dlcExit();
         friend AFUN_TOOL_EXPORT DlcHandle *openLibrary(const char *file, int mode);
 
@@ -45,7 +45,9 @@ namespace aFuntool {
         struct DlcHandle *next;
         struct DlcHandle *prev;
     public:
-        AFUN_TOOL_EXPORT ~DlcHandle();
+        DlcHandle(const DlcHandle &dlc)=delete;
+        DlcHandle &operator=(const DlcHandle *dlc)=delete;
+        ~DlcHandle();
 
         /**
          * 获得动态库中指定名字的符号
@@ -64,9 +66,9 @@ namespace aFuntool {
         /**
          * 关闭动态库句柄
          */
-        AFUN_TOOL_EXPORT void close();
-        AFUN_TOOL_EXPORT int operator++(int);
-        AFUN_TOOL_EXPORT int operator--(int);
+        void close();
+        int operator++(int);
+        int operator--(int);
     };
 
     /**
@@ -88,6 +90,23 @@ namespace aFuntool {
         explicit DlcSymbol(SYMBOL *symbol_, class DlcHandle *dlc_) : symbol {symbol_}, dlc {dlc_} {
             if (this->dlc != nullptr)
                 this->dlc++;
+        }
+
+        DlcSymbol(const DlcSymbol &dlc_symbol) : symbol{dlc_symbol.symbol}, dlc {dlc_symbol.dlc} {
+            if (this->dlc != nullptr)
+                this->dlc++;
+        }
+
+        DlcSymbol &operator=(const DlcSymbol &dlc_symbol) {
+            if (this == &dlc_symbol)
+                return *this;
+            if (this->dlc != nullptr)
+                this->dlc--;
+            symbol = dlc_symbol.symbol;
+            dlc = dlc_symbol.dlc;
+            if (this->dlc != nullptr)
+                this->dlc++;
+            return *this;
         }
 
         /**

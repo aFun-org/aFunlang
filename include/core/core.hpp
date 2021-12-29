@@ -13,11 +13,11 @@ namespace aFuncore {
         block_b = '[',
         block_c = '{',
     } BlockType;
-    typedef class Code Code;
+    AFUN_CORE_EXPORT class Code;
 
-    class EnvVarSpace;
+    AFUN_CORE_EXPORT class EnvVarSpace;
 
-    class Inter;
+    AFUN_CORE_EXPORT class Inter;
     enum InterStatus {
         inter_creat = 0,
         inter_init = 1,  // 执行初始化程序
@@ -44,33 +44,35 @@ namespace aFuncore {
     static const std::string E_PREFIX = "$`'";  /* NOLINT element前缀 */
     static const std::string B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
-    class Message;
-    class NormalMessage;
-    class ErrorMessage;
+    AFUN_CORE_EXPORT class Message;
+    AFUN_CORE_EXPORT class NormalMessage;
+    AFUN_CORE_EXPORT class ErrorMessage;
 
-    class MessageStream;
-    class UpMessage;
-    class DownMessage;
+    AFUN_CORE_EXPORT class MessageStream;
+    AFUN_CORE_EXPORT class UpMessage;
+    AFUN_CORE_EXPORT class DownMessage;
 
-    class Activation;
-    class ExeActivation;
-    class TopActivation;
-    class FuncActivation;
+    AFUN_CORE_EXPORT class Activation;
+    AFUN_CORE_EXPORT class ExeActivation;
+    AFUN_CORE_EXPORT class TopActivation;
+    AFUN_CORE_EXPORT class FuncActivation;
     typedef enum ActivationStatus {
         as_run = 0,
         as_end = 1,
         as_end_run = 2,
     } ActivationStatus;
 
-    class GcList;
+    AFUN_CORE_EXPORT class GcList;
 
-    class Object;
-    class Function;
+    AFUN_CORE_EXPORT class Object;
+    AFUN_CORE_EXPORT class Function;
+    AFUN_CORE_EXPORT class Literaler;
+    AFUN_CORE_EXPORT class CallBackVar;
 
-    class Var;
-    class VarSpace;
-    class VarList;
-    class ProtectVarSpace;
+    AFUN_CORE_EXPORT class Var;
+    AFUN_CORE_EXPORT class VarSpace;
+    AFUN_CORE_EXPORT class VarList;
+    AFUN_CORE_EXPORT class ProtectVarSpace;
     typedef enum VarOperationFlat {
         vof_success = 0,  // 成功
         vof_not_var = 1,  // 变量不存在

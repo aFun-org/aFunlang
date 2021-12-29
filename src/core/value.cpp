@@ -1,6 +1,5 @@
 ﻿#include "value.hpp"
 #include "inter.hpp"
-#include "__gc.hpp"
 
 using namespace aFuncore;
 using namespace aFuntool;

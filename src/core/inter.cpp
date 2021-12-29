@@ -4,7 +4,6 @@
 #include "env-var.hpp"
 #include "var.hpp"
 #include "msg.hpp"
-#include "__gc.hpp"
 
 using namespace aFuncore;
 using namespace aFuntool;
@@ -46,7 +45,7 @@ Inter::Inter(int argc, char **argv, ExitMode em)
 
     protect = new ProtectVarSpace(this);  // 放到最后
     global = new VarSpace(this);  // 放到最后
-    global_varlist = (new VarList(global))->connect(new VarList(protect));
+    global_varlist = (VarList::create(global))->connect(VarList::create(protect));
     status = inter_init;
 }
 
@@ -56,7 +55,7 @@ Inter::~Inter(){
     pthread_cond_destroy(&monitor_cond);
 
     if (!is_derive) {
-        global_varlist->destructAll();
+        VarList::destruct(global_varlist);
 
         Object::destruct(gc->obj);
         Var::destruct(gc->var);

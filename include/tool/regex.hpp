@@ -9,14 +9,16 @@
 namespace aFuntool {
     const int REGEX_ERROR_SIZE = 512;
 
-    class Regex {
+    AFUN_TOOL_EXPORT class Regex {
         pcre2_code *re;  // 正则表达式
         const std::string pattern;  // 正则表达式的字符串
     public:
-        AFUN_TOOL_EXPORT explicit Regex(const std::string &pattern_);
-        AFUN_TOOL_EXPORT ~Regex ();
-        AFUN_TOOL_EXPORT int match(const char *subject);
-        AFUN_TOOL_EXPORT int match(const std::string &subject) {return match(subject.c_str());}
+        explicit Regex(const std::string &pattern_);
+        Regex(const Regex &regex);
+        Regex &operator=(const Regex &regex);
+        ~Regex ();
+        int match(const char *subject);
+        int match(const std::string &subject) {return match(subject.c_str());}
     };
 }
 

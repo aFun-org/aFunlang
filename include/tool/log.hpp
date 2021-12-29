@@ -20,35 +20,26 @@ namespace aFuntool {
     };
     typedef enum LogLevel LogLevel;
 
-    class LogFactory;
+    AFUN_TOOL_EXPORT class LogFactory;
 
-    class Logger {
+    AFUN_TOOL_EXPORT class Logger {
         const std::string id;
         LogLevel level = log_debug;
         bool exit = true;
-
         friend class LogFactory;
-
     public:
-        AFUN_TOOL_EXPORT explicit Logger(const std::string &id_, LogLevel level_ = log_warning, bool exit_ = true);
-        AFUN_TOOL_EXPORT int writeTrackLog(const char *file, int line, const char *func,
-                                           const char *format, ...);
-        AFUN_TOOL_EXPORT int writeDebugLog(const char *file, int line, const char *func,
-                                           const char *format, ...);
-        AFUN_TOOL_EXPORT int writeInfoLog(const char *file, int line, const char *func,
-                                          const char *format, ...);
-        AFUN_TOOL_EXPORT int writeWarningLog(const char *file, int line, const char *func,
-                                             const char *format, ...);
-        AFUN_TOOL_EXPORT int writeErrorLog(const char *file, int line, const char *func,
-                                           const char *format, ...);
-        AFUN_TOOL_EXPORT int writeSendErrorLog(const char *file, int line, const char *func,
-                                               const char *format, ...);
-        AFUN_TOOL_EXPORT int writeFatalErrorLog(const char *file, int line, const char *func,
-                                               int exit_code, const char *format, ...);
+        explicit Logger(const std::string &id_, LogLevel level_ = log_warning, bool exit_ = true);
+        int writeTrackLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeDebugLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeInfoLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeWarningLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeErrorLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeSendErrorLog(const char *file, int line, const char *func, const char *format, ...);
+        int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...);
     };
 
 
-    class LogFactory {
+    AFUN_TOOL_EXPORT class LogFactory {
         bool init;  // 是否已经初始化
         pid_t pid;
 
@@ -64,33 +55,36 @@ namespace aFuntool {
 
     public:
         Logger sys_log = Logger("SYSTEM");
-        AFUN_TOOL_EXPORT LogFactory();
-        AFUN_TOOL_EXPORT ~LogFactory();
-        AFUN_TOOL_EXPORT int initLogSystem(ConstFilePath path, bool is_asyn = true);
-        AFUN_TOOL_EXPORT bool destruct();
-        AFUN_TOOL_EXPORT void writeLog(LogLevel level,
-                                       const char *id, pid_t tid,
-                                       const char *ti, time_t t,
-                                       const char *file, int line, const char *func,
-                                       const char *info);
-        AFUN_TOOL_EXPORT static void writeConsole(LogLevel level,
-                                                  const char *id, pid_t tid,
-                                                  const char *ti, time_t t,
-                                                  const char *file, int line, const char *func,
-                                                  const char *info);
-        AFUN_TOOL_EXPORT void writeLogAsyn(LogLevel level,
-                                           const char *id, pid_t tid,
-                                           const char *ti, time_t t,
-                                           const char *file, int line, const char *func, const char *info);
-        AFUN_TOOL_EXPORT int newLog(Logger *logger,
-                                    bool pc,
-                                    LogLevel level,
-                                    const char *file, int line, const char *func,
-                                    const char *format, va_list ap);
+        LogFactory();
+        ~LogFactory();
+        LogFactory(const LogFactory &)=delete;
+        LogFactory &operator=(const LogFactory &)=delete;
+
+        int initLogSystem(ConstFilePath path, bool is_asyn = true);
+        bool destruct();
+        void writeLog(LogLevel level,
+                      const char *id, pid_t tid,
+                      const char *ti, time_t t,
+                      const char *file, int line, const char *func,
+                      const char *info);
+        static void writeConsole(LogLevel level,
+                                 const char *id, pid_t tid,
+                                 const char *ti, time_t t,
+                                 const char *file, int line, const char *func,
+                                 const char *info);
+        void writeLogAsyn(LogLevel level,
+                          const char *id, pid_t tid,
+                          const char *ti, time_t t,
+                          const char *file, int line, const char *func, const char *info);
+        int newLog(Logger *logger,
+                   bool pc,
+                   LogLevel level,
+                   const char *file, int line, const char *func,
+                   const char *format, va_list ap);
         bool news(){ return !init || log_buf != nullptr; }
         int wait(){ return pthread_cond_wait(&cond, &mutex); }
         bool stop(){ return !init && log_buf == nullptr; }
-        AFUN_TOOL_EXPORT struct LogNode *pop();
+        struct LogNode *pop();
     };
 
     AFUN_TOOL_EXPORT extern LogFactory log_factory;

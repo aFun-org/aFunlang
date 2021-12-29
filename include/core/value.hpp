@@ -7,25 +7,30 @@
 #include "gc.hpp"
 
 namespace aFuncore {
-    class Object : public GcObject<class Object> {
+    AFUN_CORE_EXPORT class Object : public GcObject<class Object> {
     public:
         Inter *const inter;
         const std::string type;  // 标识 Object 的字符串
 
-        AFUN_CORE_EXPORT explicit Object(const std::string &type_, Inter *inter_);
-        AFUN_CORE_EXPORT ~Object() override =default;
+        explicit Object(const std::string &type_, Inter *inter_);
+        ~Object() override =default;
     };
 
-    class Function : public Object {
+    AFUN_CORE_EXPORT class Function : public Object {
     public:
         Function(const std::string &type_, Inter *inter_) : Object(type_ + ":Function", inter_) {}
-        class CallFunction {
+
+        AFUN_CORE_EXPORT class CallFunction {
         public:
             struct ArgCodeList {
                 Code *code = nullptr;
                 Object *ret = nullptr;
             };
+            CallFunction()=default;
             virtual ~CallFunction()=default;
+            CallFunction(const CallFunction &)=delete;
+            CallFunction &operator=(const CallFunction &)=delete;
+
             virtual std::list<ArgCodeList> *getArgCodeList()=0;
             virtual void runFunction()=0;
         };
@@ -33,15 +38,17 @@ namespace aFuncore {
         virtual bool isInfix() {return false;}
     };
 
-    class Literaler : public Object {
+    AFUN_CORE_EXPORT class Literaler : public Object {
     public:
         Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
+
         virtual void getObject(const std::string &literal, char prefix)=0;
     };
 
-    class CallBackVar : public Object {
+    AFUN_CORE_EXPORT class CallBackVar : public Object {
     public:
         CallBackVar(const std::string &type_, Inter *inter_) : Object(type_ + ":CallBackVar", inter_) {}
+
         virtual bool isCallBack() {return true;}
         virtual void callBack()=0;
     };

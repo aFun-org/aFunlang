@@ -6,7 +6,7 @@
 #include "gc.hpp"
 
 namespace aFuncore {
-    class Var : public GcObject<class Var> {
+    AFUN_CORE_EXPORT class Var : public GcObject<class Var> {
         Object *data;
     public:
         Inter *const inter;
@@ -18,7 +18,7 @@ namespace aFuncore {
         virtual void setData(Object *data_) {data = data_;}
     };
 
-    class VarSpace : public GcObject<class VarSpace> {
+    AFUN_CORE_EXPORT class VarSpace : public GcObject<class VarSpace> {
     public:
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
     private:
@@ -47,7 +47,7 @@ namespace aFuncore {
         }
     };
 
-    class ProtectVarSpace : public VarSpace {
+    AFUN_CORE_EXPORT class ProtectVarSpace : public VarSpace {
         bool is_protect;
     public:
         explicit ProtectVarSpace(Inter *inter_) : VarSpace(inter_), is_protect{false} {}
@@ -61,13 +61,21 @@ namespace aFuncore {
         VarOperationFlat delVar(const std::string &name) override;
     };
 
-    class VarList {
+    AFUN_CORE_EXPORT class VarList {
         VarList *next;
+
+        explicit VarList(VarSpace *vs) : varspace {vs}, next {nullptr} {};
+        ~VarList()=default;
+        VarList(const VarList &)=delete;
+        VarList &operator=(const VarList &)=delete;
     public:
         VarSpace *const varspace;
 
-        explicit VarList(VarSpace *vs) : varspace {vs}, next {nullptr} {};
-        void destructAll();
+        static VarList *create(VarSpace *vs) {
+            return new VarList(vs);
+        }
+
+        static void destruct(VarList *varlist);
 
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual bool defineVar(const std::string &name, Object *data);

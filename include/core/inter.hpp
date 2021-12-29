@@ -6,7 +6,7 @@
 #include "core.hpp"
 
 namespace aFuncore {
-    class Inter {
+    AFUN_CORE_EXPORT class Inter {
         friend class Object;
         friend class Var;
         friend class VarSpace;
@@ -58,6 +58,9 @@ namespace aFuncore {
     public:
         explicit Inter(int argc=0, char **argv=nullptr, ExitMode em=em_activity);
         ~Inter();
+        Inter(const Inter &)=delete;
+        Inter &operator=(const Inter &)=delete;
+
         void enable();
 
         [[nodiscard]] InterStatus getStatus() const {return status;}

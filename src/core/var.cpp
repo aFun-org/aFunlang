@@ -1,6 +1,5 @@
 ﻿#include "var.hpp"
 #include "inter.hpp"
-#include "__gc.hpp"
 
 using namespace aFuncore;
 using namespace aFuntool;
@@ -256,9 +255,9 @@ void aFuncore::VarList::disconnect(VarList *varlist){
 /**
  * 删除所有varlist
  */
-void VarList::destructAll(){
-    for (VarList *tmp=this, *n; tmp != nullptr; tmp = n) {
-        n = tmp->next;
-        delete tmp;
+void VarList::destruct(VarList *varlist){
+    for (VarList *n; varlist != nullptr; varlist = n) {
+        n = varlist->next;
+        delete varlist;
     }
 }

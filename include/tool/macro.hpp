@@ -11,7 +11,6 @@
 #include "base.h"
 
 #define NUL ((char)0)
-#define W_NUL ((wchar_t)0)
 
 namespace aFuntool {
     typedef uint32_t FileLine;  // 文件行号
