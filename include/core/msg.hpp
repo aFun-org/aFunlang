@@ -22,7 +22,7 @@ namespace aFuncore {
     class TopMessage : public Message {
     public:
         explicit TopMessage(const std::string &type_) : Message(type_) {}
-        virtual void topProgress()=0;
+        virtual void topProgress() = 0;
     };
 
     AFUN_CORE_EXPORT class NormalMessage : public TopMessage {

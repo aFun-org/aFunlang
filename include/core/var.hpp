@@ -4,6 +4,7 @@
 #include "aFunCoreExport.h"
 #include "core.hpp"
 #include "gc.hpp"
+#include <list>
 
 namespace aFuncore {
     AFUN_CORE_EXPORT class Var : public GcObject<class Var> {
@@ -62,20 +63,17 @@ namespace aFuncore {
     };
 
     AFUN_CORE_EXPORT class VarList {
-        VarList *next;
-
-        explicit VarList(VarSpace *vs) : varspace {vs}, next {nullptr} {};
-        ~VarList()=default;
+        std::list<VarSpace *> varspace;
+    public:
+        explicit VarList() = default;
+        explicit VarList(VarList *varlist);
+        explicit VarList(VarSpace *varspace) {this->varspace.push_front(varspace);}
+        ~VarList() = default;
         VarList(const VarList &)=delete;
         VarList &operator=(const VarList &)=delete;
-    public:
-        VarSpace *const varspace;
 
-        static VarList *create(VarSpace *vs) {
-            return new VarList(vs);
-        }
-
-        static void destruct(VarList *varlist);
+        void connect(VarList *varlist);
+        void push(VarSpace *varspace_) {varspace.push_front(varspace_);}
 
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual bool defineVar(const std::string &name, Object *data);
@@ -86,11 +84,6 @@ namespace aFuncore {
             Var *var = findVar(name);
             return var ? var->getData() : nullptr;
         }
-
-        [[nodiscard]] VarList *toNext() const {return next;}
-        VarList *connect(VarList *varlist) {next = varlist; return this;}
-        void disconnect(VarList *varlist);
-        void disconnectNext() {next = nullptr;}
     };
 }
 

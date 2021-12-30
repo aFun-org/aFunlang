@@ -11,7 +11,6 @@ namespace aFuncore {
         Activation *prev;
 
         VarList *varlist;
-        VarList *old_varlist;
 
         UpMessage *up;
         DownMessage *down;
@@ -25,7 +24,7 @@ namespace aFuncore {
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
 
-        virtual ActivationStatus getCode(Code *&code)=0;
+        virtual ActivationStatus getCode(Code *&code) = 0;
         virtual void runCode(Code *code);
         virtual void endRun() {}
 

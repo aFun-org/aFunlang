@@ -26,15 +26,15 @@ namespace aFuncore {
                 Code *code = nullptr;
                 Object *ret = nullptr;
             };
-            CallFunction()=default;
-            virtual ~CallFunction()=default;
+            CallFunction() = default;
+            virtual ~CallFunction() = default;
             CallFunction(const CallFunction &)=delete;
             CallFunction &operator=(const CallFunction &)=delete;
 
-            virtual std::list<ArgCodeList> *getArgCodeList()=0;
-            virtual void runFunction()=0;
+            virtual std::list<ArgCodeList> *getArgCodeList() = 0;
+            virtual void runFunction() = 0;
         };
-        virtual CallFunction *getCallFunction(Code *code, Inter *inter)=0;
+        virtual CallFunction *getCallFunction(Code *code, Inter *inter) = 0;
         virtual bool isInfix() {return false;}
     };
 
@@ -42,7 +42,7 @@ namespace aFuncore {
     public:
         Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
 
-        virtual void getObject(const std::string &literal, char prefix)=0;
+        virtual void getObject(const std::string &literal, char prefix) = 0;
     };
 
     AFUN_CORE_EXPORT class CallBackVar : public Object {
@@ -50,7 +50,7 @@ namespace aFuncore {
         CallBackVar(const std::string &type_, Inter *inter_) : Object(type_ + ":CallBackVar", inter_) {}
 
         virtual bool isCallBack() {return true;}
-        virtual void callBack()=0;
+        virtual void callBack() = 0;
     };
 };
 

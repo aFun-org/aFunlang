@@ -13,7 +13,7 @@ namespace aFuncore {
         GcCount reference;  // 引用计数
     protected:
         GcObjectBase() : not_clear{false}, reference{0}, reachable{false} {}
-        virtual ~GcObjectBase()=default;
+        virtual ~GcObjectBase() = default;
         GcObjectBase(const GcObjectBase &)=delete;
         GcObjectBase &operator=(const GcObjectBase &)=delete;
     public:

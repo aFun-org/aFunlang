@@ -19,13 +19,17 @@ using namespace aFuntool;
 Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
     Activation *prev_ = inter->getActivation();
     prev = prev_;
-    old_varlist = prev ? prev->varlist : nullptr;
-    varlist = old_varlist;
     down = new DownMessage();
-    up = new UpMessage(prev ? prev->up : nullptr);
     if (prev != nullptr) {
+        varlist = new VarList(prev->varlist);
+        up = new UpMessage(prev->up);
         line = prev->line;
         path = prev->path;
+    } else {
+        varlist = new VarList();
+        up = new UpMessage();
+        line = 0;
+        path = "";
     }
     inter->pushActivation(this);
 }
@@ -36,12 +40,11 @@ Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
  * 释放Varlist并且将DownMessage压入上层
  */
 Activation::~Activation(){
-    if (varlist != nullptr && old_varlist != nullptr)
-        varlist->disconnect(old_varlist);
-    if (prev && down != nullptr)
+    if (prev != nullptr && down != nullptr)
         down->joinMsg(prev->down);
     delete up;
     delete down;
+    delete varlist;
 }
 
 /**
@@ -118,8 +121,7 @@ ActivationStatus ExeActivation::getCode(Code *&code){
 }
 
 TopActivation::TopActivation(Code *code, Inter *inter_) : ExeActivation(code, inter_) {
-    varlist = inter_->getGlobalVarlist();
-    old_varlist = varlist;
+    varlist->connect(inter_->getGlobalVarlist());
 }
 
 static void ActivationTopProgress(Message *msg, void *) {

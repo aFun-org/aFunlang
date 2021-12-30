@@ -45,7 +45,9 @@ Inter::Inter(int argc, char **argv, ExitMode em)
 
     protect = new ProtectVarSpace(this);  // 放到最后
     global = new VarSpace(this);  // 放到最后
-    global_varlist = (VarList::create(global))->connect(VarList::create(protect));
+    global_varlist = new VarList(protect);
+    global_varlist->push(global);
+
     status = inter_init;
 }
 
@@ -55,12 +57,10 @@ Inter::~Inter(){
     pthread_cond_destroy(&monitor_cond);
 
     if (!is_derive) {
-        VarList::destruct(global_varlist);
-
+        delete global_varlist;
         Object::destruct(gc->obj);
         Var::destruct(gc->var);
         VarSpace::destruct(gc->varspace);
-
         for (auto &it : *literal)
             delete it.rg;
         delete literal;
