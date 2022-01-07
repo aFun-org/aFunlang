@@ -7,6 +7,7 @@
 #include "macro.h"
 #include "time_.h"
 #include "stdio_.h"
+#include "str.h"
 
 /**
  * 等待指定的秒数(ms) 支持小数

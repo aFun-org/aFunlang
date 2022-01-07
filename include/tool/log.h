@@ -4,6 +4,7 @@
 #include <iostream>
 #include "aFunToolExport.h"
 #include "macro.h"
+#include "pthread.h"
 
 namespace aFuntool {
     enum LogLevel {

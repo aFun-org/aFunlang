@@ -122,7 +122,7 @@ configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in
                @ONLY)
 
 include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
-include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
+#include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
 add_subdirectory(src)
 include(aFunHeader)
 
