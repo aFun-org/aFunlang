@@ -9,7 +9,7 @@
 namespace aFuntool {
     const int REGEX_ERROR_SIZE = 512;
 
-    AFUN_TOOL_EXPORT class Regex {
+    class AFUN_TOOL_EXPORT Regex {
         pcre2_code *re;  // 正则表达式
         const std::string pattern;  // 正则表达式的字符串
     public:

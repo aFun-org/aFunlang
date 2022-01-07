@@ -5,7 +5,7 @@
 #include "core.h"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Code {
+    class AFUN_CORE_EXPORT Code {
         CodeType type;
         char prefix=NUL;
 

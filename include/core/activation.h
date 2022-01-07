@@ -6,7 +6,7 @@
 #include "value.h"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Activation {
+    class AFUN_CORE_EXPORT Activation {
     protected:
         Activation *prev;
 
@@ -37,7 +37,7 @@ namespace aFuncore {
         [[nodiscard]] const StringFilePath &getFilePath() const {return path;}
     };
 
-    AFUN_CORE_EXPORT class ExeActivation : public Activation {
+    class AFUN_CORE_EXPORT ExeActivation : public Activation {
         Code *start;
         Code *next;
         bool first=true;
@@ -47,13 +47,13 @@ namespace aFuncore {
         [[nodiscard]] Code *getStart() const {return start;}
     };
 
-    AFUN_CORE_EXPORT class TopActivation : public ExeActivation {
+    class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
     public:
         explicit TopActivation(Code *code, Inter *inter_);
         ~TopActivation() override;
     };
 
-    AFUN_CORE_EXPORT class FuncActivation : public Activation {
+    class AFUN_CORE_EXPORT FuncActivation : public Activation {
         enum {
             func_first = 0,
             func_get_func = 1,

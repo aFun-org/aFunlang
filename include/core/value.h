@@ -7,7 +7,7 @@
 #include "gc.h"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Object : public GcObject<class Object> {
+    class AFUN_CORE_EXPORT Object : public GcObject<class Object> {
     public:
         Inter *const inter;
         const std::string type;  // 标识 Object 的字符串
@@ -16,11 +16,11 @@ namespace aFuncore {
         ~Object() override =default;
     };
 
-    AFUN_CORE_EXPORT class Function : public Object {
+    class AFUN_CORE_EXPORT Function : public Object {
     public:
         Function(const std::string &type_, Inter *inter_) : Object(type_ + ":Function", inter_) {}
 
-        AFUN_CORE_EXPORT class CallFunction {
+        class AFUN_CORE_EXPORT CallFunction {
         public:
             struct ArgCodeList {
                 Code *code = nullptr;
@@ -38,14 +38,14 @@ namespace aFuncore {
         virtual bool isInfix() {return false;}
     };
 
-    AFUN_CORE_EXPORT class Literaler : public Object {
+    class AFUN_CORE_EXPORT Literaler : public Object {
     public:
         Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
 
         virtual void getObject(const std::string &literal, char prefix) = 0;
     };
 
-    AFUN_CORE_EXPORT class CallBackVar : public Object {
+    class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
         CallBackVar(const std::string &type_, Inter *inter_) : Object(type_ + ":CallBackVar", inter_) {}
 

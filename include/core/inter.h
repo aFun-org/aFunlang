@@ -6,7 +6,7 @@
 #include "core.h"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Inter {
+    class AFUN_CORE_EXPORT Inter {
         friend class Object;
         friend class Var;
         friend class VarSpace;

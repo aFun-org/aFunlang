@@ -7,7 +7,7 @@
 namespace aFuncore {
     typedef unsigned GcCount;
 
-    AFUN_CORE_EXPORT class GcObjectBase {
+    class AFUN_CORE_EXPORT GcObjectBase {
         bool not_clear;  // 不清除
         bool reachable;  // 可达标记 [同时标识已迭代]
         GcCount reference;  // 引用计数
@@ -54,7 +54,7 @@ namespace aFuncore {
         }
     };
 
-    AFUN_CORE_EXPORT class GcList {
+    class AFUN_CORE_EXPORT GcList {
         std::queue<GcObjectBase *> queue;
     public :
         size_t add(GcObjectBase *obj);

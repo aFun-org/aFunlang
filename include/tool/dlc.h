@@ -35,7 +35,7 @@ namespace aFuntool {
      * 注意: 仅能通过 openLibrary生成
      * 不需要 delete 释放 (自动管理释放)
      */
-    AFUN_TOOL_EXPORT class DlcHandle {
+    class AFUN_TOOL_EXPORT DlcHandle {
         friend AFUN_TOOL_EXPORT void dlcExit();
         friend AFUN_TOOL_EXPORT DlcHandle *openLibrary(const char *file, int mode);
 

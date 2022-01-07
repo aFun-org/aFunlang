@@ -4,7 +4,7 @@
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class EnvVarSpace {  // 环境变量
+    class AFUN_CORE_EXPORT EnvVarSpace {  // 环境变量
         static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
         struct EnvVar {  // 环境变量
             std::string name;

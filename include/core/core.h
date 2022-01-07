@@ -15,11 +15,11 @@ namespace aFuncore {
         block_b = '[',
         block_c = '{',
     } BlockType;
-    AFUN_CORE_EXPORT class Code;
+    class AFUN_CORE_EXPORT Code;
 
-    AFUN_CORE_EXPORT class EnvVarSpace;
+    class AFUN_CORE_EXPORT EnvVarSpace;
 
-    AFUN_CORE_EXPORT class Inter;
+    class AFUN_CORE_EXPORT Inter;
     enum InterStatus {
         inter_creat = 0,
         inter_init = 1,  // 执行初始化程序
@@ -46,35 +46,35 @@ namespace aFuncore {
     static const std::string E_PREFIX = "$`'";  /* NOLINT element前缀 */
     static const std::string B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
-    AFUN_CORE_EXPORT class Message;
-    AFUN_CORE_EXPORT class NormalMessage;
-    AFUN_CORE_EXPORT class ErrorMessage;
+    class AFUN_CORE_EXPORT Message;
+    class AFUN_CORE_EXPORT NormalMessage;
+    class AFUN_CORE_EXPORT ErrorMessage;
 
-    AFUN_CORE_EXPORT class MessageStream;
-    AFUN_CORE_EXPORT class UpMessage;
-    AFUN_CORE_EXPORT class DownMessage;
+    class AFUN_CORE_EXPORT MessageStream;
+    class AFUN_CORE_EXPORT UpMessage;
+    class AFUN_CORE_EXPORT DownMessage;
 
-    AFUN_CORE_EXPORT class Activation;
-    AFUN_CORE_EXPORT class ExeActivation;
-    AFUN_CORE_EXPORT class TopActivation;
-    AFUN_CORE_EXPORT class FuncActivation;
+    class AFUN_CORE_EXPORT Activation;
+    class AFUN_CORE_EXPORT ExeActivation;
+    class AFUN_CORE_EXPORT TopActivation;
+    class AFUN_CORE_EXPORT FuncActivation;
     typedef enum ActivationStatus {
         as_run = 0,
         as_end = 1,
         as_end_run = 2,
     } ActivationStatus;
 
-    AFUN_CORE_EXPORT class GcList;
+    class AFUN_CORE_EXPORT GcList;
 
-    AFUN_CORE_EXPORT class Object;
-    AFUN_CORE_EXPORT class Function;
-    AFUN_CORE_EXPORT class Literaler;
-    AFUN_CORE_EXPORT class CallBackVar;
+    class AFUN_CORE_EXPORT Object;
+    class AFUN_CORE_EXPORT Function;
+    class AFUN_CORE_EXPORT Literaler;
+    class AFUN_CORE_EXPORT CallBackVar;
 
-    AFUN_CORE_EXPORT class Var;
-    AFUN_CORE_EXPORT class VarSpace;
-    AFUN_CORE_EXPORT class VarList;
-    AFUN_CORE_EXPORT class ProtectVarSpace;
+    class AFUN_CORE_EXPORT Var;
+    class AFUN_CORE_EXPORT VarSpace;
+    class AFUN_CORE_EXPORT VarList;
+    class AFUN_CORE_EXPORT ProtectVarSpace;
     typedef enum VarOperationFlat {
         vof_success = 0,  // 成功
         vof_not_var = 1,  // 变量不存在

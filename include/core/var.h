@@ -7,7 +7,7 @@
 #include <list>
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Var : public GcObject<class Var> {
+    class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
         Object *data;
     public:
         Inter *const inter;
@@ -19,7 +19,7 @@ namespace aFuncore {
         virtual void setData(Object *data_) {data = data_;}
     };
 
-    AFUN_CORE_EXPORT class VarSpace : public GcObject<class VarSpace> {
+    class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
     public:
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
     private:
@@ -48,7 +48,7 @@ namespace aFuncore {
         }
     };
 
-    AFUN_CORE_EXPORT class ProtectVarSpace : public VarSpace {
+    class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
         bool is_protect;
     public:
         explicit ProtectVarSpace(Inter *inter_) : VarSpace(inter_), is_protect{false} {}
@@ -62,7 +62,7 @@ namespace aFuncore {
         VarOperationFlat delVar(const std::string &name) override;
     };
 
-    AFUN_CORE_EXPORT class VarList {
+    class AFUN_CORE_EXPORT VarList {
         std::list<VarSpace *> varspace;
     public:
         explicit VarList() = default;

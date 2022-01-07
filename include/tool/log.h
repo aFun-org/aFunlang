@@ -17,9 +17,9 @@ namespace aFuntool {
     };
     typedef enum LogLevel LogLevel;
 
-    AFUN_TOOL_EXPORT class LogFactory;
+    class AFUN_TOOL_EXPORT LogFactory;
 
-    AFUN_TOOL_EXPORT class Logger {
+    class AFUN_TOOL_EXPORT Logger {
         const std::string id;
         LogLevel level = log_debug;
         bool exit = true;
@@ -36,7 +36,7 @@ namespace aFuntool {
     };
 
 
-    AFUN_TOOL_EXPORT class LogFactory {
+    class AFUN_TOOL_EXPORT LogFactory {
         bool init;  // 是否已经初始化
         pid_t pid;
 

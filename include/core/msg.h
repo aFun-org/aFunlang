@@ -6,7 +6,7 @@
 #include "list"
 
 namespace aFuncore {
-    AFUN_CORE_EXPORT class Message {
+    class AFUN_CORE_EXPORT Message {
         friend class MessageStream;
         friend class UpMessage;
         friend class DownMessage;
@@ -25,7 +25,7 @@ namespace aFuncore {
         virtual void topProgress() = 0;
     };
 
-    AFUN_CORE_EXPORT class NormalMessage : public TopMessage {
+    class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
         Object *obj;
     public:
         explicit NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {}
@@ -34,7 +34,7 @@ namespace aFuncore {
         Object *getObject() {return obj;}
     };
 
-    AFUN_CORE_EXPORT class ErrorMessage : public TopMessage {
+    class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
         Inter *inter;
 
         std::string error_type;
@@ -51,7 +51,7 @@ namespace aFuncore {
         std::string getErrorInfo() {return error_info;}
     };
 
-    AFUN_CORE_EXPORT class MessageStream {
+    class AFUN_CORE_EXPORT MessageStream {
     protected:
         Message *stream;
         [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
@@ -78,7 +78,7 @@ namespace aFuncore {
         }
     };
 
-    AFUN_CORE_EXPORT class UpMessage : public MessageStream {
+    class AFUN_CORE_EXPORT UpMessage : public MessageStream {
     protected:
         Message *old;
     public:
@@ -88,7 +88,7 @@ namespace aFuncore {
         Message *popMessage(const std::string &type) override;
     };
 
-    AFUN_CORE_EXPORT class DownMessage : public MessageStream {
+    class AFUN_CORE_EXPORT DownMessage : public MessageStream {
     public:
         void joinMsg(DownMessage *msg);
     };
