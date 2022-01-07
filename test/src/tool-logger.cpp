@@ -1,4 +1,4 @@
-﻿#include "tool.hpp"
+﻿#include "aFuntool.h"
 using namespace aFuntool;
 
 int main(int argc, char **argv){

@@ -1,4 +1,4 @@
-﻿#include "tool.hpp"
+﻿#include "aFuntool.h"
 #include <clocale>
 using namespace aFuntool;
 

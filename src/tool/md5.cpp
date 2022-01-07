@@ -4,9 +4,14 @@
  */
 
 #include <cstdio>
+#include <cstring>
 
-#include "tool.hpp"
-#include "__md5.hpp"
+#include "macro.h"
+#include "md5.h"
+#include "file.h"
+#include "exception.h"
+#include "__md5.h"
+
 using namespace aFuntool;
 
 namespace aFuntool {

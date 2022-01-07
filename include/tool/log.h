@@ -1,12 +1,9 @@
-﻿#ifndef AFUN_LOG_HPP
-#define AFUN_LOG_HPP
+﻿#ifndef AFUN_LOG_H
+#define AFUN_LOG_H
 
 #include <iostream>
 #include "aFunToolExport.h"
-#include "macro.hpp"
-#include "log-m.hpp"
-
-using namespace aFuntool;
+#include "macro.h"
 
 namespace aFuntool {
     enum LogLevel {
@@ -92,6 +89,8 @@ namespace aFuntool {
 
 #ifndef NO_DEFINE_LOG_MACRO
 
+#include "log-m.h"
+
 #define getLogger(logger) ((logger) == nullptr ? &aFuntool::log_factory.sys_log : (logger))
 
 #if aFunWriteTrack
@@ -145,4 +144,4 @@ namespace aFuntool {
 #endif
 
 #endif
-#endif //AFUN_LOG_HPP
+#endif //AFUN_LOG_H

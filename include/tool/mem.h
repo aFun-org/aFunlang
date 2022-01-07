@@ -3,11 +3,11 @@
  * 目标: 内存管理工具的头文件
  */
 
-#ifndef AFUN_MEM_HPP
-#define AFUN_MEM_HPP
+#ifndef AFUN_MEM_H
+#define AFUN_MEM_H
 
 #include <cstdlib>
-#include "log.hpp"
+#include "log.h"
 
 
 /* 取代calloc函数 */
@@ -37,4 +37,4 @@ namespace aFuntool {
 #define calloc_size(n, size) (aFuntool::safeCalloc(n, size))
 #endif
 
-#endif  // AFUN_MEM_HPP
+#endif  // AFUN_MEM_H

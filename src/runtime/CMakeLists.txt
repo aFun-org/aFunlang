@@ -8,20 +8,20 @@ file(GLOB source_tool
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+     ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
 file(GLOB private_tool_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*/*.hpp)
+     ${CMAKE_CURRENT_LIST_DIR}/*/*.h)
 
 file(GLOB private_h_core
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/../core/*.hpp)  # 需要使用 core 的特定头文件 (高级开发)
+     ${CMAKE_CURRENT_LIST_DIR}/../core/*.h)  # 需要使用 core 的特定头文件 (高级开发)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_runtime}"
-     "${build_include_runtime}/*.hpp")
+     "${build_include_runtime}/*.h")
 
 set(public_h_build)
 set(public_h_install)

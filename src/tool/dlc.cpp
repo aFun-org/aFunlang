@@ -1,5 +1,5 @@
-﻿#include "tool.hpp"
-#include "dlc.hpp"
+﻿#include "macro.h"
+#include "dlc.h"
 using namespace aFuntool;
 
 static DlcHandle *dlc_l = nullptr;

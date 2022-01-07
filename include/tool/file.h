@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_FILE_HPP
-#define AFUN_FILE_HPP
+﻿#ifndef AFUN_FILE_H
+#define AFUN_FILE_H
 #include "aFunToolExport.h"
 
 /* 文件处理工具 */
@@ -21,4 +21,4 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT FILE *fileOpen(const char *path_, const char *mode_);
     AFUN_TOOL_EXPORT int fileClose(FILE *file);
 }
-#endif //AFUN_FILE_HPP
+#endif //AFUN_FILE_H

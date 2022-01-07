@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_HASH_HPP
-#define AFUN_HASH_HPP
+﻿#ifndef AFUN_HASH_H
+#define AFUN_HASH_H
 #include "aFunToolExport.h"
 
 /* 哈希工具 */
@@ -9,4 +9,4 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT time33_t time33(const std::string &str);
 }
 
-#endif //AFUN_HASH_HPP
+#endif //AFUN_HASH_H

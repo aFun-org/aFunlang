@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-#include "tool.hpp"
+#include "aFuntool.h"
 using namespace aFuntool;
 
 void exit_func(void *) {

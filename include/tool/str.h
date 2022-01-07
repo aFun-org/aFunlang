@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_STR_HPP
-#define AFUN_STR_HPP
+﻿#ifndef AFUN_STR_H
+#define AFUN_STR_H
 #include <cwchar>
 #include <cstring>
 #include "aFunToolExport.h"
@@ -14,4 +14,4 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT char *convertToStr(const wchar_t *wstr, bool free_old);
 }
 
-#endif //AFUN_STR_HPP
+#endif //AFUN_STR_H

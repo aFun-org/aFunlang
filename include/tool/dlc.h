@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_DLC_HPP
-#define AFUN_DLC_HPP
+﻿#ifndef AFUN_DLC_H
+#define AFUN_DLC_H
 #include <iostream>
 #include "aFunToolExport.h"
 #include "dlfcn.h"  // CMake 处理 dlfcn.h 的位置
@@ -131,4 +131,4 @@ namespace aFuntool {
     };
 }
 
-#endif //AFUN_DLC_HPP
+#endif //AFUN_DLC_H

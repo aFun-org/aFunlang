@@ -1,6 +1,6 @@
 ﻿#include <cstdio>
 #include <cstdlib>
-#include "tool.hpp"
+#include "aFuntool.h"
 using namespace aFuntool;
 
 int test_func() {

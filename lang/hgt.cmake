@@ -27,7 +27,7 @@ unset(include_n)
 add_custom_target(hgt ALL)
 add_custom_command(TARGET hgt POST_BUILD
                    COMMAND ${HGT_COMMAND}
-                   COMMENT "The hgt_generate_file: base")
+                   COMMENT "The hgt generate file: base")
 
 execute_process(COMMAND ${HGT_COMMAND}
                 RESULT_VARIABLE re
@@ -77,6 +77,11 @@ function(build_lang)
         cmake_path(GET src STEM name)
         add_library(hgt-${name} SHARED ${src})
         add_dependencies(hgt-${name} hgt-base)
+        add_custom_command(TARGET hgt-${name} POST_BUILD
+                           COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_BASE_NAME:hgt-${name}>" ">>" "LANG"
+                           WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}"
+                           COMMENT "Creat file ${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}/LANG")
+
         set_target_properties(hgt-${name} PROPERTIES OUTPUT_NAME "${name}")
 
         target_compile_definitions(hgt-${name} PRIVATE hgt_base_EXPORTS)
@@ -89,10 +94,4 @@ function(build_lang)
 endfunction()
 
 build_lang()  # 使用函数防止 CMAKE_RUNTIME_OUTPUT_DIRECTORY 影响外部
-
-add_custom_command(TARGET hgt-zh_cn
-                   COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_BASE_NAME:hgt-zh_cn>" ">>" "LANG"
-                   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}"
-                   COMMENT "Creat file ${CMAKE_BINARY_DIR}/${INSTALL_LANGDIR}/LANG")
-
 unset(hgt-name)

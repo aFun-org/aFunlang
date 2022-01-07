@@ -8,7 +8,8 @@
 #include <cstring>
 #include <cstdarg>
 #include <csignal>
-#include "tool.hpp"
+#include "macro.h"
+#include "stdio_.h"
 using namespace aFuntool;
 
 /* 注意:

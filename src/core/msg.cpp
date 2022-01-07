@@ -1,7 +1,7 @@
-﻿#include "msg.hpp"
-#include "activation.hpp"
-#include "inter.hpp"
-#include "env-var.hpp"
+﻿#include "msg.h"
+#include "activation.h"
+#include "inter.h"
+#include "env-var.h"
 
 using namespace aFuncore;
 using namespace aFuntool;

@@ -1,9 +1,12 @@
 ﻿#include <cstdio>
-#include "tool.hpp"
+#include <cstring>
+#include "macro.h"
+#include "exception.h"
+#include "file.h"
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
-#include "regex.hpp"
+#include "regex.h"
 using namespace aFuntool;
 
 aFuntool::Regex::Regex(const std::string &pattern_) : pattern {pattern_} {

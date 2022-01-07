@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_MD5_HPP
-#define AFUN_MD5_HPP
+﻿#ifndef AFUN_MD5_H
+#define AFUN_MD5_H
 #include "aFunToolExport.h"
 
 /* md5计算工具 */
@@ -20,4 +20,4 @@ namespace aFuntool {
     T getFileMd5 (T &path);
 }
 
-#endif //AFUN_MD5_HPP
+#endif //AFUN_MD5_H

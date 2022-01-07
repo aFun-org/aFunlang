@@ -1,5 +1,5 @@
 ﻿#include <cstdio>
-#include "tool.hpp"
+#include "aFuntool.h"
 using namespace aFuntool;
 
 

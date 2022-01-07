@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_GC_HPP
-#define AFUN_GC_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_GC_H
+#define AFUN_GC_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "queue"
 
@@ -67,4 +67,4 @@ namespace aFuncore {
 };
 
 
-#endif //AFUN_GC_HPP
+#endif //AFUN_GC_H

@@ -1,5 +1,5 @@
-﻿#include "var.hpp"
-#include "inter.hpp"
+﻿#include "var.h"
+#include "inter.h"
 
 using namespace aFuncore;
 using namespace aFuntool;

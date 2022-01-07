@@ -1,8 +1,8 @@
-﻿#ifndef AFUN_MSG_HPP
-#define AFUN_MSG_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_MSG_H
+#define AFUN_MSG_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.hpp"
+#include "core.h"
 #include "list"
 
 namespace aFuncore {
@@ -95,4 +95,4 @@ namespace aFuncore {
 }
 
 
-#endif //AFUN_MSG_HPP
+#endif //AFUN_MSG_H

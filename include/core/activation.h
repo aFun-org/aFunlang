@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_ACTIVATION_HPP
-#define AFUN_ACTIVATION_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_ACTIVATION_H
+#define AFUN_ACTIVATION_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.hpp"
-#include "value.hpp"
+#include "core.h"
+#include "value.h"
 
 namespace aFuncore {
     AFUN_CORE_EXPORT class Activation {
@@ -77,4 +77,4 @@ namespace aFuncore {
     };
 }
 
-#endif //AFUN_ACTIVATION_HPP
+#endif //AFUN_ACTIVATION_H

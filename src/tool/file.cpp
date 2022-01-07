@@ -8,7 +8,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "tool.hpp"
+#include "macro.h"
+#include "file.h"
+#include "path.h"
+#include "str.h"
+#include "log.h"
+#include "stdio_.h"
+
 using namespace aFuntool;
 
 #ifdef aFunWIN32_NO_CYGWIN

@@ -1,8 +1,10 @@
-﻿#ifndef AFUN_CORE_HPP
-#define AFUN_CORE_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_CORE_H
+#define AFUN_CORE_H
+#include "aFuntool.h"
 
 namespace aFuncore {
+    using namespace aFuntool;
+
     typedef enum CodeType {
         code_start = 0,
         code_element = 1,
@@ -81,4 +83,4 @@ namespace aFuncore {
     } VarOperationFlat;
 }
 
-#endif //AFUN_CORE_HPP
+#endif //AFUN_CORE_H

@@ -1,4 +1,4 @@
-﻿#include "tool.hpp"
+﻿#include "aFuntool.h"
 
 int main() {
     int *p = calloc(1, int);

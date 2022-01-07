@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_INTER_HPP
-#define AFUN_INTER_HPP
+﻿#ifndef AFUN_INTER_H
+#define AFUN_INTER_H
 #include <list>
-#include "tool.hpp"
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.hpp"
+#include "core.h"
 
 namespace aFuncore {
     AFUN_CORE_EXPORT class Inter {
@@ -81,4 +81,4 @@ namespace aFuncore {
     };
 }
 
-#endif //AFUN_INTER_HPP
+#endif //AFUN_INTER_H

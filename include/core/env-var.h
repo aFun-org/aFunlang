@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_ENV_VAR_HPP
-#define AFUN_ENV_VAR_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_ENV_VAR_H
+#define AFUN_ENV_VAR_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
@@ -32,4 +32,4 @@ namespace aFuncore {
 }
 
 
-#endif //AFUN_ENV_VAR_HPP
+#endif //AFUN_ENV_VAR_H

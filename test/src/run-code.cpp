@@ -1,10 +1,4 @@
-﻿#include "inter.hpp"
-#include "value.hpp"
-#include "var.hpp"
-#include "code.hpp"
-#include "msg.hpp"
-#include "activation.hpp"
-#include "env-var.hpp"
+﻿#include "aFuncore.h"
 
 using namespace aFuncore;
 using namespace aFuntool;

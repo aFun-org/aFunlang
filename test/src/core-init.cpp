@@ -1,4 +1,4 @@
-﻿#include "init.hpp"
+﻿#include "init.h"
 using namespace aFuncore;
 using namespace aFuntool;
 

@@ -1,4 +1,4 @@
-﻿#include "gc.hpp"
+﻿#include "gc.h"
 using namespace aFuncore;
 using namespace aFuntool;
 

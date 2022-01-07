@@ -4,7 +4,9 @@
  */
 
 #include <ctime>
-#include "tool.hpp"
+#include "macro.h"
+#include "time_.h"
+#include "stdio_.h"
 
 /**
  * 等待指定的秒数(ms) 支持小数

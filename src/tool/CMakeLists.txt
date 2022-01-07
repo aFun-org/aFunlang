@@ -7,12 +7,12 @@ file(GLOB source
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+     ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_tool}"
-     "${build_include_tool}/*.hpp")
+     "${build_include_tool}/*.h")
 
 set(public_h_build)
 set(public_h_install)

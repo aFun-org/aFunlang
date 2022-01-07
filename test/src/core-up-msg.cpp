@@ -1,4 +1,4 @@
-﻿#include "msg.hpp"
+﻿#include "msg.h"
 using namespace aFuncore;
 using namespace aFuntool;
 

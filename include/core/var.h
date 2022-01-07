@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_VAR_HPP
-#define AFUN_VAR_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_VAR_H
+#define AFUN_VAR_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.hpp"
-#include "gc.hpp"
+#include "core.h"
+#include "gc.h"
 #include <list>
 
 namespace aFuncore {
@@ -87,4 +87,4 @@ namespace aFuncore {
     };
 }
 
-#endif //AFUN_VAR_HPP
+#endif //AFUN_VAR_H

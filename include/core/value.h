@@ -1,10 +1,10 @@
-﻿#ifndef AFUN_VALUE_HPP
-#define AFUN_VALUE_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_VALUE_H
+#define AFUN_VALUE_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "list"
-#include "core.hpp"
-#include "gc.hpp"
+#include "core.h"
+#include "gc.h"
 
 namespace aFuncore {
     AFUN_CORE_EXPORT class Object : public GcObject<class Object> {
@@ -54,4 +54,4 @@ namespace aFuncore {
     };
 };
 
-#endif //AFUN_VALUE_HPP
+#endif //AFUN_VALUE_H

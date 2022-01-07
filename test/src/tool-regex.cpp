@@ -1,6 +1,6 @@
 ﻿#include <cstdio>
 #include <iostream>
-#include "tool.hpp"
+#include "aFuntool.h"
 
 int main() {
     Regex *rg = new Regex("Hello嘿.*d");

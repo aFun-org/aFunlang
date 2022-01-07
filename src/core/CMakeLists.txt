@@ -4,12 +4,12 @@
 
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+     ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
      RELATIVE "${build_include_core}"
-     "${build_include_core}/*.hpp")
+     "${build_include_core}/*.h")
 
 file(GLOB public_h_info
      LIST_DIRECTORIES FALSE
@@ -43,16 +43,16 @@ foreach(tgt core-shared core-static)
     define_FILENAME(${tgt})
 endforeach()
 
-set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
-set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
-
+#set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
+#set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
+#
 target_link_libraries(core-shared PUBLIC tool-shared)
 target_link_libraries(core-static PUBLIC tool-static)
-
-install(TARGETS core-shared core-static
-        EXPORT aFunlang
-        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
-        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
-        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT base-runtime
-        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)
+#
+#install(TARGETS core-shared core-static
+#        EXPORT aFunlang
+#        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
+#        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
+#        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT base-runtime
+#        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+#        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)

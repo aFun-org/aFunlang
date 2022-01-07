@@ -1,5 +1,5 @@
-﻿#include "value.hpp"
-#include "inter.hpp"
+﻿#include "value.h"
+#include "inter.h"
 
 using namespace aFuncore;
 using namespace aFuntool;

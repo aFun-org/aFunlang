@@ -1,7 +1,7 @@
 ﻿#ifndef AFUN_STDIO_H
 #define AFUN_STDIO_H
 #include <cstdio>
-#include "base.h"
+#include "macro.h"
 #include "aFunToolExport.h"
 
 namespace aFuntool {

@@ -104,13 +104,13 @@ endfunction()
 
 # 添加 target
 if (NOT TARGET import_build)
-    add_custom_target(import_build ALL COMMENT "Copy import target.")
+#    add_custom_target(import_build ALL COMMENT "Copy import target.")
 endif()
 
 macro(set_copy_command target a b)
-    add_custom_command(TARGET ${target} POST_BUILD
-                       COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${a}" "${b}"
-                       COMMENT "Copy ${a}.")
+#    add_custom_command(TARGET ${target} POST_BUILD
+#                       COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${a}" "${b}"
+#                       COMMENT "Copy ${a}.")
 endmacro()
 
 function(_wi_build_import_inline target run lib)

@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_INIT_HPP
-#define AFUN_INIT_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_INIT_H
+#define AFUN_INIT_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
@@ -18,4 +18,4 @@ namespace aFuncore {
     AFUN_CORE_EXPORT bool aFunCoreInit(InitInfo *info);
 }
 
-#endif //AFUN_INIT_HPP
+#endif //AFUN_INIT_H

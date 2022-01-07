@@ -2,7 +2,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "tool.hpp"
+#include "macro.h"
+#include "byte.h"
+
 using namespace aFuntool;
 
 namespace aFuntool {
@@ -37,7 +39,7 @@ void aFuntool::getEndian() {
 template <typename T>
 bool aFuntool::byteWriteInt(FILE *file, T num) {
     if (endian != save_as) {
-        const size_t len = sizeof(T) / sizeof(uint8_t);
+        const size_t len = sizeof(T) / sizeof(uint8_t);  // NOLINT 允许 size(T) / size(T)
         union {
             T a;//元素a，占2个字节
             uint8_t b[len];//元素b，占1个字节，b在内存中的地址为a最低字节的地址
@@ -63,7 +65,7 @@ bool aFuntool::byteReadInt(FILE *file, T *num) {
     size_t re = fread(num, sizeof(T), 1, file);
 
     if (endian != save_as) {
-        const size_t len = sizeof(T) / sizeof(uint8_t);
+        const size_t len = sizeof(T) / sizeof(uint8_t);  // NOLINT 允许 size(T) / size(T)
         union {
             T a;//元素a，占2个字节
             uint8_t b[len];//元素b，占1个字节，b在内存中的地址为a最低字节的地址

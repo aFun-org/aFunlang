@@ -16,7 +16,17 @@
 #include <cstdlib>
 #include <cstdarg>
 #include <cstring>
-#include "tool.hpp"
+#include "macro.h"
+#include "log.h"
+#include "exception.h"
+#include "log-m.h"
+#include "time_.h"
+#include "file.h"
+#include "stdio_.h"
+#include "str.h"
+#include "exit_.h"
+#include "pthread.h"
+
 using namespace aFuntool;
 
 #ifdef aFunWIN32

@@ -35,11 +35,11 @@ add_subdirectory(core)  # core 依赖 tool
 #
 #file(GLOB private_h
 #     LIST_DIRECTORIES FALSE
-#     ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
+#     ${CMAKE_CURRENT_LIST_DIR}/*.h)
 #
 #file(GLOB include_h
 #     LIST_DIRECTORIES FALSE
-#     "${PROJECT_SOURCE_DIR}/include/*.hpp")
+#     "${PROJECT_SOURCE_DIR}/include/*.h")
 #
 #add_executable(aFun-xx "")  # xx表示均为动态链接
 #add_executable(aFun-ct "")  # ct表示均静态链接

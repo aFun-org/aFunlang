@@ -1,8 +1,8 @@
-﻿#ifndef AFUN_CODE_HPP
-#define AFUN_CODE_HPP
-#include "tool.hpp"
+﻿#ifndef AFUN_CODE_H
+#define AFUN_CODE_H
+#include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.hpp"
+#include "core.h"
 
 namespace aFuncore {
     AFUN_CORE_EXPORT class Code {
@@ -77,4 +77,4 @@ namespace aFuncore {
     };
 }
 
-#endif //AFUN_CODE_HPP
+#endif //AFUN_CODE_H

@@ -5,7 +5,9 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "tool.hpp"
+#include "macro.h"
+#include "str.h"
+
 using namespace aFuntool;
 
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))

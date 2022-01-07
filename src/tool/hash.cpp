@@ -3,7 +3,9 @@
  * 目标: 关于哈希表的实用函数
  */
 
-#include "tool.hpp"
+#include "macro.h"
+#include "hash.h"
+
 using namespace aFuntool;
 
 time33_t aFuntool::time33(const char *str) {
