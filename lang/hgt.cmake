@@ -1,13 +1,13 @@
 find_package(Python3 REQUIRED)
 
-set(hgt_dir ${CMAKE_BINARY_DIR}/hgt)
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/hgt)
+set(hgt_dir ${CMAKE_BINARY_DIR}/hgt)  # hgt 文件储存位置
+file(MAKE_DIRECTORY ${hgt_dir})
 
-to_native_path(${hgt_dir} hgt_dir_n)
-to_native_path(${CMAKE_CURRENT_LIST_DIR}/tr tr_n)
-to_native_path(${CMAKE_SOURCE_DIR}/src src_n)
-to_native_path(${CMAKE_SOURCE_DIR}/include include_n)
-set(hgt_name aFun)
+to_native_path(${hgt_dir} hgt_dir_n)  # hgt 温江储存位置
+to_native_path(${CMAKE_CURRENT_LIST_DIR}/tr tr_n)  # tr  文件储存位置
+to_native_path(${CMAKE_SOURCE_DIR}/src src_n)  # src 文件储存位置 【需要遍历】
+to_native_path(${CMAKE_SOURCE_DIR}/include include_n)  # include 文件位置 【需要遍历】
+set(hgt_name aFun)  # ht 名称
 
 set(HGT_COMMAND
     "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/hgt.py"
