@@ -18,8 +18,10 @@ namespace aFuntool {
         Regex &operator=(const Regex &regex);
         ~Regex ();
         int match(const char *subject);
-        int match(const std::string &subject) {return match(subject.c_str());}
+        int match(const std::string &subject);
     };
 }
+
+#include "regex.inline.h"
 
 #endif //AFUN_REGEX

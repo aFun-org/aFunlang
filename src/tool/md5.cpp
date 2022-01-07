@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "macro.h"
+#include "tool.h"
 #include "md5.h"
 #include "file.h"
 #include "exception.h"

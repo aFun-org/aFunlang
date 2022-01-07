@@ -1,6 +1,6 @@
 ﻿#include <cstdio>
 #include <cstring>
-#include "macro.h"
+#include "tool.h"
 #include "exception.h"
 #include "file.h"
 

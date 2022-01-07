@@ -1,4 +1,4 @@
-﻿#include "macro.h"
+﻿#include "tool.h"
 #include "dlc.h"
 using namespace aFuntool;
 

@@ -1,6 +1,6 @@
 ﻿#ifndef AFUN_PATH_H
 #define AFUN_PATH_H
-#include "macro.h"
+#include "tool.h"
 
 /* 路径工具 */
 #ifdef aFunWIN32_NO_CYGWIN

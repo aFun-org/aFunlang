@@ -4,7 +4,7 @@
  */
 
 #include <ctime>
-#include "macro.h"
+#include "tool.h"
 #include "time_.h"
 #include "stdio_.h"
 #include "str.h"

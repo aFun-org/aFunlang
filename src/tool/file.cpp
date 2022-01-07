@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "macro.h"
+#include "tool.h"
 #include "file.h"
 #include "path.h"
 #include "str.h"

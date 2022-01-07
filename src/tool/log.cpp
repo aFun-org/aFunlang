@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <cstdarg>
 #include <cstring>
-#include "macro.h"
+#include "tool.h"
 #include "log.h"
 #include "exception.h"
 #include "log-m.h"

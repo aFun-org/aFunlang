@@ -1,4 +1,4 @@
-﻿#include "macro.h"
+﻿#include "tool.h"
 #include "exit_.h"
 #include "pthread.h"
 using namespace aFuntool;

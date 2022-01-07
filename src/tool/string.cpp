@@ -5,7 +5,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "macro.h"
+#include "tool.h"
 #include "str.h"
 
 using namespace aFuntool;

@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "aFunToolExport.h"
-#include "macro.h"
+#include "tool.h"
 #include "pthread.h"
 
 namespace aFuntool {
@@ -79,19 +79,19 @@ namespace aFuntool {
                    LogLevel level,
                    const char *file, int line, const char *func,
                    const char *format, va_list ap);
-        bool news(){ return !init || log_buf != nullptr; }
-        int wait(){ return pthread_cond_wait(&cond, &mutex); }
-        bool stop(){ return !init && log_buf == nullptr; }
+        bool news();
+        int wait();
+        bool stop();
         struct LogNode *pop();
     };
 
     AFUN_TOOL_EXPORT extern LogFactory log_factory;
 }
 
+#include "log.inline.h"
+
 #ifndef NO_DEFINE_LOG_MACRO
-
 #include "log-m.h"
-
 #define getLogger(logger) ((logger) == nullptr ? &aFuntool::log_factory.sys_log : (logger))
 
 #if aFunWriteTrack

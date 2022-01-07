@@ -7,7 +7,7 @@
 #ifndef AFUN_AFUNTOOL_H
 #define AFUN_AFUNTOOL_H
 
-#include "macro.h"
+#include "tool.h"
 #include "aFunToolExport.h"
 
 #include "pthread.h"

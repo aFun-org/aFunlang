@@ -3,7 +3,7 @@
  * 目标: 关于哈希表的实用函数
  */
 
-#include "macro.h"
+#include "tool.h"
 #include "hash.h"
 
 using namespace aFuntool;
