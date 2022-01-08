@@ -1,4 +1,5 @@
 ﻿#include "aFuntool.h"
+using namespace aFuntool;
 
 int main(int argc, char **argv) {
     if (argc != 3)
