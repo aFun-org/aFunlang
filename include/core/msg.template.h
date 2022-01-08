@@ -11,10 +11,10 @@ namespace aFuncore {
     }
 
 
-    template <typename T>
-    void MessageStream::forEach(void (*func)(Message *, T), T arg) {
+    template <typename Callable, typename...T>
+    inline void MessageStream::forEach(Callable func, T...arg) {
         for (Message *msg = stream; msg != nullptr; msg = msg->next) {
-            func(msg, arg);
+            func(msg, arg...);
         }
     }
 }

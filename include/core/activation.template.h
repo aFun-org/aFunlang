@@ -3,10 +3,10 @@
 #include "activation.h"
 
 namespace aFuncore {
-    template<typename T>
-    void Activation::forEach(Activation *activation, void (*func)(Activation *activation, Message *, T), T arg){
+    template <typename Callable, typename...T>
+    inline void Activation::forEach(Activation *activation, Callable func, T...arg) {
         for (NULL; activation != nullptr; activation = activation->prev)
-            func(activation, arg);
+            func(activation, arg...);
     }
 }
 

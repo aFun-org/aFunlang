@@ -149,7 +149,7 @@ static void ActivationTopProgress(Message *msg, void *) {
 };
 
 TopActivation::~TopActivation() {
-    down->forEach<void *>(ActivationTopProgress, nullptr);
+    down->forEach(ActivationTopProgress, nullptr);
 }
 
 FuncActivation::~FuncActivation(){

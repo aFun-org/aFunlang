@@ -26,8 +26,8 @@ namespace aFuncore {
     public:
         Inter *const inter;
 
-        template <typename T>
-        static void forEach(Activation *activation, void (*func)(Activation *activation, Message *, T), T arg);
+        template <typename Callable,typename...T>
+        static void forEach(Activation *activation, Callable func, T...arg);
 
         explicit Activation(Inter *inter_);
         virtual ~Activation();

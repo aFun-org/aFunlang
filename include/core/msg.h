@@ -67,8 +67,8 @@ namespace aFuncore {
         virtual Message *popMessage(const std::string &type);
         void pushMessage(Message *msg);
 
-        template <typename T>
-        void forEach(void (*func)(Message *, T), T arg);
+        template <typename Callable, typename...T>
+        void forEach(Callable func, T...arg);
     };
 
     class AFUN_CORE_EXPORT UpMessage : public MessageStream {

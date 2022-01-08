@@ -35,6 +35,9 @@ namespace aFuncore {
         explicit VarSpace(Inter *inter_);
         ~VarSpace() override;
 
+        template <typename Callable,typename...T>
+        void forEach(Callable func, T...arg);
+
         [[nodiscard]] size_t getCount() const;
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual VarOperationFlat defineVar(const std::string &name, Object *data);
@@ -72,6 +75,9 @@ namespace aFuncore {
         void connect(VarList *varlist);
         void push(VarSpace *varspace_);
 
+        template <typename Callable,typename...T>
+        void forEach(Callable func, T...arg);
+
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual bool defineVar(const std::string &name, Object *data);
         virtual bool defineVar(const std::string &name, Var *data);
@@ -82,5 +88,6 @@ namespace aFuncore {
 }
 
 #include "var.inline.h"
+#include "var.template.h"
 
 #endif //AFUN_VAR_H
