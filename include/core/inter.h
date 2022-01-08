@@ -29,6 +29,9 @@ namespace aFuncore {
         VarSpace *global;  // 全局变量空间
         VarList *global_varlist;  // global + protect
         Activation *activation;  // 活动记录
+        InterMessage *out;
+        InterMessage *in;
+
         void pushActivation(Activation *new_activation);
 
         struct LiteralRegex {

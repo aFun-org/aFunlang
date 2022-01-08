@@ -53,6 +53,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT MessageStream;
     class AFUN_CORE_EXPORT UpMessage;
     class AFUN_CORE_EXPORT DownMessage;
+    class AFUN_CORE_EXPORT InterMessage;
 
     class AFUN_CORE_EXPORT Activation;
     class AFUN_CORE_EXPORT ExeActivation;

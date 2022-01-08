@@ -19,8 +19,21 @@ namespace aFuncore {
         return obj;
     }
 
-    inline std::string ErrorMessage::getErrorType() {return error_type;}
-    inline std::string ErrorMessage::getErrorInfo() {return error_info;}
+    inline std::string ErrorMessage::getErrorType() {
+        return error_type;
+    }
+
+    inline std::string ErrorMessage::getErrorInfo() {
+        return error_info;
+    }
+
+    inline InterMessage::InterMessage() : MessageStream() {  // NOLINT mutex通过pthread_mutex_init初始化
+        pthread_mutex_init(&mutex, nullptr);
+    }
+
+    inline InterMessage::~InterMessage(){
+        pthread_mutex_destroy(&mutex);
+    }
 }
 
 #endif //AFUN_MSG_INLINE_H

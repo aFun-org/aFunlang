@@ -10,6 +10,7 @@ namespace aFuncore {
         friend class MessageStream;
         friend class UpMessage;
         friend class DownMessage;
+        friend class InterMessage;
 
         Message *next;  // 下一条消息
     public:
@@ -83,6 +84,13 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT DownMessage : public MessageStream {
     public:
         void joinMsg(DownMessage *msg);
+    };
+
+    class AFUN_CORE_EXPORT InterMessage : public MessageStream {
+        pthread_mutex_t mutex{};
+    public:
+        InterMessage();
+        ~InterMessage() override ;
     };
 }
 

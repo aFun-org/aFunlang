@@ -47,6 +47,8 @@ Inter::Inter(int argc, char **argv, ExitMode em)
     global = new VarSpace(this);  // 放到最后
     global_varlist = new VarList(protect);
     global_varlist->push(global);
+    out = new InterMessage();
+    in = new InterMessage();
 
     status = inter_init;
 }
@@ -67,6 +69,8 @@ Inter::~Inter(){
         delete gc;
         delete son_inter;
         delete envvar;
+        delete out;
+        delete in;
     }
 }
 
