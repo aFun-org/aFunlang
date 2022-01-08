@@ -13,7 +13,6 @@ namespace aFuncore {
         friend class Activation;
 
         /* 解释器原信息记录 */
-        pthread_mutex_t status_lock;  // status 可能被外部使用, 因此需要用锁保护
         InterStatus status;
 
         /* GC 记录器 */
@@ -53,11 +52,8 @@ namespace aFuncore {
         Object *result;  // 线程执行的结果
         std::list<Inter *> *son_inter;  // 派生线程链表, 由主线程负责管理
 
-        pthread_t monitor;  // 守护线程
         ExitFlat exit_flat;  // 外部设置退出
         ExitMode exit_mode;  // 退出模式
-        pthread_mutex_t monitor_lock;
-        pthread_cond_t monitor_cond;
     public:
         explicit Inter(int argc=0, char **argv=nullptr, ExitMode em=em_activity);
         ~Inter();

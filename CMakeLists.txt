@@ -37,7 +37,7 @@ if (MSVC)
         message(FATAL_ERROR "The msvc not support utf-8")
     endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /utf-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /utf-8 /EHsc")
 else()
     check_c_compiler_flag("-fexec-charset=UTF-8" utf8_work)
     if (NOT utf8_work)
@@ -188,15 +188,15 @@ include(aFunHeader)
 #        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
 #        DESTINATION ${INSTALL_CMAKEDIR})
 #
-#function(install_directory dir)
-#    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
-#    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
-#endfunction()
-#
-#install_directory(${INSTALL_LOGDIR})
-#install_directory(${INSTALL_LOCALSTATEDIR})
-#install_directory(${INSTALL_LANGDIR})
-#
+function(install_directory dir)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
+    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
+endfunction()
+
+install_directory(${INSTALL_LOGDIR})
+install_directory(${INSTALL_LOCALSTATEDIR})
+install_directory(${INSTALL_LANGDIR})
+
 set(BUILD_TEST FALSE CACHE BOOL "Enable run test program")
 set(_build_test ${BUILD_TEST})
 if (_build_test)

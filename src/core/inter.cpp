@@ -8,10 +8,8 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
-Inter::Inter(int argc, char **argv, ExitMode em)
-     : base{this}, is_derive{false}, status_lock{}, monitor{}, monitor_lock{}, monitor_cond{} {
+Inter::Inter(int argc, char **argv, ExitMode em) : base{this}, is_derive{false} {
     status = inter_creat;
-    pthread_mutex_init(&status_lock, nullptr);
 
     gc = new GcRecord;
     gc->obj = nullptr;
@@ -40,9 +38,6 @@ Inter::Inter(int argc, char **argv, ExitMode em)
     exit_flat = ef_none;
     exit_mode = em;
 
-    pthread_mutex_init(&monitor_lock, nullptr);
-    pthread_cond_init(&monitor_cond, nullptr);
-
     protect = new ProtectVarSpace(this);  // 放到最后
     global = new VarSpace(this);  // 放到最后
     global_varlist = new VarList(protect);
@@ -54,10 +49,6 @@ Inter::Inter(int argc, char **argv, ExitMode em)
 }
 
 Inter::~Inter(){
-    pthread_mutex_destroy(&status_lock);
-    pthread_mutex_destroy(&monitor_lock);
-    pthread_cond_destroy(&monitor_cond);
-
     if (!is_derive) {
         delete global_varlist;
         Object::destruct(gc->obj);

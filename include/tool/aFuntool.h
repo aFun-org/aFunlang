@@ -10,9 +10,6 @@
 #include "tool.h"
 #include "aFunToolExport.h"
 
-#include "pthread.h"
-#include "fflags.h"
-
 #include "exception.h"
 #include "stdio_.h"
 #include "exit_.h"

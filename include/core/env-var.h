@@ -2,6 +2,7 @@
 #define AFUN_ENV_VAR_H
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
+#include "shared_mutex"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT EnvVarSpace {  // 环境变量
@@ -15,7 +16,7 @@ namespace aFuncore {
 
         size_t count;
         EnvVar *var[ENV_VAR_HASH_SIZE] {};
-        pthread_rwlock_t lock;
+        std::shared_mutex lock;
     public:
         EnvVarSpace();
         ~EnvVarSpace();

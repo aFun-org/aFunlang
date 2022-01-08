@@ -98,38 +98,11 @@ install(DIRECTORY "${fflags_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FI
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindFFlags.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
 cfep_install(FFlags PREFIX ${deps_install_dir})
 
-if (MSVC)
-    if (_print)
-        message(STATUS "Build pthreads-win32...")
-    endif()
-    cfep_find_dir(PThreadWin32
-                  REQUIRED
-                  MODULE  # 使用FindFFlags.cmake文件
-                  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/pthread-win32
-                  CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake"  # FindPThreadWin32.cmake 文件位置
-                  EXTERNAL
-                  BUILD_CMAKE_CACHE_ARGS
-                    "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
-                  BUILD_DIR "pthread")
-    set(pthread_lib PThreadWin32::pthread)
-    get_target_property(pthread_include_dir PThreadWin32::pthread INTERFACE_INCLUDE_DIRECTORIES)
-
-    install(DIRECTORY "${pthread_INCLUDE_DIRS}/" DESTINATION ${INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")  # 安装fflags.h
-    install(FILES ${CMAKE_CURRENT_LIST_DIR}/cmake/FindPThreadWin32.cmake DESTINATION ${deps_install_dir}/cmake)  # 安装find程序
-    cfep_install(PThreadWin32 PREFIX ${deps_install_dir})
-else()
-    find_package(Threads REQUIRED)
-    set(pthread_define ${CMAKE_USE_PTHREADS_INIT})
-    if (NOT pthread_define)
-        message(FATAL_ERROR "pthread not found")
-    endif()
-    set(pthread_lib Threads::Threads)
-    get_target_property(pthread_include_dir Threads::Threads INTERFACE_INCLUDE_DIRECTORIES)
-    if (NOT pthread_include_dir)
-        set(pthread_include_dir "")
-    endif()
+find_package(Threads REQUIRED)
+set(thread_lib Threads::Threads)
+get_target_property(thread_include_dir Threads::Threads INTERFACE_INCLUDE_DIRECTORIES)
+if (NOT thread_include_dir)
+    set(thread_include_dir "")
 endif()
 
-
-set(base_include_dir ${dlfcn_include_dir} ${pcre2_include_dir} ${fflags_include_dir} ${pthread_include_dir})
-set(base_libraries ${dlfcn_lib} ${pcre2_lib} ${fflags_lib} ${pthread_lib})
+set(base_include_dir ${dlfcn_include_dir} ${pcre2_include_dir} ${fflags_include_dir} ${thread_include_dir})

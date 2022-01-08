@@ -5,11 +5,9 @@
  */
 
 #include <cstdio>
-#include <cstring>
-#include <cstdarg>
-#include <csignal>
 #include "tool.h"
 #include "stdio_.h"
+#include "mutex"
 using namespace aFuntool;
 
 /* 注意:
@@ -20,6 +18,10 @@ using namespace aFuntool;
  */
 
 #ifdef aFunWIN32_NO_CYGWIN
+#include <cstring>
+#include <cstdarg>
+#include <csignal>
+
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
 
@@ -29,7 +31,7 @@ static size_t index = 0;
 static size_t next = 0;
 static size_t end = 0;
 volatile sig_atomic_t ctrl_c = 0;
-static pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
+static std::mutex buffer_mutex;  // 只有 export 的函数统一处理该互斥锁
 
 static int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_) {
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -227,17 +229,14 @@ int aFuntool::fgetc_stdin() {
         return EOF;
 
     int re = EOF;
-    pthread_mutex_lock(&buffer_mutex);
+    std::unique_lock<std::mutex> ul{buffer_mutex};
     for (int fs = 0; fs != 1 ; fs = fcheck_stdin(std_i, std_o)) {  // 阻塞
         if (fs == -1)
-            goto RETURN;  // 返回EOF
+            return EOF;
     }
 
     re = (unsigned char)buffer[index];
     index++;
-
-RETURN:
-    pthread_mutex_unlock(&buffer_mutex);
     return re;
 }
 
@@ -250,11 +249,11 @@ char *aFuntool::fgets_stdin_(char *buf, size_t len) {
     if (std_i == INVALID_HANDLE_VALUE || std_o == INVALID_HANDLE_VALUE)
         return nullptr;
 
-    pthread_mutex_lock(&buffer_mutex);
+    std::unique_lock<std::mutex> ul{buffer_mutex};
     for (int fs = 0; fs != 1 ; fs = fcheck_stdin(std_i, std_o)) {  // 阻塞
         if (fs == -1) {
             buf = nullptr;
-            goto RETURN;  // 返回nullptr
+            return nullptr;
         }
     }
 
@@ -268,8 +267,6 @@ char *aFuntool::fgets_stdin_(char *buf, size_t len) {
         buf[len_] = '\0';  // 最后一位
     }
 
-RETURN:
-    pthread_mutex_unlock(&buffer_mutex);
     return buf;
 }
 
@@ -283,13 +280,12 @@ bool aFuntool::fclear_stdin() {
     if (std_o == INVALID_HANDLE_VALUE)
         return true;
 
-    pthread_mutex_lock(&buffer_mutex);
+    std::unique_lock<std::mutex> ul{buffer_mutex};
     nextToEnd(std_o);
     index = 0;
     end = 0;
     next = 0;
     memset(buffer, 0, BUFF_SIZE);
-    pthread_mutex_unlock(&buffer_mutex);
     return false;
 }
 
@@ -318,11 +314,10 @@ bool aFuntool::stdio_check_signal() {
         return false;
     }
 
-    pthread_mutex_lock(&buffer_mutex);
+    std::unique_lock<std::mutex> ul{buffer_mutex};
     fcheck_stdin(std_i, std_o);
     bool res = ctrl_c == 1;
     ctrl_c = 0;
-    pthread_mutex_unlock(&buffer_mutex);
     return res;
 }
 
@@ -394,9 +389,8 @@ int aFuntool::fungetc_stdin(int ch) {
     if (!_isatty(_fileno(stdin)))
         return ungetc(ch, stdin);
 
-    pthread_mutex_lock(&buffer_mutex);
+    std::unique_lock<std::mutex> ul{buffer_mutex};
     if (ch == 0 || index == 0 && end == BUFF_SIZE) {
-        pthread_mutex_unlock(&buffer_mutex);
         return 0;
     }
 
@@ -410,7 +404,6 @@ int aFuntool::fungetc_stdin(int ch) {
         buffer[0] = (char) ch;
     }
 
-    pthread_mutex_unlock(&buffer_mutex);
     return 1;
 }
 
@@ -423,10 +416,8 @@ int aFuntool::fungetc_stdin(int ch) {
 bool aFuntool::checkStdin() {
     HANDLE std_i = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE std_o = GetStdHandle(STD_OUTPUT_HANDLE);
-    pthread_mutex_lock(&buffer_mutex);
-    int fs = fcheck_stdin(std_i, std_o);
-    pthread_mutex_unlock(&buffer_mutex);
-    if (fs == 0)
+    std::unique_lock<std::mutex> ul{buffer_mutex};
+    if (fcheck_stdin(std_i, std_o) == 0)
         return false;
     return true;
 }
@@ -471,7 +462,7 @@ size_t aFuntool::vprintf_std_(FILE *std, size_t buf_len, const char *format, va_
 #include <fcntl.h>
 
 namespace aFuntool {
-    static pthread_mutex_t fcntl_mutex = PTHREAD_MUTEX_INITIALIZER;  // 只有 export 的函数统一处理该互斥锁
+    static std::mutex fcntl_mutex;  // 只有 export 的函数统一处理该互斥锁
 }
 
 // 用于Linux平台的IO函数
@@ -496,7 +487,7 @@ bool aFuntool::checkStdin() {
         return true;
     bool re = false;
 
-    pthread_mutex_lock(&fcntl_mutex);
+    std::unique_lock<std::mutex> ul{fcntl_mutex};
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
@@ -509,7 +500,6 @@ bool aFuntool::checkStdin() {
     }
 
     fcntl(STDIN_FILENO, F_SETFL, oldf);
-    pthread_mutex_unlock(&fcntl_mutex);
     return re;
 }
 
@@ -517,7 +507,7 @@ bool aFuntool::fclear_stdin() {
     if (!isatty(fileno(stdin)))
         return true;
 
-    pthread_mutex_lock(&fcntl_mutex);
+    std::unique_lock<std::mutex> ul{fcntl_mutex};
     int oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
 
@@ -528,7 +518,6 @@ bool aFuntool::fclear_stdin() {
     } while (ch != EOF);
 
     fcntl(STDIN_FILENO, F_SETFL, oldf);
-    pthread_mutex_unlock(&fcntl_mutex);
     return !ferror(stdin) && !feof(stdin);
 }
 

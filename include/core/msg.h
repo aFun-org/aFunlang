@@ -1,9 +1,10 @@
 ﻿#ifndef AFUN_MSG_H
 #define AFUN_MSG_H
+#include <list>
+#include <mutex>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "core.h"
-#include "list"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Message {
@@ -87,10 +88,7 @@ namespace aFuncore {
     };
 
     class AFUN_CORE_EXPORT InterMessage : public MessageStream {
-        pthread_mutex_t mutex{};
-    public:
-        InterMessage();
-        ~InterMessage() override ;
+        std::mutex mutex;
     };
 }
 

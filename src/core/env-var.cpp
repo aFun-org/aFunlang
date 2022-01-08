@@ -5,8 +5,8 @@ using namespace aFuntool;
 /**
  * 创建环境变量
  */
-aFuncore::EnvVarSpace::EnvVarSpace() : count {0} {  // NOLINT lock 通过 pthread_rwlock_init 初始化
-    pthread_rwlock_init(&lock, nullptr);
+aFuncore::EnvVarSpace::EnvVarSpace() : count {0} {
+
 }
 
 /**
@@ -19,7 +19,6 @@ aFuncore::EnvVarSpace::~EnvVarSpace() {
             delete tmp;
         }
     }
-    pthread_rwlock_destroy(&lock);
 }
 
 /**

@@ -8,6 +8,3 @@
 [submodule "deps/dlfcn"]
 	path = deps/dlfcn
 	url = https://github.com/aFun-org/dlfcn-win32.git
-[submodule "deps/pthread-win32"]
-	path = deps/pthread-win32
-	url = https://github.com/aFun-org/pthread-win32.git

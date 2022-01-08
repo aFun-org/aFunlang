@@ -9,7 +9,6 @@
  * stdio_.h
  * str.h
  * exit_.h
- * pthread.h
  */
 
 #include <cstdio>
@@ -25,7 +24,6 @@
 #include "stdio_.h"
 #include "str.h"
 #include "exit_.h"
-#include "pthread.h"
 
 using namespace aFuntool;
 
@@ -62,21 +60,16 @@ namespace aFuntool {
     LogFactory log_factory {};  // NOLINT
 }
 
-struct ansyData {
-    pthread_mutex_t *mutex;
-};
-
 static void destructLogSystemAtExit(void *);
-static void *ansyWritrLog(void *);
+void staticAnsyWritrLog(LogFactory::ansyData *data);
 
-aFuntool::LogFactory::LogFactory() : sys_log("SYSTEM", log_info) {  // NOLINT cond 通过 pthread_cond_init 实现初始化
+aFuntool::LogFactory::LogFactory() : sys_log("SYSTEM", log_info) {
     init=false;
     pid=0;
     log = nullptr;
     csv = nullptr;
 
     asyn=false;
-    pthread_cond_init(&cond, nullptr);
     log_buf = nullptr;
     plog_buf = nullptr;
 }
@@ -99,11 +92,9 @@ int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
         return 0;
 
     int re = 1;
-    pthread_mutex_lock(&mutex);
-    if (init) {
-        pthread_mutex_unlock(&mutex);
+    std::unique_lock<std::mutex> ul{mutex};
+    if (init)
         return 2;
-    }
 
     char log_path[218] = {0};
     char csv_path[218] = {0};
@@ -121,15 +112,12 @@ int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
     log = fileOpen(log_path, "a");
     if (log == nullptr) {
         perror("ERROR: ");
-        pthread_mutex_unlock(&mutex);
         return 0;
     }
 
     csv = fileOpen(csv_path, (char *)"a");
-    if (csv == nullptr) {
-        pthread_mutex_unlock(&mutex);
+    if (csv == nullptr)
         return 0;
-    }
 
 #define CSV_FORMAT "%s,%s,%d,%d,%s,%ld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
@@ -143,14 +131,12 @@ int aFuntool::LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
     asyn = is_asyn;
     if (is_asyn) {
         plog_buf = &log_buf;
-        pthread_cond_init(&cond, nullptr);
-
         auto *data = new ansyData;
         data->mutex = &mutex;
-        pthread_create(&pt, nullptr, ansyWritrLog, data);
+        pt = std::thread(staticAnsyWritrLog, data);
     }
 
-    pthread_mutex_unlock(&mutex);
+    ul.unlock();
     infoLog(nullptr, "Log system init success");
     infoLog(nullptr, "Log .log size %lld", log_size);
     infoLog(nullptr, "Log .csv size %lld", csv_size);
@@ -168,26 +154,22 @@ aFuntool::LogFactory::~LogFactory(){
 
 bool aFuntool::LogFactory::destruct() {
     bool re = true;
-    pthread_mutex_lock(&mutex);
+    std::unique_lock<std::mutex> ul{mutex};
     if (!init) {
         re = false;
         goto RETURN;
     }
 
-    pthread_mutex_unlock(&mutex);
-
+    ul.unlock();
     infoLog(nullptr, "Log system destruct by exit.");  // 需要用锁
 
-    pthread_mutex_lock(&mutex);
+    ul.lock();
     init = false;
     if (asyn) {
-        pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&cond);
-
-        pthread_join(pt, nullptr);
-
-        pthread_mutex_lock(&mutex);
-        pthread_cond_destroy(&cond);
+        ul.unlock();
+        cond.notify_all();
+        pt.join();
+        ul.lock();
         if (log_buf != nullptr)
             printf_stderr(0, "Logsystem destruct error.");
     }
@@ -197,7 +179,6 @@ bool aFuntool::LogFactory::destruct() {
     log = nullptr;
     csv = nullptr;
 RETURN:
-    pthread_mutex_unlock(&mutex);
     return re;
 }
 
@@ -329,17 +310,21 @@ aFuntool::LogNode *aFuntool::LogFactory::pop(){
 }
 
 
+void staticAnsyWritrLog(LogFactory::ansyData *data) {
+    log_factory.ansyWritrLog(data);
+}
+
+
 /**
  * 异步写入日志程序
  * @return
  */
-static void *ansyWritrLog(void *d) {
-    auto *data = (struct ansyData *)d;
-    pthread_mutex_lock(data->mutex);
+void LogFactory::ansyWritrLog(ansyData *data) {
+    std::unique_lock<std::mutex> ul{mutex};
     while (true) {
-        while (!log_factory.news())
-            log_factory.wait();
-        if (log_factory.stop())
+        while (init && log_buf == nullptr)
+            cond.wait(ul);
+        if (!init && log_buf == nullptr)
             break;
 
         LogNode *tmp = log_factory.pop();
@@ -350,9 +335,7 @@ static void *ansyWritrLog(void *d) {
         free(tmp->info);
         delete tmp;
     }
-    pthread_mutex_unlock(data->mutex);
     delete data;
-    return nullptr;
 }
 
 /**
@@ -375,9 +358,8 @@ int aFuntool::LogFactory::newLog(Logger *logger,
     if (logger->level > level)
         return 2;
 
-    pthread_mutex_lock(&mutex);
+    std::unique_lock<std::mutex> ul{mutex};
     if (!init || log == nullptr) {
-        pthread_mutex_unlock(&mutex);
         return 1;
     }
     clear_ferror(log);
@@ -399,9 +381,9 @@ int aFuntool::LogFactory::newLog(Logger *logger,
     if (pc)
         writeConsole(level, logger->id.c_str(), tid, ti, t, file, line, func, tmp);
 
-    pthread_mutex_unlock(&mutex);
+    ul.unlock();
     if (asyn)
-        pthread_cond_signal(&cond);
+        cond.notify_all();
     free(ti);
     return 0;
 }

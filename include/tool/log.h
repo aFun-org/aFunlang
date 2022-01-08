@@ -4,9 +4,16 @@
 #include <iostream>
 #include "aFunToolExport.h"
 #include "tool.h"
-#include "pthread.h"
+#include "thread"
+#include "mutex"
+#include "condition_variable"
 
 namespace aFuntool {
+#ifndef __pid_t_defined
+    typedef int pid_t;
+#define __pid_t_defined
+#endif
+
     enum LogLevel {
         log_track = 0,
         log_debug = 1,
@@ -36,7 +43,6 @@ namespace aFuntool {
         int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...);
     };
 
-
     class AFUN_TOOL_EXPORT LogFactory {
         bool init;  // 是否已经初始化
         pid_t pid;
@@ -45,9 +51,9 @@ namespace aFuntool {
         FILE *csv;
 
         bool asyn;  // 异步
-        pthread_t pt;
-        pthread_cond_t cond;  // 有日志
-        pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+        std::thread pt;
+        std::condition_variable cond;  // 有日志
+        std::mutex mutex;
         struct LogNode *log_buf;
         struct LogNode **plog_buf;  // 指向 log_buf的末端
 
@@ -79,16 +85,17 @@ namespace aFuntool {
                    LogLevel level,
                    const char *file, int line, const char *func,
                    const char *format, va_list ap);
-        bool news();
-        int wait();
-        bool stop();
         struct LogNode *pop();
+
+        struct ansyData {
+            std::mutex *mutex;
+        };
+
+        void ansyWritrLog(ansyData *data);
     };
 
     AFUN_TOOL_EXPORT extern LogFactory log_factory;
 }
-
-#include "log.inline.h"
 
 #ifndef NO_DEFINE_LOG_MACRO
 #include "log-m.h"
