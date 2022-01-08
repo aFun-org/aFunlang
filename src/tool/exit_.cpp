@@ -16,9 +16,10 @@ struct ExitFuncData {
  */
 [[ noreturn ]] void aFuntool::aFunExit(int exit_code) {
     if (pthread_mutex_trylock(&exit_mutex) == 0) {
-        int count = 0;
-        for (struct ExitFuncData *tmp = exit_func; tmp->func != nullptr && count < exit_func_size; tmp++, count++)
-            tmp->func(tmp->data);
+        for (int i = exit_func_size - 1; i >= 0; i--) {
+            if (exit_func[i].func != nullptr)
+                exit_func[i].func(exit_func[i].data);
+        }
         pthread_mutex_unlock(&exit_mutex);
     }
     exit(exit_code);
@@ -29,11 +30,11 @@ struct ExitFuncData {
  */
 int aFuntool::aFunTryExitPseudo() {
     if (pthread_mutex_trylock(&exit_mutex) == 0) {
-        int count = 0;
-        for (struct ExitFuncData *tmp = exit_func; tmp->func != nullptr && count < exit_func_size; tmp++, count++) {
-            tmp->func(tmp->data);
-            tmp->data = nullptr;
-            tmp->func = nullptr;
+        for (int i = exit_func_size - 1; i >= 0; i--) {
+            if (exit_func[i].func != nullptr)
+                exit_func[i].func(exit_func[i].data);
+            exit_func[i].func = nullptr;
+            exit_func[i].data = nullptr;
         }
         pthread_mutex_unlock(&exit_mutex);
         return 1;
@@ -46,11 +47,11 @@ int aFuntool::aFunTryExitPseudo() {
  */
 int aFuntool::aFunExitPseudo() {
     if (pthread_mutex_lock(&exit_mutex) == 0) {
-        int count = 0;
-        for (struct ExitFuncData *tmp = exit_func; tmp->func != nullptr && count < exit_func_size; tmp++, count++) {
-            tmp->func(tmp->data);
-            tmp->data = nullptr;
-            tmp->func = nullptr;
+        for (int i = exit_func_size - 1; i >= 0; i--) {
+            if (exit_func[i].func != nullptr)
+                exit_func[i].func(exit_func[i].data);
+            exit_func[i].func = nullptr;
+            exit_func[i].data = nullptr;
         }
         pthread_mutex_unlock(&exit_mutex);
         return 1;
