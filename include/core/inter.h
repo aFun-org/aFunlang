@@ -22,14 +22,14 @@ namespace aFuncore {
             Var *var;
             VarSpace *varspace;
         } *gc;
-        [[nodiscard]] struct GcRecord *getGcRecord() const {return gc;}
+        [[nodiscard]] struct GcRecord *getGcRecord() const;
 
         /* 运行相关 */
         ProtectVarSpace *protect;  // 保护变量空间
         VarSpace *global;  // 全局变量空间
         VarList *global_varlist;  // global + protect
         Activation *activation;  // 活动记录
-        void pushActivation(Activation *new_activation) {activation = new_activation;}
+        void pushActivation(Activation *new_activation);
 
         struct LiteralRegex {
             Regex *rg;
@@ -63,16 +63,16 @@ namespace aFuncore {
 
         void enable();
 
-        [[nodiscard]] InterStatus getStatus() const {return status;}
-        [[nodiscard]] bool isExit() const {return (status == inter_exit || status == inter_stop);}
+        [[nodiscard]] InterStatus getStatus() const;
+        [[nodiscard]] bool isExit() const;
 
-        [[nodiscard]] ProtectVarSpace *getProtectVarSpace() const {return protect;}
-        [[nodiscard]] VarSpace *getGlobalVarSpace() const {return global;}
-        [[nodiscard]] VarList *getGlobalVarlist() const {return global_varlist;}
-        [[nodiscard]] Activation *getActivation() const {return activation;}
+        [[nodiscard]] ProtectVarSpace *getProtectVarSpace() const;
+        [[nodiscard]] VarSpace *getGlobalVarSpace() const;
+        [[nodiscard]] VarList *getGlobalVarlist() const;
+        [[nodiscard]] Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
-        [[nodiscard]] EnvVarSpace *getEnvVarSpace() const {return envvar;}
+        [[nodiscard]] EnvVarSpace *getEnvVarSpace() const;
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
@@ -80,5 +80,7 @@ namespace aFuncore {
         bool runCode(Code *code);
     };
 }
+
+#include "inter.inline.h"
 
 #endif //AFUN_INTER_H

@@ -14,24 +14,24 @@ namespace aFuncore {
         Message *next;  // 下一条消息
     public:
         const std::string type;  // 消息类型标注
-        explicit Message(const std::string &type_) : type {type_}, next {nullptr} {}
+        explicit Message(const std::string &type_);
         virtual ~Message() = default;
         Message &operator=(const Message &)=delete;
     };
 
     class TopMessage : public Message {
     public:
-        explicit TopMessage(const std::string &type_) : Message(type_) {}
+        explicit TopMessage(const std::string &type_);
         virtual void topProgress() = 0;
     };
 
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
         Object *obj;
     public:
-        explicit NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {}
+        explicit NormalMessage(Object *obj_);
         ~NormalMessage() override;
         void topProgress() override;
-        Object *getObject() {return obj;}
+        Object *getObject();
     };
 
     class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
@@ -47,8 +47,8 @@ namespace aFuncore {
     public:
         explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
         void topProgress() override;
-        std::string getErrorType() {return error_type;}
-        std::string getErrorInfo() {return error_info;}
+        std::string getErrorType();
+        std::string getErrorInfo();
     };
 
     class AFUN_CORE_EXPORT MessageStream {
@@ -61,21 +61,13 @@ namespace aFuncore {
         MessageStream &operator=(const MessageStream &)=delete;
 
         template<class T>
-        [[nodiscard]] T *getMessage(const std::string &type) const {
-            Message *msg = this->_getMessage(type);
-            T *ret = dynamic_cast<T*>(msg);
-            return ret;
-        }
+        [[nodiscard]] T *getMessage(const std::string &type) const;
 
         virtual Message *popMessage(const std::string &type);
         void pushMessage(Message *msg);
 
         template <typename T>
-        void forEach(void (*func)(Message *, T), T arg) {
-            for (Message *msg = stream; msg != nullptr; msg = msg->next) {
-                func(msg, arg);
-            }
-        }
+        void forEach(void (*func)(Message *, T), T arg);
     };
 
     class AFUN_CORE_EXPORT UpMessage : public MessageStream {
@@ -94,5 +86,7 @@ namespace aFuncore {
     };
 }
 
+#include "msg.inline.h"
+#include "msg.template.h"
 
 #endif //AFUN_MSG_H

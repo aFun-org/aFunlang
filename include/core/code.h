@@ -33,20 +33,11 @@ namespace aFuncore {
         Code(const Code &)=delete;
         Code &operator=(const Code &)=delete;
 
-        static Code *create(FileLine line, ConstFilePath file="") {
-            return new Code(line, file);
-        }
-
+        static Code *create(FileLine line, ConstFilePath file="");
         static Code *create(const std::string &element,
-                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL) {
-            return new Code(element, line, file, prefix);
-        }
-
+                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
         static Code *create(BlockType block_type, Code *son,
-                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL) {
-            return new Code(block_type, son, line, file);
-        }
-
+                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=NUL);
         static void destruct(Code *code);
 
         Code *connect(Code *code);
@@ -61,20 +52,22 @@ namespace aFuncore {
         bool writeByteCode(ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
         bool readByteCode(ConstFilePath file_path);
 
-        [[nodiscard]] CodeType getType() const {return type;}
-        [[nodiscard]] char getPrefix() const {return prefix;}
+        [[nodiscard]] CodeType getType() const;
+        [[nodiscard]] char getPrefix() const;
 
-        [[nodiscard]] const char *getElement() const {if (type != code_element) return ""; return element;}
-        [[nodiscard]] BlockType getBlockType() const {if (type != code_block) return block_p; return block_type;}
-        [[nodiscard]] Code *getSon() const {if (type != code_block) return nullptr; return son;}
+        [[nodiscard]] const char *getElement() const;
+        [[nodiscard]] BlockType getBlockType() const;
+        [[nodiscard]] Code *getSon() const;
 
-        [[nodiscard]] Code *toNext() const {return next;}
-        [[nodiscard]] Code *toPrev() const {return prev;}
-        [[nodiscard]] Code *toFather() const {return father;}
+        [[nodiscard]] Code *toNext() const;
+        [[nodiscard]] Code *toPrev() const;
+        [[nodiscard]] Code *toFather() const;
 
-        [[nodiscard]] aFuntool::FileLine getFileLine() const {return line;}
-        [[nodiscard]] aFuntool::FilePath getFilePath() const {return file;}
+        [[nodiscard]] aFuntool::FileLine getFileLine() const;
+        [[nodiscard]] aFuntool::FilePath getFilePath() const;
     };
 }
+
+#include "code.inline.h"
 
 #endif //AFUN_CODE_H

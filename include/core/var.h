@@ -13,10 +13,10 @@ namespace aFuncore {
         Inter *const inter;
 
         Var(Object *data_, Inter *inter_);
-        ~Var() override =default;
+        ~Var() override = default;
 
-        [[nodiscard]] virtual Object *getData() {return data;}
-        virtual void setData(Object *data_) {data = data_;}
+        [[nodiscard]] virtual Object *getData();
+        virtual void setData(Object *data_);
     };
 
     class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
@@ -35,26 +35,23 @@ namespace aFuncore {
         explicit VarSpace(Inter *inter_);
         ~VarSpace() override;
 
-        [[nodiscard]] size_t getCount() const {return count;}
+        [[nodiscard]] size_t getCount() const;
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual VarOperationFlat defineVar(const std::string &name, Object *data);
         virtual VarOperationFlat defineVar(const std::string &name, Var *data);
         virtual VarOperationFlat setVar(const std::string &name, Object *data);
         virtual VarOperationFlat delVar(const std::string &name);
 
-        [[nodiscard]] Object *findObject(const std::string &name) {
-            Var *ret = findVar(name);
-            return ret ? ret->getData() : nullptr;
-        }
+        [[nodiscard]] Object *findObject(const std::string &name);
     };
 
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
         bool is_protect;
     public:
-        explicit ProtectVarSpace(Inter *inter_) : VarSpace(inter_), is_protect{false} {}
+        explicit ProtectVarSpace(Inter *inter_);
 
-        [[nodiscard]]bool getProtect() const {return is_protect;};
-        bool setProtect(bool protect) {bool ret = is_protect; is_protect = protect; return ret;}
+        [[nodiscard]] bool getProtect() const;
+        bool setProtect(bool protect);
 
         VarOperationFlat defineVar(const std::string &name, Object *data) override;
         VarOperationFlat defineVar(const std::string &name, Var *data) override;
@@ -67,24 +64,23 @@ namespace aFuncore {
     public:
         explicit VarList() = default;
         explicit VarList(VarList *varlist);
-        explicit VarList(VarSpace *varspace) {this->varspace.push_front(varspace);}
+        explicit VarList(VarSpace *varspace);
         ~VarList() = default;
-        VarList(const VarList &)=delete;
-        VarList &operator=(const VarList &)=delete;
+        VarList(const VarList &) = delete;
+        VarList &operator=(const VarList &) = delete;
 
         void connect(VarList *varlist);
-        void push(VarSpace *varspace_) {varspace.push_front(varspace_);}
+        void push(VarSpace *varspace_);
 
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual bool defineVar(const std::string &name, Object *data);
         virtual bool defineVar(const std::string &name, Var *data);
         virtual bool setVar(const std::string &name, Object *data);
         virtual bool delVar(const std::string &name);
-        [[nodiscard]] Object *findObject(const std::string &name) {
-            Var *var = findVar(name);
-            return var ? var->getData() : nullptr;
-        }
+        [[nodiscard]] Object *findObject(const std::string &name);
     };
 }
+
+#include "var.inline.h"
 
 #endif //AFUN_VAR_H

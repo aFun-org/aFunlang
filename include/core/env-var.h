@@ -22,7 +22,7 @@ namespace aFuncore {
         EnvVarSpace(const EnvVarSpace &)=delete;
         EnvVarSpace &operator=(const EnvVarSpace &)=delete;
 
-        [[nodiscard]] size_t getCount() const {return count;}
+        [[nodiscard]] size_t getCount() const;
         bool findString(const std::string &name, std::string &str) const;
         bool findNumber(const std::string &name, int32_t &num) const;
 
@@ -31,5 +31,6 @@ namespace aFuncore {
     };
 }
 
+#include "env-var.inline.h"
 
 #endif //AFUN_ENV_VAR_H

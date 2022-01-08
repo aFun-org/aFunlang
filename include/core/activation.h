@@ -26,15 +26,15 @@ namespace aFuncore {
 
         virtual ActivationStatus getCode(Code *&code) = 0;
         virtual void runCode(Code *code);
-        virtual void endRun() {}
+        virtual void endRun();
 
-        [[nodiscard]] VarList *getVarlist() const {return varlist;}
-        [[nodiscard]] Activation *toPrev() const {return prev;}
-        [[nodiscard]] UpMessage *getUpStream() const {return up;}
-        [[nodiscard]] DownMessage *getDownStream() const {return down;}
+        [[nodiscard]] VarList *getVarlist() const;
+        [[nodiscard]] Activation *toPrev() const;
+        [[nodiscard]] UpMessage *getUpStream() const;
+        [[nodiscard]] DownMessage *getDownStream() const;
 
-        [[nodiscard]] FileLine getFileLine() const {return line;}
-        [[nodiscard]] const StringFilePath &getFilePath() const {return path;}
+        [[nodiscard]] FileLine getFileLine() const;
+        [[nodiscard]] const StringFilePath &getFilePath() const;
     };
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
@@ -42,9 +42,9 @@ namespace aFuncore {
         Code *next;
         bool first=true;
     public:
-        explicit ExeActivation(Code *code, Inter *inter_) : Activation(inter_), start{code}, next{code} {}
+        explicit ExeActivation(Code *code, Inter *inter_);
         ActivationStatus getCode(Code *&code) override;
-        [[nodiscard]] Code *getStart() const {return start;}
+        [[nodiscard]] Code *getStart() const;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
@@ -70,11 +70,13 @@ namespace aFuncore {
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_begin;
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_end;
     public:
-        explicit FuncActivation(Code *code, Inter *inter_) : Activation(inter_), call{code,} {}
+        explicit FuncActivation(Code *code, Inter *inter_);
         ~FuncActivation() override;
         ActivationStatus getCode(Code *&code) override;
         void endRun() override;
     };
 }
+
+#include "activation.inline.h"
 
 #endif //AFUN_ACTIVATION_H

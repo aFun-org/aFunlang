@@ -18,8 +18,6 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT Function : public Object {
     public:
-        Function(const std::string &type_, Inter *inter_) : Object(type_ + ":Function", inter_) {}
-
         class AFUN_CORE_EXPORT CallFunction {
         public:
             struct ArgCodeList {
@@ -34,24 +32,26 @@ namespace aFuncore {
             virtual std::list<ArgCodeList> *getArgCodeList() = 0;
             virtual void runFunction() = 0;
         };
+
+        Function(const std::string &type_, Inter *inter_);
         virtual CallFunction *getCallFunction(Code *code, Inter *inter) = 0;
-        virtual bool isInfix() {return false;}
+        virtual bool isInfix();
     };
 
     class AFUN_CORE_EXPORT Literaler : public Object {
     public:
-        Literaler(const std::string &type_, Inter *inter_) : Object(type_ + ":Literaler", inter_) {}
-
+        Literaler(const std::string &type_, Inter *inter_);
         virtual void getObject(const std::string &literal, char prefix) = 0;
     };
 
     class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
-        CallBackVar(const std::string &type_, Inter *inter_) : Object(type_ + ":CallBackVar", inter_) {}
-
-        virtual bool isCallBack() {return true;}
+        CallBackVar(const std::string &type_, Inter *inter_);
+        virtual bool isCallBack();
         virtual void callBack() = 0;
     };
 };
+
+#include "value.inline.h"
 
 #endif //AFUN_VALUE_H

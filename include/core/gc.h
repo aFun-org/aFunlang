@@ -12,47 +12,17 @@ namespace aFuncore {
         bool reachable;  // 可达标记 [同时标识已迭代]
         GcCount reference;  // 引用计数
     protected:
-        GcObjectBase() : not_clear{false}, reference{0}, reachable{false} {}
+        GcObjectBase();
         virtual ~GcObjectBase() = default;
-        GcObjectBase(const GcObjectBase &)=delete;
-        GcObjectBase &operator=(const GcObjectBase &)=delete;
+        GcObjectBase(const GcObjectBase &) = delete;
+        GcObjectBase &operator=(const GcObjectBase &) = delete;
     public:
-        void addReference() {reference++;}
-        void delReference() {reference--;}
-        void setClear(bool clear=false) {not_clear=!clear;}
-        void setReachable(bool is_reference=false) {reachable=is_reference;}
+        void addReference();
+        void delReference();
+        void setClear(bool clear=false);
+        void setReachable(bool is_reference=false);
     };
 
-    template <class T>
-    class GcObject : public GcObjectBase {
-        T *prev;
-        T *next;
-    protected:
-        GcObject() : GcObjectBase(), prev {nullptr}, next {nullptr} {}
-    public:
-        void addObject(T *&chain) {
-            if (chain != nullptr) {
-                next = chain;
-                chain->prev = dynamic_cast<T *>(this);
-            }
-            chain = dynamic_cast<T *>(this);
-        }
-        void delObject(T *&chain) {
-            if (next != nullptr)
-                next->prev = prev;
-
-            if (prev == nullptr)
-                chain = next;
-            else
-                prev->next = next;
-        }
-        static void destruct(T *&chain) {
-            for (T *tmp = chain, *n; tmp != nullptr; tmp = n) {
-                n = tmp->next;
-                delete tmp;
-            }
-        }
-    };
 
     class AFUN_CORE_EXPORT GcList {
         std::queue<GcObjectBase *> queue;
@@ -60,11 +30,13 @@ namespace aFuncore {
         size_t add(GcObjectBase *obj);
         GcObjectBase *pop();
 
-        [[nodiscard]] size_t getSize() const {return queue.size();}
-        [[nodiscard]] size_t isEmpty() const {return queue.empty();}
+        [[nodiscard]] size_t getSize() const;
+        [[nodiscard]] size_t isEmpty() const;
     };
 
 };
 
+#include "gc.inline.h"
+#include "gc.template.h"
 
 #endif //AFUN_GC_H
