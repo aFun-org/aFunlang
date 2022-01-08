@@ -14,9 +14,10 @@ namespace aFuncore {
     protected:
         GcObjectBase();
         virtual ~GcObjectBase() = default;
+    public:
         GcObjectBase(const GcObjectBase &) = delete;
         GcObjectBase &operator=(const GcObjectBase &) = delete;
-    public:
+
         void addReference();
         void delReference();
         void setClear(bool clear=false);

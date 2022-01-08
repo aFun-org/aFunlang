@@ -26,6 +26,9 @@ namespace aFuncore {
     public:
         Inter *const inter;
 
+        template <typename T>
+        static void forEach(Activation *activation, void (*func)(Activation *activation, Message *, T), T arg);
+
         explicit Activation(Inter *inter_);
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
@@ -84,5 +87,6 @@ namespace aFuncore {
 }
 
 #include "activation.inline.h"
+#include "activation.template.h"
 
 #endif //AFUN_ACTIVATION_H

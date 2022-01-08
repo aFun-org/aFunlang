@@ -28,6 +28,9 @@ namespace aFuncore {
 
         void setString(const std::string &name, const std::string &str);
         void setNumber(const std::string &name, int32_t num);
+
+        void addString(const std::string &name, const std::string &str);
+        void addNumber(const std::string &name, int32_t num);
     };
 }
 
