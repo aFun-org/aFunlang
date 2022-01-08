@@ -17,6 +17,12 @@ namespace aFuncore {
 
         StringFilePath path;
         FileLine line;
+
+    protected:
+        virtual void runCodeElement(Code *code);
+        virtual void runCodeBlockP(Code *code);
+        virtual void runCodeBlockC(Code *code);
+        virtual void runCodeBlockB(Code *code);
     public:
         Inter *const inter;
 

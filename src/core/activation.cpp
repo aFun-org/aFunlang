@@ -51,51 +51,69 @@ Activation::~Activation(){
  * 运行代码
  * @param code
  */
-void Activation::runCode(Code *code){
+void Activation::runCode(Code *code) {
     auto code_type = code->getType();
     if (code_type == code_start) {  // start 不处理 msg
         auto *none = new Object("None", inter);
         down->pushMessage(new NormalMessage(none));
     } else {
         if (code_type == code_element) {
-            std::string literaler_name;
-            bool in_protect = false;
-            Object *obj = nullptr;
-            if (inter->checkLiteral(code->getElement(), literaler_name, in_protect)) {
-                if (in_protect)
-                    obj = inter->getProtectVarSpace()->findObject(literaler_name);
-                else
-                    obj = varlist->findObject(literaler_name);
-                auto literaler = dynamic_cast<Literaler *>(obj);
-                if (literaler != nullptr)
-                    literaler->getObject(code->getElement(), code->getPrefix());
-                else
-                    down->pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
-            } else {
-                if (varlist != nullptr)
-                    obj = varlist->findObject(code->getElement());
-                if (obj != nullptr) {
-                    auto cbv = dynamic_cast<CallBackVar *>(obj);
-                    if (cbv != nullptr && cbv->isCallBack())
-                        cbv->callBack();
-                    else
-                        down->pushMessage(new NormalMessage(obj));
-                } else
-                    down->pushMessage(new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.", this));
-            }
+            runCodeElement(code);
         } else switch (code->getBlockType()) {
             case block_p:  // 顺序执行
-                new ExeActivation(code->getSon(), inter);
+                runCodeBlockP(code);
                 break;
             case block_b:
+                runCodeBlockB(code);
+                break;
             case block_c:
-                new FuncActivation(code, inter);
+                runCodeBlockC(code);
                 break;
             default:
                 errorLog(aFunCoreLogger, "Error block type.");
                 break;
         }
     }
+}
+
+void Activation::runCodeElement(Code *code) {
+    std::string literaler_name;
+    bool in_protect = false;
+    Object *obj = nullptr;
+    if (inter->checkLiteral(code->getElement(), literaler_name, in_protect)) {
+        if (in_protect)
+            obj = inter->getProtectVarSpace()->findObject(literaler_name);
+        else
+            obj = varlist->findObject(literaler_name);
+        auto literaler = dynamic_cast<Literaler *>(obj);
+        if (literaler != nullptr)
+            literaler->getObject(code->getElement(), code->getPrefix());
+        else
+            down->pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
+    } else {
+        if (varlist != nullptr)
+            obj = varlist->findObject(code->getElement());
+        if (obj != nullptr) {
+            auto cbv = dynamic_cast<CallBackVar *>(obj);
+            if (cbv != nullptr && cbv->isCallBack())
+                cbv->callBack();
+            else
+                down->pushMessage(new NormalMessage(obj));
+        } else
+            down->pushMessage(new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.", this));
+    }
+}
+
+void Activation::runCodeBlockP(Code *code) {
+    new ExeActivation(code->getSon(), inter);
+}
+
+void Activation::runCodeBlockC(Code *code) {
+    new FuncActivation(code, inter);
+}
+
+void Activation::runCodeBlockB(Code *code) {
+    new FuncActivation(code, inter);
 }
 
 ActivationStatus ExeActivation::getCode(Code *&code){
