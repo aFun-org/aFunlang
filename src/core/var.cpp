@@ -126,8 +126,6 @@ aFuncore::VarList::VarList(VarList *varlist) {
  * @return
  */
 VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Object *data){
-    if (is_protect)
-        return findVar(name) ? vof_redefine_var : vof_fail;
     return VarSpace::defineVar(name, data);
 }
 
@@ -140,8 +138,6 @@ VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, O
  * @return
  */
 VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Var *data){
-    if (is_protect)
-        return findVar(name) ? vof_redefine_var : vof_fail;
     return VarSpace::defineVar(name, data);
 }
 
