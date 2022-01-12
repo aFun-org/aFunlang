@@ -15,8 +15,8 @@ namespace aFuntool {
      */
     template <typename SYMBOL>
     class DlcSymbol {
-        const SYMBOL *symbol;
-        const DlcHandle *dlc = nullptr;
+        SYMBOL *symbol;
+        DlcHandle *dlc = nullptr;
     public:
         /**
          * 从句柄和符号指针创建一个符号

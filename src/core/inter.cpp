@@ -51,11 +51,11 @@ Inter::Inter(int argc, char **argv, ExitMode em) : base{this}, is_derive{false} 
 Inter::~Inter(){
     if (!is_derive) {
         delete global_varlist;
+
         Object::destruct(gc->obj);
         Var::destruct(gc->var);
         VarSpace::destruct(gc->varspace);
-        for (auto &it : *literal)
-            delete it.rg;
+
         delete literal;
         delete gc;
         delete son_inter;
@@ -143,7 +143,7 @@ bool Inter::checkLiteral(const std::string &element) const {
 
     for(NULL;it != end;it++){
         try {
-            if (it->rg->match(element) != 1)
+            if (it->rg.match(element) != 1)
                 continue;
             return true;
         } catch (RegexException &e) {
@@ -169,7 +169,7 @@ bool Inter::checkLiteral(const std::string &element, std::string &literaler, boo
 
     for(NULL;it != end;it++){
         try {
-            if (it->rg->match(element) != 1)
+            if (it->rg.match(element) != 1)
                 continue;
             literaler = it->literaler;
             in_protect = it->in_protect;
@@ -183,8 +183,7 @@ bool Inter::checkLiteral(const std::string &element, std::string &literaler, boo
 
 bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect){
     try {
-        auto rg =  new Regex(pattern);
-        literal->push_front({rg, pattern, literaler, in_protect});
+        literal->push_front({Regex(pattern), pattern, literaler, in_protect});
     } catch (RegexException &e) {
         return false;
     }

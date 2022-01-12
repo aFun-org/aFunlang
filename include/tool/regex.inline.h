@@ -7,6 +7,10 @@ namespace aFuntool {
     inline int Regex::match(const std::string &subject){
         return match(subject.c_str());
     }
+
+    inline Regex::Regex(Regex &&regex) noexcept : pattern {std::move(regex.pattern)}, re {regex.re} {
+        regex.re = nullptr;
+    }
 }
 
 #endif //AFUN_REGEX_INLINE_H

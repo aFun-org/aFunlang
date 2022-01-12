@@ -37,7 +37,7 @@ namespace aFuncore {
         friend Activation::Activation(Inter *inter_);
 
         struct LiteralRegex {
-            Regex *rg;
+            Regex rg;
             std::string pattern;  // 派生 LiteralRegex 时使用
             std::string literaler;  // 调用的函数
             bool in_protect;  // 是否在protect空间
