@@ -5,13 +5,12 @@
 #include "aFunCoreExport.h"
 #include "core.h"
 
+#include "value.h"
+#include "var.h"
+#include "activation.h"
+
 namespace aFuncore {
     class AFUN_CORE_EXPORT Inter {
-        friend class Object;
-        friend class Var;
-        friend class VarSpace;
-        friend class Activation;
-
         /* 解释器原信息记录 */
         InterStatus status;
 
@@ -22,6 +21,9 @@ namespace aFuncore {
             VarSpace *varspace;
         } *gc;
         [[nodiscard]] struct GcRecord *getGcRecord() const;
+        friend Object::Object(const std::string &type_, Inter *inter_);
+        friend Var::Var(Object *data_, Inter *inter_);
+        friend VarSpace::VarSpace(Inter *inter_);
 
         /* 运行相关 */
         ProtectVarSpace *protect;  // 保护变量空间
@@ -32,6 +34,7 @@ namespace aFuncore {
         InterMessage *in;
 
         void pushActivation(Activation *new_activation);
+        friend Activation::Activation(Inter *inter_);
 
         struct LiteralRegex {
             Regex *rg;
