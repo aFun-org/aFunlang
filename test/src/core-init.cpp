@@ -9,7 +9,9 @@ int main() {
         aFunExit(EXIT_FAILURE);
     }
 
+    aFuntool::LogFactory factor {};
     aFuncore::InitInfo info = {.base_dir=base_path,
+                               .factor=factor,
                                .log_asyn=true,
                                .level=log_debug,
     };

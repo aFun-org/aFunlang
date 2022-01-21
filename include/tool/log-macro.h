@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_LOG_M_H
-#define AFUN_LOG_M_H
+﻿#ifndef AFUN_LOG_MACRO_H
+#define AFUN_LOG_MACRO_H
 
 #if (defined aFunOFFAllLog || defined aFunOFFLog)
 
@@ -144,4 +144,4 @@
 #define aFunConsoleFatalError 1
 #endif
 
-#endif //AFUN_LOG_M_H
+#endif //AFUN_LOG_MACRO_H

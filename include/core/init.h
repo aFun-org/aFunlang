@@ -6,6 +6,7 @@
 namespace aFuncore {
     struct InitInfo {
         const std::string &base_dir;
+        aFuntool::LogFactory &factor;
         bool log_asyn;
         aFuntool::LogLevel level;
     };

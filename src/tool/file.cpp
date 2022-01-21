@@ -242,7 +242,8 @@ bool aFuntool::isCharUTF8(const char *str) {
         unsigned char c = *ch;
         unsigned char c_ = ~c;
 
-        assertFatalErrorLog(code >= 0 && code <= 5, nullptr, 2, "str = %s", str);
+        if (SysLogger)
+            assertFatalErrorLog(code >= 0 && code <= 5, SysLogger, 2, "str = %s", str);
         if (code == 0) {
             if ((c_ & 0xFC) == 0 && (c & 0x02) == 0)  // 检查是否为1111110x, 先对其取反, 使用0xFC掩码检查前6位是否为0, 然后单独检查倒数第二位是否为0
                 code = 5;  // 剩余 5 个字节

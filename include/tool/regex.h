@@ -15,13 +15,13 @@ namespace aFuntool {
     public:
         explicit Regex(std::string pattern_);
         Regex(const Regex &regex);
-        Regex(Regex &&regex) noexcept;
+        inline Regex(Regex &&regex) noexcept;
         Regex &operator=(const Regex &regex)=delete;
         Regex &operator=(Regex &&regex)=delete;
 
         ~Regex ();
         int match(const char *subject);
-        int match(const std::string &subject);
+        inline int match(const std::string &subject);
     };
 }
 

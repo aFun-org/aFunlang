@@ -15,12 +15,8 @@ namespace aFuncore {
  * @return 是否初始化成功
  */
 bool aFuncore::aFunCoreInit(aFuncore::InitInfo *info) {
-    if (info == nullptr) {
-        static InitInfo info_default = {.base_dir=".",
-                                        .log_asyn=true,
-                                        .level=log_info};
-        info = &info_default;
-    }
+    if (info == nullptr)
+        return false;
 
     getEndian();
     if (setlocale(LC_ALL, "") == nullptr)
@@ -32,11 +28,11 @@ bool aFuncore::aFunCoreInit(aFuncore::InitInfo *info) {
     varlib_path = info->base_dir + SEP + aFunVarLibDir + SEP;
 
     std::string log = log_path + "aFunlang";
-    bool re = log_factory.initLogSystem(log, info->log_asyn);
+    bool re = info->factor.initLogSystem(log, info->log_asyn);
     if (re == 0)
         return false;
 
-    static aFuntool::Logger logger {"aFunlang-core", info->level};
+    static aFuntool::Logger logger {info->factor, "aFunlang-core", info->level};
     aFuncore::aFunCoreLogger = &logger;
 
     debugLog(aFunCoreLogger, "aFunCore log path: %s", log_path.c_str());

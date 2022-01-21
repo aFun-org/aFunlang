@@ -6,23 +6,23 @@ namespace aFuntool {
     class FileOpenException : public std::exception {
         std::string message;
     public:
-        explicit FileOpenException(ConstFilePath file);
-        virtual const char *what();
+        inline explicit FileOpenException(ConstFilePath file);
+        inline virtual const char *what();
     };
 
     class RegexException : public std::exception
     {
         std::string message;
     public:
-        explicit RegexException(const std::string &msg);
-        virtual const char *what();
+        inline explicit RegexException(const std::string &msg);
+        inline virtual const char *what();
     };
 
     class LogFatalError : public std::exception {
         std::string message;
     public:
-        explicit LogFatalError(const char *msg);
-        virtual const char *what();
+        inline explicit LogFatalError(const char *msg);
+        inline virtual const char *what();
     };
 }
 

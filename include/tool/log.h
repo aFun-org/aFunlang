@@ -28,12 +28,10 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT LogFactory;
 
     class AFUN_TOOL_EXPORT Logger {
-        const std::string id;
-        LogLevel level = log_debug;
-        bool exit = true;
         friend class LogFactory;
     public:
-        explicit Logger(const std::string &id_, LogLevel level_ = log_warning, bool exit_ = true);
+        inline explicit Logger(LogFactory &factor, std::string id, LogLevel level = log_warning, bool exit = true) noexcept;
+
         int writeTrackLog(const char *file, int line, const char *func, const char *format, ...);
         int writeDebugLog(const char *file, int line, const char *func, const char *format, ...);
         int writeInfoLog(const char *file, int line, const char *func, const char *format, ...);
@@ -41,31 +39,22 @@ namespace aFuntool {
         int writeErrorLog(const char *file, int line, const char *func, const char *format, ...);
         int writeSendErrorLog(const char *file, int line, const char *func, const char *format, ...);
         int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...);
+    private:
+        const std::string id_;
+        LogLevel level_ = log_debug;
+        bool exit_ = true;
+        LogFactory &factor_;
     };
 
     class AFUN_TOOL_EXPORT LogFactory {
-        bool init;  // 是否已经初始化
-        pid_t pid;
-
-        FILE *log;  // 记录文件输出的位置
-        FILE *csv;
-
-        bool asyn;  // 异步
-        std::thread pt;
-        std::condition_variable cond;  // 有日志
-        std::mutex mutex;
-        struct LogNode *log_buf;
-        struct LogNode **plog_buf;  // 指向 log_buf的末端
-
     public:
-        Logger sys_log = Logger("SYSTEM");
+        Logger sys_log = Logger(*this, "SYSTEM");
         LogFactory();
         ~LogFactory();
         LogFactory(const LogFactory &)=delete;
         LogFactory &operator=(const LogFactory &)=delete;
 
         int initLogSystem(ConstFilePath path, bool is_asyn = true);
-        bool destruct();
         void writeLog(LogLevel level,
                       const char *id, pid_t tid,
                       const char *ti, time_t t,
@@ -88,27 +77,40 @@ namespace aFuntool {
         struct LogNode *pop();
 
         struct ansyData {
-            std::mutex *mutex;
+            LogFactory &factor;
+            std::mutex &mutex;
         };
 
         void ansyWritrLog(ansyData *data);
-    };
+    private:
+        bool init_;  // 是否已经初始化
+        pid_t pid_;
 
-    AFUN_TOOL_EXPORT extern LogFactory log_factory;
+        FILE *log_;  // 记录文件输出的位置
+        FILE *csv_;
+
+        bool asyn_;  // 异步
+        std::thread thread_;
+        std::condition_variable cond_;  // 有日志
+        std::mutex mutex_;
+        struct LogNode *log_buf_;
+        struct LogNode **plog_buf_;  // 指向 log_buf的末端
+    };
 }
 
+#include "log.inline.h"
+
 #ifndef NO_DEFINE_LOG_MACRO
-#include "log-m.h"
-#define getLogger(logger) ((logger) == nullptr ? &aFuntool::log_factory.sys_log : (logger))
+#include "log-macro.h"
 
 #if aFunWriteTrack
-#define trackLog(logger, ...) getLogger(logger)->writeTrackLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define trackLog(logger, ...) (logger)->writeTrackLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #else
 #define trackLog(logger, ...) (nullptr)
 #endif
 
 #if aFunWriteDebug
-#define debugLog(logger, ...) getLogger(logger)->writeDebugLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define debugLog(logger, ...) (logger)->writeDebugLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #define assertDebugLog(c, logger, ...) ((c) || debugLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define debugLog(logger, ...) (nullptr)
@@ -116,7 +118,7 @@ namespace aFuntool {
 #endif
 
 #if aFunWriteInfo
-#define infoLog(logger, ...) getLogger(logger)->writeInfoLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define infoLog(logger, ...) (logger)->writeInfoLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #define assertInfoLog(c, logger, ...) ((c) || infoLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define infoLog(logger, ...) (nullptr)
@@ -124,7 +126,7 @@ namespace aFuntool {
 #endif
 
 #if !aFunIgnoreWarning
-#define warningLog(logger, ...) getLogger(logger)->writeWarningLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define warningLog(logger, ...) (logger)->writeWarningLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #define assertWarningLog(c, logger, ...) ((c) || warningLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define warningLog(logger, ...) (nullptr)
@@ -132,7 +134,7 @@ namespace aFuntool {
 #endif
 
 #if !aFunIgnoreError
-#define errorLog(logger, ...) getLogger(logger)->writeErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define errorLog(logger, ...) (logger)->writeErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
 #define assertErrorLog(c, logger, ...) ((c) || errorLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define errorLog(logger, ...) (nullptr)
@@ -140,8 +142,8 @@ namespace aFuntool {
 #endif
 
 #if !aFunOFFAllLog
-#define sendErrorLog(logger, ...) getLogger(logger)->writeSendErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
-#define fatalErrorLog(logger, exit_code, ...) getLogger(logger)->writeFatalErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, exit_code, __VA_ARGS__)
+#define sendErrorLog(logger, ...) (logger)->writeSendErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define fatalErrorLog(logger, exit_code, ...) (logger)->writeFatalErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, exit_code, __VA_ARGS__)
 #define assertSendErrorLog(c, logger, ...) ((c) || sendErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #define assertFatalErrorLog(c, logger, exit_code, ...) ((c) || fatalErrorLog(logger, exit_code, "Assert " #c " error : " __VA_ARGS__))
 #else

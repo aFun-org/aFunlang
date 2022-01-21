@@ -37,12 +37,12 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT DlcHandle {
     public:
         DlcHandle(const char *file, int mode) noexcept;  // 仅 openLibary 可用
-        DlcHandle(const DlcHandle &dlc_handle) noexcept;
-        DlcHandle(DlcHandle &&dlc_handle) noexcept;
-        ~DlcHandle() noexcept;
-        DlcHandle &operator=(const DlcHandle &dlc_handle) noexcept;
+        inline DlcHandle(const DlcHandle &dlc_handle) noexcept;
+        inline DlcHandle(DlcHandle &&dlc_handle) noexcept;
+        inline ~DlcHandle() noexcept;
+        inline DlcHandle &operator=(const DlcHandle &dlc_handle) noexcept;
 
-        [[nodiscard]] bool isOpen() const;
+        [[nodiscard]] inline bool isOpen() const;
 
         /**
          * 获得动态库中指定名字的符号
@@ -56,9 +56,9 @@ namespace aFuntool {
         /**
          * 关闭动态库句柄
          */
-        void close();
-        int operator++(int);
-        int operator--(int);
+        inline void close();
+        inline int operator++(int);
+        inline int operator--(int);
 
         AFUN_TOOL_EXPORT static void dlcExit();
 
@@ -70,7 +70,7 @@ namespace aFuntool {
             Handle &operator=(const Handle *dlc) = delete;
             ~Handle();
 
-            [[nodiscard]] bool isOpen() const;
+            [[nodiscard]] inline bool isOpen() const;
 
             /**
              * 获得动态库中指定名字的符号
