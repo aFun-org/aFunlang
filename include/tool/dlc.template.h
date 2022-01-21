@@ -15,55 +15,53 @@ namespace aFuntool {
      */
     template <typename SYMBOL>
     class DlcSymbol {
-        SYMBOL *symbol;
-        DlcHandle *dlc = nullptr;
     public:
+        DlcSymbol() noexcept = default;
+
         /**
          * 从句柄和符号指针创建一个符号
          * @param symbol 符号指针
          * @param dlc 句柄
          */
-        explicit DlcSymbol(SYMBOL *symbol_, class DlcHandle *dlc_) : symbol {symbol_}, dlc {dlc_} {
-            if (this->dlc != nullptr)
-                this->dlc++;
+        explicit DlcSymbol(SYMBOL *symbol_, DlcHandle::Handle *dlc_) noexcept : symbol_ {symbol_}, handle_ {dlc_} {
+            if (this->handle_ != nullptr)
+                (*handle_)++;
         }
 
-        DlcSymbol(const DlcSymbol &dlc_symbol) : symbol{dlc_symbol.symbol}, dlc {dlc_symbol.dlc} {
-            if (this->dlc != nullptr)
-                this->dlc++;
+        DlcSymbol(const DlcSymbol &dlc_symbol) noexcept : symbol_{dlc_symbol.symbol_}, handle_ {dlc_symbol.handle_} {
+            if (handle_ != nullptr)
+                (*handle_)++;
         }
 
-        DlcSymbol &operator=(const DlcSymbol &dlc_symbol) {
+        DlcSymbol(DlcSymbol &&dlc_symbol) noexcept : symbol_{dlc_symbol.symbol_}, handle_ {dlc_symbol.handle_} {
+            dlc_symbol.handle_ = nullptr;
+        }
+
+        DlcSymbol &operator=(const DlcSymbol &dlc_symbol) noexcept {
             if (this == &dlc_symbol)
                 return *this;
-            if (this->dlc != nullptr)
-                this->dlc--;
-            symbol = dlc_symbol.symbol;
-            dlc = dlc_symbol.dlc;
-            if (this->dlc != nullptr)
-                this->dlc++;
+
+            if (handle_ != nullptr)
+                (*handle_)--;
+            symbol_ = dlc_symbol.symbol_;
+            handle_ = dlc_symbol.handle_;
+            if (handle_ != nullptr)
+                (*handle_)++;
             return *this;
         }
 
-        /**
-         * 复制符号
-         * @param symbol
-         */
-        explicit DlcSymbol(class DlcSymbol<SYMBOL> *symbol) {
-            this->symbol = symbol->symbol;
-            this->dlc = symbol->dlc;
-            if (this->dlc != nullptr)
-                this->dlc++;
-        }
-
-        ~DlcSymbol(){
-            if (dlc != nullptr)
-                dlc--;
+        ~DlcSymbol() noexcept {
+            if (handle_ != nullptr)
+                (*handle_)--;
         }
 
         const SYMBOL *getSymbol() const {
-            return symbol;
+            return symbol_;
         }
+
+    private:
+        SYMBOL *symbol_ = nullptr;
+        DlcHandle::Handle *handle_ = nullptr;
     };
 }
 

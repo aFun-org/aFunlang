@@ -2,7 +2,7 @@
 #include "dlc.h"
 using namespace aFuntool;
 
-static DlcHandle *dlc_l = nullptr;
+DlcHandle::Handle *DlcHandle::dlc = nullptr;
 
 /**
  * 打开动态库
@@ -10,66 +10,52 @@ static DlcHandle *dlc_l = nullptr;
  * @param mode 模式
  * @return
  */
-DlcHandle *aFuntool::openLibrary(const char *file, int mode) {
+aFuntool::DlcHandle::DlcHandle(const char *file, int mode) noexcept : handle_{nullptr} {
     void *handle = dlopen(file, mode);
-    DlcHandle *dlc;
-
     if (handle == nullptr)
-        return nullptr;
+        return;
 
-    for (struct DlcHandle *tmp = dlc_l; tmp != nullptr; tmp = tmp->next) {
-        if (tmp->handle == handle) {
+    for (Handle *tmp = dlc; tmp != nullptr; tmp = tmp->next_) {
+        if (tmp->handle_ == handle) {
             dlclose(handle);  // 减少dlopen时对handle的引用计数
-            tmp++;
-            return tmp;
+            (*tmp)++;
+            handle_ = tmp;
+            return;
         }
     }
 
-    dlc = new DlcHandle(handle);
-
-    dlc->next = dlc_l;
-    dlc->prev = nullptr;
-    if (dlc_l != nullptr)
-        dlc_l->prev = dlc;
-    dlc_l = dlc;
-
-    return dlc;
+    handle_ = new Handle(handle);
+    (*handle_)++;
 }
 
-aFuntool::DlcHandle::DlcHandle(void *handle){
-    this->handle = handle;
-    this->link = 1;
-    this->next = nullptr;
-    this->prev = nullptr;
+aFuntool::DlcHandle::Handle::Handle(void *handle) : handle_{handle}, link_{0}, next_{DlcHandle::dlc}, prev_{nullptr} {
+    if (DlcHandle::dlc != nullptr)
+        DlcHandle::dlc->prev_ = dlc;
+    DlcHandle::dlc = this;
 }
 
 
-aFuntool::DlcHandle::~DlcHandle() {
-    dlclose(handle);
+aFuntool::DlcHandle::Handle::~Handle() {
+    dlclose(handle_);
 
-    if (prev == nullptr)
-        dlc_l = next;
+    if (prev_ == nullptr)
+        dlc = next_;
     else
-        prev->next = next;
+        prev_->next_ = next_;
 
-    if (next != nullptr)
-        next->prev = prev;
+    if (next_ != nullptr)
+        next_->prev_ = prev_;
 }
 
 
-void aFuntool::DlcHandle::close() {
-    this->operator--(1);
+int aFuntool::DlcHandle::Handle::operator++(int){
+    return link_++;
 }
 
 
-int aFuntool::DlcHandle::operator++(int){
-    return link++;
-}
-
-
-int aFuntool::DlcHandle::operator--(int){
-    int ret = link--;
-    if (link == 0)
+int aFuntool::DlcHandle::Handle::operator--(int){
+    int ret = link_--;
+    if (link_ == 0)
         delete this;  // 删除自己
     return ret;
 }
@@ -78,10 +64,10 @@ int aFuntool::DlcHandle::operator--(int){
  * 退出函数
  * 需要使用at_exit注册
  */
-void aFuntool::dlcExit() {
-    while (dlc_l != nullptr) {
-        auto next = dlc_l->next;
-        free(dlc_l);
-        dlc_l = next;
+void aFuntool::DlcHandle::dlcExit() {
+    while (dlc != nullptr) {
+        auto next = dlc->next_;
+        free(dlc);
+        dlc = next;
     }
 }

@@ -13,7 +13,7 @@ namespace aFuntool {
         pcre2_code *re;  // 正则表达式
         const std::string pattern;  // 正则表达式的字符串
     public:
-        explicit Regex(const std::string &pattern_);
+        explicit Regex(std::string pattern_);
         Regex(const Regex &regex);
         Regex(Regex &&regex) noexcept;
         Regex &operator=(const Regex &regex)=delete;

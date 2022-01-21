@@ -8,8 +8,8 @@
 using namespace aFuntool;
 
 namespace aFuntool {
-    enum af_EndianType endian = little_endian;
-    enum af_EndianType save_as = little_endian;  // 默认以小端序存储
+    enum EndianType endian = little_endian;
+    enum EndianType save_as = little_endian;  // 默认以小端序存储
 }
 
 /**

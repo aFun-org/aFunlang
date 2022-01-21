@@ -1,5 +1,6 @@
 ﻿#include <cstdio>
 #include <cstring>
+#include <utility>
 #include "tool.h"
 #include "exception.h"
 #include "file.h"
@@ -9,7 +10,7 @@
 #include "regex.h"
 using namespace aFuntool;
 
-aFuntool::Regex::Regex(const std::string &pattern_) : pattern {pattern_} {
+aFuntool::Regex::Regex(std::string pattern_) : pattern {std::move(pattern_)} {
     if (!isCharUTF8(pattern))
         throw RegexException("Pattern not utf-8");
 

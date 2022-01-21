@@ -28,7 +28,6 @@ namespace aFuntool {
     class DlcSymbol;
 
     AFUN_TOOL_EXPORT void dlcExit();
-    AFUN_TOOL_EXPORT DlcHandle *openLibrary(const char *file, int mode);
 
     /**
      * DlcHandle: 动态库句柄
@@ -36,18 +35,14 @@ namespace aFuntool {
      * 不需要 delete 释放 (自动管理释放)
      */
     class AFUN_TOOL_EXPORT DlcHandle {
-        friend AFUN_TOOL_EXPORT void dlcExit();
-        friend AFUN_TOOL_EXPORT DlcHandle *openLibrary(const char *file, int mode);
-
-        explicit DlcHandle(void *handle);  // 仅 openLibary 可用
-        void *handle;
-        int link;  // 引用计数
-        struct DlcHandle *next;
-        struct DlcHandle *prev;
     public:
-        DlcHandle(const DlcHandle &dlc)=delete;
-        DlcHandle &operator=(const DlcHandle *dlc)=delete;
-        ~DlcHandle();
+        DlcHandle(const char *file, int mode) noexcept;  // 仅 openLibary 可用
+        DlcHandle(const DlcHandle &dlc_handle) noexcept;
+        DlcHandle(DlcHandle &&dlc_handle) noexcept;
+        ~DlcHandle() noexcept;
+        DlcHandle &operator=(const DlcHandle &dlc_handle) noexcept;
+
+        [[nodiscard]] bool isOpen() const;
 
         /**
          * 获得动态库中指定名字的符号
@@ -56,7 +51,7 @@ namespace aFuntool {
          * @return 符号
          */
         template<typename SYMBOL>
-        DlcSymbol<SYMBOL> *get_symbol(const std::string &name);
+        DlcSymbol<SYMBOL> getSymbol(const std::string &name);
 
         /**
          * 关闭动态库句柄
@@ -64,6 +59,41 @@ namespace aFuntool {
         void close();
         int operator++(int);
         int operator--(int);
+
+        AFUN_TOOL_EXPORT static void dlcExit();
+
+        class AFUN_TOOL_EXPORT Handle {
+            friend class DlcHandle;
+        public:
+            explicit Handle(void *handle);  // 仅 openLibary 可用
+            Handle(const Handle &dlc) = delete;
+            Handle &operator=(const Handle *dlc) = delete;
+            ~Handle();
+
+            [[nodiscard]] bool isOpen() const;
+
+            /**
+             * 获得动态库中指定名字的符号
+             * @tparam SYMBOL 符号类型
+             * @param name 名字
+             * @return 符号
+             */
+            template<typename SYMBOL>
+            DlcSymbol<SYMBOL> getSymbol(const std::string &name);
+
+            int operator++(int);
+            int operator--(int);
+
+        private:
+            void *handle_;
+            int link_;  // 引用计数
+            struct Handle *next_;
+            struct Handle *prev_;
+        };
+
+    private:
+        class Handle *handle_;
+        static Handle *dlc;
     };
 
 }

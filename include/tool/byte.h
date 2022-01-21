@@ -5,12 +5,12 @@
 #include "aFunToolExport.h"
 
 namespace aFuntool {
-    enum af_EndianType {
+    enum EndianType {
         little_endian = 0,
         big_endian
     };
 
-    extern enum af_EndianType endian;
+    extern enum EndianType endian;
 
     AFUN_TOOL_EXPORT void getEndian();
 
