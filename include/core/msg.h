@@ -37,7 +37,7 @@ namespace aFuncore {
     };
 
     class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
-        Inter *inter;
+        Inter &inter;
 
         std::string error_type;
         std::string error_info;

@@ -24,12 +24,12 @@ namespace aFuncore {
         virtual void runCodeBlockC(Code *code);
         virtual void runCodeBlockB(Code *code);
     public:
-        Inter *const inter;
+        Inter &inter;
 
         template <typename Callable,typename...T>
         static void forEach(Activation *activation, Callable func, T...arg);
 
-        explicit Activation(Inter *inter_);
+        explicit Activation(Inter &inter_);
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
 
@@ -51,14 +51,14 @@ namespace aFuncore {
         Code *next;
         bool first=true;
     public:
-        explicit ExeActivation(Code *code, Inter *inter_);
+        explicit ExeActivation(Code *code, Inter &inter_);
         ActivationStatus getCode(Code *&code) override;
         [[nodiscard]] Code *getStart() const;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
     public:
-        explicit TopActivation(Code *code, Inter *inter_);
+        explicit TopActivation(Code *code, Inter &inter_);
         ~TopActivation() override;
     };
 
@@ -79,7 +79,7 @@ namespace aFuncore {
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_begin;
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_end;
     public:
-        explicit FuncActivation(Code *code, Inter *inter_);
+        explicit FuncActivation(Code *code, Inter &inter_);
         ~FuncActivation() override;
         ActivationStatus getCode(Code *&code) override;
         void endRun() override;

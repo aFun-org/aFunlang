@@ -32,7 +32,7 @@ namespace aFuncore {
         return path;
     }
 
-    inline ExeActivation::ExeActivation(Code *code, Inter *inter_) : Activation(inter_), start{code}, next{code}{
+    inline ExeActivation::ExeActivation(Code *code, Inter &inter_) : Activation(inter_), start{code}, next{code}{
 
     }
 
@@ -40,7 +40,7 @@ namespace aFuncore {
         return start;
     }
 
-    inline FuncActivation::FuncActivation(Code *code, Inter *inter_) : Activation(inter_), call{code,}{
+    inline FuncActivation::FuncActivation(Code *code, Inter &inter_) : Activation(inter_), call{code,}{
 
     }
 }

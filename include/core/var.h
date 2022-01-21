@@ -10,9 +10,9 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
         Object *data;
     public:
-        Inter *const inter;
+        Inter &inter;
 
-        Var(Object *data_, Inter *inter_);
+        Var(Object *data_, Inter &inter_);
         ~Var() override = default;
 
         [[nodiscard]] virtual Object *getData();
@@ -31,8 +31,9 @@ namespace aFuncore {
         size_t count;
         VarCup *var[VAR_HASH_SIZE];
     public:
-        Inter *const inter;
-        explicit VarSpace(Inter *inter_);
+        Inter &inter;
+
+        explicit VarSpace(Inter &inter_);
         ~VarSpace() override;
 
         template <typename Callable,typename...T>
@@ -51,7 +52,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
         bool is_protect;
     public:
-        explicit ProtectVarSpace(Inter *inter_);
+        explicit ProtectVarSpace(Inter &inter_);
 
         [[nodiscard]] bool getProtect() const;
         bool setProtect(bool protect);

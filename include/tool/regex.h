@@ -18,8 +18,8 @@ namespace aFuntool {
         inline Regex(Regex &&regex) noexcept;
         Regex &operator=(const Regex &regex)=delete;
         Regex &operator=(Regex &&regex)=delete;
+        ~Regex();
 
-        ~Regex ();
         int match(const char *subject);
         inline int match(const std::string &subject);
     };

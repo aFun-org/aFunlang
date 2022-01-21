@@ -16,8 +16,8 @@ using namespace aFuntool;
  * 自动压入inter
  * @param inter_
  */
-Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
-    Activation *prev_ = inter->getActivation();
+Activation::Activation(Inter &inter_) : inter{inter_}, line{0} {
+    Activation *prev_ = inter.getActivation();
     prev = prev_;
     down = new DownMessage();
     if (prev != nullptr) {
@@ -31,7 +31,7 @@ Activation::Activation(Inter *inter_) : inter{inter_}, line{0} {
         line = 0;
         path = "";
     }
-    inter->pushActivation(this);
+    inter.pushActivation(this);
 }
 
 /**
@@ -80,9 +80,9 @@ void Activation::runCodeElement(Code *code) {
     std::string literaler_name;
     bool in_protect = false;
     Object *obj = nullptr;
-    if (inter->checkLiteral(code->getElement(), literaler_name, in_protect)) {
+    if (inter.checkLiteral(code->getElement(), literaler_name, in_protect)) {
         if (in_protect)
-            obj = inter->getProtectVarSpace()->findObject(literaler_name);
+            obj = inter.getProtectVarSpace()->findObject(literaler_name);
         else
             obj = varlist->findObject(literaler_name);
         auto literaler = dynamic_cast<Literaler *>(obj);
@@ -138,8 +138,8 @@ ActivationStatus ExeActivation::getCode(Code *&code){
     return as_run;
 }
 
-TopActivation::TopActivation(Code *code, Inter *inter_) : ExeActivation(code, inter_) {
-    varlist->connect(inter_->getGlobalVarlist());
+TopActivation::TopActivation(Code *code, Inter &inter_) : ExeActivation(code, inter_) {
+    varlist->connect(inter_.getGlobalVarlist());
 }
 
 static void ActivationTopProgress(Message *msg, void *) {
@@ -176,11 +176,11 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 return as_run;
             case block_b: {
                 std::string prefix;
-                if (!inter->getEnvVarSpace()->findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
+                if (!inter.getEnvVarSpace()->findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
                     prefix = "''";
                 char quote = prefix[prefix_quote];
                 for (Code *var = call->getSon(); var != nullptr; var = var->toNext()) {
-                    if (var->getType() != code_element || var->getPrefix() == quote || inter->checkLiteral(var->getElement()))
+                    if (var->getType() != code_element || var->getPrefix() == quote || inter.checkLiteral(var->getElement()))
                         continue;
                     Object *obj = varlist->findObject(var->getElement());
                     if (obj == nullptr || !dynamic_cast<Function *>(obj) || !dynamic_cast<Function *>(obj)->isInfix())

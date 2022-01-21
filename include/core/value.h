@@ -9,11 +9,11 @@
 namespace aFuncore {
     class AFUN_CORE_EXPORT Object : public GcObject<class Object> {
     public:
-        Inter *const inter;
+        Inter &inter;
         const std::string type;  // 标识 Object 的字符串
 
-        explicit Object(const std::string &type_, Inter *inter_);
-        ~Object() override =default;
+        explicit Object(const std::string &type_, Inter &inter_);
+        ~Object() override = default;
     };
 
     class AFUN_CORE_EXPORT Function : public Object {
@@ -33,20 +33,20 @@ namespace aFuncore {
             virtual void runFunction() = 0;
         };
 
-        Function(const std::string &type_, Inter *inter_);
-        virtual CallFunction *getCallFunction(Code *code, Inter *inter) = 0;
+        Function(const std::string &type_, Inter &inter_);
+        virtual CallFunction *getCallFunction(Code *code, Inter &inter) = 0;
         virtual bool isInfix();
     };
 
     class AFUN_CORE_EXPORT Literaler : public Object {
     public:
-        Literaler(const std::string &type_, Inter *inter_);
+        Literaler(const std::string &type_, Inter &inter_);
         virtual void getObject(const std::string &literal, char prefix) = 0;
     };
 
     class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
-        CallBackVar(const std::string &type_, Inter *inter_);
+        CallBackVar(const std::string &type_, Inter &inter_);
         virtual bool isCallBack();
         virtual void callBack() = 0;
     };

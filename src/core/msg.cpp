@@ -24,7 +24,7 @@ ErrorMessage::ErrorMessage(const std::string &error_type_, const std::string &er
 
 void ErrorMessage::topProgress(){
     int32_t error_std = 0;
-    inter->getEnvVarSpace()->findNumber("sys:error_std", error_std);
+    inter.getEnvVarSpace()->findNumber("sys:error_std", error_std);
     if (error_std == 0) {
         printf_stderr(0, "Error TrackBack\n");
         for (auto & begin : trackback)

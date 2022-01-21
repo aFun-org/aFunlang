@@ -20,10 +20,10 @@ namespace aFuncore {
             Var *var;
             VarSpace *varspace;
         } *gc;
-        [[nodiscard]] struct GcRecord *getGcRecord() const;
-        friend Object::Object(const std::string &type_, Inter *inter_);
-        friend Var::Var(Object *data_, Inter *inter_);
-        friend VarSpace::VarSpace(Inter *inter_);
+        [[nodiscard]] inline struct GcRecord *getGcRecord() const;
+        friend Object::Object(const std::string &type_, Inter &inter_);
+        friend Var::Var(Object *data_, Inter &inter_);
+        friend VarSpace::VarSpace(Inter &inter_);
 
         /* 运行相关 */
         ProtectVarSpace *protect;  // 保护变量空间
@@ -33,8 +33,8 @@ namespace aFuncore {
         InterMessage *out;
         InterMessage *in;
 
-        void pushActivation(Activation *new_activation);
-        friend Activation::Activation(Inter *inter_);
+        inline void pushActivation(Activation *new_activation);
+        friend Activation::Activation(Inter &inter_);
 
         struct LiteralRegex {
             Regex rg;
@@ -50,7 +50,7 @@ namespace aFuncore {
         /* 线程信息 */
     public:
         const bool is_derive;  // 是否派生
-        Inter *const base;  // 主线程
+        Inter &base;  // 主线程
     private:
         Object *result;  // 线程执行的结果
         std::list<Inter *> *son_inter;  // 派生线程链表, 由主线程负责管理
@@ -65,16 +65,16 @@ namespace aFuncore {
 
         void enable();
 
-        [[nodiscard]] InterStatus getStatus() const;
-        [[nodiscard]] bool isExit() const;
+        [[nodiscard]] inline InterStatus getStatus() const;
+        [[nodiscard]] inline bool isExit() const;
 
-        [[nodiscard]] ProtectVarSpace *getProtectVarSpace() const;
-        [[nodiscard]] VarSpace *getGlobalVarSpace() const;
-        [[nodiscard]] VarList *getGlobalVarlist() const;
-        [[nodiscard]] Activation *getActivation() const;
+        [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
+        [[nodiscard]] inline VarSpace *getGlobalVarSpace() const;
+        [[nodiscard]] inline VarList *getGlobalVarlist() const;
+        [[nodiscard]] inline Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
-        [[nodiscard]] EnvVarSpace *getEnvVarSpace() const;
+        [[nodiscard]] inline EnvVarSpace *getEnvVarSpace() const;
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 

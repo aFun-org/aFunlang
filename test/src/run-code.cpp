@@ -7,10 +7,10 @@ class Func1 : public Function {
     class CallFunc1 : public CallFunction {
         Code *func_code;
         Code *code;
-        Inter *inter;
+        Inter &inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code *func_code_, Code *code_, Inter *inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
+        CallFunc1(Code *func_code_, Code *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
             ArgCodeList agr1 = {code_->getSon()->toNext()};
             acl->push_front(agr1);
@@ -32,7 +32,7 @@ class Func1 : public Function {
 
     Code *func_code;
 public:
-    explicit Func1(Inter *inter_) : Function("Function", inter_) {
+    explicit Func1(Inter &inter_) : Function("Function", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
         func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
@@ -41,7 +41,7 @@ public:
         Code::destruct(func_code);
     }
 
-    CallFunction *getCallFunction(Code *code, Inter *inter) override {
+    CallFunction *getCallFunction(Code *code, Inter &inter) override {
         return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
     }
 
@@ -51,7 +51,7 @@ public:
 class Literaler1 : public Literaler {
     Code *func_code;
 public:
-    explicit Literaler1(Inter *inter_) : Literaler("Data", inter_) {
+    explicit Literaler1(Inter &inter_) : Literaler("Data", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
         func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
@@ -69,7 +69,7 @@ public:
 class CBV1 : public CallBackVar {
     Code *func_code;
 public:
-    explicit CBV1(Inter *inter_) : CallBackVar("CBV1", inter_) {
+    explicit CBV1(Inter &inter_) : CallBackVar("CBV1", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
         func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
     }
@@ -85,30 +85,30 @@ public:
 };
 
 int main() {
-    auto inter = new Inter();
+    Inter inter {};
 
     auto obj = new Object("Object", inter);
-    inter->getGlobalVarlist()->defineVar("test-var", obj);
+    inter.getGlobalVarlist()->defineVar("test-var", obj);
     printf_stdout(0, "obj: %p\n", obj);
 
     auto func = new Func1(inter);
-    inter->getGlobalVarlist()->defineVar("test-func", func);
+    inter.getGlobalVarlist()->defineVar("test-func", func);
     printf_stdout(0, "func: %p\n", func);
 
     auto literaler = new Literaler1(inter);
-    inter->getGlobalVarlist()->defineVar("test-literaler", literaler);
+    inter.getGlobalVarlist()->defineVar("test-literaler", literaler);
     printf_stdout(0, "literaler: %p\n", literaler);
 
     auto cbv = new CBV1(inter);
-    inter->getGlobalVarlist()->defineVar("test-cbv", cbv);
+    inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
     printf_stdout(0, "cbv: %p\n", cbv);
     fputs_stdout("\n");
-    inter->getEnvVarSpace()->setNumber("sys:error_std", 1);
+    inter.getEnvVarSpace()->setNumber("sys:error_std", 1);
 
     {
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
@@ -119,7 +119,7 @@ int main() {
 
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create(block_c, arg, 0));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
@@ -130,16 +130,16 @@ int main() {
 
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create(block_b, arg, 0));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        inter->pushLiteral("data[0-9]", "test-literaler", false);
+        inter.pushLiteral("data[0-9]", "test-literaler", false);
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create("data3", 1));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
@@ -147,7 +147,7 @@ int main() {
     {
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create("test-cbv", 1));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
@@ -155,11 +155,10 @@ int main() {
     {
         auto code = (Code::create(0, "run-code.aun"));
         code->connect(Code::create("test-not-var", 1));
-        inter->runCode(code);
+        inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
     }
 
-    delete inter;
     return 0;
 }

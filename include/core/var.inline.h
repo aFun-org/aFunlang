@@ -18,7 +18,7 @@ namespace aFuncore {
         return ret ? ret->getData() : nullptr;
     }
 
-    inline ProtectVarSpace::ProtectVarSpace(Inter *inter_) : VarSpace(inter_), is_protect{false} {
+    inline ProtectVarSpace::ProtectVarSpace(Inter &inter_) : VarSpace(inter_), is_protect{false} {
 
     }
 

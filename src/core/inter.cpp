@@ -8,7 +8,7 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
-Inter::Inter(int argc, char **argv, ExitMode em) : base{this}, is_derive{false} {
+Inter::Inter(int argc, char **argv, ExitMode em) : base{*this}, is_derive{false} {
     status = inter_creat;
 
     gc = new GcRecord;
@@ -38,8 +38,8 @@ Inter::Inter(int argc, char **argv, ExitMode em) : base{this}, is_derive{false} 
     exit_flat = ef_none;
     exit_mode = em;
 
-    protect = new ProtectVarSpace(this);  // 放到最后
-    global = new VarSpace(this);  // 放到最后
+    protect = new ProtectVarSpace(*this);  // 放到最后
+    global = new VarSpace(*this);  // 放到最后
     global_varlist = new VarList(protect);
     global_varlist->push(global);
     out = new InterMessage();
@@ -125,7 +125,7 @@ bool Inter::runCode(Code *code){
         return false;
     }
 
-    new TopActivation(code, this);
+    new TopActivation(code, *this);
     return runCode();
 }
 
