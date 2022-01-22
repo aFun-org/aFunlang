@@ -103,7 +103,7 @@ int main() {
     inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
     printf_stdout(0, "cbv: %p\n", cbv);
     fputs_stdout("\n");
-    inter.getEnvVarSpace()->setNumber("sys:error_std", 1);
+    inter.getEnvVarSpace().setNumber("sys:error_std", 1);
 
     {
         auto code = (Code::create(0, "run-code.aun"));

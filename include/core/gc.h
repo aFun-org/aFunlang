@@ -12,16 +12,16 @@ namespace aFuncore {
         bool reachable;  // 可达标记 [同时标识已迭代]
         GcCount reference;  // 引用计数
     protected:
-        GcObjectBase();
+        inline GcObjectBase();
         virtual ~GcObjectBase() = default;
     public:
         GcObjectBase(const GcObjectBase &) = delete;
         GcObjectBase &operator=(const GcObjectBase &) = delete;
 
-        void addReference();
-        void delReference();
-        void setClear(bool clear=false);
-        void setReachable(bool is_reference=false);
+        inline void addReference();
+        inline void delReference();
+        inline void setClear(bool clear=false);
+        inline void setReachable(bool is_reference=false);
     };
 
 
@@ -31,8 +31,8 @@ namespace aFuncore {
         size_t add(GcObjectBase *obj);
         GcObjectBase *pop();
 
-        [[nodiscard]] size_t getSize() const;
-        [[nodiscard]] size_t isEmpty() const;
+        [[nodiscard]] inline size_t getSize() const;
+        [[nodiscard]] inline size_t isEmpty() const;
     };
 
 };

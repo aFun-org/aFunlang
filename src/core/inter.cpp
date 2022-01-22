@@ -8,7 +8,8 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
-Inter::Inter(int argc, char **argv, ExitMode em) : base{*this}, is_derive{false} {
+Inter::Inter(int argc, char **argv, ExitMode em)
+    : base{*this}, is_derive{false}, out{}, in{}, envvar{*(new EnvVarSpace())} {
     status = inter_creat;
 
     gc = new GcRecord;
@@ -19,17 +20,16 @@ Inter::Inter(int argc, char **argv, ExitMode em) : base{*this}, is_derive{false}
     activation = nullptr;
     literal = new std::list<LiteralRegex>;
 
-    envvar = new EnvVarSpace();
-    envvar->setNumber("sys:gc-runtime", 2);
-    envvar->setString("sys:prefix", "''");  // 引用，顺序执行
-    envvar->setNumber("sys:exit-code", 0);
-    envvar->setNumber("sys:argc", argc);
-    envvar->setNumber("sys:error_std", 0);
+    envvar.setNumber("sys:gc-runtime", 2);
+    envvar.setString("sys:prefix", "''");  // 引用，顺序执行
+    envvar.setNumber("sys:exit-code", 0);
+    envvar.setNumber("sys:argc", argc);
+    envvar.setNumber("sys:error_std", 0);
 
     for (int i = 0; i < argc; i++) {
         char buf[20];
         snprintf(buf, 10, "sys:arg%d", i);
-        envvar->setString(buf, argv[i]);
+        envvar.setString(buf, argv[i]);
     }
 
     result = nullptr;
@@ -42,8 +42,6 @@ Inter::Inter(int argc, char **argv, ExitMode em) : base{*this}, is_derive{false}
     global = new VarSpace(*this);  // 放到最后
     global_varlist = new VarList(protect);
     global_varlist->push(global);
-    out = new InterMessage();
-    in = new InterMessage();
 
     status = inter_init;
 }
@@ -59,9 +57,7 @@ Inter::~Inter(){
         delete literal;
         delete gc;
         delete son_inter;
-        delete envvar;
-        delete out;
-        delete in;
+        delete &envvar;
     }
 }
 
@@ -98,7 +94,7 @@ bool Inter::runCode(){
                 break;
             default:
                 errorLog(aFunCoreLogger, "Error activation status.");
-                activation->getDownStream()->pushMessage(new ErrorMessage("RuntimeError", "Error activation status.", activation));
+                activation->getDownStream().pushMessage(new ErrorMessage("RuntimeError", "Error activation status.", activation));
                 break;
         }
 

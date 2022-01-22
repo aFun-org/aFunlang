@@ -35,7 +35,7 @@ namespace aFuncore {
         return activation;
     }
 
-    inline EnvVarSpace *Inter::getEnvVarSpace() const {
+    inline EnvVarSpace &Inter::getEnvVarSpace() {
         return envvar;
     }
 }

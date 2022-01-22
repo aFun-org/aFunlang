@@ -33,21 +33,21 @@ namespace aFuncore {
             virtual void runFunction() = 0;
         };
 
-        Function(const std::string &type_, Inter &inter_);
+        inline Function(const std::string &type_, Inter &inter_);
         virtual CallFunction *getCallFunction(Code *code, Inter &inter) = 0;
-        virtual bool isInfix();
+        virtual inline bool isInfix();
     };
 
     class AFUN_CORE_EXPORT Literaler : public Object {
     public:
-        Literaler(const std::string &type_, Inter &inter_);
+        inline Literaler(const std::string &type_, Inter &inter_);
         virtual void getObject(const std::string &literal, char prefix) = 0;
     };
 
     class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
-        CallBackVar(const std::string &type_, Inter &inter_);
-        virtual bool isCallBack();
+        inline CallBackVar(const std::string &type_, Inter &inter_);
+        virtual inline bool isCallBack();
         virtual void callBack() = 0;
     };
 };

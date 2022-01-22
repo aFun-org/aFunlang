@@ -30,8 +30,8 @@ namespace aFuncore {
         VarSpace *global;  // 全局变量空间
         VarList *global_varlist;  // global + protect
         Activation *activation;  // 活动记录
-        InterMessage *out;
-        InterMessage *in;
+        InterMessage out;
+        InterMessage in;
 
         inline void pushActivation(Activation *new_activation);
         friend Activation::Activation(Inter &inter_);
@@ -45,7 +45,7 @@ namespace aFuncore {
         std::list<LiteralRegex> *literal;
 
         /* 配置信息记录器 */
-        EnvVarSpace *envvar;
+        EnvVarSpace &envvar;
 
         /* 线程信息 */
     public:
@@ -74,7 +74,7 @@ namespace aFuncore {
         [[nodiscard]] inline Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
-        [[nodiscard]] inline EnvVarSpace *getEnvVarSpace() const;
+        [[nodiscard]] inline EnvVarSpace &getEnvVarSpace();
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 

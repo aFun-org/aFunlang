@@ -15,8 +15,8 @@ namespace aFuncore {
         Var(Object *data_, Inter &inter_);
         ~Var() override = default;
 
-        [[nodiscard]] virtual Object *getData();
-        virtual void setData(Object *data_);
+        [[nodiscard]] inline virtual Object *getData();
+        virtual void inline setData(Object *data_);
     };
 
     class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
@@ -39,8 +39,8 @@ namespace aFuncore {
         template <typename Callable,typename...T>
         void forEach(Callable func, T...arg);
 
-        [[nodiscard]] size_t getCount() const;
-        [[nodiscard]] virtual Var *findVar(const std::string &name);
+        [[nodiscard]] inline size_t getCount() const;
+        [[nodiscard]] inline virtual Var *findVar(const std::string &name);
         virtual VarOperationFlat defineVar(const std::string &name, Object *data);
         virtual VarOperationFlat defineVar(const std::string &name, Var *data);
         virtual VarOperationFlat setVar(const std::string &name, Object *data);
@@ -52,10 +52,10 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
         bool is_protect;
     public:
-        explicit ProtectVarSpace(Inter &inter_);
+        explicit inline ProtectVarSpace(Inter &inter_);
 
-        [[nodiscard]] bool getProtect() const;
-        bool setProtect(bool protect);
+        [[nodiscard]] inline bool getProtect() const;
+        inline bool setProtect(bool protect);
 
         VarOperationFlat defineVar(const std::string &name, Object *data) override;
         VarOperationFlat defineVar(const std::string &name, Var *data) override;
@@ -66,7 +66,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT VarList {
         std::list<VarSpace *> varspace;
     public:
-        explicit VarList() = default;
+        explicit inline VarList() = default;
         explicit VarList(VarList *varlist);
         explicit VarList(VarSpace *varspace);
         ~VarList() = default;
@@ -74,7 +74,7 @@ namespace aFuncore {
         VarList &operator=(const VarList &) = delete;
 
         void connect(VarList *varlist);
-        void push(VarSpace *varspace_);
+        inline void push(VarSpace *varspace_);
 
         template <typename Callable,typename...T>
         void forEach(Callable func, T...arg);
@@ -84,7 +84,7 @@ namespace aFuncore {
         virtual bool defineVar(const std::string &name, Var *data);
         virtual bool setVar(const std::string &name, Object *data);
         virtual bool delVar(const std::string &name);
-        [[nodiscard]] Object *findObject(const std::string &name);
+        [[nodiscard]] inline Object *findObject(const std::string &name);
     };
 }
 

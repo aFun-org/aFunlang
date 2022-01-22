@@ -16,11 +16,11 @@ namespace aFuncore {
         return prev;
     }
 
-    inline UpMessage *Activation::getUpStream() const{
+    inline UpMessage &Activation::getUpStream() {
         return up;
     }
 
-    inline DownMessage *Activation::getDownStream() const{
+    inline DownMessage &Activation::getDownStream() {
         return down;
     }
 

@@ -11,7 +11,9 @@ namespace aFuncore {
         data = data_;
     }
 
-    inline size_t VarSpace::getCount() const {return count;}
+    inline size_t VarSpace::getCount() const {
+        return count;
+    }
 
     inline Object *VarSpace::findObject(const std::string &name) {
         Var *ret = findVar(name);

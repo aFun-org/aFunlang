@@ -16,19 +16,15 @@ using namespace aFuntool;
  * 自动压入inter
  * @param inter_
  */
-Activation::Activation(Inter &inter_) : inter{inter_}, line{0} {
-    Activation *prev_ = inter.getActivation();
-    prev = prev_;
-    down = new DownMessage();
+Activation::Activation(Inter &inter_)
+    : inter{inter_}, prev {inter_.getActivation()}, line{0},
+      up{prev == nullptr ? nullptr : &prev->up}, down {} {
     if (prev != nullptr) {
         varlist = new VarList(prev->varlist);
-        up = new UpMessage(prev->up);
         line = prev->line;
         path = prev->path;
     } else {
         varlist = new VarList();
-        up = new UpMessage();
-        line = 0;
         path = "";
     }
     inter.pushActivation(this);
@@ -40,10 +36,8 @@ Activation::Activation(Inter &inter_) : inter{inter_}, line{0} {
  * 释放Varlist并且将DownMessage压入上层
  */
 Activation::~Activation(){
-    if (prev != nullptr && down != nullptr)
-        down->joinMsg(prev->down);
-    delete up;
-    delete down;
+    if (prev != nullptr)
+        down.joinMsg(prev->down);
     delete varlist;
 }
 
@@ -55,7 +49,7 @@ void Activation::runCode(Code *code) {
     auto code_type = code->getType();
     if (code_type == code_start) {  // start 不处理 msg
         auto *none = new Object("None", inter);
-        down->pushMessage(new NormalMessage(none));
+        down.pushMessage(new NormalMessage(none));
     } else {
         if (code_type == code_element) {
             runCodeElement(code);
@@ -89,7 +83,7 @@ void Activation::runCodeElement(Code *code) {
         if (literaler != nullptr)
             literaler->getObject(code->getElement(), code->getPrefix());
         else
-            down->pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
+            down.pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
     } else {
         if (varlist != nullptr)
             obj = varlist->findObject(code->getElement());
@@ -98,9 +92,9 @@ void Activation::runCodeElement(Code *code) {
             if (cbv != nullptr && cbv->isCallBack())
                 cbv->callBack();
             else
-                down->pushMessage(new NormalMessage(obj));
+                down.pushMessage(new NormalMessage(obj));
         } else
-            down->pushMessage(new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.", this));
+            down.pushMessage(new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.", this));
     }
 }
 
@@ -122,11 +116,11 @@ ActivationStatus ExeActivation::getCode(Code *&code){
         return as_end;
 
     if (!first) {
-        auto msg = down->getMessage<NormalMessage>("NORMAL");
+        auto msg = down.getMessage<NormalMessage>("NORMAL");
         if (msg == nullptr)
             return as_end;
         else
-            down->popMessage("NORMAL");
+            down.popMessage("NORMAL");
         delete msg;
     }
 
@@ -149,7 +143,7 @@ static void ActivationTopProgress(Message *msg, void *) {
 };
 
 TopActivation::~TopActivation() {
-    down->forEach(ActivationTopProgress, nullptr);
+    down.forEach(ActivationTopProgress, nullptr);
 }
 
 FuncActivation::~FuncActivation(){
@@ -167,7 +161,7 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 code = call->getSon();
                 if (code == nullptr) {
                     line = 0;
-                    down->pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                    down.pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
                     return as_end;
                 }
                 line = code->getFileLine();
@@ -176,7 +170,7 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 return as_run;
             case block_b: {
                 std::string prefix;
-                if (!inter.getEnvVarSpace()->findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
+                if (!inter.getEnvVarSpace().findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
                     prefix = "''";
                 char quote = prefix[prefix_quote];
                 for (Code *var = call->getSon(); var != nullptr; var = var->toNext()) {
@@ -193,7 +187,7 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 }
                 if (status != func_get_func) {
                     line = 0;
-                    down->pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                    down.pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
                     return as_end;
                 }
                 break;
@@ -201,22 +195,22 @@ ActivationStatus FuncActivation::getCode(Code *&code){
             default:
                 errorLog(aFunCoreLogger, "Error FuncActivation block type");
                 line = 0;
-                down->pushMessage(new ErrorMessage("RuntimeError", "Error FuncActivation block type.", this));
+                down.pushMessage(new ErrorMessage("RuntimeError", "Error FuncActivation block type.", this));
                 return as_end;
         }
     }
 
     if (status == func_get_func) {
         if (func == nullptr) {
-            auto *msg = down->getMessage<NormalMessage>("NORMAL");
+            auto *msg = down.getMessage<NormalMessage>("NORMAL");
             if (msg == nullptr)
                 return as_end;
             else
-                down->popMessage("NORMAL");
+                down.popMessage("NORMAL");
             func = dynamic_cast<Function *>(msg->getObject());
             delete msg;
             if (func == nullptr) {
-                down->pushMessage(new ErrorMessage("TypeError", "Callback without function.", this));
+                down.pushMessage(new ErrorMessage("TypeError", "Callback without function.", this));
                 return as_end;
             }
         }
@@ -237,10 +231,10 @@ ActivationStatus FuncActivation::getCode(Code *&code){
     }
 
     if (acl_begin != acl_end) {  // 获取参数计算结果
-        auto *msg = down->getMessage<NormalMessage>("NORMAL");
+        auto *msg = down.getMessage<NormalMessage>("NORMAL");
         if (msg == nullptr)
             return as_end;
-        down->popMessage("NORMAL");
+        down.popMessage("NORMAL");
 
         acl_begin->ret = msg->getObject();
         delete msg;

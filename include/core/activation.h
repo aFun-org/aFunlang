@@ -4,6 +4,7 @@
 #include "aFunCoreExport.h"
 #include "core.h"
 #include "value.h"
+#include "msg.h"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Activation {
@@ -12,13 +13,12 @@ namespace aFuncore {
 
         VarList *varlist;
 
-        UpMessage *up;
-        DownMessage *down;
+        UpMessage up;
+        DownMessage down;
 
         StringFilePath path;
         FileLine line;
 
-    protected:
         virtual void runCodeElement(Code *code);
         virtual void runCodeBlockP(Code *code);
         virtual void runCodeBlockC(Code *code);
@@ -35,15 +35,15 @@ namespace aFuncore {
 
         virtual ActivationStatus getCode(Code *&code) = 0;
         virtual void runCode(Code *code);
-        virtual void endRun();
+        virtual inline void endRun();
 
-        [[nodiscard]] VarList *getVarlist() const;
-        [[nodiscard]] Activation *toPrev() const;
-        [[nodiscard]] UpMessage *getUpStream() const;
-        [[nodiscard]] DownMessage *getDownStream() const;
+        [[nodiscard]] inline VarList *getVarlist() const;
+        [[nodiscard]] inline Activation *toPrev() const;
+        [[nodiscard]] inline UpMessage &getUpStream();
+        [[nodiscard]] inline DownMessage &getDownStream();
 
-        [[nodiscard]] FileLine getFileLine() const;
-        [[nodiscard]] const StringFilePath &getFilePath() const;
+        [[nodiscard]] inline FileLine getFileLine() const;
+        [[nodiscard]] inline  const StringFilePath &getFilePath() const;
     };
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
@@ -51,9 +51,9 @@ namespace aFuncore {
         Code *next;
         bool first=true;
     public:
-        explicit ExeActivation(Code *code, Inter &inter_);
+        explicit inline  ExeActivation(Code *code, Inter &inter_);
         ActivationStatus getCode(Code *&code) override;
-        [[nodiscard]] Code *getStart() const;
+        [[nodiscard]] inline  Code *getStart() const;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
@@ -79,7 +79,7 @@ namespace aFuncore {
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_begin;
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_end;
     public:
-        explicit FuncActivation(Code *code, Inter &inter_);
+        explicit inline FuncActivation(Code *code, Inter &inter_);
         ~FuncActivation() override;
         ActivationStatus getCode(Code *&code) override;
         void endRun() override;
