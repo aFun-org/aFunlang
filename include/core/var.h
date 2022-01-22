@@ -8,7 +8,6 @@
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
-        Object *data;
     public:
         Inter &inter;
 
@@ -17,19 +16,12 @@ namespace aFuncore {
 
         [[nodiscard]] inline virtual Object *getData();
         virtual void inline setData(Object *data_);
+
+    private:
+        Object *data;
     };
 
     class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
-    public:
-        static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
-    private:
-        struct VarCup {
-            std::string name;
-            Var *var;
-            VarCup *next=nullptr;
-        };
-        size_t count;
-        VarCup *var[VAR_HASH_SIZE];
     public:
         Inter &inter;
 
@@ -40,17 +32,27 @@ namespace aFuncore {
         void forEach(Callable func, T...arg);
 
         [[nodiscard]] inline size_t getCount() const;
-        [[nodiscard]] inline virtual Var *findVar(const std::string &name);
+        [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual VarOperationFlat defineVar(const std::string &name, Object *data);
         virtual VarOperationFlat defineVar(const std::string &name, Var *data);
         virtual VarOperationFlat setVar(const std::string &name, Object *data);
         virtual VarOperationFlat delVar(const std::string &name);
 
         [[nodiscard]] Object *findObject(const std::string &name);
+
+        static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
+
+    private:
+        struct VarCup {
+            std::string name;
+            Var *var;
+            VarCup *next=nullptr;
+        };
+        size_t count;
+        VarCup *var[VAR_HASH_SIZE];
     };
 
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
-        bool is_protect;
     public:
         explicit inline ProtectVarSpace(Inter &inter_);
 
@@ -61,10 +63,12 @@ namespace aFuncore {
         VarOperationFlat defineVar(const std::string &name, Var *data) override;
         VarOperationFlat setVar(const std::string &name, Object *data) override;
         VarOperationFlat delVar(const std::string &name) override;
+
+    private:
+        bool is_protect;
     };
 
     class AFUN_CORE_EXPORT VarList {
-        std::list<VarSpace *> varspace;
     public:
         explicit inline VarList() = default;
         explicit VarList(VarList *varlist);
@@ -85,6 +89,9 @@ namespace aFuncore {
         virtual bool setVar(const std::string &name, Object *data);
         virtual bool delVar(const std::string &name);
         [[nodiscard]] inline Object *findObject(const std::string &name);
+
+    private:
+        std::list<VarSpace *> varspace;
     };
 }
 

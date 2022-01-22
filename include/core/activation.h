@@ -8,21 +8,6 @@
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Activation {
-    protected:
-        Activation *prev;
-
-        VarList *varlist;
-
-        UpMessage up;
-        DownMessage down;
-
-        StringFilePath path;
-        FileLine line;
-
-        virtual void runCodeElement(Code *code);
-        virtual void runCodeBlockP(Code *code);
-        virtual void runCodeBlockC(Code *code);
-        virtual void runCodeBlockB(Code *code);
     public:
         Inter &inter;
 
@@ -44,16 +29,34 @@ namespace aFuncore {
 
         [[nodiscard]] inline FileLine getFileLine() const;
         [[nodiscard]] inline  const StringFilePath &getFilePath() const;
+
+    protected:
+        Activation *prev;
+
+        VarList *varlist;
+
+        UpMessage up;
+        DownMessage down;
+
+        StringFilePath path;
+        FileLine line;
+
+        virtual void runCodeElement(Code *code);
+        virtual void runCodeBlockP(Code *code);
+        virtual void runCodeBlockC(Code *code);
+        virtual void runCodeBlockB(Code *code);
     };
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
-        Code *start;
-        Code *next;
-        bool first=true;
     public:
         explicit inline  ExeActivation(Code *code, Inter &inter_);
         ActivationStatus getCode(Code *&code) override;
         [[nodiscard]] inline  Code *getStart() const;
+
+    private:
+        Code *start;
+        Code *next;
+        bool first=true;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
@@ -63,6 +66,13 @@ namespace aFuncore {
     };
 
     class AFUN_CORE_EXPORT FuncActivation : public Activation {
+    public:
+        explicit inline FuncActivation(Code *code, Inter &inter_);
+        ~FuncActivation() override;
+        ActivationStatus getCode(Code *&code) override;
+        void endRun() override;
+
+    private:
         enum {
             func_first = 0,
             func_get_func = 1,
@@ -78,11 +88,6 @@ namespace aFuncore {
         std::list<Function::CallFunction::ArgCodeList> *acl = nullptr;
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_begin;
         std::list<Function::CallFunction::ArgCodeList>::iterator acl_end;
-    public:
-        explicit inline FuncActivation(Code *code, Inter &inter_);
-        ~FuncActivation() override;
-        ActivationStatus getCode(Code *&code) override;
-        void endRun() override;
     };
 }
 

@@ -76,11 +76,7 @@ namespace aFuntool {
                    const char *format, va_list ap);
         struct LogNode *pop();
 
-        struct ansyData {
-            LogFactory &factor;
-            std::mutex &mutex;
-        };
-
+        struct ansyData;
         void ansyWritrLog(ansyData *data);
     private:
         bool init_;  // 是否已经初始化
@@ -95,6 +91,11 @@ namespace aFuntool {
         std::mutex mutex_;
         struct LogNode *log_buf_;
         struct LogNode **plog_buf_;  // 指向 log_buf的末端
+    };
+
+    struct LogFactory::ansyData {
+        LogFactory &factor;
+        std::mutex &mutex;
     };
 }
 

@@ -13,12 +13,14 @@ namespace aFuncore {
         friend class DownMessage;
         friend class InterMessage;
 
-        Message *next;  // 下一条消息
     public:
         const std::string type;  // 消息类型标注
         explicit inline Message(const std::string &type_);
         virtual ~Message() = default;
         Message &operator=(const Message &)=delete;
+
+    private:
+        Message *next;  // 下一条消息
     };
 
     class TopMessage : public Message {
@@ -28,15 +30,24 @@ namespace aFuncore {
     };
 
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
-        Object *obj;
     public:
         explicit inline NormalMessage(Object *obj_);
         ~NormalMessage() override;
         void topProgress() override;
         inline Object *getObject();
+
+    private:
+        Object *obj;
     };
 
     class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
+    public:
+        explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
+        void topProgress() override;
+        inline std::string getErrorType();
+        inline std::string getErrorInfo();
+
+    private:
         Inter &inter;
 
         std::string error_type;
@@ -46,17 +57,9 @@ namespace aFuncore {
             FileLine line;
         };
         std::list<TrackBack> trackback;
-    public:
-        explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
-        void topProgress() override;
-        inline std::string getErrorType();
-        inline std::string getErrorInfo();
     };
 
     class AFUN_CORE_EXPORT MessageStream {
-    protected:
-        Message *stream;
-        [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
     public:
         MessageStream();
         virtual ~MessageStream();
@@ -70,16 +73,21 @@ namespace aFuncore {
 
         template <typename Callable, typename...T>
         void forEach(Callable func, T...arg);
+
+    protected:
+        Message *stream;
+        [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
     };
 
     class AFUN_CORE_EXPORT UpMessage : public MessageStream {
-    protected:
-        Message *old;
     public:
         explicit UpMessage(const UpMessage *old=nullptr);
         ~UpMessage() override;
 
         Message *popMessage(const std::string &type) override;
+
+    protected:
+        Message *old;
     };
 
     class AFUN_CORE_EXPORT DownMessage : public MessageStream {

@@ -18,24 +18,29 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT Function : public Object {
     public:
-        class AFUN_CORE_EXPORT CallFunction {
-        public:
-            struct ArgCodeList {
-                Code *code = nullptr;
-                Object *ret = nullptr;
-            };
-            CallFunction() = default;
-            virtual ~CallFunction() = default;
-            CallFunction(const CallFunction &)=delete;
-            CallFunction &operator=(const CallFunction &)=delete;
-
-            virtual std::list<ArgCodeList> *getArgCodeList() = 0;
-            virtual void runFunction() = 0;
-        };
+        class AFUN_CORE_EXPORT CallFunction;
 
         inline Function(const std::string &type_, Inter &inter_);
         virtual CallFunction *getCallFunction(Code *code, Inter &inter) = 0;
         virtual inline bool isInfix();
+    };
+
+    class AFUN_CORE_EXPORT Function::CallFunction {
+    public:
+        struct ArgCodeList;
+
+        CallFunction() = default;
+        virtual ~CallFunction() = default;
+        CallFunction(const CallFunction &)=delete;
+        CallFunction &operator=(const CallFunction &)=delete;
+
+        virtual std::list<ArgCodeList> *getArgCodeList() = 0;
+        virtual void runFunction() = 0;
+    };
+
+    struct Function::CallFunction::ArgCodeList {
+        Code *code = nullptr;
+        Object *ret = nullptr;
     };
 
     class AFUN_CORE_EXPORT Literaler : public Object {

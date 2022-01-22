@@ -6,17 +6,6 @@
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT EnvVarSpace {  // 环境变量
-        static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
-        struct EnvVar {  // 环境变量
-            std::string name;
-            std::string str;
-            int32_t num = 0;  // 可以同时记录字符串和数字
-            struct EnvVar *next = nullptr;
-        };
-
-        size_t count;
-        EnvVar *var[ENV_VAR_HASH_SIZE] {};
-        std::shared_mutex lock;
     public:
         EnvVarSpace();
         ~EnvVarSpace();
@@ -32,6 +21,21 @@ namespace aFuncore {
 
         void addString(const std::string &name, const std::string &str);
         void addNumber(const std::string &name, int32_t num);
+
+    private:
+        static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
+        struct EnvVar;
+
+        size_t count;
+        EnvVar *var[ENV_VAR_HASH_SIZE] {};
+        std::shared_mutex lock;
+    };
+
+    struct EnvVarSpace::EnvVar {  // 环境变量
+        std::string name;
+        std::string str;
+        int32_t num = 0;  // 可以同时记录字符串和数字
+        struct EnvVar *next = nullptr;
     };
 }
 
