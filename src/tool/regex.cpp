@@ -2,7 +2,7 @@
 #include <cstring>
 #include <utility>
 #include "tool.h"
-#include "exception.h"
+#include "tool-exception.h"
 #include "file.h"
 
 #define PCRE2_CODE_UNIT_WIDTH 8

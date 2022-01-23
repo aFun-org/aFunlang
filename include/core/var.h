@@ -1,19 +1,20 @@
 ﻿#ifndef AFUN_VAR_H
 #define AFUN_VAR_H
+#include <list>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "gc.h"
-#include <list>
+#include "inter.h"
 
 namespace aFuncore {
-    class Inter;
     class Object;
 
     class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
     public:
-        Inter &inter;
+        Environment &env;
 
-        Var(Object *data_, Inter &inter_);
+        Var(Object *data_, Inter &inter);
+        Var(Object *data_, Environment &env_);
         ~Var() override = default;
 
         [[nodiscard]] inline virtual Object *getData();
@@ -32,9 +33,10 @@ namespace aFuncore {
             vof_fail = 3,  // 存在其他错误
         } VarOperationFlat;
 
-        Inter &inter;
+        Environment &env;
 
-        explicit VarSpace(Inter &inter_);
+        explicit VarSpace(Inter &inter);
+        explicit VarSpace(Environment &env_);
         ~VarSpace() override;
 
         template <typename Callable,typename...T>
@@ -63,7 +65,8 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
     public:
-        explicit inline ProtectVarSpace(Inter &inter_);
+        explicit inline ProtectVarSpace(Inter &inter);
+        explicit inline ProtectVarSpace(Environment &env_);
 
         [[nodiscard]] inline bool getProtect() const;
         inline bool setProtect(bool protect);

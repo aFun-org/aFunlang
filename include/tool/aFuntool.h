@@ -10,7 +10,7 @@
 #include "tool.h"
 #include "aFunToolExport.h"
 
-#include "exception.h"
+#include "tool-exception.h"
 #include "stdio_.h"
 #include "exit_.h"
 #include "byte.h"

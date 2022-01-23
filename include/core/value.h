@@ -5,16 +5,16 @@
 #include "list"
 #include "gc.h"
 #include "code.h"
+#include "inter.h"
 
 namespace aFuncore {
-    class Inter;
-
     class AFUN_CORE_EXPORT Object : public GcObject<class Object> {
     public:
-        Inter &inter;
+        Environment &env;
         const std::string type;  // 标识 Object 的字符串
 
-        explicit Object(const std::string &type_, Inter &inter_);
+        Object(std::string type_, Inter &inter);
+        Object(std::string type_, Environment &env_);
         ~Object() override = default;
     };
 
@@ -48,14 +48,14 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT Literaler : public Object {
     public:
         inline Literaler(const std::string &type_, Inter &inter_);
-        virtual void getObject(const std::string &literal, char prefix) = 0;
+        virtual void getObject(const std::string &literal, char prefix, Inter &inter) = 0;
     };
 
     class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
         inline CallBackVar(const std::string &type_, Inter &inter_);
         virtual inline bool isCallBack();
-        virtual void callBack() = 0;
+        virtual void callBack(Inter &inter) = 0;
     };
 };
 

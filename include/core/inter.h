@@ -6,14 +6,50 @@
 
 #include "code.h"
 #include "env-var.h"
-
-#include "value.h"
-#include "var.h"
-#include "activation.h"
-
+#include "msg.h"
 
 namespace aFuncore {
+    class Activation;
+    class Var;
+    class ProtectVarSpace;
+    class VarSpace;
+    class VarList;
+    class Object;
+
+    class AFUN_CORE_EXPORT Environment {
+        friend class Object;
+        friend class Var;
+        friend class VarSpace;
+        friend class Inter;
+
+    public:
+        Environment();
+        ~Environment() noexcept(false);
+        Environment(Environment &) = delete;
+        Environment &operator=(Environment &) = delete;
+
+        inline size_t operator++();
+        inline size_t operator--();
+        inline size_t operator++(int);
+        inline size_t operator--(int);
+
+    private:
+        Object *obj;
+        Var *var;
+        VarSpace *varspace;
+
+        ProtectVarSpace *protect;  // 保护变量空间
+        VarSpace *global;  // 全局变量空间
+        VarList *global_varlist;  // global + protect
+        EnvVarSpace envvar;
+
+        size_t reference;  // 引用计数
+    };
+
     class AFUN_CORE_EXPORT Inter {
+        friend class Activation;
+
+        struct LiteralRegex;
     public:
         typedef enum InterStatus {
             inter_creat = 0,
@@ -43,16 +79,16 @@ namespace aFuncore {
         constexpr static const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
         constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
-        explicit Inter(int argc=0, char **argv=nullptr, ExitMode em=em_activity);
-        Inter(const Inter &base_inter, ExitMode em=em_activity);
+        explicit Inter(Environment &env_, int argc = 0, char **argv = nullptr, ExitMode em = em_activity);
+        Inter(const Inter &base_inter, ExitMode em = em_activity);
         ~Inter();
-        Inter &operator=(const Inter &)=delete;
+        Inter &operator=(const Inter &) = delete;
 
         void enable();
 
         [[nodiscard]] inline InterStatus getStatus() const;
         [[nodiscard]] inline bool isExit() const;
-
+        [[nodiscard]] inline Environment &getEnvironment();
         [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
         [[nodiscard]] inline VarSpace *getGlobalVarSpace() const;
         [[nodiscard]] inline VarList *getGlobalVarlist() const;
@@ -67,51 +103,23 @@ namespace aFuncore {
         bool runCode(Code *code);
 
     private:
-        /* 解释器原信息记录 */
         InterStatus status;
 
-        /* GC 记录器 */
-        struct GcRecord;
-        struct GcRecord *gc;
-        [[nodiscard]] inline struct GcRecord *getGcRecord() const;
-        friend Object::Object(const std::string &type_, Inter &inter_);
-        friend Var::Var(Object *data_, Inter &inter_);
-        friend VarSpace::VarSpace(Inter &inter_);
+        Environment &env;
 
-        /* 运行相关 */
-        ProtectVarSpace *protect;  // 保护变量空间
-        VarSpace *global;  // 全局变量空间
-        VarList *global_varlist;  // global + protect
         Activation *activation;  // 活动记录
+
         InterMessage out;
         InterMessage in;
 
-        inline void pushActivation(Activation *new_activation);
-        friend Activation::Activation(Inter &inter_);
-
-        struct LiteralRegex;
         std::list<LiteralRegex> literal;
 
-        /* 配置信息记录器 */
-        EnvVarSpace &envvar;
-
-        /* 线程信息 */
-    public:
-        const bool is_derive;  // 是否派生
-        Inter &base;  // 主线程
-
-    private:
         Object *result;  // 线程执行的结果
-        std::list<Inter *> *son_inter;  // 派生线程链表, 由主线程负责管理
 
         ExitFlat exit_flat;  // 外部设置退出
         ExitMode exit_mode;  // 退出模式
-    };
 
-    struct Inter::GcRecord {
-        Object *obj;
-        Var *var;
-        VarSpace *varspace;
+        inline void pushActivation(Activation *new_activation);
     };
 
     struct Inter::LiteralRegex {

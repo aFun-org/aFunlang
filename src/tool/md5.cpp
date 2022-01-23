@@ -9,7 +9,7 @@
 #include "tool.h"
 #include "md5.h"
 #include "file.h"
-#include "exception.h"
+#include "tool-exception.h"
 #include "__md5.h"
 
 using namespace aFuntool;

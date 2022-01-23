@@ -1,10 +1,11 @@
-﻿#ifndef AFUN_ACTIVATION_H
-#define AFUN_ACTIVATION_H
+﻿#ifndef AFUN_CORE_ACTIVATION_H
+#define AFUN_CORE_ACTIVATION_H
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
+#include "msg.h"
+#include "code.h"
 #include "value.h"
 #include "var.h"
-#include "msg.h"
 
 namespace aFuncore {
     class Inter;
@@ -99,7 +100,7 @@ namespace aFuncore {
     };
 }
 
-#include "activation.inline.h"
-#include "activation.template.h"
+#include "core-activation.inline.h"
+#include "core-activation.template.h"
 
-#endif //AFUN_ACTIVATION_H
+#endif //AFUN_CORE_ACTIVATION_H

@@ -1,87 +1,58 @@
 ﻿#include "inter.h"
-#include "activation.h"
+#include "core-activation.h"
 #include "init.h"
-#include "env-var.h"
-#include "var.h"
 #include "msg.h"
+#include "core-exception.h"
 
 using namespace aFuncore;
 using namespace aFuntool;
 
-Inter::Inter(int argc, char **argv, ExitMode em)
-    : base{*this}, is_derive{false}, out{}, in{}, envvar{*(new EnvVarSpace())} {
+Inter::Inter(Environment &env_, int argc, char **argv, ExitMode em)
+    : out{}, in{}, env{env_} {
     status = inter_creat;
-
-    gc = new GcRecord;
-    gc->obj = nullptr;
-    gc->var = nullptr;
-    gc->varspace = nullptr;
 
     activation = nullptr;
 
-    envvar.setNumber("sys:gc-runtime", 2);
-    envvar.setString("sys:prefix", "''");  // 引用，顺序执行
-    envvar.setNumber("sys:exit-code", 0);
-    envvar.setNumber("sys:argc", argc);
-    envvar.setNumber("sys:error_std", 0);
+    env.envvar.setNumber("sys:gc-runtime", 2);
+    env.envvar.setString("sys:prefix", "''");  // 引用，顺序执行
+    env.envvar.setNumber("sys:exit-code", 0);
+    env.envvar.setNumber("sys:argc", argc);
+    env.envvar.setNumber("sys:error_std", 0);
 
     for (int i = 0; i < argc; i++) {
         char buf[20];
         snprintf(buf, 10, "sys:arg%d", i);
-        envvar.setString(buf, argv[i]);
+        env.envvar.setString(buf, argv[i]);
     }
 
     result = nullptr;
-    son_inter = new std::list<Inter *>;
 
     exit_flat = ef_none;
     exit_mode = em;
 
-    protect = new ProtectVarSpace(*this);  // 放到最后
-    global = new VarSpace(*this);  // 放到最后
-    global_varlist = new VarList(protect);
-    global_varlist->push(global);
-
     status = inter_init;
+    env++;
 }
 
 Inter::Inter(const Inter &base_inter, ExitMode em)
-        : base{base_inter.base}, is_derive{true}, out{}, in{}, envvar{base_inter.base.envvar} {
+        : out{}, in{}, env{base_inter.env} {
     status = inter_creat;
-
-    gc = base.gc;
 
     activation = nullptr;
 
-    for(auto &i : base.literal)
+    for(auto &i : base_inter.literal)
         literal.push_back(i);
 
     result = nullptr;
-    son_inter = nullptr;
-    base.son_inter->push_back(this);
-
     exit_flat = ef_none;
     exit_mode = em;
 
-    protect = base.protect;  // 放到最后
-    global = base.global;  // 放到最后
-    global_varlist = base.global_varlist;
-
-    status = inter_init;
+    status = inter_normal;
+    env++;
 }
 
 Inter::~Inter(){
-    if (!is_derive) {
-        delete global_varlist;
-
-        Object::destruct(gc->obj);
-        Var::destruct(gc->var);
-        VarSpace::destruct(gc->varspace);
-
-        delete gc;
-        delete son_inter;
-        delete &envvar;
-    }
+    env--;
 }
 
 /**
@@ -89,7 +60,7 @@ Inter::~Inter(){
  */
 void Inter::enable(){
     if (status == inter_init) {
-        protect->setProtect(true);
+        env.protect->setProtect(true);
         status = inter_normal;
     }
 }
@@ -203,3 +174,37 @@ bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler
     return true;
 }
 
+Environment::Environment() : envvar{} {
+    obj = nullptr;
+    var = nullptr;
+    varspace = nullptr;
+
+    protect = new ProtectVarSpace(*this);  // 放到最后
+    global = new VarSpace(*this);  // 放到最后
+    global_varlist = new VarList(protect);
+    global_varlist->push(global);
+
+    reference = 0;
+}
+
+Environment::~Environment() noexcept(false) {
+    if (reference != 0)
+        throw EnvironmentDestructException();
+
+    if (global_varlist == nullptr)
+        return;
+
+    delete global_varlist;
+
+    Object::destruct(obj);
+    Var::destruct(var);
+    VarSpace::destruct(varspace);
+
+    obj = nullptr;
+    var = nullptr;
+    varspace = nullptr;
+
+    protect = nullptr;  // 放到最后
+    global = nullptr;  // 放到最后
+    global_varlist = nullptr;
+}

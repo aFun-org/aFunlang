@@ -20,7 +20,11 @@ namespace aFuncore {
         return ret ? ret->getData() : nullptr;
     }
 
-    inline ProtectVarSpace::ProtectVarSpace(Inter &inter_) : VarSpace(inter_), is_protect{false} {
+    inline ProtectVarSpace::ProtectVarSpace(Inter &inter) : VarSpace(inter), is_protect{false} {
+
+    }
+
+    inline ProtectVarSpace::ProtectVarSpace(Environment &env_) : VarSpace(env_), is_protect{false} {
 
     }
 

@@ -1,7 +1,7 @@
-﻿#ifndef AFUN_EXCEPTION_INLINE_H
-#define AFUN_EXCEPTION_INLINE_H
+﻿#ifndef AFUN_TOOL_EXCEPTION_INLINE_H
+#define AFUN_TOOL_EXCEPTION_INLINE_H
 
-#include "exception.h"
+#include "tool-exception.h"
 
 namespace aFuntool {
     inline FileOpenException::FileOpenException(ConstFilePath file) {
@@ -29,4 +29,4 @@ namespace aFuntool {
     }
 }
 
-#endif //AFUN_EXCEPTION_INLINE_H
+#endif //AFUN_TOOL_EXCEPTION_INLINE_H

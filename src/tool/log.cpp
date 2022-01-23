@@ -17,7 +17,7 @@
 #include <cstring>
 #include "tool.h"
 #include "log.h"
-#include "exception.h"
+#include "tool-exception.h"
 #include "log-macro.h"
 #include "time_.h"
 #include "file.h"

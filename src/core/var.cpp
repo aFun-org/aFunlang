@@ -5,12 +5,20 @@ using namespace aFuncore;
 using namespace aFuntool;
 
 
-aFuncore::Var::Var(Object *data_, Inter &inter_) : data{data_}, inter{inter_.base} {
-    addObject(inter.getGcRecord()->var);
+aFuncore::Var::Var(Object *data_, Inter &inter) : data{data_}, env{inter.getEnvironment()} {
+    addObject(env.var);
 }
 
-aFuncore::VarSpace::VarSpace(Inter &inter_) : count{0}, var{}, inter{inter_.base} {
-    addObject(inter.getGcRecord()->varspace);
+aFuncore::Var::Var(Object *data_, Environment &env_) : data{data_}, env{env_} {
+    addObject(env.var);
+}
+
+aFuncore::VarSpace::VarSpace(Inter &inter) : count{0}, var{}, env{inter.getEnvironment()} {
+    addObject(env.varspace);
+}
+
+aFuncore::VarSpace::VarSpace(Environment &env_) : count{0}, var{}, env{env_} {
+    addObject(env.varspace);
 }
 
 /**
@@ -42,7 +50,7 @@ VarSpace::VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name
     }
     (*tmp) = new VarCup;
     (*tmp)->name = name;
-    (*tmp)->var = new Var(data, inter);
+    (*tmp)->var = new Var(data, env);
     count++;
     return vof_success;
 }

@@ -1,7 +1,7 @@
-﻿#ifndef AFUN_ACTIVATION_INLINE_H
-#define AFUN_ACTIVATION_INLINE_H
+﻿#ifndef AFUN_CORE_ACTIVATION_INLINE_H
+#define AFUN_CORE_ACTIVATION_INLINE_H
 
-#include "activation.h"
+#include "core-activation.h"
 
 namespace aFuncore {
     inline void Activation::endRun() {
@@ -45,4 +45,4 @@ namespace aFuncore {
     }
 }
 
-#endif //AFUN_ACTIVATION_INLINE_H
+#endif //AFUN_CORE_ACTIVATION_INLINE_H

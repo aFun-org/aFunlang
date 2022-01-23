@@ -9,6 +9,7 @@
 #include "env-var.h"
 #include "value.h"
 #include "var.h"
-#include "activation.h"
+#include "core-activation.h"
+#include "core-exception.h"
 
 #endif //AFUN_AFUNCORE_H

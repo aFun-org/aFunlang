@@ -3,8 +3,8 @@
 #include "inter.h"
 
 namespace aFuncore {
-    inline Inter::GcRecord *Inter::getGcRecord() const {
-        return gc;
+    inline Environment &Inter::getEnvironment() {
+        return env;
     }
 
     inline void Inter::pushActivation(Activation *new_activation) {
@@ -20,15 +20,15 @@ namespace aFuncore {
     }
 
     inline ProtectVarSpace *Inter::getProtectVarSpace() const {
-        return protect;
+        return env.protect;
     }
 
     inline VarSpace *Inter::getGlobalVarSpace() const {
-        return global;
+        return env.global;
     }
 
     inline VarList *Inter::getGlobalVarlist() const {
-        return global_varlist;
+        return env.global_varlist;
     }
 
     inline Activation *Inter::getActivation() const {
@@ -36,7 +36,23 @@ namespace aFuncore {
     }
 
     inline EnvVarSpace &Inter::getEnvVarSpace() {
-        return envvar;
+        return env.envvar;
+    }
+
+    inline size_t Environment::operator++(){
+        return ++reference;
+    }
+
+    inline size_t Environment::operator--(){
+        return --reference;
+    }
+
+    inline size_t Environment::operator++(int){
+        return reference++;
+    }
+
+    inline size_t Environment::operator--(int){
+        return reference--;
     }
 }
 

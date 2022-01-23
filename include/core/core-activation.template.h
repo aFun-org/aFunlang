@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_ACTIVATION_TEMPLATE_H
-#define AFUN_ACTIVATION_TEMPLATE_H
-#include "activation.h"
+﻿#ifndef AFUN_CORE_ACTIVATION_TEMPLATE_H
+#define AFUN_CORE_ACTIVATION_TEMPLATE_H
+#include "core-activation.h"
 
 namespace aFuncore {
     template <typename Callable, typename...T>
@@ -10,4 +10,4 @@ namespace aFuncore {
     }
 }
 
-#endif //AFUN_ACTIVATION_TEMPLATE_H
+#endif //AFUN_CORE_ACTIVATION_TEMPLATE_H

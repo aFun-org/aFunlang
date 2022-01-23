@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_EXCEPTION_H
-#define AFUN_EXCEPTION_H
+﻿#ifndef AFUN_TOOL_EXCEPTION_H
+#define AFUN_TOOL_EXCEPTION_H
 #include "tool.h"
 
 namespace aFuntool {
@@ -26,6 +26,6 @@ namespace aFuntool {
     };
 }
 
-#include "exception.inline.h"
+#include "tool-exception.inline.h"
 
-#endif //AFUN_EXCEPTION_H
+#endif //AFUN_TOOL_EXCEPTION_H

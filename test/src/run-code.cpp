@@ -60,7 +60,7 @@ public:
         Code::destruct(func_code);
     }
 
-    void getObject(const std::string &literal, char prefix) override {
+    void getObject(const std::string &literal, char prefix, Inter &inter) override {
         printf_stdout(0, "Literaler1: %s %c\n", literal.c_str(), prefix == NUL ? '-' : prefix);
         new ExeActivation(func_code, inter);
     }
@@ -78,14 +78,15 @@ public:
         Code::destruct(func_code);
     }
 
-    void callBack() override {
+    void callBack(Inter &inter) override {
         printf_stdout(0, "CallBackVar callback\n");
         new ExeActivation(func_code, inter);
     }
 };
 
 int main() {
-    Inter inter {};
+    Environment env {};
+    Inter inter {env};
 
     auto obj = new Object("Object", inter);
     inter.getGlobalVarlist()->defineVar("test-var", obj);

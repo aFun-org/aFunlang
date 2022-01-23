@@ -1,8 +1,7 @@
-﻿#include "value.h"
+﻿#include "core-activation.h"
 #include "inter.h"
 #include "init.h"
 #include "msg.h"
-#include "var.h"
 #include "code.h"
 
 using namespace aFuncore;
@@ -79,7 +78,7 @@ void Activation::runCodeElement(Code *code) {
             obj = varlist->findObject(literaler_name);
         auto literaler = dynamic_cast<Literaler *>(obj);
         if (literaler != nullptr)
-            literaler->getObject(code->getElement(), code->getPrefix());
+            literaler->getObject(code->getElement(), code->getPrefix(), inter);
         else
             down.pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
     } else {
@@ -88,7 +87,7 @@ void Activation::runCodeElement(Code *code) {
         if (obj != nullptr) {
             auto cbv = dynamic_cast<CallBackVar *>(obj);
             if (cbv != nullptr && cbv->isCallBack())
-                cbv->callBack();
+                cbv->callBack(inter);
             else
                 down.pushMessage(new NormalMessage(obj));
         } else
