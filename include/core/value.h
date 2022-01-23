@@ -3,10 +3,12 @@
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "list"
-#include "core.h"
 #include "gc.h"
+#include "code.h"
 
 namespace aFuncore {
+    class Inter;
+
     class AFUN_CORE_EXPORT Object : public GcObject<class Object> {
     public:
         Inter &inter;

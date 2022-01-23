@@ -3,7 +3,7 @@
 #include "code.h"
 
 namespace aFuncore {
-    inline Code *Code::create(FileLine line, ConstFilePath file) {
+    inline Code *Code::create(aFuntool::FileLine line, aFuntool::ConstFilePath file) {
         return new Code(line, file);
     }
 
@@ -17,7 +17,7 @@ namespace aFuncore {
         return new Code(block_type, son, line, file);
     }
 
-    inline CodeType Code::getType() const {
+    inline Code::CodeType Code::getType() const {
         return type;
     }
 
@@ -31,7 +31,7 @@ namespace aFuncore {
         return element;
     }
 
-    inline BlockType Code::getBlockType() const {
+    inline Code::BlockType Code::getBlockType() const {
         if (type != code_block)
             return block_p;
         return block_type;

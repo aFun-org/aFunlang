@@ -24,11 +24,11 @@ namespace aFuncore {
         return down;
     }
 
-    inline FileLine Activation::getFileLine() const{
+    inline aFuntool::FileLine Activation::getFileLine() const{
         return line;
     }
 
-    inline const StringFilePath &Activation::getFilePath() const{
+    inline const aFuntool::StringFilePath &Activation::getFilePath() const{
         return path;
     }
 

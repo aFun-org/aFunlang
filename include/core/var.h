@@ -2,11 +2,13 @@
 #define AFUN_VAR_H
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.h"
 #include "gc.h"
 #include <list>
 
 namespace aFuncore {
+    class Inter;
+    class Object;
+
     class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
     public:
         Inter &inter;
@@ -23,6 +25,13 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
     public:
+        typedef enum VarOperationFlat {
+            vof_success = 0,  // 成功
+            vof_not_var = 1,  // 变量不存在
+            vof_redefine_var = 2,  // 变量重复定义
+            vof_fail = 3,  // 存在其他错误
+        } VarOperationFlat;
+
         Inter &inter;
 
         explicit VarSpace(Inter &inter_);

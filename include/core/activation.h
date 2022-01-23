@@ -2,13 +2,21 @@
 #define AFUN_ACTIVATION_H
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.h"
 #include "value.h"
+#include "var.h"
 #include "msg.h"
 
 namespace aFuncore {
+    class Inter;
+
     class AFUN_CORE_EXPORT Activation {
     public:
+        typedef enum ActivationStatus {
+            as_run = 0,
+            as_end = 1,
+            as_end_run = 2,
+        } ActivationStatus;
+
         Inter &inter;
 
         template <typename Callable,typename...T>
@@ -27,8 +35,8 @@ namespace aFuncore {
         [[nodiscard]] inline UpMessage &getUpStream();
         [[nodiscard]] inline DownMessage &getDownStream();
 
-        [[nodiscard]] inline FileLine getFileLine() const;
-        [[nodiscard]] inline  const StringFilePath &getFilePath() const;
+        [[nodiscard]] inline aFuntool::FileLine getFileLine() const;
+        [[nodiscard]] inline  const aFuntool::StringFilePath &getFilePath() const;
 
     protected:
         Activation *prev;
@@ -38,8 +46,8 @@ namespace aFuncore {
         UpMessage up;
         DownMessage down;
 
-        StringFilePath path;
-        FileLine line;
+        aFuntool::StringFilePath path;
+        aFuntool::FileLine line;
 
         virtual void runCodeElement(Code *code);
         virtual void runCodeBlockP(Code *code);

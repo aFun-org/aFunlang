@@ -34,7 +34,7 @@ class Func1 : public Function {
 public:
     explicit Func1(Inter &inter_) : Function("Function", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
+        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
     }
 
     ~Func1() override {
@@ -53,7 +53,7 @@ class Literaler1 : public Literaler {
 public:
     explicit Literaler1(Inter &inter_) : Literaler("Data", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
+        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
     }
 
     ~Literaler1() override {
@@ -71,7 +71,7 @@ class CBV1 : public CallBackVar {
 public:
     explicit CBV1(Inter &inter_) : CallBackVar("CBV1", inter_) {
         func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
+        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
     }
 
     ~CBV1() override {
@@ -107,7 +107,7 @@ int main() {
 
     {
         auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(block_p, Code::create("test-var", 1), 0));
+        code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
         inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
@@ -118,7 +118,7 @@ int main() {
         arg->connect(Code::create("test-var", 1));
 
         auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(block_c, arg, 0));
+        code->connect(Code::create(Code::block_c, arg, 0));
         inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");
@@ -129,7 +129,7 @@ int main() {
         arg->connect(Code::create("test-func", 1));
 
         auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(block_b, arg, 0));
+        code->connect(Code::create(Code::block_b, arg, 0));
         inter.runCode(code);
         Code::destruct(code);
         fputs_stdout("\n");

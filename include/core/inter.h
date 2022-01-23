@@ -3,15 +3,46 @@
 #include <list>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.h"
+
+#include "code.h"
+#include "env-var.h"
 
 #include "value.h"
 #include "var.h"
 #include "activation.h"
 
+
 namespace aFuncore {
     class AFUN_CORE_EXPORT Inter {
     public:
+        typedef enum InterStatus {
+            inter_creat = 0,
+            inter_init = 1,  // 执行初始化程序
+            inter_normal = 2,  // 正常执行
+            inter_stop = 3,  // 当前运算退出
+            inter_exit = 4,  // 解释器退出
+        } InterStatus;
+
+        typedef enum ExitFlat {
+            ef_activity = 0,  // 主动退出
+            ef_passive = 1,  // 被动退出
+            ef_none = 2,
+        } ExitFlat;
+
+        typedef enum ExitMode {
+            em_activity = ef_activity,  // 主动退出
+            em_passive = ef_passive,  // 被动退出
+        } ExitMode;
+
+        typedef enum Prefix {
+            prefix_quote = 0,  // 变量引用
+            prefix_exec_first = 1,
+        } Prefix;
+
+        static const int PREFIX_COUNT = 2;
+        constexpr static const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
+        constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+
         explicit Inter(int argc=0, char **argv=nullptr, ExitMode em=em_activity);
         Inter(const Inter &base_inter, ExitMode em=em_activity);
         ~Inter();
@@ -84,7 +115,7 @@ namespace aFuncore {
     };
 
     struct Inter::LiteralRegex {
-        Regex rg;
+        aFuntool::Regex rg;
         std::string pattern;  // 派生 LiteralRegex 时使用
         std::string literaler;  // 调用的函数
         bool in_protect;  // 是否在protect空间

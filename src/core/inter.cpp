@@ -101,18 +101,18 @@ void Inter::enable(){
 bool Inter::runCode(){
     while (activation != nullptr) {
         Code *code = nullptr;
-        ActivationStatus as = activation->getCode(code);
+        Activation::ActivationStatus as = activation->getCode(code);
         switch (as) {
-            case as_end: {
+            case Activation::as_end: {
                 Activation *prev = activation->toPrev();
                 delete activation;
                 activation = prev;
                 break;
             }
-            case as_run:
+            case Activation::as_run:
                 activation->runCode(code);
                 break;
-            case as_end_run:
+            case Activation::as_end_run:
                 activation->endRun();
                 break;
             default:

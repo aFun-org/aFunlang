@@ -1,11 +1,9 @@
-﻿#include "activation.h"
-#include "value.h"
+﻿#include "value.h"
 #include "inter.h"
 #include "init.h"
 #include "msg.h"
 #include "var.h"
 #include "code.h"
-#include "env-var.h"
 
 using namespace aFuncore;
 using namespace aFuntool;
@@ -47,20 +45,20 @@ Activation::~Activation(){
  */
 void Activation::runCode(Code *code) {
     auto code_type = code->getType();
-    if (code_type == code_start) {  // start 不处理 msg
+    if (code_type == Code::code_start) {  // start 不处理 msg
         auto *none = new Object("None", inter);
         down.pushMessage(new NormalMessage(none));
     } else {
-        if (code_type == code_element) {
+        if (code_type == Code::code_element) {
             runCodeElement(code);
         } else switch (code->getBlockType()) {
-            case block_p:  // 顺序执行
+            case Code::block_p:  // 顺序执行
                 runCodeBlockP(code);
                 break;
-            case block_b:
+            case Code::block_b:
                 runCodeBlockB(code);
                 break;
-            case block_c:
+            case Code::block_c:
                 runCodeBlockC(code);
                 break;
             default:
@@ -110,7 +108,7 @@ void Activation::runCodeBlockB(Code *code) {
     new FuncActivation(code, inter);
 }
 
-ActivationStatus ExeActivation::getCode(Code *&code){
+Activation::ActivationStatus ExeActivation::getCode(Code *&code){
     code = next;
     if (code == nullptr)
         return as_end;
@@ -150,13 +148,13 @@ FuncActivation::~FuncActivation(){
     delete call_func;
 }
 
-ActivationStatus FuncActivation::getCode(Code *&code){
+Activation::ActivationStatus FuncActivation::getCode(Code *&code){
     if (on_tail)
         return as_end;
 
     if (status == func_first) {
         switch (call->getBlockType()) {
-            case block_c:
+            case Code::block_c:
                 status = func_get_func;
                 code = call->getSon();
                 if (code == nullptr) {
@@ -168,13 +166,13 @@ ActivationStatus FuncActivation::getCode(Code *&code){
                 if (code->getFilePath() != nullptr)
                     path = code->getFilePath();
                 return as_run;
-            case block_b: {
+            case Code::block_b: {
                 std::string prefix;
-                if (!inter.getEnvVarSpace().findString("sys:prefix", prefix) || prefix.size() != PREFIX_COUNT)
+                if (!inter.getEnvVarSpace().findString("sys:prefix", prefix) || prefix.size() != Inter::PREFIX_COUNT)
                     prefix = "''";
-                char quote = prefix[prefix_quote];
+                char quote = prefix[Inter::prefix_quote];
                 for (Code *var = call->getSon(); var != nullptr; var = var->toNext()) {
-                    if (var->getType() != code_element || var->getPrefix() == quote || inter.checkLiteral(var->getElement()))
+                    if (var->getType() != Code::code_element || var->getPrefix() == quote || inter.checkLiteral(var->getElement()))
                         continue;
                     Object *obj = varlist->findObject(var->getElement());
                     if (obj == nullptr || !dynamic_cast<Function *>(obj) || !dynamic_cast<Function *>(obj)->isInfix())

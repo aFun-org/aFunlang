@@ -33,7 +33,7 @@ Var *aFuncore::VarSpace::findVar(const std::string &name){
  * @param data 变量（Object）
  * @return
  */
-VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *data){
+VarSpace::VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     auto tmp = &var[index];
     for (NULL; *tmp != nullptr; tmp = &(*tmp)->next) {
@@ -53,7 +53,7 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Object *
  * @param data 变量（Var）
  * @return
  */
-VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *data){
+VarSpace::VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     auto tmp = &var[index];
     for (NULL; *tmp != nullptr; tmp = &(*tmp)->next) {
@@ -73,7 +73,7 @@ VarOperationFlat aFuncore::VarSpace::defineVar(const std::string &name, Var *dat
  * @param data 变量
  * @return
  */
-VarOperationFlat aFuncore::VarSpace::setVar(const std::string &name, Object *data){
+VarSpace::VarOperationFlat aFuncore::VarSpace::setVar(const std::string &name, Object *data){
     size_t index = time33(name) % VAR_HASH_SIZE;
     for (auto tmp = var[index]; tmp != nullptr; tmp = tmp->next) {
         if (tmp->name == name) {
@@ -89,7 +89,7 @@ VarOperationFlat aFuncore::VarSpace::setVar(const std::string &name, Object *dat
  * @param name 变量名
  * @return
  */
-VarOperationFlat aFuncore::VarSpace::delVar(const std::string &name){
+VarSpace::VarOperationFlat aFuncore::VarSpace::delVar(const std::string &name){
     size_t index = time33(name) % VAR_HASH_SIZE;
     for (auto tmp = var[index]; tmp != nullptr && tmp->next != nullptr; tmp = tmp->next) {
         if (tmp->next->name == name) {
@@ -125,7 +125,7 @@ aFuncore::VarList::VarList(VarList *varlist) {
  * @param data 变量（Object）
  * @return
  */
-VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Object *data){
+VarSpace::VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Object *data){
     return VarSpace::defineVar(name, data);
 }
 
@@ -137,7 +137,7 @@ VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, O
  * @param data 变量（Var）
  * @return
  */
-VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Var *data){
+VarSpace::VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, Var *data){
     return VarSpace::defineVar(name, data);
 }
 
@@ -149,7 +149,7 @@ VarOperationFlat aFuncore::ProtectVarSpace::defineVar(const std::string &name, V
  * @param data 变量（Var）
  * @return
  */
-VarOperationFlat aFuncore::ProtectVarSpace::setVar(const std::string &name, Object *data){
+VarSpace::VarOperationFlat aFuncore::ProtectVarSpace::setVar(const std::string &name, Object *data){
     if (is_protect)
         return findVar(name) ? vof_fail : vof_not_var;
     return VarSpace::setVar(name, data);
@@ -163,7 +163,7 @@ VarOperationFlat aFuncore::ProtectVarSpace::setVar(const std::string &name, Obje
  * @param data 变量（Var）
  * @return
  */
-VarOperationFlat aFuncore::ProtectVarSpace::delVar(const std::string &name){
+VarSpace::VarOperationFlat aFuncore::ProtectVarSpace::delVar(const std::string &name){
     if (is_protect)
         return findVar(name) ? vof_fail : vof_not_var;
     return VarSpace::delVar(name);
@@ -190,10 +190,10 @@ Var *aFuncore::VarList::findVar(const std::string &name){
  * @return
  */
 bool aFuncore::VarList::defineVar(const std::string &name, Object *data){
-    VarOperationFlat ret = vof_fail;
-    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == vof_fail; tmp++)
+    VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
+    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
         ret = (*tmp)->defineVar(name, data);
-    return ret == vof_success;
+    return ret == VarSpace::vof_success;
 }
 
 /**
@@ -205,10 +205,10 @@ bool aFuncore::VarList::defineVar(const std::string &name, Object *data){
  * @return
  */
 bool aFuncore::VarList::defineVar(const std::string &name, Var *data){
-    VarOperationFlat ret = vof_fail;
-    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == vof_fail; tmp++)
+    VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
+    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
         ret = (*tmp)->defineVar(name, data);
-    return ret == vof_success;
+    return ret == VarSpace::vof_success;
 }
 
 /**
@@ -220,10 +220,10 @@ bool aFuncore::VarList::defineVar(const std::string &name, Var *data){
  * @return
  */
 bool aFuncore::VarList::setVar(const std::string &name, Object *data){
-    VarOperationFlat ret = vof_not_var;
-    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == vof_not_var; tmp++)
+    VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
+    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
         ret = (*tmp)->setVar(name, data);
-    return ret == vof_success;
+    return ret == VarSpace::vof_success;
 }
 
 /**
@@ -234,10 +234,10 @@ bool aFuncore::VarList::setVar(const std::string &name, Object *data){
  * @return
  */
 bool aFuncore::VarList::delVar(const std::string &name){
-    VarOperationFlat ret = vof_not_var;
-    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == vof_not_var; tmp++)
+    VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
+    for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
         ret = (*tmp)->delVar(name);
-    return ret == vof_success;
+    return ret == VarSpace::vof_success;
 }
 
 void VarList::connect(VarList *varlist){

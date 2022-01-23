@@ -4,7 +4,6 @@
 #include <mutex>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "core.h"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Message {
@@ -28,6 +27,10 @@ namespace aFuncore {
         explicit inline TopMessage(const std::string &type_);
         virtual void topProgress() = 0;
     };
+
+    class Object;
+    class Activation;
+    class Inter;
 
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
     public:
@@ -53,8 +56,8 @@ namespace aFuncore {
         std::string error_type;
         std::string error_info;
         struct TrackBack{
-            const StringFilePath path;
-            FileLine line;
+            const aFuntool::StringFilePath path;
+            aFuntool::FileLine line;
         };
         std::list<TrackBack> trackback;
     };

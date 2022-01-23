@@ -11,7 +11,7 @@ namespace aFuncore {
         activation = new_activation;
     }
 
-    inline InterStatus Inter::getStatus() const {
+    inline Inter::InterStatus Inter::getStatus() const {
         return status;
     }
 
