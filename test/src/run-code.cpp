@@ -160,5 +160,14 @@ int main() {
         fputs_stdout("\n");
     }
 
+    {
+        Inter son {inter};
+        auto code = (Code::create(0, "run-code.aun"));
+        code->connect(Code::create("test-not-var", 1));
+        son.runCode(code);
+        Code::destruct(code);
+        fputs_stdout("\n");
+    }
+
     return 0;
 }

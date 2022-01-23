@@ -55,7 +55,7 @@ namespace aFuntool {
                 (*handle_)--;
         }
 
-        const SYMBOL *getSymbol() const {
+        SYMBOL *getSymbol() const {
             return symbol_;
         }
 

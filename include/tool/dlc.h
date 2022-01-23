@@ -60,7 +60,7 @@ namespace aFuntool {
         inline int operator++(int);
         inline int operator--(int);
 
-        AFUN_TOOL_EXPORT static void dlcExit();
+        static void dlcExit();
 
         class AFUN_TOOL_EXPORT Handle {
             friend class DlcHandle;

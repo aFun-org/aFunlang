@@ -18,7 +18,6 @@ Inter::Inter(int argc, char **argv, ExitMode em)
     gc->varspace = nullptr;
 
     activation = nullptr;
-    literal = new std::list<LiteralRegex>;
 
     envvar.setNumber("sys:gc-runtime", 2);
     envvar.setString("sys:prefix", "''");  // 引用，顺序执行
@@ -46,6 +45,31 @@ Inter::Inter(int argc, char **argv, ExitMode em)
     status = inter_init;
 }
 
+Inter::Inter(const Inter &base_inter, ExitMode em)
+        : base{base_inter.base}, is_derive{true}, out{}, in{}, envvar{base_inter.base.envvar} {
+    status = inter_creat;
+
+    gc = base.gc;
+
+    activation = nullptr;
+
+    for(auto &i : base.literal)
+        literal.push_back(i);
+
+    result = nullptr;
+    son_inter = nullptr;
+    base.son_inter->push_back(this);
+
+    exit_flat = ef_none;
+    exit_mode = em;
+
+    protect = base.protect;  // 放到最后
+    global = base.global;  // 放到最后
+    global_varlist = base.global_varlist;
+
+    status = inter_init;
+}
+
 Inter::~Inter(){
     if (!is_derive) {
         delete global_varlist;
@@ -54,7 +78,6 @@ Inter::~Inter(){
         Var::destruct(gc->var);
         VarSpace::destruct(gc->varspace);
 
-        delete literal;
         delete gc;
         delete son_inter;
         delete &envvar;
@@ -131,15 +154,12 @@ bool Inter::runCode(Code *code){
  * @return
  */
 bool Inter::checkLiteral(const std::string &element) const {
-    if (literal->empty())
+    if (literal.empty())
         return false;
 
-    auto it = literal->begin();
-    auto end = literal->end();
-
-    for(NULL;it != end;it++){
+    for(auto &i : literal){
         try {
-            if (it->rg.match(element) != 1)
+            if (i.rg.match(element) != 1)
                 continue;
             return true;
         } catch (RegexException &e) {
@@ -157,18 +177,15 @@ bool Inter::checkLiteral(const std::string &element) const {
  * @return
  */
 bool Inter::checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const {
-    if (literal->empty())
+    if (literal.empty())
         return false;
 
-    auto it = literal->begin();
-    auto end = literal->end();
-
-    for(NULL;it != end;it++){
+    for(auto &i : literal){
         try {
-            if (it->rg.match(element) != 1)
+            if (i.rg.match(element) != 1)
                 continue;
-            literaler = it->literaler;
-            in_protect = it->in_protect;
+            literaler = i.literaler;
+            in_protect = i.in_protect;
             return true;
         } catch (RegexException &e) {
             continue;
@@ -179,7 +196,7 @@ bool Inter::checkLiteral(const std::string &element, std::string &literaler, boo
 
 bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect){
     try {
-        literal->push_front({Regex(pattern), pattern, literaler, in_protect});
+        literal.push_front({Regex(pattern), pattern, literaler, in_protect});
     } catch (RegexException &e) {
         return false;
     }

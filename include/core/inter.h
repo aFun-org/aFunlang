@@ -13,8 +13,8 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT Inter {
     public:
         explicit Inter(int argc=0, char **argv=nullptr, ExitMode em=em_activity);
+        Inter(const Inter &base_inter, ExitMode em=em_activity);
         ~Inter();
-        Inter(const Inter &)=delete;
         Inter &operator=(const Inter &)=delete;
 
         void enable();
@@ -59,7 +59,7 @@ namespace aFuncore {
         friend Activation::Activation(Inter &inter_);
 
         struct LiteralRegex;
-        std::list<LiteralRegex> *literal;
+        std::list<LiteralRegex> literal;
 
         /* 配置信息记录器 */
         EnvVarSpace &envvar;

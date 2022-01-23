@@ -53,7 +53,7 @@ aFuntool::Regex::~Regex() {
  * 返回  (0) - 不可完全匹配或不可匹配
  * 返回 (>0) - 失败
  */
-int aFuntool::Regex::match(const char *subject) {
+int aFuntool::Regex::match(const char *subject) const {
     if (!isCharUTF8(subject))
         throw RegexException("Subject not utf-8");
 

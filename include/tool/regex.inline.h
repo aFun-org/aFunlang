@@ -4,7 +4,7 @@
 #include "regex.h"
 
 namespace aFuntool {
-    inline int Regex::match(const std::string &subject){
+    inline int Regex::match(const std::string &subject) const {
         return match(subject.c_str());
     }
 
