@@ -11,6 +11,7 @@ namespace aFuntool {
     };
 
     extern enum EndianType endian;
+    extern enum EndianType save_as;
 
     AFUN_TOOL_EXPORT void getEndian();
 
@@ -27,5 +28,7 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT bool byteReadStr(FILE *file, char *&str);
 
 }
+
+#include "byte.template.h"
 
 #endif //AFUN_BYTE_H
