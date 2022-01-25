@@ -6,6 +6,30 @@
 namespace aFuncore {
     class AFUN_CORE_EXPORT Code {
     public:
+        class ByteCode;
+
+        inline explicit Code(aFuntool::StringFilePath file_);
+        ~Code();
+        Code &operator=(const Code &)=delete;
+
+        void display() const;
+        [[nodiscard]] std::string getMD5_v1() const;
+        bool writeByteCode(aFuntool::ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
+        bool readByteCode(aFuntool::ConstFilePath file_path);
+
+        [[nodiscard]] inline aFuntool::ConstFilePath getFilePath() const;
+        [[nodiscard]] inline ByteCode *getByteCode() const;
+    private:
+        ByteCode *code;
+        aFuntool::StringFilePath file;
+
+        bool write_v1(FILE *f, bool debug=false) const;
+        bool read_v1(FILE *f, bool debug=false);
+    };
+    
+    class AFUN_CORE_EXPORT Code::ByteCode {
+        friend class Code;
+    public:
         typedef enum CodeType {
             code_start = 0,
             code_element = 1,
@@ -18,66 +42,50 @@ namespace aFuncore {
             block_c = '{',
         } BlockType;
 
-        Code(const Code &)=delete;
-        Code &operator=(const Code &)=delete;
+        explicit ByteCode(Code &belong, aFuntool::FileLine line);
+        ByteCode(Code &belong, const std::string &element, aFuntool::FileLine line, char prefix=aFuntool::NUL);
+        ByteCode(Code &belong, BlockType block_type, ByteCode *son, aFuntool::FileLine line, char prefix=aFuntool::NUL);
+        ~ByteCode();
+        ByteCode &operator=(const ByteCode &)=delete;
 
-        static Code *create(aFuntool::FileLine line, aFuntool::ConstFilePath file="");
-        static Code *create(const std::string &element,
-                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=aFuntool::NUL);
-        static Code *create(BlockType block_type, Code *son,
-                            aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=aFuntool::NUL);
-        static void destruct(Code *code);
-
-        Code *connect(Code *code);
+        ByteCode *connect(ByteCode *new_code);
         void display() const;
-        void displayAll() const;
         bool write_v1(FILE *f, bool debug=false) const;
-        bool writeAll_v1(FILE *f, bool debug=false) const;
-        Code *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
-        bool readAll_v1(FILE *f, bool debug=false);
+        ByteCode *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
         [[nodiscard]] std::string getMD5_v1() const;
-        [[nodiscard]] std::string getMD5All_v1() const;
-        bool writeByteCode(aFuntool::ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
-        bool readByteCode(aFuntool::ConstFilePath file_path);
 
         [[nodiscard]] CodeType getType() const;
         [[nodiscard]] char getPrefix() const;
 
         [[nodiscard]] const char *getElement() const;
         [[nodiscard]] BlockType getBlockType() const;
-        [[nodiscard]] Code *getSon() const;
-
-        [[nodiscard]] Code *toNext() const;
-        [[nodiscard]] Code *toPrev() const;
-        [[nodiscard]] Code *toFather() const;
-
+        [[nodiscard]] ByteCode *getSon() const;
         [[nodiscard]] aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] aFuntool::FilePath getFilePath() const;
+        [[nodiscard]] aFuntool::ConstFilePath getFilePath() const;
 
-    protected:
-        explicit Code(aFuntool::FileLine line, aFuntool::ConstFilePath file="");
-        Code(const std::string &element, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=aFuntool::NUL);
-        Code(BlockType block_type, Code *son, aFuntool::FileLine line, aFuntool::ConstFilePath file="", char prefix=aFuntool::NUL);
-        ~Code();
+        [[nodiscard]] ByteCode *toNext() const;
+        [[nodiscard]] ByteCode *toPrev() const;
+        [[nodiscard]] ByteCode *toFather() const;
 
     private:
         CodeType type;
         char prefix=aFuntool::NUL;
 
-        union {
-            char *element = nullptr;  // union 内不使用 std::string
+        union CodeData {
+            char *element;  // union 内不使用 std::string
             struct {  // NOLINT 不需要初始化
                 BlockType block_type;
-                Code *son;
+                ByteCode *son;
             };
-        };
+            inline CodeData();
+        } data;
 
-        Code *father = nullptr;;
-        Code *next = nullptr;;
-        Code *prev = nullptr;;
+        ByteCode *father = nullptr;
+        ByteCode *next = nullptr;
+        ByteCode *prev = nullptr;
 
+        Code &belong;
         aFuntool::FileLine line;
-        aFuntool::FilePath file;
     };
 }
 

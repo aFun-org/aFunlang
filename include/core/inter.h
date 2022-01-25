@@ -100,7 +100,7 @@ namespace aFuncore {
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
         bool runCode();
-        bool runCode(Code *code);
+        bool runCode(Code &code);
 
     private:
         InterStatus status;

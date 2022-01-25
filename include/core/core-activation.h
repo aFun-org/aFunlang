@@ -27,8 +27,8 @@ namespace aFuncore {
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
 
-        virtual ActivationStatus getCode(Code *&code) = 0;
-        virtual void runCode(Code *code);
+        virtual ActivationStatus getCode(Code::ByteCode *&code) = 0;
+        virtual void runCode(Code::ByteCode *code);
         virtual inline void endRun();
 
         [[nodiscard]] inline VarList *getVarlist() const;
@@ -50,35 +50,40 @@ namespace aFuncore {
         aFuntool::StringFilePath path;
         aFuntool::FileLine line;
 
-        virtual void runCodeElement(Code *code);
-        virtual void runCodeBlockP(Code *code);
-        virtual void runCodeBlockC(Code *code);
-        virtual void runCodeBlockB(Code *code);
+        virtual void runCodeElement(Code::ByteCode *code);
+        virtual void runCodeBlockP(Code::ByteCode *code);
+        virtual void runCodeBlockC(Code::ByteCode *code);
+        virtual void runCodeBlockB(Code::ByteCode *code);
     };
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
     public:
-        explicit inline  ExeActivation(Code *code, Inter &inter_);
-        ActivationStatus getCode(Code *&code) override;
-        [[nodiscard]] inline  Code *getStart() const;
+        inline  ExeActivation(Code &code, Inter &inter_);
+        inline  ExeActivation(Code::ByteCode *code, Inter &inter_);
+        ActivationStatus getCode(Code::ByteCode *&code) override;
+        [[nodiscard]] inline Code::ByteCode *getStart() const;
 
     private:
-        Code *start;
-        Code *next;
+        Code::ByteCode *start;
+        Code::ByteCode *next;
         bool first=true;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
     public:
-        explicit TopActivation(Code *code, Inter &inter_);
+        explicit TopActivation(Code &code, Inter &inter_);
         ~TopActivation() override;
+        [[nodiscard]] inline const Code &getBase() const;
+
+    private:
+        Code &base;
     };
 
     class AFUN_CORE_EXPORT FuncActivation : public Activation {
     public:
-        explicit inline FuncActivation(Code *code, Inter &inter_);
+        explicit inline FuncActivation(Code::ByteCode *code, Inter &inter_);
         ~FuncActivation() override;
-        ActivationStatus getCode(Code *&code) override;
+        ActivationStatus getCode(Code::ByteCode *&code) override;
         void endRun() override;
 
     private:
@@ -89,7 +94,7 @@ namespace aFuncore {
         } status = func_first;
 
         bool on_tail = false;
-        Code *call;
+        Code::ByteCode *call;
 
         Function *func = nullptr;
         Function::CallFunction *call_func = nullptr;

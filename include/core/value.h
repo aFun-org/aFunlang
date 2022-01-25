@@ -23,7 +23,7 @@ namespace aFuncore {
         class AFUN_CORE_EXPORT CallFunction;
 
         inline Function(const std::string &type_, Inter &inter_);
-        virtual CallFunction *getCallFunction(Code *code, Inter &inter) = 0;
+        virtual CallFunction *getCallFunction(Code::ByteCode *code, Inter &inter) = 0;
         virtual inline bool isInfix();
     };
 
@@ -41,7 +41,7 @@ namespace aFuncore {
     };
 
     struct Function::CallFunction::ArgCodeList {
-        Code *code = nullptr;
+        Code::ByteCode *code = nullptr;
         Object *ret = nullptr;
     };
 

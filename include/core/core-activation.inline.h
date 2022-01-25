@@ -32,15 +32,23 @@ namespace aFuncore {
         return path;
     }
 
-    inline ExeActivation::ExeActivation(Code *code, Inter &inter_) : Activation(inter_), start{code}, next{code}{
+    inline ExeActivation::ExeActivation(Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
 
     }
 
-    inline Code *ExeActivation::getStart() const{
+    inline ExeActivation::ExeActivation(Code::ByteCode *code, Inter &inter_) : Activation(inter_), start{code}, next{code} {
+
+    }
+
+    inline Code::ByteCode *ExeActivation::getStart() const{
         return start;
     }
 
-    inline FuncActivation::FuncActivation(Code *code, Inter &inter_) : Activation(inter_), call{code,}{
+    const Code &TopActivation::getBase() const {
+        return base;
+    }
+
+    inline FuncActivation::FuncActivation(Code::ByteCode *code, Inter &inter_) : Activation(inter_), call{code} {
 
     }
 }

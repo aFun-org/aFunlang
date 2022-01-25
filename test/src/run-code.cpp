@@ -5,12 +5,12 @@ using namespace aFuntool;
 
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
-        Code *func_code;
-        Code *code;
+        Code &func_code;
+        Code::ByteCode *code;
         Inter &inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code *func_code_, Code *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
+        CallFunc1(Code &func_code_, Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
             ArgCodeList agr1 = {code_->getSon()->toNext()};
             acl->push_front(agr1);
@@ -30,18 +30,17 @@ class Func1 : public Function {
         }
     };
 
-    Code *func_code;
+    Code func_code;
 public:
-    explicit Func1(Inter &inter_) : Function("Function", inter_) {
-        func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
+    explicit Func1(Inter &inter_) : Function("Function", inter_), func_code {"run-code.aun"} {
+        func_code.getByteCode()->connect(
+                new Code::ByteCode(func_code, Code::ByteCode::block_p,
+                                   new Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
-    ~Func1() override {
-        Code::destruct(func_code);
-    }
+    ~Func1() override = default;
 
-    CallFunction *getCallFunction(Code *code, Inter &inter) override {
+    CallFunction *getCallFunction(Code::ByteCode *code, Inter &inter) override {
         return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
     }
 
@@ -49,16 +48,15 @@ public:
 };
 
 class Literaler1 : public Literaler {
-    Code *func_code;
+    Code func_code;
 public:
-    explicit Literaler1(Inter &inter_) : Literaler("Data", inter_) {
-        func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
+    explicit Literaler1(Inter &inter_) : Literaler("Data", inter_), func_code{"run-code.aun"} {
+        func_code.getByteCode()->connect(
+                new Code::ByteCode(func_code, Code::ByteCode::block_p,
+                                   new Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
-    ~Literaler1() override {
-        Code::destruct(func_code);
-    }
+    ~Literaler1() override = default;
 
     void getObject(const std::string &literal, char prefix, Inter &inter) override {
         printf_stdout(0, "Literaler1: %s %c\n", literal.c_str(), prefix == NUL ? '-' : prefix);
@@ -67,16 +65,15 @@ public:
 };
 
 class CBV1 : public CallBackVar {
-    Code *func_code;
+    Code func_code;
 public:
-    explicit CBV1(Inter &inter_) : CallBackVar("CBV1", inter_) {
-        func_code = (Code::create(0, "run-code.aun"));
-        func_code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
+    explicit CBV1(Inter &inter_) : CallBackVar("CBV1", inter_), func_code{"run-code.aun"} {
+        func_code.getByteCode()->connect(
+                new Code::ByteCode(func_code, Code::ByteCode::block_p,
+                                   new Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
-    ~CBV1() override {
-        Code::destruct(func_code);
-    }
+    ~CBV1() override = default;
 
     void callBack(Inter &inter) override {
         printf_stdout(0, "CallBackVar callback\n");
@@ -107,66 +104,63 @@ int main() {
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
 
     {
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(Code::block_p, Code::create("test-var", 1), 0));
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
+                                                       new Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto arg = Code::create("test-func", 1);
-        arg->connect(Code::create("test-var", 1));
+        auto code = Code("run-code.aun");
 
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(Code::block_c, arg, 0));
+        auto arg = new Code::ByteCode(code, "test-func", 1);
+        arg->connect(new Code::ByteCode(code, "test-var", 1));
+
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
+
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto arg = Code::create("test-var", 1);
-        arg->connect(Code::create("test-func", 1));
+        auto code = Code("run-code.aun");
 
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create(Code::block_b, arg, 0));
+        auto arg = new Code::ByteCode(code, "test-var", 1);
+        arg->connect(new Code::ByteCode(code, "test-func", 1));
+
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_b, arg, 0));
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
         inter.pushLiteral("data[0-9]", "test-literaler", false);
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create("data3", 1));
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, "data3", 1));
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create("test-cbv", 1));
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, "test-cbv", 1));
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create("test-not-var", 1));
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 
     {
         Inter son {inter};
-        auto code = (Code::create(0, "run-code.aun"));
-        code->connect(Code::create("test-not-var", 1));
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         son.runCode(code);
-        Code::destruct(code);
         fputs_stdout("\n");
     }
 

@@ -3,64 +3,66 @@
 #include "code.h"
 
 namespace aFuncore {
-    inline Code *Code::create(aFuntool::FileLine line, aFuntool::ConstFilePath file) {
-        return new Code(line, file);
+    inline Code::Code(aFuntool::StringFilePath file_) : code{new ByteCode(*this, 0)}, file{std::move(file_)} {
+
     }
 
-    inline Code *Code::create(const std::string &element,
-                    aFuntool::FileLine line, aFuntool::ConstFilePath file, char prefix) {
-        return new Code(element, line, file, prefix);
+    inline Code::ByteCode *Code::getByteCode() const{
+        return code;
     }
 
-    inline Code *Code::create(BlockType block_type, Code *son,
-                    aFuntool::FileLine line, aFuntool::ConstFilePath file, char prefix) {
-        return new Code(block_type, son, line, file);
+    inline aFuntool::ConstFilePath Code::getFilePath() const{
+        return file;
     }
 
-    inline Code::CodeType Code::getType() const {
+    inline Code::ByteCode::CodeType Code::ByteCode::getType() const {
         return type;
     }
 
-    inline char Code::getPrefix() const {
+    inline char Code::ByteCode::getPrefix() const {
         return prefix;
     }
 
-    inline const char *Code::getElement() const {
+    inline const char *Code::ByteCode::getElement() const {
         if (type != code_element)
             return "";
-        return element;
+        return data.element;
     }
 
-    inline Code::BlockType Code::getBlockType() const {
+    inline Code::ByteCode::BlockType Code::ByteCode::getBlockType() const {
         if (type != code_block)
             return block_p;
-        return block_type;
+        return data.block_type;
     }
 
-    inline Code *Code::getSon() const {
+    inline Code::ByteCode *Code::ByteCode::getSon() const {
         if (type != code_block)
             return nullptr;
-        return son;
+        return data.son;
     }
 
-    inline Code *Code::toNext() const {
+    inline Code::ByteCode *Code::ByteCode::toNext() const {
         return next;
     }
 
-    inline Code *Code::toPrev() const {
+    inline Code::ByteCode *Code::ByteCode::toPrev() const {
         return prev;
     }
 
-    inline Code *Code::toFather() const {
+    inline Code::ByteCode *Code::ByteCode::toFather() const {
         return father;
     }
 
-    inline aFuntool::FileLine Code::getFileLine() const {
+    inline aFuntool::FileLine Code::ByteCode::getFileLine() const {
         return line;
     }
 
-    inline aFuntool::FilePath Code::getFilePath() const {
-        return file;
+    inline aFuntool::ConstFilePath Code::ByteCode::getFilePath() const{
+        return belong.getFilePath();
+    }
+
+    inline Code::ByteCode::CodeData::CodeData() : element{nullptr} {
+
     }
 }
 
