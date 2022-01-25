@@ -83,7 +83,7 @@ namespace aFuntool {
  * @param is_asyn 是否启用异步
  * @return
  */
-    int LogFactory::initLogSystem(ConstFilePath path, bool is_asyn){
+    int LogFactory::initLogSystem(const aFuntool::FilePath &path, bool is_asyn){
         if (path.size() >= 218)  // 路径过长
             return 0;
 

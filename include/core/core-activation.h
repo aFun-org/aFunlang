@@ -37,7 +37,7 @@ namespace aFuncore {
         [[nodiscard]] inline DownMessage &getDownStream();
 
         [[nodiscard]] inline aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] inline  const aFuntool::StringFilePath &getFilePath() const;
+        [[nodiscard]] inline  const aFuntool::FilePath &getFilePath() const;
 
     protected:
         Activation *prev;
@@ -47,7 +47,7 @@ namespace aFuncore {
         UpMessage up;
         DownMessage down;
 
-        aFuntool::StringFilePath path;
+        aFuntool::FilePath path;
         aFuntool::FileLine line;
 
         virtual void runCodeElement(Code::ByteCode *code);

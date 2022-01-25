@@ -3,7 +3,7 @@
 #include "code.h"
 
 namespace aFuncore {
-    inline Code::Code(aFuntool::StringFilePath file_) : code{new ByteCode(*this, 0)}, file{std::move(file_)} {
+    inline Code::Code(aFuntool::FilePath file_) : code{new ByteCode(*this, 0)}, file{std::move(file_)} {
 
     }
 
@@ -11,7 +11,7 @@ namespace aFuncore {
         return code;
     }
 
-    inline aFuntool::ConstFilePath Code::getFilePath() const{
+    inline const aFuntool::FilePath &Code::getFilePath() const{
         return file;
     }
 
@@ -57,7 +57,7 @@ namespace aFuncore {
         return line;
     }
 
-    inline aFuntool::ConstFilePath Code::ByteCode::getFilePath() const{
+    inline const aFuntool::FilePath &Code::ByteCode::getFilePath() const{
         return belong.getFilePath();
     }
 

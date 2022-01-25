@@ -200,7 +200,7 @@ RETURN:
      * @param debug
      * @return
      */
-    bool Code::writeByteCode(aFuntool::ConstFilePath file_path, bool debug) const{
+    bool Code::writeByteCode(const aFuntool::FilePath &file_path, bool debug) const{
         if (code->type != ByteCode::code_start) {
             errorLog(aFunCoreLogger, "ByteCode write all did not with `start`");
             return false;
@@ -230,7 +230,7 @@ RETURN_FALSE:
      * @param file_path
      * @return
      */
-    bool Code::readByteCode(aFuntool::ConstFilePath file_path){
+    bool Code::readByteCode(const aFuntool::FilePath &file_path){
         if (code->type != ByteCode::code_start) {
             errorLog(aFunCoreLogger, "ByteCode read all did not with `start`");
             return false;

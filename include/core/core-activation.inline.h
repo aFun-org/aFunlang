@@ -28,7 +28,7 @@ namespace aFuncore {
         return line;
     }
 
-    inline const aFuntool::StringFilePath &Activation::getFilePath() const{
+    inline const aFuntool::FilePath &Activation::getFilePath() const{
         return path;
     }
 

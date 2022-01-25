@@ -54,7 +54,7 @@ namespace aFuntool {
         LogFactory(const LogFactory &)=delete;
         LogFactory &operator=(const LogFactory &)=delete;
 
-        int initLogSystem(ConstFilePath path, bool is_asyn = true);
+        int initLogSystem(const aFuntool::FilePath &path, bool is_asyn = true);
         void writeLog(LogLevel level,
                       const char *id, pid_t tid,
                       const char *ti, time_t t,

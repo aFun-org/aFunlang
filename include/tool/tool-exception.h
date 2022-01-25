@@ -6,7 +6,7 @@ namespace aFuntool {
     class FileOpenException : public std::exception {
         std::string message;
     public:
-        inline explicit FileOpenException(ConstFilePath file);
+        inline explicit FileOpenException(const FilePath &file);
         inline virtual const char *what();
     };
 

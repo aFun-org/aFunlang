@@ -4,7 +4,7 @@
 #include "tool-exception.h"
 
 namespace aFuntool {
-    inline FileOpenException::FileOpenException(ConstFilePath file) {
+    inline FileOpenException::FileOpenException(const FilePath &file) {
         this->message = std::string("File cannot open: ") + file;
     }
 

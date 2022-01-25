@@ -56,7 +56,7 @@ namespace aFuncore {
         std::string error_type;
         std::string error_info;
         struct TrackBack{
-            const aFuntool::StringFilePath path;
+            const aFuntool::FilePath path;
             aFuntool::FileLine line;
         };
         std::list<TrackBack> trackback;

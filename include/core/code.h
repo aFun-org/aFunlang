@@ -8,20 +8,20 @@ namespace aFuncore {
     public:
         class ByteCode;
 
-        inline explicit Code(aFuntool::StringFilePath file_);
+        inline explicit Code(aFuntool::FilePath file_);
         ~Code();
         Code &operator=(const Code &)=delete;
 
         void display() const;
         [[nodiscard]] std::string getMD5_v1() const;
-        bool writeByteCode(aFuntool::ConstFilePath file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
-        bool readByteCode(aFuntool::ConstFilePath file_path);
+        bool writeByteCode(const aFuntool::FilePath &file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
+        bool readByteCode(const aFuntool::FilePath &file_path);
 
-        [[nodiscard]] inline aFuntool::ConstFilePath getFilePath() const;
+        [[nodiscard]] inline const aFuntool::FilePath &getFilePath() const;
         [[nodiscard]] inline ByteCode *getByteCode() const;
     private:
         ByteCode *code;
-        aFuntool::StringFilePath file;
+        aFuntool::FilePath file;
 
         bool write_v1(FILE *f, bool debug=false) const;
         bool read_v1(FILE *f, bool debug=false);
@@ -60,7 +60,7 @@ namespace aFuncore {
         [[nodiscard]] BlockType getBlockType() const;
         [[nodiscard]] ByteCode *getSon() const;
         [[nodiscard]] aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] aFuntool::ConstFilePath getFilePath() const;
+        [[nodiscard]] const aFuntool::FilePath &getFilePath() const;
 
         [[nodiscard]] ByteCode *toNext() const;
         [[nodiscard]] ByteCode *toPrev() const;
