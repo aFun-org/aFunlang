@@ -9,7 +9,7 @@ namespace aFuntool {
             throw RegexException("Pattern not utf-8");
     }
 
-    inline Regex::Regex(const Regex &regex) : re{regex.pattern}, pattern{regex.pattern}{
+    inline Regex::Regex(const Regex &regex) noexcept: re{regex.pattern}, pattern{regex.pattern}{
 
     }
 
