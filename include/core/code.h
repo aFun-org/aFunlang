@@ -45,7 +45,6 @@ namespace aFuncore {
         explicit ByteCode(Code &belong, aFuntool::FileLine line);
         ByteCode(Code &belong, const std::string &element, aFuntool::FileLine line, char prefix=aFuntool::NUL);
         ByteCode(Code &belong, BlockType block_type, ByteCode *son, aFuntool::FileLine line, char prefix=aFuntool::NUL);
-        ~ByteCode();
         ByteCode &operator=(const ByteCode &)=delete;
 
         ByteCode *connect(ByteCode *new_code);
@@ -86,6 +85,8 @@ namespace aFuncore {
 
         Code &belong;
         aFuntool::FileLine line;
+
+        ~ByteCode();  // 限制 ByteCode 只能建立在堆上
     };
 }
 
