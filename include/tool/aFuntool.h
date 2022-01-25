@@ -19,7 +19,7 @@
 #include "hash.h"
 #include "md5.h"
 #include "path.h"
-#include "regex.h"
+#include "tool-regex.h"
 #include "str.h"
 #include "time_.h"
 #include "log.h"

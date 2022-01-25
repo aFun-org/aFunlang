@@ -5,12 +5,10 @@ set(_print ${PRINT_DEPS_INFO})
 
 set(deps_install_dir ${INSTALL_RESOURCEDIR}/deps)  # 依赖的安装位置
 set(dlfcn_cmake "share/dlfcn-win32")  # dlfcn cmake 安装位置 (相对路径)
-set(pcre2_cmake "cmake")
 set(fflags_cmake "cmake")  # FindFFlags.cmake 不是 fflags 的一部分, 但是会被安装到 cmake 目录下
 set(pthread_cmake "cmake")
 
 set(dlfcn-win32_MUST_BUILD TRUE CACHE BOOL "Must build dlfcn-win32")
-set(PCRE2_MUST_BUILD TRUE CACHE BOOL "Must build pcre2")
 set(FFlags_MUST_BUILD TRUE CACHE BOOL "Must build FFlags")
 set(PThreadWin32_MUST_BUILD TRUE CACHE BOOL "Must build pthreads-win32")
 
@@ -56,26 +54,6 @@ else()
 endif()
 
 if (_print)
-    message(STATUS "Build pcre2...")
-endif()
-
-set(PCRE2_USE_STATIC_LIBS TRUE)
-cfep_find_dir(PCRE2
-              REQUIRED
-              SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/pcre2
-              CMAKE_DIR "cmake"
-              PACKAGE
-              COMPONENTS 8BIT
-              EXTERNAL
-              BUILD_CMAKE_CACHE_ARGS
-                "\"-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}\""
-              BUILD_DIR "pcre2")
-unset(PCRE2_USE_STATIC_LIBS)
-set(pcre2_lib PCRE2::8BIT)
-get_target_property(pcre2_include_dir PCRE2::8BIT INTERFACE_INCLUDE_DIRECTORIES)
-cfep_install(PCRE2 PREFIX ${deps_install_dir})
-
-if (_print)
     message(STATUS "Build fflags...")
 endif()
 
@@ -105,4 +83,4 @@ if (NOT thread_include_dir)
     set(thread_include_dir "")
 endif()
 
-set(base_include_dir ${dlfcn_include_dir} ${pcre2_include_dir} ${fflags_include_dir} ${thread_include_dir})
+set(base_include_dir ${dlfcn_include_dir} ${fflags_include_dir} ${thread_include_dir})

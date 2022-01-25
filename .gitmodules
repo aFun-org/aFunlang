@@ -1,7 +1,4 @@
 
-[submodule "deps/pcre2"]
-	path = deps/pcre2
-	url = https://github.com/aFun-org/pcre2.git
 [submodule "deps/fflags"]
 	path = deps/fflags
 	url = https://github.com/aFun-org/fflags.git

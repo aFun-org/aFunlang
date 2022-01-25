@@ -79,14 +79,6 @@ if (WIN32 AND NOT CYGWIN)  # cygwin 不需要 dl
     endif()
 endif()
 
-set(PCRE2_USE_STATIC_LIBS TRUE)
-set_and_check(aFunlang_pcre2_ROOT @PACKAGE_pcre2_INSTALL_DIR@)
-find_package_safe(PACKAGE PCRE2 QUIET COMPONENTS 8BIT HINTS @PACKAGE_pcre2_CMAKEDIR@)  # 不能用REQUIRED, 是PCRE2的bug
-unset(PCRE2_USE_STATIC_LIBS)
-if (NOT TARGET PCRE2::8BIT)
-    message(FATAL_ERROR "Target PCRE2::8BIT not found.")
-endif()
-
 set_and_check(aFunlang_fflags_ROOT @PACKAGE_fflags_INSTALL_DIR@)
 set(FFlags_ROOT ${aFunlang_fflags_ROOT})
 set(_CMAKE_MODULE_PATH_bak ${CMAKE_MODULE_PATH})
