@@ -11,8 +11,8 @@
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
 #define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
 
-#define NEW_STR(size) calloc((size) + 1, char)
-#define NEW_WSTR(size) calloc((size) + 1, wchar_t)
+#define NEW_STR(size) safeCalloc<char>((size) + 1)
+#define NEW_WSTR(size) safeCalloc<wchar_t>((size) + 1)
 
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
 #define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))

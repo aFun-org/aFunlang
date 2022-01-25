@@ -60,7 +60,7 @@ namespace aFuntool {
             return true;
         }
 
-        str = calloc(len + 1, char);
+        str = safeCalloc<char>(len + 1);
         return fread(str, sizeof(char), len, file) == len;
     }
 
@@ -77,7 +77,7 @@ namespace aFuntool {
             return true;
         }
 
-        char *tmp = calloc(len + 1, char);
+        char *tmp = safeCalloc<char>(len + 1);
         size_t ret = fread(tmp, sizeof(char), len, file);
         str = tmp;
         free(tmp);

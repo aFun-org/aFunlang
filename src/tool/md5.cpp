@@ -33,7 +33,7 @@ namespace aFuntool {
     };
 
     MD5_CTX *MD5Init(){
-        auto context = calloc(1, MD5_CTX);
+        auto context = safeCalloc<MD5_CTX>();
         context->count[0] = 0;
         context->count[1] = 0;
         context->state[0] = 0x67452301;
@@ -203,7 +203,7 @@ namespace aFuntool {
         if ((fd = fileOpen(path, "rb")) == nullptr)
             throw FileOpenException(path);
 
-        char *md5str = calloc(MD5_STRING, char);
+        char *md5str = safeCalloc<char>(MD5_STRING);
         MD5_CTX *md5 = MD5Init();
         while (true) {
             ret = fread(data, 1, READ_DATA_SIZE, fd);

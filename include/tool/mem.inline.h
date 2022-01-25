@@ -8,11 +8,12 @@
 
 /* 取代calloc函数 */
 namespace aFuntool {
-    template <typename T>
-    static void *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
+    template <typename T = void *>
+    static T *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
 
-    static void *safeCalloc(size_t n, size_t size){
-        void *re = calloc(n, size);
+    template <typename T = void *>
+    static T *safeCalloc(size_t n, size_t size){
+        T *re = (T *)calloc(n, size);
         if (re == nullptr) {
             if (SysLogger)
                 fatalErrorLog(SysLogger, EXIT_FAILURE, "The memory error");
@@ -22,9 +23,9 @@ namespace aFuntool {
         return re;
     }
 
-    template <typename T>
-    static void *safeCalloc(size_t n, T &t){
-        void *re = calloc(n, sizeof(decltype(*t)));  // 自动推断类型
+    template <typename T = void *>
+    static T *safeCalloc(size_t n = 1){
+        T *re = (T *)calloc(n, sizeof(T));  // 自动推断类型
         if (re == nullptr) {
             if (SysLogger)
                 fatalErrorLog(SysLogger, EXIT_FAILURE, "The memory error");

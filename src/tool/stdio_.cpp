@@ -330,7 +330,7 @@ namespace aFuntool {
         if (tmp_len == 0)
             return 0;
 
-        auto tmp = calloc(tmp_len + 1, wchar_t);
+        auto tmp = safeCalloc<wchar_t>(tmp_len + 1);
         if (MultiByteToWideChar(from, 0, str, -1, tmp, tmp_len) == 0)
             return 0;
 
@@ -338,7 +338,7 @@ namespace aFuntool {
         if (dest_len == 0)
             return 0;
 
-        *dest = calloc(dest_len + 1, char);
+        *dest = safeCalloc<char>(dest_len + 1);
         int re = WideCharToMultiByte(to, 0, tmp, -1, *dest, dest_len, nullptr, nullptr);
 
         free(tmp);
@@ -353,7 +353,7 @@ namespace aFuntool {
         if (tmp_len == 0)
             return 0;
 
-        *dest = calloc(tmp_len + 1, wchar_t);
+        *dest = safeCalloc<wchar_t>(tmp_len + 1);
         return MultiByteToWideChar(from, 0, str, -1, *dest, tmp_len);
     }
 
@@ -365,21 +365,21 @@ namespace aFuntool {
         if (dest_len == 0)
             return 0;
 
-        *dest = calloc(dest_len + 1, char);
+        *dest = safeCalloc<char>(dest_len + 1);
         return WideCharToMultiByte(to, 0, str, -1, *dest, dest_len, nullptr, nullptr);
     }
 
     int fgets_stdin(char **dest, int len){
         int re = 0;
         if (!_isatty(_fileno(stdin))) {
-            *dest = calloc(len + 1, char);
+            *dest = safeCalloc<char>(len + 1);
             re = fgets(*dest, len, stdin) != nullptr;
             if (!re)
                 free(*dest);
             return re;
         }
 
-        char *wstr = calloc(len, char);
+        char *wstr = safeCalloc<char>(len);
         UINT code_page = GetConsoleCP();
         if (fgets_stdin_(wstr, len) != nullptr)  // 已经有互斥锁
             re = convertMultiByte(dest, wstr, code_page, CP_UTF8);
@@ -450,7 +450,7 @@ namespace aFuntool {
         if (buf_len == 0)
             buf_len = 1024;
         buf_len += 10;  // 预留更多位置
-        char *buf = calloc(buf_len, char);
+        char *buf = safeCalloc<char>(buf_len);
         size_t re = vsnprintf(buf, buf_len, format, ap);
         if (fputs_std_(buf, std) == EOF)
             re = 0;
@@ -470,7 +470,7 @@ namespace aFuntool {
     // 默认Linux平台均使用utf-8
     
     int fgets_stdin(char **dest, int len) {
-        *dest = calloc(len, char);
+        *dest = safeCalloc<char>(len);
         if (fgets(*dest, len, stdin) == nullptr)
             return 0;
         return 1;

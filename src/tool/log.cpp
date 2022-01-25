@@ -39,8 +39,6 @@
 #define getpid() (long)getpid()
 #endif
 
-#undef calloc
-
 namespace aFuntool {
     typedef struct LogNode LogNode;
     struct LogNode {  // 日志信息记录节点
