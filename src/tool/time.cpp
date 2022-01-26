@@ -43,7 +43,7 @@ namespace aFuntool {
         if (convertWideByte(&format_, format, CP_UTF8) == 0)
             return nullptr;
         wcsftime(time_str, 100, format_, &lt);
-        free(format_);
+        safeFree(format_);
 
         char *re = nullptr;
         if (convertFromWideByte(&re, time_str, CP_UTF8) == 0)
@@ -72,7 +72,7 @@ namespace aFuntool {
         if (convertWideByte(&format_, format.c_str(), CP_UTF8) == 0)
             return "";
         wcsftime(time_str, 100, format_, &lt);
-        free(format_);
+        safeFree(format_);
 
         char *tmp_ch = nullptr;
         if (convertFromWideByte(&tmp_ch, time_str, CP_UTF8) == 0)
@@ -84,7 +84,7 @@ namespace aFuntool {
         char *tmp_ch = strCopy(time_str);;
 #endif
         std::string ret = tmp_ch;
-        free(tmp_ch);
+        safeFree(tmp_ch);
         return ret;
     }
 }

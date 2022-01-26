@@ -97,7 +97,7 @@ namespace aFuntool {
         char *ti = getTime(nullptr, (char *) "%Y-%m-%d%z");
         snprintf(log_path, 218, "%s-%s.log", path.c_str(), ti);
         snprintf(csv_path, 218, "%s-%s.csv", path.c_str(), ti);
-        free(ti);
+        safeFree(ti);
 
         uintmax_t log_size = getFileSize(log_path);
         uintmax_t csv_size = getFileSize(csv_path);
@@ -308,8 +308,8 @@ namespace aFuntool {
 #define D(i) tmp->i
             data->factor.writeLog(D(level), D(id), D(tid), D(date), D(time), D(file), D(line), D(func), D(info));
 #undef D
-            free(tmp->date);
-            free(tmp->info);
+            safeFree(tmp->date);
+            safeFree(tmp->info);
             delete tmp;
         }
         delete data;
@@ -361,7 +361,7 @@ namespace aFuntool {
         ul.unlock();
         if (asyn_)
             cond_.notify_all();
-        free(ti);
+        safeFree(ti);
         return 0;
     }
 

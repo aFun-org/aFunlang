@@ -41,7 +41,7 @@ namespace aFuncore {
         }
 
         if (!aFuntool::isCharUTF8(re)) {
-            free(re);
+            aFuntool::safeFree(re);
             errorLog(aFunCoreLogger, "Is not utf-8");
             return nullptr;
         }

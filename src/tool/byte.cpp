@@ -80,7 +80,7 @@ namespace aFuntool {
         char *tmp = safeCalloc<char>(len + 1);
         size_t ret = fread(tmp, sizeof(char), len, file);
         str = tmp;
-        free(tmp);
+        safeFree(tmp);
         return ret == len;
     }
 

@@ -55,12 +55,12 @@ namespace aFuntool {
 
         if (free_first) {
             auto free_ = const_cast<char *>(first);
-            free(free_);
+            safeFree(free_);
         }
 
         if (free_last) {
             auto free_ = const_cast<char *>(second);
-            free(free_);
+            safeFree(free_);
         }
         return new_str;
     }
@@ -75,7 +75,7 @@ namespace aFuntool {
 
         if (free_old) {
             auto free_ = const_cast<char *>(str);
-            free(free_);
+            safeFree(free_);
         }
         return tmp;
     }
@@ -90,7 +90,7 @@ namespace aFuntool {
 
         if (free_old) {
             auto free_ = const_cast<wchar_t *>(wstr);
-            free(free_);
+            safeFree(free_);
         }
         return tmp;
     }

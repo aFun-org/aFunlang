@@ -395,7 +395,7 @@ namespace aFuncore {
                 break;
             } else if (re == DEL_TOKEN) {  // 删除该token, 继续执行
                 char *word = reader.readWord(lexical.last);
-                free(word);
+                aFuntool::safeFree(word);
                 lexical.status = lex_begin;
                 lexical.last = 0;
                 continue;
@@ -430,10 +430,10 @@ namespace aFuncore {
                     }
 
                     text = new_str;
-                    free(word);
-                    free(new_str);
+                    aFuntool::safeFree(word);
+                    aFuntool::safeFree(new_str);
                 } else
-                    free(word);
+                    aFuntool::safeFree(word);
 
                 if (tt == TK_SPACE || tt == TK_COMMENT) {
                     lexical.status = lex_begin;

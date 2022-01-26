@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     char *my_md5 = getFileMd5(file_path);
 
     bool ret = !strcmp(my_md5, md5_answer);
-    free(my_md5);
+    aFuntool::safeFree(my_md5);
 
     if (ret)
         return 0;

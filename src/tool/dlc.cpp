@@ -68,7 +68,7 @@ namespace aFuntool {
     void DlcHandle::dlcExit(){
         while (dlc != nullptr) {
             auto next = dlc->next_;
-            free(dlc);
+            safeFree(dlc);
             dlc = next;
         }
     }

@@ -54,7 +54,7 @@ namespace aFuntool {
         if (convertWideByte(&tmp, path_.c_str(), CP_UTF8) == 0)
             return -1;
         re = _wstat64(tmp, &stat_);
-        free(tmp);  // 如果 path 为nullptr, 则释放最新生成的 wchat_t
+        safeFree(tmp);  // 如果 path 为nullptr, 则释放最新生成的 wchat_t
 #else
         re = stat(path_.c_str(), &stat_);
 #endif
@@ -174,7 +174,7 @@ namespace aFuntool {
             if (!isalnum(*tmp) &&'_' != *tmp)
                 *tmp = '_';
         std::string ret = var;
-        free(var);
+        safeFree(var);
         return ret;
     }
 
@@ -208,7 +208,7 @@ namespace aFuntool {
         if (convertFromWideByte(&path, exepath, CP_UTF8) == 0)
             return "";
         std::string re = getFilePath(path, dep + 1);
-        free(path);
+        safeFree(path);
         return re;
 #else
         ssize_t ret =  readlink("/proc/self/exe", exepath, 217);  // 预留一位给NUL
@@ -290,7 +290,7 @@ namespace aFuntool {
             mode[i] = (wchar_t)mode_[i];  // ascii字符转换
 
         _wfopen_s(&file, path, mode);
-        free(path);
+        safeFree(path);
         return file;
 #else
         return fopen(path_, mode_);

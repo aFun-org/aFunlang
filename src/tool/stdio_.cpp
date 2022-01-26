@@ -341,7 +341,7 @@ namespace aFuntool {
         *dest = safeCalloc<char>(dest_len + 1);
         int re = WideCharToMultiByte(to, 0, tmp, -1, *dest, dest_len, nullptr, nullptr);
 
-        free(tmp);
+        safeFree(tmp);
         return re;
     }
 
@@ -375,7 +375,7 @@ namespace aFuntool {
             *dest = safeCalloc<char>(len + 1);
             re = fgets(*dest, len, stdin) != nullptr;
             if (!re)
-                free(*dest);
+                safeFree(*dest);
             return re;
         }
 
@@ -435,7 +435,7 @@ namespace aFuntool {
         int re = EOF;
         if (convertMultiByte(&wstr, str, CP_UTF8, code_page) == 0 || wstr != nullptr) {
             re = fputs(wstr, std);
-            free(wstr);
+            safeFree(wstr);
         }
         return re;
     }
@@ -454,7 +454,7 @@ namespace aFuntool {
         size_t re = vsnprintf(buf, buf_len, format, ap);
         if (fputs_std_(buf, std) == EOF)
             re = 0;
-        free(buf);
+        safeFree(buf);
         return re;
     }
 }

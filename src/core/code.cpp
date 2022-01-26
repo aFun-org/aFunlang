@@ -328,7 +328,7 @@ RETURN_FALSE:
 
     Code::ByteCode::~ByteCode(){
         if (type == code_element)
-            free(data.element);
+            aFuntool::safeFree(data.element);
     }
 
     /**

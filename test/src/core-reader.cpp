@@ -47,7 +47,7 @@ int main() {
             printf("%zu\t\tch = %c\n", i, ch);
         }
         char *new_word = test.readWord(100);  // 提取前面100个值
-        free(new_word);
+        aFuntool::safeFree(new_word);
 
         size_t count = 0;
         do {

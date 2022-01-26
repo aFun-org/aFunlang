@@ -80,7 +80,7 @@ namespace aFuntool {
         MD5Update(context, PADDING, pad_len);
         MD5Update(context, bits, 8);
         MD5Encode(digest, context->state, 16);
-        free(context);
+        safeFree(context);
     }
 
     static void MD5Encode(unsigned char *output, const unsigned int *input, unsigned int len){
