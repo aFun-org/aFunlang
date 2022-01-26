@@ -4,7 +4,7 @@
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
-    class Reader {
+    class AFUN_CORE_EXPORT Reader {
     public:
         typedef enum ReadMode {
             read_mode_normal = 0,
@@ -22,6 +22,9 @@ namespace aFuncore {
 
         virtual size_t readText(char *dest, size_t len, ReadMode &mode) = 0;
 
+        [[nodiscard]] inline size_t countRead() const;
+        [[nodiscard]] inline bool isEnd() const;
+        [[nodiscard]] inline bool isError() const;
         [[nodiscard]] inline aFuntool::FileLine getFileLine() const;
         [[nodiscard]] inline const aFuntool::FilePath &getFilePath() const;
         char *readWord(size_t del_index);

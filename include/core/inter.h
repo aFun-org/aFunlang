@@ -78,6 +78,7 @@ namespace aFuncore {
         static const int PREFIX_COUNT = 2;
         constexpr static const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
         constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+        constexpr static const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
         explicit Inter(Environment &env_, int argc = 0, char **argv = nullptr, ExitMode em = em_activity);
         Inter(const Inter &base_inter, ExitMode em = em_activity);

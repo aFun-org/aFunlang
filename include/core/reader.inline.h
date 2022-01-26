@@ -10,6 +10,18 @@ namespace aFuncore {
         read = buf;
     }
 
+    size_t Reader::countRead() const {
+        return read - buf;
+    }
+
+    bool Reader::isEnd() const {
+        return read_end;
+    }
+
+    bool Reader::isError() const {
+        return read_error;
+    }
+
     aFuntool::FileLine Reader::getFileLine() const {
         return line;
     }
