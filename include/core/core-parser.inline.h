@@ -11,6 +11,11 @@ namespace aFuncore {
         lexical.is_end = false;
         lexical.is_error = false;
 
+        syntactic.back = false;
+        syntactic.token = TK_PREFIX;
+        syntactic.text = "";
+        syntactic.is_error = false;
+
         reader.readFirstWord();
     }
 }

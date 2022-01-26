@@ -341,6 +341,9 @@ RETURN_FALSE:
         while (tmp->next != nullptr)
             tmp = tmp->next;
 
+        if (new_code == nullptr)
+            return tmp;
+
         if (new_code->type == code_start) {
             errorLog(aFunCoreLogger, "Code connect with `start`");
             return tmp;

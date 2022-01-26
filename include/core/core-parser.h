@@ -2,6 +2,7 @@
 #define AFUN_CORE_PARSER_H
 #include "aFunToolExport.h"
 #include "reader.h"
+#include "code.h"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Parser {
@@ -51,7 +52,7 @@ namespace aFuncore {
         inline explicit Parser(Reader &reader_);
 
         TokenType getTokenFromLexical(std::string &text);
-
+        bool parserCode(Code &code);
     private:
         typedef enum DoneStatus {
             DEL_TOKEN = 0,
@@ -61,6 +62,7 @@ namespace aFuncore {
         } DoneStatus;
 
         Reader &reader;
+
         struct {
             LexicalStatus status;
             TokenType token;  // token类型
@@ -69,6 +71,13 @@ namespace aFuncore {
             bool is_end;
             bool is_error;
         } lexical;
+
+        struct {
+            bool back;
+            TokenType token;
+            std::string text;
+            bool is_error;
+        } syntactic;
 
         void setLexicalLast(LexicalStatus status, TokenType token);
         DoneStatus doneBegin(char ch);
@@ -81,6 +90,15 @@ namespace aFuncore {
         DoneStatus doneElementLongEnd(char ch);
         DoneStatus doneElementShort(char ch);
         DoneStatus doneSpace(char ch);
+
+        bool getToken();
+        bool goBackToken();
+
+        static const size_t SYNTACTIC_MAX_DEPTH = 218;
+        Code::ByteCode *codeSelf(Code &code, size_t deep, char prefix);
+        Code::ByteCode *codePrefix(Code &code, size_t deep);
+        Code::ByteCode *codeList(Code &code, size_t deep);
+        Code::ByteCode *codeListEnd(Code &code);
     };
 
 }
