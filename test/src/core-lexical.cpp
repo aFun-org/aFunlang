@@ -1,5 +1,5 @@
 ﻿#include <cstdio>
-#include "parser.h"
+#include "core-parser.h"
 
 const char *str = "Hello_var\n"
                   "10 20.32 100var\n"

@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_PARSER_INLINE_H
-#define AFUN_PARSER_INLINE_H
-#include "parser.h"
+﻿#ifndef AFUN_CORE_PARSER_INLINE_H
+#define AFUN_CORE_PARSER_INLINE_H
+#include "core-parser.h"
 
 namespace aFuncore {
     Parser::Parser(Reader &reader_) : reader{reader_} {
@@ -15,4 +15,4 @@ namespace aFuncore {
     }
 }
 
-#endif //AFUN_PARSER_INLINE_H
+#endif //AFUN_CORE_PARSER_INLINE_H

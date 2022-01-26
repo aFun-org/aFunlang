@@ -3,7 +3,7 @@
  * 目标: aFunlang词法分析
  */
 #include <cctype>
-#include "parser.h"
+#include "core-parser.h"
 #include "init.h"
 #include "inter.h"
 
@@ -13,24 +13,6 @@
 
 #define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || (ch) == ','))  /* 被忽略的符号 */
 #define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
-
-#define DEL_TOKEN (0)
-#define FINISH_TOKEN (-1)
-#define CONTINUE_TOKEN (1)
-#define ERROR_TOKEN (-2)
-
-#define printLexicalError(info, parser) do { \
-    writeErrorLog(aFunCoreLogger, "[Lexical] %s:%d %s", (parser)->reader.file, (parser)->reader.line, (info ## Log)); \
-    printf_stderr(0, "[%s] %s:%d : %s\n", HT_aFunGetText(lexical_n, "Lexical"), (parser)->reader.file, \
-                  (parser)->reader.line, info ## Console); \
-    (parser)->is_error = true; /* 错误标记在Parser而非Lexical中, Lexical的异常表示lexical停止运行 */ \
-} while(0)
-
-#define printLexicalWarning(info, parser) do { \
-    writeWarningLog(aFunCoreLogger, "[Lexical] %s:%d %s", (parser)->reader.file, (parser)->reader.line, (info ## Log)); \
-    printf_stderr(0, "[%s] %s:%d : %s\n", HT_aFunGetText(lexical_n, "Lexical"), (parser)->reader.file, \
-                  (parser)->reader.line, info ## Console); \
-} while(0)
 
 namespace aFuncore {
     void Parser::setLexicalLast(LexicalStatus status, TokenType token) {
@@ -68,7 +50,7 @@ namespace aFuncore {
      *     -> | -> (lex_element_long)
      *     -> iselement(ch) -> [lex_element]
      */
-    int Parser::doneBegin(char ch) {
+    Parser::DoneStatus Parser::doneBegin(char ch) {
         if (ch == aFuntool::NUL) {
             setLexicalLast(lex_nul, TK_EOF);
             return FINISH_TOKEN;
@@ -79,13 +61,13 @@ namespace aFuncore {
             switch (ch) {
                 case '!':
                     lexical.status = lex_prefix_block_p;
-                    return 1;
+                    return CONTINUE_TOKEN;
                 case '@':
                     lexical.status = lex_prefix_block_b;
-                    return 1;
+                    return CONTINUE_TOKEN;
                 case '#':
                     lexical.status = lex_prefix_block_c;
-                    return 1;
+                    return CONTINUE_TOKEN;
                 default:
                     fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
                     return ERROR_TOKEN;
@@ -116,16 +98,16 @@ namespace aFuncore {
             }
         } else if (ch == ';') {
             lexical.status = lex_comment_before;
-            return 1;
+            return CONTINUE_TOKEN;
         } else if (isignore(ch)) {  // 空白符或控制字符被忽略
             setLexicalLast(lex_space, TK_SPACE);
-            return 1;
+            return CONTINUE_TOKEN;
         } else if (ch == '|') {
             lexical.status = lex_element_long;
-            return 1;
+            return CONTINUE_TOKEN;
         } else if (iselement(ch)) {  // 除空格外的可见字符
             setLexicalLast(lex_element_short, TK_ELEMENT_SHORT);
-            return 1;
+            return CONTINUE_TOKEN;
         }
         // TODO-szh 给出警告
         return DEL_TOKEN;
@@ -140,7 +122,7 @@ namespace aFuncore {
      * [lex_prefix_block_b] -> ) -> [lex_rb] # return FINISH_TOKEN
      * [lex_prefix_block_c] -> ) -> [lex_rc] # return FINISH_TOKEN
      */
-    int Parser::donePrefixBlock(char ch) {
+    Parser::DoneStatus Parser::donePrefixBlock(char ch) {
         if (ch == '(') {
             switch (lexical.status) {
                 case lex_prefix_block_p:
@@ -183,17 +165,17 @@ namespace aFuncore {
      *      -> ; -> (lex_mutli_comment) # mutli_comment = 0
      *      -> other -> (lex_uni_comment)
      */
-    int Parser::doneCommentBefore(char ch) {
+    Parser::DoneStatus Parser::doneCommentBefore(char ch) {
         if (ch == '\n' || ch == aFuntool::NUL) {
             setLexicalLast(lex_uni_comment_end, TK_COMMENT);
             return FINISH_TOKEN;
         } else if (ch == ';') {  // 多行注释
             lexical.status = lex_mutli_comment;
             lexical.mutli_comment = 0;
-            return 1;
+            return CONTINUE_TOKEN;
         }
         lexical.status = lex_uni_comment;
-        return 1;
+        return CONTINUE_TOKEN;
     }
 
     /*
@@ -202,13 +184,13 @@ namespace aFuncore {
      *      -> '\n' || NUL -> [lex_uni_comment_end] # return FINISH_TOKEN
      *      -> other -> (lex_uni_comment)
      */
-    int Parser::doneUniComment(char ch) {
+    Parser::DoneStatus Parser::doneUniComment(char ch) {
         if (ch == '\n' || ch == aFuntool::NUL) {
             setLexicalLast(lex_uni_comment_end, TK_COMMENT);
             return FINISH_TOKEN;
         }
         lexical.status = lex_uni_comment;
-        return 1;
+        return CONTINUE_TOKEN;
     }
 
     /*
@@ -218,7 +200,7 @@ namespace aFuncore {
      *      -> ; -> (lex_mutli_comment_end_before)
      *      -> other -> (lex_mutli_comment)
      */
-    int Parser::doneMutliComment(char ch) {
+    Parser::DoneStatus Parser::doneMutliComment(char ch) {
         if (ch == aFuntool::NUL) {
             lexical.status = lex_mutli_comment_end;
             // TODO-szh 给出警告
@@ -227,7 +209,7 @@ namespace aFuncore {
             lexical.status = lex_mutli_comment_end_before;
         else
             lexical.status = lex_mutli_comment;
-        return 1;
+        return CONTINUE_TOKEN;
     }
 
     /*
@@ -239,7 +221,7 @@ namespace aFuncore {
      *              mutli_comment == 0 -> [lex_mutli_comment_end] # return FINISH_TOKEN
      *              else -> (lex_mutli_comment)# mutli_comment--;
      */
-    int Parser::doneMutliCommentBeforeEnd(char ch) {
+    Parser::DoneStatus Parser::doneMutliCommentBeforeEnd(char ch) {
         if (ch == aFuntool::NUL) {
             setLexicalLast(lex_mutli_comment_end, TK_COMMENT);
             // TODO-szh 给出警告
@@ -260,7 +242,7 @@ namespace aFuncore {
             }
         }
         lexical.status = lex_mutli_comment;
-        return 1;
+        return CONTINUE_TOKEN;
     }
 
     /*
@@ -270,16 +252,16 @@ namespace aFuncore {
      *      -> | -> [lex_element_long_end]
      *      -> other -> (lex_element_long)
      */
-    int Parser::doneElementLong(char ch) {
+    Parser::DoneStatus Parser::doneElementLong(char ch) {
         if (ch == '|') {  // 结束符
             setLexicalLast(lex_element_long_end, TK_ELEMENT_LONG);
-            return 1;
+            return CONTINUE_TOKEN;
         } else if (ch == aFuntool::NUL) {
             // TODO-szh 添加警告
             return ERROR_TOKEN;
         }
         lexical.status = lex_element_long;
-        return 1;
+        return CONTINUE_TOKEN;
     }
 
     /*
@@ -288,10 +270,10 @@ namespace aFuncore {
      *      -> | -> (lex_element_long)
      *      -> other -> [lex_element_long_end] # return FINISH_TOKEN
      */
-    int Parser::doneElementLongEnd(char ch) {
+    Parser::DoneStatus Parser::doneElementLongEnd(char ch) {
         if (ch == '|') {  // ||表示非结束
             lexical.status = lex_element_long;
-            return 1;
+            return CONTINUE_TOKEN;
         }
         lexical.status = lex_element_long_end;
         return FINISH_TOKEN;
@@ -303,10 +285,10 @@ namespace aFuncore {
      *      -> !strchr("!@#([{}]);,", ch) && iselement(ch) -> (lex_element_short)
      *      -> other -> (lex_element_short) # return FINISH_TOKEN
      */
-    int Parser::doneElementShort(char ch) {
+    Parser::DoneStatus Parser::doneElementShort(char ch) {
         if (!strchr("!@#([{}]);,", ch) && iselement(ch)) {  // 除空格外的可见字符 (不包括NUL)
             setLexicalLast(lex_element_short, TK_ELEMENT_SHORT);
-            return 1;
+            return CONTINUE_TOKEN;
         }
         lexical.status = lex_element_short;
         return FINISH_TOKEN;
@@ -318,10 +300,10 @@ namespace aFuncore {
      *      -> ch != NUL && isignore(ch) -> (lex_space)
      *      -> other -> (lex_space) # return FINISH_TOKEN
      */
-    int Parser::doneSpace(char ch) {
+    Parser::DoneStatus Parser::doneSpace(char ch) {
         if (ch != aFuntool::NUL && isignore(ch)) {
             setLexicalLast(lex_space, TK_SPACE);
-            return 1;
+            return CONTINUE_TOKEN;
         }
         lexical.status = lex_space;
         return FINISH_TOKEN;
@@ -332,8 +314,8 @@ namespace aFuncore {
      * 目标: 获取Lexical的TokenType以及相关值
      */
     Parser::TokenType Parser::getTokenFromLexical(std::string &text) {
-        Parser::TokenType tt;
-        int re;
+        TokenType tt;
+        DoneStatus re;
         lexical.status = lex_begin;
         lexical.last = 0;
         text = "";

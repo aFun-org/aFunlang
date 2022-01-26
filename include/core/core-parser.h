@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_PARSER_H
-#define AFUN_PARSER_H
+﻿#ifndef AFUN_CORE_PARSER_H
+#define AFUN_CORE_PARSER_H
 #include "aFunToolExport.h"
 #include "reader.h"
 
@@ -53,6 +53,13 @@ namespace aFuncore {
         TokenType getTokenFromLexical(std::string &text);
 
     private:
+        typedef enum DoneStatus {
+            DEL_TOKEN = 0,
+            FINISH_TOKEN = -1,
+            CONTINUE_TOKEN = 1,
+            ERROR_TOKEN = -2
+        } DoneStatus;
+
         Reader &reader;
         struct {
             LexicalStatus status;
@@ -64,19 +71,19 @@ namespace aFuncore {
         } lexical;
 
         void setLexicalLast(LexicalStatus status, TokenType token);
-        int doneBegin(char ch);
-        int donePrefixBlock(char ch);
-        int doneCommentBefore(char ch);
-        int doneUniComment(char ch);
-        int doneMutliComment(char ch);
-        int doneMutliCommentBeforeEnd(char ch);
-        int doneElementLong(char ch);
-        int doneElementLongEnd(char ch);
-        int doneElementShort(char ch);
-        int doneSpace(char ch);
+        DoneStatus doneBegin(char ch);
+        DoneStatus donePrefixBlock(char ch);
+        DoneStatus doneCommentBefore(char ch);
+        DoneStatus doneUniComment(char ch);
+        DoneStatus doneMutliComment(char ch);
+        DoneStatus doneMutliCommentBeforeEnd(char ch);
+        DoneStatus doneElementLong(char ch);
+        DoneStatus doneElementLongEnd(char ch);
+        DoneStatus doneElementShort(char ch);
+        DoneStatus doneSpace(char ch);
     };
 
 }
 
-#include "parser.inline.h"
-#endif //AFUN_PARSER_H
+#include "core-parser.inline.h"
+#endif //AFUN_CORE_PARSER_H
