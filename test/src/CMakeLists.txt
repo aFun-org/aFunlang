@@ -31,5 +31,6 @@ add_new_test(core-code COMMAND "$<TARGET_FILE:core-code>")
 add_new_test(core-env-var COMMAND "$<TARGET_FILE:core-env-var>")
 add_new_test(core-down-msg COMMAND "$<TARGET_FILE:core-down-msg>")
 add_new_test(core-up-msg COMMAND "$<TARGET_FILE:core-up-msg>")
+add_new_test(core-reader COMMAND "$<TARGET_FILE:core-reader>")
 
 add_new_test(run-code COMMAND "$<TARGET_FILE:run-code>")
