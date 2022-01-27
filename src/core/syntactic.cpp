@@ -25,80 +25,72 @@ namespace aFuncore {
         switch (syntactic.token) {
             case TK_ELEMENT_SHORT:
             case TK_ELEMENT_LONG:
-                return  new Code::ByteCode(code, syntactic.text, reader.getFileLine(), prefix);
+                return new Code::ByteCode(code, syntactic.text, reader.getFileLine(), prefix);
             case TK_LP: {
                 Code::ByteCode *code_list;
-                if (depth <= SYNTACTIC_MAX_DEPTH)
+                if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                else {
-                    // TODO-szh 错误提示
+                    code_list = new Code::ByteCode(code, Code::ByteCode::block_p, code_list, reader.getFileLine(), prefix);
+                } else {
+                    pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                     return nullptr;
                 }
 
                 getToken();
-                switch (syntactic.token) {
-                    case TK_RP:
-                        break;
-                    case TK_ERROR:
-                        return nullptr;
-                    default:
-                        goBackToken();
-                        // TODO-szh 错误提示
-                        return nullptr;
+                if (syntactic.token != TK_RP && syntactic.token != TK_ERROR) {
+                    goBackToken();
+                    pushEvent({ParserEvent::syntactic_error_block_p_end, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                 }
 
-                return new Code::ByteCode(code, Code::ByteCode::block_p, code_list, reader.getFileLine(), prefix);
+                return code_list;
             }
             case TK_LB: {
                 Code::ByteCode *code_list;
-                if (depth <= SYNTACTIC_MAX_DEPTH)
+                if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                else {
-                    // TODO-szh 错误提示
+                    code_list = new Code::ByteCode(code, Code::ByteCode::block_b, code_list, reader.getFileLine(), prefix);
+                } else {
+                    pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                     return nullptr;
                 }
 
                 getToken();
-                switch (syntactic.token) {
-                    case TK_RB:
-                        break;
-                    case TK_ERROR:
-                        return nullptr;
-                    default:
-                        goBackToken();
-                        // TODO-szh 错误提示
-                        return nullptr;
+                if (syntactic.token != TK_RB && syntactic.token != TK_ERROR) {
+                    goBackToken();
+                    pushEvent({ParserEvent::syntactic_error_block_b_end, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                 }
 
-                return new Code::ByteCode(code, Code::ByteCode::block_b, code_list, reader.getFileLine(), prefix);
+                return code_list;
             }
             case TK_LC: {
                 Code::ByteCode *code_list;
-                if (depth <= SYNTACTIC_MAX_DEPTH)
+                if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                else {
-                    // TODO-szh 错误提示
+                    code_list = new Code::ByteCode(code, Code::ByteCode::block_c, code_list, reader.getFileLine(), prefix);
+                } else {
+                    pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                     return nullptr;
                 }
 
                 getToken();
-                switch (syntactic.token) {
-                    case TK_RC:
-                        break;
-                    case TK_ERROR:
-                        return nullptr;
-                    default:
-                        goBackToken();
-                        // TODO-szh 错误提示
-                        return nullptr;
+                if (syntactic.token != TK_RC && syntactic.token != TK_ERROR) {
+                    goBackToken();
+                    pushEvent({ParserEvent::syntactic_error_block_c_end, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
                 }
 
-                return new Code::ByteCode(code, Code::ByteCode::block_c, code_list, reader.getFileLine(), prefix);
+                return code_list;
             }
             case TK_ERROR:
                 return nullptr;
             default:
-                // TODO-szh 错误提示
+                pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
+                syntactic.is_error = true;
                 return nullptr;
         }
     }
@@ -108,10 +100,12 @@ namespace aFuncore {
         getToken();
         if (syntactic.token != TK_PREFIX) {
             goBackToken();
-            // TODO-szh 错误提示
-        } else if (syntactic.text.size() != 1)
-            NULL;  // TODO-szh 错误提示
-        else
+            pushEvent({ParserEvent::syntactic_error_prefix, reader.getFileLine(), ""});
+            syntactic.is_error = true;
+        } else if (syntactic.text.size() != 1) {
+            pushEvent({ParserEvent::syntactic_error_prefix, reader.getFileLine(), ""});
+            syntactic.is_error = true;
+        } else
             ch = syntactic.text[0];
         return codeSelf(code, depth, ch);
     }
@@ -174,12 +168,15 @@ namespace aFuncore {
                 goBackToken();
                 Code::ByteCode *re = codeList(code, 0);
                 getToken();
-                if (syntactic.token != TK_EOF && syntactic.token != TK_ERROR)
-                    NULL; // TODO-szh 错误提示
+                if (syntactic.token != TK_EOF && syntactic.token != TK_ERROR) {
+                    pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
+                    syntactic.is_error = true;
+                }
                 return re;
             }
             default:
-                // TODO-szh 错误提示
+                pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
+                syntactic.is_error = true;
                 return nullptr;
         }
     }

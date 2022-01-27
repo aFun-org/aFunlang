@@ -3,6 +3,7 @@
 #include "aFunToolExport.h"
 #include "reader.h"
 #include "code.h"
+#include <list>
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Parser {
@@ -49,10 +50,16 @@ namespace aFuncore {
             TK_EOF = 11,
         } TokenType;
 
+        struct ParserEvent;
+
         inline explicit Parser(Reader &reader_);
 
         TokenType getTokenFromLexical(std::string &text);
         bool parserCode(Code &code);
+
+        [[nodiscard]] inline size_t countEvent() const;
+        inline ParserEvent popEvent();
+        [[nodiscard]] inline const ParserEvent &checkEvent() const;
     private:
         typedef enum DoneStatus {
             DEL_TOKEN = 0,
@@ -61,8 +68,8 @@ namespace aFuncore {
             ERROR_TOKEN = -2
         } DoneStatus;
 
+        std::list<ParserEvent> event;
         Reader &reader;
-
         struct {
             LexicalStatus status;
             TokenType token;  // token类型
@@ -71,7 +78,6 @@ namespace aFuncore {
             bool is_end;
             bool is_error;
         } lexical;
-
         struct {
             bool back;
             TokenType token;
@@ -99,6 +105,29 @@ namespace aFuncore {
         Code::ByteCode *codePrefix(Code &code, size_t deep);
         Code::ByteCode *codeList(Code &code, size_t deep);
         Code::ByteCode *codeListEnd(Code &code);
+
+        inline void pushEvent(const ParserEvent &new_event);
+        inline void pushEvent(ParserEvent &&new_event);
+    };
+
+    struct Parser::ParserEvent {
+        typedef enum EventType {
+            parser_error_unknown = -1,  // 遇到未知错误
+
+            lexical_error_char = -2,  // 遇到非正常符号
+            lexical_error_element_end = -3,  // 注释未结束
+            syntactic_error_nested_too_deep = -4,
+            syntactic_error_block_p_end = -5,
+            syntactic_error_block_b_end = -6,
+            syntactic_error_block_c_end = -7,
+            syntactic_error_prefix = -8,
+
+            lexical_warning_comment_end = 1,  // 注释未结束
+        } EventType;
+
+        EventType type;
+        aFuntool::FileLine line;
+        std::string info;
     };
 
 }

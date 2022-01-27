@@ -70,6 +70,7 @@ namespace aFuncore {
                     return CONTINUE_TOKEN;
                 default:
                     fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
         } else if (strchr("([{)]}", ch)) { /* 括号 */
@@ -94,6 +95,7 @@ namespace aFuncore {
                     return FINISH_TOKEN;
                 default:
                     fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
         } else if (ch == ';') {
@@ -109,7 +111,7 @@ namespace aFuncore {
             setLexicalLast(lex_element_short, TK_ELEMENT_SHORT);
             return CONTINUE_TOKEN;
         }
-        // TODO-szh 给出警告
+        pushEvent({ParserEvent::lexical_error_char, reader.getFileLine(), ""});
         return DEL_TOKEN;
     }
 
@@ -136,6 +138,7 @@ namespace aFuncore {
                     return FINISH_TOKEN;
                 default:
                     fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
         } else if (ch == ')') {
@@ -151,10 +154,11 @@ namespace aFuncore {
                     return FINISH_TOKEN;
                 default:
                     fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
         }
-        // TODO-szh 给出警告
+        pushEvent({ParserEvent::lexical_error_char, reader.getFileLine(), ""});
         return DEL_TOKEN;
     }
 
@@ -203,7 +207,7 @@ namespace aFuncore {
     Parser::DoneStatus Parser::doneMutliComment(char ch) {
         if (ch == aFuntool::NUL) {
             lexical.status = lex_mutli_comment_end;
-            // TODO-szh 给出警告
+            pushEvent({ParserEvent::lexical_warning_comment_end, reader.getFileLine(), ""});
             return FINISH_TOKEN;
         } else if (ch == ';')
             lexical.status = lex_mutli_comment_end_before;
@@ -224,7 +228,7 @@ namespace aFuncore {
     Parser::DoneStatus Parser::doneMutliCommentBeforeEnd(char ch) {
         if (ch == aFuntool::NUL) {
             setLexicalLast(lex_mutli_comment_end, TK_COMMENT);
-            // TODO-szh 给出警告
+            pushEvent({ParserEvent::lexical_warning_comment_end, reader.getFileLine(), ""});
             return FINISH_TOKEN;
         } else if (ch == ';') {
             /* 嵌套注释 */
@@ -257,7 +261,7 @@ namespace aFuncore {
             setLexicalLast(lex_element_long_end, TK_ELEMENT_LONG);
             return CONTINUE_TOKEN;
         } else if (ch == aFuntool::NUL) {
-            // TODO-szh 添加警告
+            pushEvent({ParserEvent::lexical_error_element_end, reader.getFileLine(), ""});
             return ERROR_TOKEN;
         }
         lexical.status = lex_element_long;
@@ -331,7 +335,7 @@ namespace aFuncore {
                 return TK_ERROR;
 
             if (isascii(ch) && iscntrl(ch) && !isspace(ch) && ch != aFuntool::NUL)  // ascii 控制字符
-                NULL;  // TODO-szh 给出警告
+                pushEvent({ParserEvent::lexical_error_char, reader.getFileLine(), ""});
 
             switch (lexical.status) {
                 case lex_begin:
@@ -374,6 +378,7 @@ namespace aFuncore {
 
             if (re == ERROR_TOKEN) {
                 tt = TK_ERROR;
+                lexical.is_error = true;
                 break;
             } else if (re == DEL_TOKEN) {  // 删除该token, 继续执行
                 char *word = reader.readWord(lexical.last);
