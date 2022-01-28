@@ -29,14 +29,14 @@
 
 #include <windows.h>
 
-#define getpid() (long)GetCurrentProcessId()
-#define gettid() (long)GetCurrentThreadId()
+#define getpid() static_cast<long>(GetCurrentProcessId())
+#define gettid() static_cast<long>(GetCurrentThreadId())
 // cygwin没有syscall.h, 因此需要依赖 windows 的 api
 #else
 #include <unistd.h>
 #include "sys/syscall.h"
-#define gettid() (long)syscall(SYS_gettid)
-#define getpid() (long)getpid()
+#define gettid() static_cast<long>(syscall(SYS_gettid))
+#define getpid() static_cast<long>(getpid())
 #endif
 
 namespace aFuntool {

@@ -248,7 +248,7 @@ namespace aFuntool {
 
     char *fgets_stdin_(char *buf, size_t len){
         if (!_isatty(_fileno(stdin)))
-            return fgets(buf, (int) len, stdin);
+            return fgets(buf, static_cast<int>(len), stdin);
 
         HANDLE std_i = GetStdHandle(STD_INPUT_HANDLE);
         HANDLE std_o = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -402,12 +402,12 @@ namespace aFuntool {
 
         if (index != 0) {
             index--;
-            buffer[index] = (char) ch;
+            buffer[index] = static_cast<char>(ch);
         } else if (end != BUFF_SIZE) {  // index == 0;
             memmove(buffer, buffer + 1, end);  // 往回移动
             end++;
             next++;
-            buffer[0] = (char) ch;
+            buffer[0] = static_cast<char>(ch);
         }
 
         return 1;

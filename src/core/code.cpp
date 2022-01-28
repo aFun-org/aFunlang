@@ -77,7 +77,7 @@ namespace aFuncore {
             if (tmp->next == nullptr) {
                 do {
                     tmp = tmp->father;
-                    Done(aFuntool::byteWriteInt(f, (int8_t) 3));
+                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(3)));
                 } while (tmp != nullptr && tmp->next == nullptr);
                 if (tmp == nullptr)
                     break;
@@ -85,7 +85,7 @@ namespace aFuncore {
             } else
                 tmp = tmp->next;
         }
-        Done(aFuntool::byteWriteInt(f, (int8_t) 0));
+        Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(0)));
         return true;
     }
 
@@ -388,24 +388,24 @@ RETURN_FALSE:
     bool Code::ByteCode::write_v1(FILE *f, bool debug) const{
         switch (type) {
             case code_element:
-                Done(aFuntool::byteWriteInt(f, (int8_t) code_element));
-                Done(aFuntool::byteWriteInt(f, (int8_t) prefix));
-                Done(aFuntool::byteWriteStr(f, data.element));
+                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_element)));
+                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
+                Done(aFuntool::byteWriteStr(f, (data.element)));
                 break;
             case code_block:
                 if (data.son == nullptr)
-                    Done(aFuntool::byteWriteInt(f, (int8_t) 4));  // 空 block 标注为 4
+                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(4)));  // 空 block 标注为 4
                 else
-                    Done(aFuntool::byteWriteInt(f, (int8_t) code_block));
-                Done(aFuntool::byteWriteInt(f, (int8_t) prefix));
-                Done(aFuntool::byteWriteInt(f, (int8_t) data.block_type));
+                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_block)));
+                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
+                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(data.block_type)));
                 break;
             default:
                 break;
 
         }
         if (debug)
-            Done(aFuntool::byteWriteInt(f, (int16_t) line));
+            Done(aFuntool::byteWriteInt(f, static_cast<int16_t>(line)));
         return true;
     }
 
@@ -475,7 +475,7 @@ RETURN_FALSE:
         char md5_value[aFuntool::MD5_SIZE];
         aFuntool::MD5_CTX *md5 = aFuntool::MD5Init();
 
-        char head[] = {(char) type, prefix, 'x', 'x', aFuntool::NUL};
+        char head[] = {static_cast<char>(type), prefix, 'x', 'x', aFuntool::NUL};
         if (prefix == aFuntool::NUL)
             head[1] = '-';
         if (type == code_block) {

@@ -30,7 +30,7 @@ namespace aFuntool {
      * 写入一个C风格字符串
      */
     bool byteWriteStr(FILE *file, const char *str){
-        if (!byteWriteInt<uint16_t>(file, (uint16_t) strlen(str)))
+        if (!byteWriteInt<uint16_t>(file, static_cast<uint16_t>(strlen(str))))
             return false;
         return fwrite(str, sizeof(char), strlen(str), file) == strlen(str);
     }
@@ -41,7 +41,7 @@ namespace aFuntool {
      */
     bool byteWriteStr(FILE *file, const std::string &str){
         size_t size = str.size();
-        if (!byteWriteInt<uint16_t>(file, (uint16_t) size))
+        if (!byteWriteInt<uint16_t>(file, static_cast<uint16_t>(size)))
             return false;
         return fwrite(str.c_str(), sizeof(char), size, file) == size;
     }
