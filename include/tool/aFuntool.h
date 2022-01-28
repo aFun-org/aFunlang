@@ -11,8 +11,8 @@
 #include "aFunToolExport.h"
 
 #include "tool-exception.h"
-#include "stdio_.h"
-#include "exit_.h"
+#include "tool-stdio.h"
+#include "tool-exit.h"
 #include "byte.h"
 #include "dlc.h"
 #include "file.h"
@@ -21,7 +21,7 @@
 #include "path.h"
 #include "tool-regex.h"
 #include "str.h"
-#include "time_.h"
+#include "tool-time.h"
 #include "log.h"
 
 #endif //AFUN_AFUNTOOL_H

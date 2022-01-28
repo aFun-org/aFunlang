@@ -5,8 +5,8 @@
 
 #include <ctime>
 #include "tool.h"
-#include "time_.h"
-#include "stdio_.h"
+#include "tool-time.h"
+#include "tool-stdio.h"
 #include "str.h"
 
 namespace aFuntool {

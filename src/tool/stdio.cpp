@@ -6,7 +6,7 @@
 
 #include <cstdio>
 #include "tool.h"
-#include "stdio_.h"
+#include "tool-stdio.h"
 #include "mutex"
 
 /* 注意:

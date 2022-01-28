@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include "log.h"
-#include "exit_.h"
+#include "tool-exit.h"
 #include "tool-logger.h"
 
 /* 取代calloc函数 */

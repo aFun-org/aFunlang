@@ -19,11 +19,11 @@
 #include "log.h"
 #include "tool-exception.h"
 #include "log-macro.h"
-#include "time_.h"
+#include "tool-time.h"
 #include "file.h"
-#include "stdio_.h"
+#include "tool-stdio.h"
 #include "str.h"
-#include "exit_.h"
+#include "tool-exit.h"
 
 #ifdef aFunWIN32
 

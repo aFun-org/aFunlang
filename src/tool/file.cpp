@@ -13,7 +13,7 @@
 #include "path.h"
 #include "str.h"
 #include "log.h"
-#include "stdio_.h"
+#include "tool-stdio.h"
 
 #ifdef aFunWIN32_NO_CYGWIN
 #ifdef _MSC_VER

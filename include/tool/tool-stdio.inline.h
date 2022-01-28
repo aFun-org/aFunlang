@@ -1,7 +1,7 @@
 ﻿#ifndef AFUN_STDIO_INLINE_H
 #define AFUN_STDIO_INLINE_H
 
-#include "stdio_.h"
+#include "tool-stdio.h"
 
 namespace aFuntool {
     static bool clear_ferror(FILE *file) {

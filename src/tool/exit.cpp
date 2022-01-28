@@ -1,5 +1,5 @@
 ﻿#include "tool.h"
-#include "exit_.h"
+#include "tool-exit.h"
 #include "mutex"
 
 namespace aFuntool {

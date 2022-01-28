@@ -65,6 +65,6 @@ namespace aFuntool {
 
 #endif
 
-#include "stdio_.inline.h"
+#include "tool-stdio.inline.h"
 
 #endif //AFUN_STDIO_H
