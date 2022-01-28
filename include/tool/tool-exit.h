@@ -4,7 +4,8 @@
 namespace aFuntool {
     typedef void aFunExitFunc(void *);
 
-    [[noreturn]] AFUN_TOOL_EXPORT void aFunExit(int exit_code);
+    AFUN_TOOL_EXPORT void aFunExit(int exit_code) noexcept(false);
+    [[noreturn]] AFUN_TOOL_EXPORT void aFunExitReal(int exit_code);
     AFUN_TOOL_EXPORT int aFunTryExitPseudo();
     AFUN_TOOL_EXPORT int aFunExitPseudo();
     AFUN_TOOL_EXPORT int aFunAtExitTry(aFunExitFunc *func, void *data);

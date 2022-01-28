@@ -1,5 +1,6 @@
 ﻿#include "tool.h"
 #include "tool-exit.h"
+#include "tool-exception.h"
 #include "mutex"
 
 namespace aFuntool {
@@ -14,7 +15,21 @@ namespace aFuntool {
      * 退出程序
      * @param exit_code 退出代码
      */
-    [[noreturn]] void aFunExit(int exit_code){
+    void aFunExit(int exit_code) noexcept(false) {
+        std::unique_lock<std::mutex> ul{exit_mutex};
+        for (int i = exit_func_size - 1; i >= 0; i--) {
+            if (exit_func[i].func != nullptr)
+                exit_func[i].func(exit_func[i].data);
+        }
+        ul.unlock();
+        throw Exit(exit_code);
+    }
+
+    /**
+     * 退出程序
+     * @param exit_code 退出代码
+     */
+    [[noreturn]] void aFunExitReal(int exit_code) {
         std::unique_lock<std::mutex> ul{exit_mutex};
         for (int i = exit_func_size - 1; i >= 0; i--) {
             if (exit_func[i].func != nullptr)

@@ -11,7 +11,11 @@ void exit_func_push2(void *) {
 }
 
 int main(int argc, char **argv) {
-    aFunAtExit(exit_func_push1, nullptr);
-    aFunAtExit(exit_func_push2, nullptr);
-    aFunExit(0);
+    try {
+        aFunAtExit(exit_func_push1, nullptr);
+        aFunAtExit(exit_func_push2, nullptr);
+        aFunExit(0);
+    } catch (aFuntool::Exit &e) {
+        aFunExitReal(e.getExitCode());
+    }
 }

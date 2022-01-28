@@ -31,8 +31,10 @@ namespace aFuntool {
     };
 
     class Exit : public aFuntoolException {
+        int exit_code;
     public:
-        inline explicit Exit();
+        inline explicit Exit(int exit_code_);
+        inline int getExitCode() const;
     };
 }
 

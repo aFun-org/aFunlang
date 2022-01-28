@@ -433,6 +433,7 @@ namespace aFuntool {
             throw LogFatalError("Log Fatal Error");
         aFunExit(EXIT_FAILURE);
 #endif
+        return 0;
     }
 
 #undef fatalErrorLog
@@ -450,5 +451,6 @@ namespace aFuntool {
         else
             aFunExit(exit_code);
 #endif
+        return 0;
     }
 }

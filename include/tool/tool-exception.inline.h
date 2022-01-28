@@ -28,8 +28,12 @@ namespace aFuntool {
 
     }
 
-    inline Exit::Exit() : aFuntoolException("Exit by user") {
+    inline Exit::Exit(int exit_code_) : aFuntoolException("Exit by user"), exit_code{exit_code_} {
 
+    }
+
+    inline int Exit::getExitCode() const {
+        return exit_code;
     }
 }
 
