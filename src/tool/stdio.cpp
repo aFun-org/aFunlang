@@ -16,6 +16,11 @@
  * 实际上, khbit只能代表有内容输入而无法确定内容是否已经输入到缓冲区中
  */
 
+namespace aFuntool {
+    OutStream cout{printf_stdout};
+    OutStream cerr{printf_stderr};
+}
+
 #ifdef aFunWIN32_NO_CYGWIN
 #include <cstring>
 #include <cstdarg>

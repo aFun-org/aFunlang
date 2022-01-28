@@ -95,4 +95,66 @@ namespace aFuntool {
 }
 
 #endif
+
+namespace aFuntool {
+    inline OutStream::OutStream(PrintFunction *func_) : func {func_} {
+
+    }
+
+    inline OutStream &OutStream::operator<<(int8_t a) {
+        func(0, "%c", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(int16_t a) {
+        func(0, "%d", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(int32_t a) {
+        func(0, "%d", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(int64_t a) {
+        func(0, "%ld", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(uint8_t a) {
+        func(0, "%c", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(uint16_t a) {
+        func(0, "%u", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(uint32_t a) {
+        func(0, "%u", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(uint64_t a) {
+        func(0, "%lu", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(const char *a){
+        func(0, "%s", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(const std::string &a) {
+        func(0, "%s", a.c_str());
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(const void *a) {
+        func(0, "%p", a);
+        return *this;
+    }
+}
+
 #endif //AFUN_STDIO_INLINE_H

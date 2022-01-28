@@ -59,7 +59,7 @@ public:
     ~Literaler1() override = default;
 
     void getObject(const std::string &literal, char prefix, Inter &inter) override {
-        printf_stdout(0, "Literaler1: %s %c\n", literal.c_str(), prefix == NUL ? '-' : prefix);
+        aFuntool::cout << "Literaler1: " << literal << (prefix == NUL ? '-' : prefix) << "\n";
         new ExeActivation(func_code, inter);
     }
 };
@@ -76,7 +76,7 @@ public:
     ~CBV1() override = default;
 
     void callBack(Inter &inter) override {
-        printf_stdout(0, "CallBackVar callback\n");
+        aFuntool::cout << "CallBackVar callback\n";
         new ExeActivation(func_code, inter);
     }
 };
@@ -87,20 +87,19 @@ int main() {
 
     auto obj = new Object("Object", inter);
     inter.getGlobalVarlist()->defineVar("test-var", obj);
-    printf_stdout(0, "obj: %p\n", obj);
+    aFuntool::cout << "obj: " << obj << "\n";
 
     auto func = new Func1(inter);
     inter.getGlobalVarlist()->defineVar("test-func", func);
-    printf_stdout(0, "func: %p\n", func);
+    aFuntool::cout << "func: " << func << "\n";
 
     auto literaler = new Literaler1(inter);
     inter.getGlobalVarlist()->defineVar("test-literaler", literaler);
-    printf_stdout(0, "literaler: %p\n", literaler);
+    aFuntool::cout << "literaler: " << literaler << "\n";
 
     auto cbv = new CBV1(inter);
     inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
-    printf_stdout(0, "cbv: %p\n", cbv);
-    fputs_stdout("\n");
+    aFuntool::cout << "cbv: " << cbv << "\n\n";
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
 
     {

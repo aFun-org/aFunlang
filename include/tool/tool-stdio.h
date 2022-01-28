@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_STDIO_H
 #define AFUN_STDIO_H
 #include <cstdio>
+#include <cinttypes>
 #include "tool.h"
 #include "aFunToolExport.h"
 
@@ -64,6 +65,29 @@ namespace aFuntool {
 }
 
 #endif
+
+namespace aFuntool {
+    class OutStream {
+        typedef size_t PrintFunction(size_t, const char *, ...);
+        PrintFunction *func;
+    public:
+        inline explicit OutStream(PrintFunction *func_);
+        inline OutStream &operator<<(int8_t a);
+        inline OutStream &operator<<(int16_t a);
+        inline OutStream &operator<<(int32_t a);
+        inline OutStream &operator<<(int64_t a);
+        inline OutStream &operator<<(uint8_t a);
+        inline OutStream &operator<<(uint16_t a);
+        inline OutStream &operator<<(uint32_t a);
+        inline OutStream &operator<<(uint64_t a);
+        inline OutStream &operator<<(const char *a);
+        inline OutStream &operator<<(const std::string &a);
+        inline OutStream &operator<<(const void *a);
+    };
+
+    AFUN_TOOL_EXPORT extern OutStream cout;
+    AFUN_TOOL_EXPORT extern OutStream cerr;
+}
 
 #include "tool-stdio.inline.h"
 

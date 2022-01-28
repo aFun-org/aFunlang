@@ -9,10 +9,10 @@ namespace aFuncore {
     }
 
     void NormalMessage::topProgress(){
-        aFuntool::printf_stdout(0, "NORMAL: %p\n", obj);
+        aFuntool::printf_stdout(0, "NORMAL: %p\n", obj);  // TODO-szh 使用 Event
     }
 
-    ErrorMessage::ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation)
+    ErrorMessage::ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation)  // TODO-szh 使用Event
             : TopMessage("ERROR"), error_type{error_type_}, error_info{error_info_}, inter{activation->inter}{
         for (NULL; activation != nullptr; activation = activation->toPrev()) {
             if (activation->getFileLine() != 0)

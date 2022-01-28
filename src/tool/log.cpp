@@ -81,7 +81,7 @@ namespace aFuntool {
  * @param is_asyn 是否启用异步
  * @return
  */
-    int LogFactory::initLogSystem(const aFuntool::FilePath &path, bool is_asyn){
+    int LogFactory::initLogSystem(const aFuntool::FilePath &path, bool is_asyn) {
         if (path.size() >= 218)  // 路径过长
             return 0;
 
@@ -113,7 +113,7 @@ namespace aFuntool {
         if (csv_ == nullptr)
             return 0;
 
-#define CSV_FORMAT "%s,%s,%d,%d,%s,%ld,%s,%d,%s,%s\n"
+#define CSV_FORMAT "%s,%s,%d,%d,%s,%lld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
         if (csv_head_write) {
             fprintf(csv_, CSV_TITLE);  // 设置 cvs 标题
@@ -199,14 +199,14 @@ namespace aFuntool {
                               const char *ti, time_t t,
                               const char *file, int line, const char *func,
                               const char *info){
-#define FORMAT "%s/[%s] %d %d {%s %ld} (%s:%d at %s) : '%s' \n"
+#define FORMAT "%s/[%s] %d %d {%s %lld} (%s:%d at %s) : '%s' \n"
         /* 写入文件日志 */
         if (log_ != nullptr) {
-            fprintf(log_, FORMAT, LogLevelName[level], id, pid_, tid, ti, t, file, line, func, info);
+            fprintf(log_, FORMAT, LogLevelName[level], id, pid_, tid, ti, static_cast<long long>(t), file, line, func, info);
             fflush(log_);
         }
         if (csv_ != nullptr) {
-            fprintf(csv_, CSV_FORMAT, LogLevelName[level], id, pid_, tid, ti, t, file, line, func, info);
+            fprintf(csv_, CSV_FORMAT, LogLevelName[level], id, pid_, tid, ti, static_cast<long long>(t), file, line, func, info);
             fflush(csv_);
         }
 
@@ -231,17 +231,15 @@ namespace aFuntool {
                                   const char *ti, time_t t,
                                   const char *file, int line, const char *func,
                                   const char *info){
-#define FORMAT_SHORT "\r* %s[%s] %d %s %ld (%s:%d) : %s \n"  // 显示到终端, 添加\r回车符确保顶行显示
-#define STD_BUF_SIZE (strlen(info) + 1024)
         if (level < log_warning) {
-            printf_stdout(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], id, tid, ti, t, file, line, info);
+            cout << "\r* " << LogLevelName[level] << "/[" << id << "] " << tid;
+            cout << " " << t << " " << ti << " (" << file << ":" << line << ") : '" << info << "'\n";
             fflush(stdout);
         } else {
-            printf_stderr(STD_BUF_SIZE, FORMAT_SHORT, LogLevelNameLong[level], id, tid, ti, t, file, line, info);
+            cerr << "\r* " << LogLevelName[level] << "/[" << id << "] " << tid;
+            cerr << " " << t << " " << ti << " (" << file << ":" << line << ") : '" << info << "'\n";
             fflush(stderr);
         }
-#undef FORMAT_SHORT
-#undef STD_BUF_SIZE
     }
 
 /**

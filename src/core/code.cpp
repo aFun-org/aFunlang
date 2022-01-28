@@ -368,13 +368,13 @@ RETURN_FALSE:
      * 显式代码块内容
      */
     void Code::ByteCode::display() const{
-        aFuntool::printf_stdout(0, "%c[father: %p] type=%d %p", prefix == aFuntool::NUL ? '-' : prefix, father, type, this);
+        aFuntool::cout << (prefix == aFuntool::NUL ? '-' : prefix) << "[father: " << father << "] type=" << type << " " << this;
         if (type == code_element)
-            aFuntool::printf_stdout(0, " element: %s\n", data.element);
+            aFuntool::cout << " element: " << data.element << "\n";
         else if (type == code_block)
-            aFuntool::printf_stdout(0, " block: '%c' son: %p\n", data.block_type, data.son);
+            aFuntool::cout << " block: '" << data.block_type << "' son: " << data.son << "\n";
         else
-            aFuntool::printf_stdout(0, "\n");
+            aFuntool::cout << "\n";
     }
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
