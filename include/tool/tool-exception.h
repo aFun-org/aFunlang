@@ -3,26 +3,36 @@
 #include "tool.h"
 
 namespace aFuntool {
-    class FileOpenException : public std::exception {
+    class aFunException : public std::exception {
         std::string message;
+    public:
+        inline explicit aFunException(std::string msg);
+        inline virtual const char *what();
+    };
+
+    class aFuntoolException : public aFunException {
+    public:
+        inline explicit aFuntoolException(const std::string &msg);
+    };
+
+    class FileOpenException : public aFuntoolException {
     public:
         inline explicit FileOpenException(const FilePath &file);
-        inline virtual const char *what();
     };
 
-    class RegexException : public std::exception
-    {
-        std::string message;
+    class RegexException : public aFuntoolException {
     public:
         inline explicit RegexException(const std::string &msg);
-        inline virtual const char *what();
     };
 
-    class LogFatalError : public std::exception {
-        std::string message;
+    class LogFatalError : public aFuntoolException {
     public:
         inline explicit LogFatalError(const char *msg);
-        inline virtual const char *what();
+    };
+
+    class Exit : public aFuntoolException {
+    public:
+        inline explicit Exit();
     };
 }
 

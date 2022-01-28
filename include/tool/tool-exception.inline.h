@@ -4,28 +4,32 @@
 #include "tool-exception.h"
 
 namespace aFuntool {
-    inline FileOpenException::FileOpenException(const FilePath &file) {
-        this->message = std::string("File cannot open: ") + file;
+    inline aFunException::aFunException(std::string msg) : message{std::move(msg)} {
+
     }
 
-    inline const char *FileOpenException::what() {
+    inline const char *aFunException::what() {
         return message.c_str();
     }
 
-    inline RegexException::RegexException(const std::string &msg) {
-        this->message = "Regex error: " + msg;
+    inline aFuntoolException::aFuntoolException(const std::string &msg) : aFunException{msg} {
+
     }
 
-    inline const char *RegexException::what() {
-        return message.c_str();
+    inline FileOpenException::FileOpenException(const FilePath &file) : aFuntoolException("File cannot open: " + file) {
+
     }
 
-    inline LogFatalError::LogFatalError(const char *msg) {
-        this->message = msg;
+    inline RegexException::RegexException(const std::string &msg) : aFuntoolException("Regex error: " + msg) {
+
     }
 
-    inline const char *LogFatalError::what() {
-        return message.c_str();
+    inline LogFatalError::LogFatalError(const char *msg) : aFuntoolException(msg) {
+
+    }
+
+    inline Exit::Exit() : aFuntoolException("Exit by user") {
+
     }
 }
 

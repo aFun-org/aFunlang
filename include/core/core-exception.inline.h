@@ -3,8 +3,12 @@
 #include "core-exception.h"
 
 namespace aFuncore {
-    inline const char *EnvironmentDestructException::what() {
-        return message;
+    inline aFuncoreException::aFuncoreException(const std::string &msg) : aFunException{msg} {
+
+    }
+
+    inline EnvironmentDestructException::EnvironmentDestructException() : aFuncoreException("Environment Destruct Error") {
+
     }
 }
 

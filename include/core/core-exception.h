@@ -1,12 +1,16 @@
 ﻿#ifndef AFUN_CORE_EXCEPTION_H
 #define AFUN_CORE_EXCEPTION_H
-#include "iostream"
+#include "aFuntool.h"
 
 namespace aFuncore {
-    class EnvironmentDestructException : public std::exception {
-        constexpr static const char *message = "Environment Destruct Error";
+    class aFuncoreException : public aFuntool::aFunException {
     public:
-        inline virtual const char *what();
+        inline explicit aFuncoreException(const std::string &msg);
+    };
+
+    class EnvironmentDestructException : public aFuncoreException {
+    public:
+        inline EnvironmentDestructException();
     };
 
 }
