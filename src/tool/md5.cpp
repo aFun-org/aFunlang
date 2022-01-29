@@ -193,7 +193,7 @@ namespace aFuntool {
 
 
     template<typename T>
-    T getFileMd5(T &path){
+    T getFileMd5(T &path) noexcept(false) {
         FILE *fd;
 
         unsigned long ret;

@@ -421,7 +421,7 @@ namespace aFuntool {
 #undef sendErrorLog
 
     int Logger::writeSendErrorLog(const char *file, int line, const char *func,
-                                  const char *format, ...){
+                                  const char *format, ...) noexcept(false) {
 #ifndef aFunOFFAllLog
 #if !aFunIgnoreSendError
         va_list ap;
@@ -439,7 +439,7 @@ namespace aFuntool {
 #undef fatalErrorLog
 
     int Logger::writeFatalErrorLog(const char *file, int line, const char *func,
-                                   int exit_code, const char *format, ...){
+                                   int exit_code, const char *format, ...) noexcept(false){
 #ifndef aFunOFFAllLog
 #if !aFunIgnoreFatal
         va_list ap;

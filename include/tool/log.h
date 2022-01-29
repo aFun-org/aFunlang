@@ -37,8 +37,8 @@ namespace aFuntool {
         int writeInfoLog(const char *file, int line, const char *func, const char *format, ...);
         int writeWarningLog(const char *file, int line, const char *func, const char *format, ...);
         int writeErrorLog(const char *file, int line, const char *func, const char *format, ...);
-        int writeSendErrorLog(const char *file, int line, const char *func, const char *format, ...);
-        int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...);
+        int writeSendErrorLog(const char *file, int line, const char *func, const char *format, ...) noexcept(false);
+        int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...) noexcept(false);
     private:
         const std::string id_;
         LogLevel level_ = log_debug;

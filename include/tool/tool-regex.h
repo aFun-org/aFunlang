@@ -7,7 +7,7 @@ namespace aFuntool {
         std::regex re;  // 正则表达式
         std::string pattern;  // 正则表达式的字符串
     public:
-        inline explicit Regex(std::string pattern_);
+        inline explicit Regex(std::string pattern_) noexcept(false);
         inline Regex(const Regex &regex) noexcept;
         inline Regex(Regex &&regex) noexcept;
         Regex &operator=(const Regex &regex)=delete;

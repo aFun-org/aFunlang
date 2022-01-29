@@ -17,7 +17,7 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT void MD5Update(MD5_CTX *context, unsigned char *input, unsigned int input_len);
 
     template <typename T>
-    T getFileMd5 (T &path);
+    T getFileMd5 (T &path) noexcept(false) ;
 }
 
 #endif //AFUN_MD5_H
