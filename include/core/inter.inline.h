@@ -39,6 +39,14 @@ namespace aFuncore {
         return env.envvar;
     }
 
+    inline InterMessage &Inter::getOutMessageStream() {
+        return out;
+    }
+
+    inline InterMessage &Inter::getInMessageStream() {
+        return in;
+    }
+
     inline size_t Environment::operator++(){
         return ++reference;
     }

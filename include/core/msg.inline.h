@@ -11,16 +11,30 @@ namespace aFuncore {
 
     }
 
+    inline NormalMessage::NormalMessage(NormalMessage &&msg) noexcept : Message("NORMAL"), obj {msg.obj}{
+        msg.obj = nullptr;
+    }
+
     inline Object *NormalMessage::getObject() {
         return obj;
     }
 
-    inline std::string ErrorMessage::getErrorType() {
+    inline ErrorMessage::ErrorMessage(ErrorMessage &&msg) noexcept
+        : Message("ERROR"), error_type{std::move(msg.error_type)}, error_info{std::move(msg.error_info)},
+          trackback{std::move(msg.trackback)}, inter{msg.inter}{
+
+    }
+
+    inline std::string ErrorMessage::getErrorType() const {
         return error_type;
     }
 
-    inline std::string ErrorMessage::getErrorInfo() {
+    inline std::string ErrorMessage::getErrorInfo() const {
         return error_info;
+    }
+
+    inline const std::list<ErrorMessage::TrackBack> &ErrorMessage::getTrackBack() const {
+        return trackback;
     }
 }
 

@@ -9,10 +9,10 @@ namespace aFuncore {
     }
 
     void NormalMessage::topProgress(Inter &inter, Activation &activation){
-        aFuntool::printf_stdout(0, "NORMAL: %p\n", obj);  // TODO-szh 使用 Event
+        inter.getOutMessageStream().pushMessage(new NormalMessage(std::move(*this)));
     }
 
-    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation)  // TODO-szh 使用Event
+    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation)
             : Message("ERROR"), error_type{std::move(error_type_)}, error_info{std::move(error_info_)}, inter{activation->inter}{
         for (NULL; activation != nullptr; activation = activation->toPrev()) {
             if (activation->getFileLine() != 0)
@@ -21,19 +21,7 @@ namespace aFuncore {
     }
 
     void ErrorMessage::topProgress(Inter &inter_, Activation &activation){
-        int32_t error_std = 0;
-        inter.getEnvVarSpace().findNumber("sys:error_std", error_std);
-        if (error_std == 0) {
-            aFuntool::printf_stderr(0, "Error TrackBack\n");
-            for (auto &begin: trackback)
-                aFuntool::printf_stderr(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
-            aFuntool::printf_stderr(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
-        } else {
-            aFuntool::printf_stdout(0, "Error TrackBack\n");
-            for (auto &begin: trackback)
-                aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
-            aFuntool::printf_stdout(0, "%s: %s\n", error_type.c_str(), error_info.c_str());
-        }
+        inter_.getOutMessageStream().pushMessage(new ErrorMessage(std::move(*this)));
     }
 
     MessageStream::MessageStream(){
@@ -136,5 +124,13 @@ namespace aFuncore {
         m->next = msg.stream;
         msg.stream = m;
         stream = nullptr;
+    }
+
+    Message *InterMessage::popFrontMessage() {
+        if (stream == nullptr)
+            return nullptr;
+        Message *ret = stream;
+        stream = ret->next;
+        return ret;
     }
 }

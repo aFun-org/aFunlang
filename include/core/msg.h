@@ -34,6 +34,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
     public:
         explicit inline NormalMessage(Object *obj_);
+        inline NormalMessage(NormalMessage &&msg) noexcept;
         ~NormalMessage() override;
         void topProgress(Inter &inter, Activation &activation) override;
         inline Object *getObject();
@@ -44,20 +45,23 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
     public:
+        struct TrackBack {
+            const aFuntool::FilePath path;
+            aFuntool::FileLine line;
+        };
+
         explicit ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation);
+        inline ErrorMessage(ErrorMessage &&msg) noexcept;
         void topProgress(Inter &inter_, Activation &activation) override;
-        inline std::string getErrorType();
-        inline std::string getErrorInfo();
+        [[nodiscard]] inline std::string getErrorType() const;
+        [[nodiscard]] inline std::string getErrorInfo() const;
+        [[nodiscard]] inline const std::list<TrackBack> &getTrackBack() const;
 
     private:
         Inter &inter;
 
         std::string error_type;
         std::string error_info;
-        struct TrackBack{
-            const aFuntool::FilePath path;
-            aFuntool::FileLine line;
-        };
         std::list<TrackBack> trackback;
     };
 
@@ -70,7 +74,7 @@ namespace aFuncore {
         template<class T>
         [[nodiscard]] T *getMessage(const std::string &type) const;
 
-        virtual Message *popMessage(const std::string &type);
+        Message *popMessage(const std::string &type);
         void pushMessage(Message *msg);
 
         template <typename Callable, typename...T>
@@ -86,7 +90,7 @@ namespace aFuncore {
         explicit UpMessage(const UpMessage *old=nullptr);
         ~UpMessage() override;
 
-        Message *popMessage(const std::string &type) override;
+        Message *popMessage(const std::string &type);
 
     protected:
         Message *old;
@@ -99,6 +103,8 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT InterMessage : public MessageStream {
         std::mutex mutex;
+    public:
+        Message *popFrontMessage();
     };
 }
 

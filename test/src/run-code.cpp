@@ -81,6 +81,39 @@ public:
     }
 };
 
+static void printMessage(Message *msg, Inter &inter) {
+    if (msg->type == "NORMAL") {
+        auto *msg_ = dynamic_cast<NormalMessage *>(msg);
+        if (msg_ == nullptr)
+            return;
+        aFuntool::printf_stdout(0, "NORMAL: %p\n", msg_->getObject());
+    } else if (msg->type == "ERROR") {
+        auto *msg_ = dynamic_cast<ErrorMessage *>(msg);
+        if (msg_ == nullptr)
+            return;
+        int32_t error_std = 0;
+        inter.getEnvVarSpace().findNumber("sys:error_std", error_std);
+        if (error_std == 0) {
+            aFuntool::printf_stderr(0, "Error TrackBack\n");
+            for (auto &begin: msg_->getTrackBack())
+                aFuntool::printf_stderr(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
+            aFuntool::printf_stderr(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
+        } else {
+            aFuntool::printf_stdout(0, "Error TrackBack\n");
+            for (auto &begin: msg_->getTrackBack())
+                aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
+            aFuntool::printf_stdout(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
+        }
+    }
+}
+
+void printInterEvent(Inter &inter) {
+    for (auto msg = inter.getOutMessageStream().popFrontMessage(); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage()) {
+        printMessage(msg, inter);
+        delete msg;
+    }
+}
+
 int main() {
     Environment env {};
     Inter inter {env};
@@ -107,6 +140,7 @@ int main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                        new Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -119,6 +153,7 @@ int main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
 
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -130,6 +165,7 @@ int main() {
 
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_b, arg, 0));
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -138,6 +174,7 @@ int main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "data3", 1));
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -145,6 +182,7 @@ int main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-cbv", 1));
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -152,6 +190,7 @@ int main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
+        printInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -160,6 +199,7 @@ int main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         son.runCode(code);
+        printInterEvent(son);
         fputs_stdout("\n");
     }
 

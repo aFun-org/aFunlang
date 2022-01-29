@@ -97,6 +97,8 @@ namespace aFuncore {
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
         [[nodiscard]] inline EnvVarSpace &getEnvVarSpace();
+        [[nodiscard]] inline InterMessage &getOutMessageStream();
+        [[nodiscard]] inline InterMessage &getInMessageStream();
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
