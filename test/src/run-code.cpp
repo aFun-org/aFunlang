@@ -59,7 +59,7 @@ public:
     ~Literaler1() override = default;
 
     void getObject(const std::string &literal, char prefix, Inter &inter, Activation &activation) override {
-        aFuntool::cout << "Literaler1: " << literal << (prefix == NUL ? '-' : prefix) << "\n";
+        aFuntool::cout << "Literaler1: " << literal  << "prefix: " << (prefix == NUL ? '-' : prefix) << "\n";
         new ExeActivation(func_code, inter);
     }
 };
@@ -115,6 +115,15 @@ void printInterEvent(Inter &inter) {
     }
 }
 
+void thread_test(Inter &son) {
+    auto code = Code("run-code.aun");
+    code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
+                                                   new Code::ByteCode(code, "test-var", 1), 0));
+    son.runCode(code);
+    printInterEvent(son);
+    fputs_stdout("\n");
+}
+
 int main() {
     Environment env {};
     Inter inter {env};
@@ -137,6 +146,7 @@ int main() {
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
 
     {
+        fputs_stdout("Test-1: block-p & get test-var\n");
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                        new Code::ByteCode(code, "test-var", 1), 0));
@@ -146,6 +156,7 @@ int main() {
     }
 
     {
+        fputs_stdout("Test-2: block-c & run {test-func test-var}\n");
         auto code = Code("run-code.aun");
 
         auto arg = new Code::ByteCode(code, "test-func", 1);
@@ -159,6 +170,7 @@ int main() {
     }
 
     {
+        fputs_stdout("Test-3: block-b & run [test-var test-func]\n");
         auto code = Code("run-code.aun");
 
         auto arg = new Code::ByteCode(code, "test-var", 1);
@@ -171,20 +183,40 @@ int main() {
     }
 
     {
+        fputs_stdout("Test-4: test-literaler\n");
         inter.pushLiteral("data[0-9]", "test-literaler", false);
         auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, "data3", 1));
+        code.getByteCode()->connect(new Code::ByteCode(code, "data4", 1));
         inter.runCode(code);
         printInterEvent(inter);
         fputs_stdout("\n");
     }
 
     {
+        fputs_stdout("Test-5: test-cbv\n");
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-cbv", 1));
         inter.runCode(code);
         printInterEvent(inter);
         fputs_stdout("\n");
+    }
+
+    {
+        /* 多线程 */
+        fputs_stdout("Test-6: thread\n");
+        Inter son{inter};
+        std::thread thread{thread_test, std::ref(son)};
+
+        {
+            auto code = Code("run-code.aun");
+            code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
+                                                           new Code::ByteCode(code, "test-var", 1), 0));
+            inter.runCode(code);
+            printInterEvent(inter);
+            fputs_stdout("\n");
+        }
+
+        thread.join();
     }
 
     /* 执行错误的代码 */
@@ -193,16 +225,6 @@ int main() {
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
         printInterEvent(inter);
-        fputs_stdout("\n");
-    }
-
-    /* 多线程 */
-    {
-        Inter son {inter};
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
-        son.runCode(code);
-        printInterEvent(son);
         fputs_stdout("\n");
     }
 

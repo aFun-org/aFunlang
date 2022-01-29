@@ -24,7 +24,7 @@ namespace aFuncore {
         friend class Inter;
 
     public:
-        Environment();
+        Environment(int argc = 0, char **argv = nullptr);
         ~Environment() noexcept(false);
         Environment(Environment &) = delete;
         Environment &operator=(Environment &) = delete;
@@ -71,7 +71,7 @@ namespace aFuncore {
         constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
         constexpr static const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
-        explicit Inter(Environment &env_, int argc = 0, char **argv = nullptr);
+        explicit Inter(Environment &env_);
         Inter(const Inter &base_inter);
         ~Inter();
         Inter &operator=(const Inter &) = delete;

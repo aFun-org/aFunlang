@@ -5,23 +5,11 @@
 #include "core-exception.h"
 
 namespace aFuncore {
-    Inter::Inter(Environment &env_, int argc, char **argv)
+    Inter::Inter(Environment &env_)
             : out{}, in{}, env{env_}{
         status = inter_creat;
 
         activation = nullptr;
-
-        env.envvar.setNumber("sys:gc-runtime", 2);
-        env.envvar.setString("sys:prefix", "''");  // 引用，顺序执行
-        env.envvar.setNumber("sys:exit-code", 0);
-        env.envvar.setNumber("sys:argc", argc);
-        env.envvar.setNumber("sys:error_std", 0);
-
-        for (int i = 0; i < argc; i++) {
-            char buf[20];
-            snprintf(buf, 10, "sys:arg%d", i);
-            env.envvar.setString(buf, argv[i]);
-        }
 
         status = inter_init;
         env++;
@@ -167,12 +155,24 @@ namespace aFuncore {
         return true;
     }
 
-    Environment::Environment()
+    Environment::Environment(int argc, char **argv)
         : obj{nullptr}, var{nullptr}, varspace{nullptr},
           protect{new ProtectVarSpace(*this)}, global{new VarSpace(*this)},
           global_varlist{new VarList(protect)}, destruct{false} {
         global_varlist->push(global);
         reference = 0;
+
+        envvar.setNumber("sys:gc-runtime", 2);
+        envvar.setString("sys:prefix", "''");  // 引用，顺序执行
+        envvar.setNumber("sys:exit-code", 0);
+        envvar.setNumber("sys:argc", argc);
+        envvar.setNumber("sys:error_std", 0);
+
+        for (int i = 0; i < argc; i++) {
+            char buf[20];
+            snprintf(buf, 10, "sys:arg%d", i);
+            envvar.setString(buf, argv[i]);
+        }
     }
 
     Environment::~Environment() noexcept(false) {
