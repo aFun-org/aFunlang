@@ -8,7 +8,7 @@ namespace aFuncore {
         this->obj = nullptr;
     }
 
-    void NormalMessage::topProgress(){
+    void NormalMessage::topProgress(Inter &inter, Activation &activation){
         aFuntool::printf_stdout(0, "NORMAL: %p\n", obj);  // TODO-szh 使用 Event
     }
 
@@ -20,7 +20,7 @@ namespace aFuncore {
         }
     }
 
-    void ErrorMessage::topProgress(){
+    void ErrorMessage::topProgress(Inter &inter_, Activation &activation){
         int32_t error_std = 0;
         inter.getEnvVarSpace().findNumber("sys:error_std", error_std);
         if (error_std == 0) {

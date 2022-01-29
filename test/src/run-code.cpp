@@ -16,7 +16,7 @@ class Func1 : public Function {
             acl->push_front(agr1);
         }
 
-        std::list<ArgCodeList> *getArgCodeList() override {
+        std::list<ArgCodeList> *getArgCodeList(Inter &inter_, Activation &activation, Code::ByteCode *call) override {
             return acl;
         }
 
@@ -58,7 +58,7 @@ public:
 
     ~Literaler1() override = default;
 
-    void getObject(const std::string &literal, char prefix, Inter &inter) override {
+    void getObject(const std::string &literal, char prefix, Inter &inter, Activation &activation) override {
         aFuntool::cout << "Literaler1: " << literal << (prefix == NUL ? '-' : prefix) << "\n";
         new ExeActivation(func_code, inter);
     }
@@ -75,7 +75,7 @@ public:
 
     ~CBV1() override = default;
 
-    void callBack(Inter &inter) override {
+    void callBack(Inter &inter, Activation &activation) override {
         aFuntool::cout << "CallBackVar callback\n";
         new ExeActivation(func_code, inter);
     }

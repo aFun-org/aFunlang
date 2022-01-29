@@ -36,7 +36,7 @@ namespace aFuncore {
         CallFunction(const CallFunction &)=delete;
         CallFunction &operator=(const CallFunction &)=delete;
 
-        virtual std::list<ArgCodeList> *getArgCodeList() = 0;
+        virtual std::list<ArgCodeList> *getArgCodeList(Inter &inter, Activation &activation, Code::ByteCode *call) = 0;
         virtual void runFunction() = 0;
     };
 
@@ -48,14 +48,14 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT Literaler : public Object {
     public:
         inline Literaler(const std::string &type_, Inter &inter_);
-        virtual void getObject(const std::string &literal, char prefix, Inter &inter) = 0;
+        virtual void getObject(const std::string &literal, char prefix, Inter &inter, Activation &activation) = 0;
     };
 
     class AFUN_CORE_EXPORT CallBackVar : public Object {
     public:
         inline CallBackVar(const std::string &type_, Inter &inter_);
-        virtual inline bool isCallBack();
-        virtual void callBack(Inter &inter) = 0;
+        virtual inline bool isCallBack(Inter &inte, Activation &activation);
+        virtual void callBack(Inter &inte, Activation &activation) = 0;
     };
 };
 

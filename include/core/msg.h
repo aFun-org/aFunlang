@@ -22,21 +22,21 @@ namespace aFuncore {
         Message *next;  // 下一条消息
     };
 
-    class TopMessage : public Message {
-    public:
-        explicit inline TopMessage(const std::string &type_);
-        virtual void topProgress() = 0;
-    };
-
     class Object;
     class Activation;
     class Inter;
+
+    class TopMessage : public Message {
+    public:
+        explicit inline TopMessage(const std::string &type_);
+        virtual void topProgress(Inter &inter, Activation &activation) = 0;
+    };
 
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
     public:
         explicit inline NormalMessage(Object *obj_);
         ~NormalMessage() override;
-        void topProgress() override;
+        void topProgress(Inter &inter, Activation &activation) override;
         inline Object *getObject();
 
     private:
@@ -46,7 +46,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT ErrorMessage : public TopMessage {
     public:
         explicit ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation);
-        void topProgress() override;
+        void topProgress(Inter &inter_, Activation &activation) override;
         inline std::string getErrorType();
         inline std::string getErrorInfo();
 

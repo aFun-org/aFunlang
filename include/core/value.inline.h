@@ -19,7 +19,7 @@ namespace aFuncore {
 
     }
 
-    inline bool CallBackVar::isCallBack() {
+    inline bool CallBackVar::isCallBack(Inter &inter, Activation &activation) {
         return true;
     }
 };

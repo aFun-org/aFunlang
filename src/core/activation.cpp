@@ -77,7 +77,7 @@ namespace aFuncore {
                 obj = varlist->findObject(literaler_name);
             auto literaler = dynamic_cast<Literaler *>(obj);
             if (literaler != nullptr)
-                literaler->getObject(code->getElement(), code->getPrefix(), inter);
+                literaler->getObject(code->getElement(), code->getPrefix(), inter, *this);
             else
                 down.pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
         } else {
@@ -85,8 +85,8 @@ namespace aFuncore {
                 obj = varlist->findObject(code->getElement());
             if (obj != nullptr) {
                 auto cbv = dynamic_cast<CallBackVar *>(obj);
-                if (cbv != nullptr && cbv->isCallBack())
-                    cbv->callBack(inter);
+                if (cbv != nullptr && cbv->isCallBack(inter, *this))
+                    cbv->callBack(inter, *this);
                 else
                     down.pushMessage(new NormalMessage(obj));
             } else
@@ -133,14 +133,14 @@ namespace aFuncore {
         varlist->connect(inter_.getGlobalVarlist());
     }
 
-    static void ActivationTopProgress(Message *msg, void *){
+    static void ActivationTopProgress(Message *msg, Inter &inter, Activation &activation){
         auto *t = dynamic_cast<TopMessage *>(msg);
         if (t)
-            t->topProgress();
+            t->topProgress(inter, activation);
     };
 
     TopActivation::~TopActivation(){
-        down.forEach(ActivationTopProgress, nullptr);
+        down.forEach(ActivationTopProgress, std::ref(inter), std::ref(*this));
     }
 
     FuncActivation::~FuncActivation(){
@@ -218,7 +218,7 @@ namespace aFuncore {
             /* Label: 执行变量获取前的准备 */
             status = func_get_arg;
             call_func = func->getCallFunction(call, inter);
-            acl = call_func->getArgCodeList();
+            acl = call_func->getArgCodeList(inter, *this, call);
             acl_begin = acl->begin();
             acl_end = acl->end();
             if (acl_begin != acl_end) {  // 如果有参数需要计算
