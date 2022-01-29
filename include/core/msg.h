@@ -98,9 +98,25 @@ namespace aFuncore {
     };
 
     class AFUN_CORE_EXPORT InterMessage : public MessageStream {
-        std::mutex mutex;
     public:
         Message *popFrontMessage(std::string &type);
+        Message *popMessage(const std::string &type);
+        void pushMessage(const std::string &type, Message *msg);
+
+        template <typename Callable, typename...T>
+        void forEach(Callable func, T...arg);
+    private:
+        std::mutex lock;
+    };
+
+    class InterOutMessage : public InterMessage {
+    public:
+        template<class T>
+        [[nodiscard]] T *getMessage(const std::string &type) const = delete;  // 对外不设置 getMessage 以避免线程问题
+    };
+
+    class InterInMessage : public InterMessage {
+
     };
 }
 

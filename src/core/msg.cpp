@@ -85,11 +85,22 @@ namespace aFuncore {
     }
 
     Message *InterMessage::popFrontMessage(std::string &type) {
+        std::unique_lock<std::mutex> mutex{lock};
         if (stream.empty())
             return nullptr;
         Message *ret = stream.begin()->second;
         type = stream.begin()->first;
         stream.erase(stream.begin());
         return ret;
+    }
+
+    Message *InterMessage::popMessage(const std::string &type) {
+        std::unique_lock<std::mutex> mutex{lock};
+        return MessageStream::popMessage(type);
+    }
+
+    void InterMessage::pushMessage(const std::string &type, Message *msg) {
+        std::unique_lock<std::mutex> mutex{lock};
+        MessageStream::pushMessage(type, msg);
     }
 }

@@ -7,7 +7,7 @@ namespace aFuncore {
      * @return 是否成功
      */
     bool EnvVarSpace::findString(const std::string &name, std::string &str) {
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             return false;
@@ -22,7 +22,7 @@ namespace aFuncore {
      * @return 是否成功
      */
     bool EnvVarSpace::findNumber(const std::string &name, int32_t &num) {
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             return false;
@@ -36,7 +36,7 @@ namespace aFuncore {
      * @param str 文本
      */
     void EnvVarSpace::setString(const std::string &name, const std::string &str){
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             var.insert({name, {str, 0}});
@@ -50,7 +50,7 @@ namespace aFuncore {
      * @param num 数值
      */
     void EnvVarSpace::setNumber(const std::string &name, int32_t num){
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             var.insert({name, {"", num}});
@@ -64,7 +64,7 @@ namespace aFuncore {
      * @param str 文本
      */
     void EnvVarSpace::addString(const std::string &name, const std::string &str){
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             var.insert({name, {str, 0}});
@@ -78,7 +78,7 @@ namespace aFuncore {
      * @param num 数值
      */
     void EnvVarSpace::addNumber(const std::string &name, int32_t num){
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         auto env_var = var.find(name);
         if (env_var == var.end())
             var.insert({name, {"", num}});

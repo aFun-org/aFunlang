@@ -4,7 +4,7 @@
 
 namespace aFuncore {
     inline size_t EnvVarSpace::getCount() {
-        std::unique_lock<std::mutex> mut(lock);
+        std::unique_lock<std::mutex> mutex{lock};
         return var.size();
     }
 }

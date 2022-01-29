@@ -43,11 +43,11 @@ namespace aFuncore {
         return env.envvar;
     }
 
-    inline InterMessage &Inter::getOutMessageStream() {
+    inline InterOutMessage &Inter::getOutMessageStream() {
         return out;
     }
 
-    inline InterMessage &Inter::getInMessageStream() {
+    inline InterInMessage &Inter::getInMessageStream() {
         return in;
     }
 

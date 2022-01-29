@@ -87,8 +87,8 @@ namespace aFuncore {
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
         [[nodiscard]] inline EnvVarSpace &getEnvVarSpace();
-        [[nodiscard]] inline InterMessage &getOutMessageStream();
-        [[nodiscard]] inline InterMessage &getInMessageStream();
+        [[nodiscard]] inline InterOutMessage &getOutMessageStream();
+        [[nodiscard]] inline InterInMessage &getInMessageStream();
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
@@ -104,8 +104,8 @@ namespace aFuncore {
 
         Activation *activation;  // 活动记录
 
-        InterMessage out;
-        InterMessage in;
+        InterOutMessage out;
+        InterInMessage in;
 
         std::list<LiteralRegex> literal;
 

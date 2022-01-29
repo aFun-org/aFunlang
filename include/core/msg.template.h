@@ -22,6 +22,16 @@ namespace aFuncore {
         for (const UpMessage *up = this; up != nullptr; up = up->old)
             up->MessageStream::forEach(func, arg...);
     }
+
+    template<typename Callable, typename... T>
+    void InterMessage::forEach(Callable func, T... arg) {
+        std::unique_lock<std::mutex> mutex{lock};
+        for (auto &msg : stream) {
+            mutex.unlock();
+            func(msg.second, arg...);
+            mutex.lock();
+        }
+    }
 }
 
 #endif //AFUN_MSG_TEMPLATE_H
