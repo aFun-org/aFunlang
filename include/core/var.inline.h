@@ -12,7 +12,7 @@ namespace aFuncore {
     }
 
     inline size_t VarSpace::getCount() const {
-        return count;
+        return var.size();
     }
 
     inline Object *VarSpace::findObject(const std::string &name) {

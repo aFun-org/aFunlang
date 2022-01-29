@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_VAR_H
 #define AFUN_VAR_H
 #include <list>
+#include <unordered_map>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "gc.h"
@@ -37,7 +38,7 @@ namespace aFuncore {
 
         explicit VarSpace(Inter &inter);
         explicit VarSpace(Environment &env_);
-        ~VarSpace() override;
+        ~VarSpace() override = default;
 
         template <typename Callable,typename...T>
         void forEach(Callable func, T...arg);
@@ -54,13 +55,7 @@ namespace aFuncore {
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
 
     private:
-        struct VarCup {
-            std::string name;
-            Var *var;
-            VarCup *next=nullptr;
-        };
-        size_t count;
-        VarCup *var[VAR_HASH_SIZE];
+        std::unordered_map<std::string, Var *> var;
     };
 
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {

@@ -10,11 +10,11 @@ namespace aFuncore {
         addObject(env.var);
     }
     
-    VarSpace::VarSpace(Inter &inter) : count{0}, var{}, env{inter.getEnvironment()}{
+    VarSpace::VarSpace(Inter &inter) : env{inter.getEnvironment()}{
         addObject(env.varspace);
     }
     
-    VarSpace::VarSpace(Environment &env_) : count{0}, var{}, env{env_}{
+    VarSpace::VarSpace(Environment &env_) : env{env_}{
         addObject(env.varspace);
     }
     
@@ -24,12 +24,10 @@ namespace aFuncore {
      * @return
      */
     Var *VarSpace::findVar(const std::string &name){
-        size_t index = aFuntool::time33(name) % VAR_HASH_SIZE;
-        for (auto tmp = var[index]; tmp != nullptr; tmp = tmp->next) {
-            if (tmp->name == name)
-                return tmp->var;
-        }
-        return nullptr;
+        auto v = var.find(name);
+        if (v == var.end())
+            return nullptr;
+        return v->second;
     }
     
     /**
@@ -38,17 +36,10 @@ namespace aFuncore {
      * @param data 变量（Object）
      * @return
      */
-    VarSpace::VarOperationFlat VarSpace::defineVar(const std::string &name, Object *data){
-        size_t index = aFuntool::time33(name) % VAR_HASH_SIZE;
-        auto tmp = &var[index];
-        for (NULL; *tmp != nullptr; tmp = &(*tmp)->next) {
-            if ((*tmp)->name == name)
-                return vof_redefine_var;
-        }
-        (*tmp) = new VarCup;
-        (*tmp)->name = name;
-        (*tmp)->var = new Var(data, env);
-        count++;
+    VarSpace::VarOperationFlat VarSpace::defineVar(const std::string &name, Object *data) {
+        if (var.find(name) != var.end())
+            return vof_redefine_var;
+        var.emplace(name, new Var(data, env));
         return vof_success;
     }
     
@@ -59,16 +50,9 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::defineVar(const std::string &name, Var *data){
-        size_t index = aFuntool::time33(name) % VAR_HASH_SIZE;
-        auto tmp = &var[index];
-        for (NULL; *tmp != nullptr; tmp = &(*tmp)->next) {
-            if ((*tmp)->name == name)
-                return vof_redefine_var;
-        }
-        (*tmp) = new VarCup;
-        (*tmp)->name = name;
-        (*tmp)->var = data;
-        count++;
+        if (var.find(name) != var.end())
+            return vof_redefine_var;
+        var.emplace(name, data);
         return vof_success;
     }
     
@@ -79,14 +63,11 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::setVar(const std::string &name, Object *data){
-        size_t index = aFuntool::time33(name) % VAR_HASH_SIZE;
-        for (auto tmp = var[index]; tmp != nullptr; tmp = tmp->next) {
-            if (tmp->name == name) {
-                tmp->var->setData(data);
-                return vof_success;
-            }
-        }
-        return vof_not_var;
+        auto v = var.find(name);
+        if (v == var.end())
+            return vof_not_var;
+        v->second->setData(data);
+        return vof_success;
     }
     
     /**
@@ -95,26 +76,11 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::delVar(const std::string &name){
-        size_t index = aFuntool::time33(name) % VAR_HASH_SIZE;
-        for (auto tmp = var[index]; tmp != nullptr && tmp->next != nullptr; tmp = tmp->next) {
-            if (tmp->next->name == name) {
-                auto del = tmp->next;
-                tmp->next = del->next;
-                delete del;  // 删除 VarCup
-                count--;
-                return vof_success;
-            }
-        }
-        return vof_not_var;
-    }
-    
-    VarSpace::~VarSpace(){
-        for (auto &cup: var) {
-            for (VarCup *next; cup != nullptr; cup = next) {
-                next = cup->next;
-                delete cup;
-            }
-        }
+        auto v = var.find(name);
+        if (v == var.end())
+            return vof_not_var;
+        var.erase(v);
+        return vof_success;
     }
     
     VarList::VarList(VarList *varlist){
