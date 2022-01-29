@@ -105,6 +105,9 @@ namespace aFuncore {
 
         template <typename Callable, typename...T>
         void forEach(Callable func, T...arg);
+
+        template <typename Callable, typename...T>
+        void forEachLock(Callable func, T...arg);
     private:
         std::mutex lock;
     };

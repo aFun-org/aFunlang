@@ -4,14 +4,17 @@
 
 namespace aFuncore {
     inline Object *Var::getData() {
+        std::unique_lock<std::mutex> mutex{lock};
         return data;
     }
 
     inline void Var::setData(Object *data_) {
+        std::unique_lock<std::mutex> mutex{lock};
         data = data_;
     }
 
-    inline size_t VarSpace::getCount() const {
+    inline size_t VarSpace::getCount() {
+        std::unique_lock<std::mutex> mutex{lock};
         return var.size();
     }
 
@@ -41,6 +44,7 @@ namespace aFuncore {
     }
 
     inline void VarList::push(VarSpace *varspace_) {
+        std::unique_lock<std::mutex> mutex{lock};
         varspace.push_front(varspace_);
     }
 

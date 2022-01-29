@@ -32,6 +32,13 @@ namespace aFuncore {
             mutex.lock();
         }
     }
+
+    template<typename Callable, typename... T>
+    void InterMessage::forEachLock(Callable func, T... arg) {
+        std::unique_lock<std::mutex> mutex{lock};
+        for (auto &msg : stream)
+            func(msg.second, arg...);
+    }
 }
 
 #endif //AFUN_MSG_TEMPLATE_H

@@ -1,8 +1,9 @@
 ﻿#ifndef AFUN_VALUE_H
 #define AFUN_VALUE_H
+#include <list>
+#include <mutex>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "list"
 #include "gc.h"
 #include "code.h"
 #include "inter.h"
@@ -16,6 +17,9 @@ namespace aFuncore {
         Object(std::string type_, Inter &inter);
         Object(std::string type_, Environment &env_);
         ~Object() override = default;
+
+    protected:
+        std::mutex lock;
     };
 
     class AFUN_CORE_EXPORT Function : public virtual Object {

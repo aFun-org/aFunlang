@@ -28,6 +28,7 @@ namespace aFuncore {
      * @return
      */
     Var *VarSpace::findVar(const std::string &name){
+        std::unique_lock<std::mutex> mutex{lock};
         auto v = var.find(name);
         if (v == var.end())
             return nullptr;
@@ -41,6 +42,7 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::defineVar(const std::string &name, Object *data) {
+        std::unique_lock<std::mutex> mutex{lock};
         if (var.find(name) != var.end())
             return vof_redefine_var;
         var.emplace(name, new Var(data, env));
@@ -54,6 +56,7 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::defineVar(const std::string &name, Var *data){
+        std::unique_lock<std::mutex> mutex{lock};
         if (var.find(name) != var.end())
             return vof_redefine_var;
         var.emplace(name, data);
@@ -67,6 +70,7 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::setVar(const std::string &name, Object *data){
+        std::unique_lock<std::mutex> mutex{lock};
         auto v = var.find(name);
         if (v == var.end())
             return vof_not_var;
@@ -80,6 +84,7 @@ namespace aFuncore {
      * @return
      */
     VarSpace::VarOperationFlat VarSpace::delVar(const std::string &name){
+        std::unique_lock<std::mutex> mutex{lock};
         auto v = var.find(name);
         if (v == var.end())
             return vof_not_var;
@@ -88,6 +93,7 @@ namespace aFuncore {
     }
     
     VarList::VarList(VarList *varlist){
+        std::unique_lock<std::mutex> mutex{lock};
         for (auto &t: varlist->varspace)
             this->varspace.push_back(t);
     }
@@ -150,9 +156,13 @@ namespace aFuncore {
      * @return
      */
     Var *VarList::findVar(const std::string &name){
+        std::unique_lock<std::mutex> mutex{lock};
         Var *ret = nullptr;
-        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == nullptr; tmp++)
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == nullptr; tmp++) {
+            mutex.unlock();
             ret = (*tmp)->findVar(name);
+            mutex.lock();
+        }
         return ret;
     }
     
@@ -165,9 +175,13 @@ namespace aFuncore {
      * @return
      */
     bool VarList::defineVar(const std::string &name, Object *data){
+        std::unique_lock<std::mutex> mutex{lock};
         VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
-        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++) {
+            mutex.unlock();
             ret = (*tmp)->defineVar(name, data);
+            mutex.lock();
+        }
         return ret == VarSpace::vof_success;
     }
     
@@ -180,9 +194,13 @@ namespace aFuncore {
      * @return
      */
     bool VarList::defineVar(const std::string &name, Var *data){
+        std::unique_lock<std::mutex> mutex{lock};
         VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
-        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++) {
+            mutex.unlock();
             ret = (*tmp)->defineVar(name, data);
+            mutex.lock();
+        }
         return ret == VarSpace::vof_success;
     }
     
@@ -195,9 +213,13 @@ namespace aFuncore {
      * @return
      */
     bool VarList::setVar(const std::string &name, Object *data){
+        std::unique_lock<std::mutex> mutex{lock};
         VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
-        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++) {
+            mutex.unlock();
             ret = (*tmp)->setVar(name, data);
+            mutex.lock();
+        }
         return ret == VarSpace::vof_success;
     }
     
@@ -209,15 +231,23 @@ namespace aFuncore {
      * @return
      */
     bool VarList::delVar(const std::string &name){
+        std::unique_lock<std::mutex> mutex{lock};
         VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
-        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++) {
+            mutex.unlock();
             ret = (*tmp)->delVar(name);
+            mutex.lock();
+        }
         return ret == VarSpace::vof_success;
     }
     
     void VarList::connect(VarList *varlist){
-        for (auto &t: varlist->varspace)
+        std::unique_lock<std::mutex> mutex{lock};
+        for (auto &t: varlist->varspace) {
+            mutex.unlock();
             this->varspace.push_back(t);
+            mutex.lock();
+        }
     }
 
 }
