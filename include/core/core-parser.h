@@ -3,7 +3,7 @@
 #include "aFunToolExport.h"
 #include "reader.h"
 #include "code.h"
-#include <list>
+#include <queue>
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Parser {
@@ -50,7 +50,25 @@ namespace aFuncore {
             TK_EOF = 11,
         } TokenType;
 
-        struct ParserEvent;
+        struct ParserEvent {
+            typedef enum EventType {
+                parser_error_unknown = -1,  // 遇到未知错误
+
+                lexical_error_char = -2,  // 遇到非正常符号
+                lexical_error_element_end = -3,  // 注释未结束
+                syntactic_error_nested_too_deep = -4,
+                syntactic_error_block_p_end = -5,
+                syntactic_error_block_b_end = -6,
+                syntactic_error_block_c_end = -7,
+                syntactic_error_prefix = -8,
+
+                lexical_warning_comment_end = 1,  // 注释未结束
+            } EventType;
+
+            EventType type;
+            aFuntool::FileLine line;
+            std::string info;
+        };
 
         inline explicit Parser(Reader &reader_);
 
@@ -68,7 +86,7 @@ namespace aFuncore {
             ERROR_TOKEN = -2
         } DoneStatus;
 
-        std::list<ParserEvent> event;
+        std::queue<ParserEvent> event;
         Reader &reader;
         struct {
             LexicalStatus status;
@@ -108,26 +126,6 @@ namespace aFuncore {
 
         inline void pushEvent(const ParserEvent &new_event);
         inline void pushEvent(ParserEvent &&new_event);
-    };
-
-    struct Parser::ParserEvent {
-        typedef enum EventType {
-            parser_error_unknown = -1,  // 遇到未知错误
-
-            lexical_error_char = -2,  // 遇到非正常符号
-            lexical_error_element_end = -3,  // 注释未结束
-            syntactic_error_nested_too_deep = -4,
-            syntactic_error_block_p_end = -5,
-            syntactic_error_block_b_end = -6,
-            syntactic_error_block_c_end = -7,
-            syntactic_error_prefix = -8,
-
-            lexical_warning_comment_end = 1,  // 注释未结束
-        } EventType;
-
-        EventType type;
-        aFuntool::FileLine line;
-        std::string info;
     };
 
 }

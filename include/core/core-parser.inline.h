@@ -13,7 +13,7 @@ namespace aFuncore {
 
     inline Parser::ParserEvent Parser::popEvent() {
         ParserEvent pop = event.front();
-        event.pop_front();
+        event.pop();
         return pop;
     }
 
@@ -22,11 +22,11 @@ namespace aFuncore {
     }
 
     inline void Parser::pushEvent(const ParserEvent &new_event) {
-        event.push_back(new_event);
+        event.push(new_event);
     }
 
     inline void Parser::pushEvent(ParserEvent &&new_event) {
-        event.push_back(new_event);
+        event.push(new_event);
     }
 
     inline const Parser::ParserEvent &Parser::checkEvent() const {
