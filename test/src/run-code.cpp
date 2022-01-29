@@ -187,6 +187,7 @@ int main() {
         fputs_stdout("\n");
     }
 
+    /* 执行错误的代码 */
     {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
@@ -195,6 +196,7 @@ int main() {
         fputs_stdout("\n");
     }
 
+    /* 多线程 */
     {
         Inter son {inter};
         auto code = Code("run-code.aun");
@@ -202,6 +204,17 @@ int main() {
         son.runCode(code);
         printInterEvent(son);
         fputs_stdout("\n");
+    }
+
+    /* 不会执行的代码 */
+    inter.setInterExit();
+
+    {
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
+                                                       new Code::ByteCode(code, "test-var", 1), 0));
+        inter.runCode(code);
+        printInterEvent(inter);
     }
 
     return 0;

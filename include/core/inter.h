@@ -59,17 +59,6 @@ namespace aFuncore {
             inter_exit = 4,  // 解释器退出
         } InterStatus;
 
-        typedef enum ExitFlat {
-            ef_activity = 0,  // 主动退出
-            ef_passive = 1,  // 被动退出
-            ef_none = 2,
-        } ExitFlat;
-
-        typedef enum ExitMode {
-            em_activity = ef_activity,  // 主动退出
-            em_passive = ef_passive,  // 被动退出
-        } ExitMode;
-
         typedef enum Prefix {
             prefix_quote = 0,  // 变量引用
             prefix_exec_first = 1,
@@ -80,15 +69,16 @@ namespace aFuncore {
         constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
         constexpr static const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
-        explicit Inter(Environment &env_, int argc = 0, char **argv = nullptr, ExitMode em = em_activity);
-        Inter(const Inter &base_inter, ExitMode em = em_activity);
+        explicit Inter(Environment &env_, int argc = 0, char **argv = nullptr);
+        Inter(const Inter &base_inter);
         ~Inter();
         Inter &operator=(const Inter &) = delete;
 
         void enable();
 
         [[nodiscard]] inline InterStatus getStatus() const;
-        [[nodiscard]] inline bool isExit() const;
+        [[nodiscard]] inline bool isInterStop() const;
+        [[nodiscard]] inline bool isInterExit() const;
         [[nodiscard]] inline Environment &getEnvironment();
         [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
         [[nodiscard]] inline VarSpace *getGlobalVarSpace() const;
@@ -105,6 +95,8 @@ namespace aFuncore {
         bool runCode();
         bool runCode(Code &code);
 
+        inline InterStatus setInterStop();
+        inline InterStatus setInterExit();
     private:
         InterStatus status;
 
@@ -116,11 +108,6 @@ namespace aFuncore {
         InterMessage in;
 
         std::list<LiteralRegex> literal;
-
-        Object *result;  // 线程执行的结果
-
-        ExitFlat exit_flat;  // 外部设置退出
-        ExitMode exit_mode;  // 退出模式
 
         inline void pushActivation(Activation *new_activation);
     };

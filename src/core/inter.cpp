@@ -5,7 +5,7 @@
 #include "core-exception.h"
 
 namespace aFuncore {
-    Inter::Inter(Environment &env_, int argc, char **argv, ExitMode em)
+    Inter::Inter(Environment &env_, int argc, char **argv)
             : out{}, in{}, env{env_}{
         status = inter_creat;
 
@@ -23,16 +23,11 @@ namespace aFuncore {
             env.envvar.setString(buf, argv[i]);
         }
 
-        result = nullptr;
-
-        exit_flat = ef_none;
-        exit_mode = em;
-
         status = inter_init;
         env++;
     }
 
-    Inter::Inter(const Inter &base_inter, ExitMode em)
+    Inter::Inter(const Inter &base_inter)
             : out{}, in{}, env{base_inter.env}{
         status = inter_creat;
 
@@ -40,10 +35,6 @@ namespace aFuncore {
 
         for (auto &i: base_inter.literal)
             literal.push_back(i);
-
-        result = nullptr;
-        exit_flat = ef_none;
-        exit_mode = em;
 
         status = inter_normal;
         env++;
@@ -68,7 +59,19 @@ namespace aFuncore {
      * @return
      */
     bool Inter::runCode(){
+        if (status == inter_stop)
+            status = inter_normal;
+
         while (activation != nullptr) {
+            if (isInterStop()) {
+                while (activation != nullptr) {
+                    Activation *prev = activation->toPrev();
+                    delete activation;
+                    activation = prev;
+                }
+                return false;
+            }
+
             Code::ByteCode *code = nullptr;
             Activation::ActivationStatus as = activation->getCode(code);
             switch (as) {
@@ -87,17 +90,8 @@ namespace aFuncore {
                 default:
                     errorLog(aFunCoreLogger, "Error activation status.");
                     activation->getDownStream().pushMessage("ERROR",
-                            new ErrorMessage("RuntimeError", "Error activation status.", activation));
+                                                            new ErrorMessage("RuntimeError", "Error activation status.", activation));
                     break;
-            }
-
-            if (isExit()) {
-                while (activation != nullptr) {
-                    Activation *prev = activation->toPrev();
-                    delete activation;
-                    activation = prev;
-                }
-                return false;
             }
         }
         return true;

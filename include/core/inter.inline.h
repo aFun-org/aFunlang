@@ -15,8 +15,12 @@ namespace aFuncore {
         return status;
     }
 
-    inline bool Inter::isExit() const {
+    inline bool Inter::isInterStop() const {
         return (status == inter_exit || status == inter_stop);
+    }
+
+    inline bool Inter::isInterExit() const {
+        return (status == inter_exit);
     }
 
     inline ProtectVarSpace *Inter::getProtectVarSpace() const {
@@ -61,6 +65,19 @@ namespace aFuncore {
 
     inline size_t Environment::operator--(int){
         return reference--;
+    }
+
+    inline Inter::InterStatus Inter::setInterStop() {
+        InterStatus ret = status;
+        if (status != inter_exit)
+            status = inter_stop;
+        return ret;
+    }
+
+    inline Inter::InterStatus Inter::setInterExit() {
+        InterStatus ret = status;
+        status = inter_exit;
+        return ret;
     }
 }
 
