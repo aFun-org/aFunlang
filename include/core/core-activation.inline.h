@@ -32,15 +32,15 @@ namespace aFuncore {
         return path;
     }
 
-    inline ExeActivation::ExeActivation(Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
+    inline ExeActivation::ExeActivation(const Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
 
     }
 
-    inline ExeActivation::ExeActivation(Code::ByteCode *code, Inter &inter_) : Activation(inter_), start{code}, next{code} {
+    inline ExeActivation::ExeActivation(const Code::ByteCode *code, Inter &inter_) : Activation(inter_), start{code}, next{code} {
 
     }
 
-    inline Code::ByteCode *ExeActivation::getStart() const{
+    inline const Code::ByteCode *ExeActivation::getStart() const{
         return start;
     }
 
@@ -48,7 +48,7 @@ namespace aFuncore {
         return base;
     }
 
-    inline FuncActivation::FuncActivation(Code::ByteCode *code, Inter &inter_) : Activation(inter_), call{code} {
+    inline FuncActivation::FuncActivation(const Code::ByteCode *code, Inter &inter_) : Activation(inter_), call{code} {
 
     }
 }

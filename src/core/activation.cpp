@@ -40,7 +40,7 @@ namespace aFuncore {
      * 运行代码
      * @param code
      */
-    void Activation::runCode(Code::ByteCode *code){
+    void Activation::runCode(const Code::ByteCode *code){
         auto code_type = code->getType();
         if (code_type == Code::ByteCode::code_start) {  // start 不处理 msg
             auto *none = new Object("None", inter);
@@ -66,7 +66,7 @@ namespace aFuncore {
         }
     }
 
-    void Activation::runCodeElement(Code::ByteCode *code){
+    void Activation::runCodeElement(const Code::ByteCode *code){
         std::string literaler_name;
         bool in_protect = false;
         Object *obj = nullptr;
@@ -96,19 +96,19 @@ namespace aFuncore {
         }
     }
 
-    void Activation::runCodeBlockP(Code::ByteCode *code){
+    void Activation::runCodeBlockP(const Code::ByteCode *code){
         new ExeActivation(code->getSon(), inter);
     }
 
-    void Activation::runCodeBlockC(Code::ByteCode *code){
+    void Activation::runCodeBlockC(const Code::ByteCode *code){
         new FuncActivation(code, inter);
     }
 
-    void Activation::runCodeBlockB(Code::ByteCode *code){
+    void Activation::runCodeBlockB(const Code::ByteCode *code){
         new FuncActivation(code, inter);
     }
 
-    Activation::ActivationStatus ExeActivation::getCode(Code::ByteCode *&code){
+    Activation::ActivationStatus ExeActivation::getCode(const Code::ByteCode *&code){
         code = next;
         if (code == nullptr)
             return as_end;
@@ -129,7 +129,7 @@ namespace aFuncore {
         return as_run;
     }
 
-    TopActivation::TopActivation(Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
+    TopActivation::TopActivation(const Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
         varlist->connect(inter_.getGlobalVarlist());
     }
 
@@ -147,7 +147,7 @@ namespace aFuncore {
         delete call_func;
     }
 
-    Activation::ActivationStatus FuncActivation::getCode(Code::ByteCode *&code) {
+    Activation::ActivationStatus FuncActivation::getCode(const Code::ByteCode *&code) {
         if (on_tail)
             return as_end;
 

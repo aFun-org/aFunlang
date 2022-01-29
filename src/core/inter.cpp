@@ -72,7 +72,7 @@ namespace aFuncore {
                 return false;
             }
 
-            Code::ByteCode *code = nullptr;
+            const Code::ByteCode *code = nullptr;
             Activation::ActivationStatus as = activation->getCode(code);
             switch (as) {
                 case Activation::as_end: {
@@ -102,7 +102,7 @@ namespace aFuncore {
      * @param code 代码
      * @return
      */
-    bool Inter::runCode(Code &code){
+    bool Inter::runCode(const Code &code){
         if (activation != nullptr) {
             errorLog(aFunCoreLogger, "Run code with activation");
             return false;

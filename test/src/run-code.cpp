@@ -6,17 +6,17 @@ using namespace aFuntool;
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
         Code &func_code;
-        Code::ByteCode *code;
+        const Code::ByteCode *code;
         Inter &inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code &func_code_, Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
+        CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
             ArgCodeList agr1 = {code_->getSon()->toNext()};
             acl->push_front(agr1);
         }
 
-        std::list<ArgCodeList> *getArgCodeList(Inter &inter_, Activation &activation, Code::ByteCode *call) override {
+        std::list<ArgCodeList> *getArgCodeList(Inter &inter_, Activation &activation, const Code::ByteCode *call) override {
             return acl;
         }
 
@@ -40,7 +40,7 @@ public:
 
     ~Func1() override = default;
 
-    CallFunction *getCallFunction(Code::ByteCode *code, Inter &inter) override {
+    CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
         return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
     }
 
