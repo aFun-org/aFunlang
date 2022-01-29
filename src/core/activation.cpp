@@ -44,7 +44,7 @@ namespace aFuncore {
         auto code_type = code->getType();
         if (code_type == Code::ByteCode::code_start) {  // start 不处理 msg
             auto *none = new Object("None", inter);
-            down.pushMessage(new NormalMessage(none));
+            down.pushMessage("NORMAL", new NormalMessage(none));
         } else {
             if (code_type == Code::ByteCode::code_element) {
                 runCodeElement(code);
@@ -79,7 +79,7 @@ namespace aFuncore {
             if (literaler != nullptr)
                 literaler->getObject(code->getElement(), code->getPrefix(), inter, *this);
             else
-                down.pushMessage(new ErrorMessage("TypeError", "Error type of literal.", this));
+                down.pushMessage("ERROR", new ErrorMessage("TypeError", "Error type of literal.", this));
         } else {
             if (varlist != nullptr)
                 obj = varlist->findObject(code->getElement());
@@ -88,9 +88,9 @@ namespace aFuncore {
                 if (cbv != nullptr && cbv->isCallBack(inter, *this))
                     cbv->callBack(inter, *this);
                 else
-                    down.pushMessage(new NormalMessage(obj));
+                    down.pushMessage("NORMAL", new NormalMessage(obj));
             } else
-                down.pushMessage(
+                down.pushMessage("ERROR",
                         new ErrorMessage("NameError", std::string("Variable ") + code->getElement() + " not fount.",
                                          this));
         }
@@ -158,11 +158,11 @@ namespace aFuncore {
                     code = call->getSon();
                     if (code == nullptr) {
                         line = 0;
-                        down.pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                        down.pushMessage("ERROR", new ErrorMessage("SyntaxError", "Callback without code.", this));
                         return as_end;
                     }
                     line = code->getFileLine();
-                    if (code->getFilePath() != "")
+                    if (!code->getFilePath().empty())
                         path = code->getFilePath();
                     return as_run;
                 case Code::ByteCode::block_b: {
@@ -187,7 +187,7 @@ namespace aFuncore {
                     }
                     if (status != func_get_func) {
                         line = 0;
-                        down.pushMessage(new ErrorMessage("SyntaxError", "Callback without code.", this));
+                        down.pushMessage("ERROR", new ErrorMessage("SyntaxError", "Callback without code.", this));
                         return as_end;
                     }
                     break;
@@ -195,7 +195,7 @@ namespace aFuncore {
                 default:
                     errorLog(aFunCoreLogger, "Error FuncActivation block type");
                     line = 0;
-                    down.pushMessage(new ErrorMessage("RuntimeError", "Error FuncActivation block type.", this));
+                    down.pushMessage("ERROR", new ErrorMessage("RuntimeError", "Error FuncActivation block type.", this));
                     return as_end;
             }
         }
@@ -210,7 +210,7 @@ namespace aFuncore {
                 func = dynamic_cast<Function *>(msg->getObject());
                 delete msg;
                 if (func == nullptr) {
-                    down.pushMessage(new ErrorMessage("TypeError", "Callback without function.", this));
+                    down.pushMessage("ERROR", new ErrorMessage("TypeError", "Callback without function.", this));
                     return as_end;
                 }
             }

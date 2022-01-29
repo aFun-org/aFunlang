@@ -13,9 +13,14 @@ namespace aFuncore {
 
     template <typename Callable, typename...T>
     inline void MessageStream::forEach(Callable func, T...arg) {
-        for (Message *msg = stream; msg != nullptr; msg = msg->next) {
-            func(msg, arg...);
-        }
+        for (auto &msg : stream)
+            func(msg.second, arg...);
+    }
+
+    template<typename Callable, typename... T>
+    void UpMessage::forEachAll(Callable func, T... arg) {
+        for (const UpMessage *up = this; up != nullptr; up = up->old)
+            up->MessageStream::forEach(func, arg...);
     }
 }
 

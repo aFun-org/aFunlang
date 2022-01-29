@@ -86,7 +86,7 @@ namespace aFuncore {
                     break;
                 default:
                     errorLog(aFunCoreLogger, "Error activation status.");
-                    activation->getDownStream().pushMessage(
+                    activation->getDownStream().pushMessage("ERROR",
                             new ErrorMessage("RuntimeError", "Error activation status.", activation));
                     break;
             }

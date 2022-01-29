@@ -81,13 +81,13 @@ public:
     }
 };
 
-static void printMessage(Message *msg, Inter &inter) {
-    if (msg->type == "NORMAL") {
+static void printMessage(const std::string &type, Message *msg, Inter &inter) {
+    if (type == "NORMAL") {
         auto *msg_ = dynamic_cast<NormalMessage *>(msg);
         if (msg_ == nullptr)
             return;
         aFuntool::printf_stdout(0, "NORMAL: %p\n", msg_->getObject());
-    } else if (msg->type == "ERROR") {
+    } else if (type == "ERROR") {
         auto *msg_ = dynamic_cast<ErrorMessage *>(msg);
         if (msg_ == nullptr)
             return;
@@ -108,8 +108,9 @@ static void printMessage(Message *msg, Inter &inter) {
 }
 
 void printInterEvent(Inter &inter) {
-    for (auto msg = inter.getOutMessageStream().popFrontMessage(); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage()) {
-        printMessage(msg, inter);
+    std::string type;
+    for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
+        printMessage(type, msg, inter);
         delete msg;
     }
 }

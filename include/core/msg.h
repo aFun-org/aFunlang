@@ -2,24 +2,17 @@
 #define AFUN_MSG_H
 #include <list>
 #include <mutex>
+#include <map>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 
 namespace aFuncore {
     class AFUN_CORE_EXPORT Message {
-        friend class MessageStream;
-        friend class UpMessage;
-        friend class DownMessage;
-        friend class InterMessage;
-
     public:
-        const std::string type;  // 消息类型标注
-        explicit inline Message(const std::string &type_);
+        explicit inline Message() = default;
         virtual ~Message() = default;
         Message &operator=(const Message &)=delete;
 
-    private:
-        Message *next;  // 下一条消息
     };
 
     class Object;
@@ -67,33 +60,36 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT MessageStream {
     public:
-        MessageStream();
+        MessageStream() = default;
         virtual ~MessageStream();
+        MessageStream(const MessageStream &)=delete;
         MessageStream &operator=(const MessageStream &)=delete;
 
         template<class T>
         [[nodiscard]] T *getMessage(const std::string &type) const;
 
         Message *popMessage(const std::string &type);
-        void pushMessage(Message *msg);
+        void pushMessage(const std::string &type, Message *msg);
 
         template <typename Callable, typename...T>
         void forEach(Callable func, T...arg);
 
     protected:
-        Message *stream;
+        std::map<std::string, Message *> stream;
         [[nodiscard]] virtual Message *_getMessage(const std::string &type) const;
     };
 
     class AFUN_CORE_EXPORT UpMessage : public MessageStream {
     public:
         explicit UpMessage(const UpMessage *old=nullptr);
-        ~UpMessage() override;
+        ~UpMessage() override = default;
 
-        Message *popMessage(const std::string &type);
+        template <typename Callable, typename...T>
+        void forEachAll(Callable func, T...arg);
 
     protected:
-        Message *old;
+        const UpMessage *old;
+        [[nodiscard]] Message *_getMessage(const std::string &type) const override;
     };
 
     class AFUN_CORE_EXPORT DownMessage : public MessageStream {
@@ -104,7 +100,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT InterMessage : public MessageStream {
         std::mutex mutex;
     public:
-        Message *popFrontMessage();
+        Message *popFrontMessage(std::string &type);
     };
 }
 

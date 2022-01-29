@@ -25,15 +25,13 @@ namespace aFuncore {
 
     private:
         static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
-        struct EnvVar;
+        struct EnvVar {  // 环境变量
+            std::string str;
+            int32_t num;  // 可以同时记录字符串和数字
+        };
 
         std::unordered_map<std::string, EnvVar> var;
         std::shared_mutex lock;
-    };
-
-    struct EnvVarSpace::EnvVar {  // 环境变量
-        std::string str;
-        int32_t num;  // 可以同时记录字符串和数字
     };
 }
 

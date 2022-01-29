@@ -5,14 +5,14 @@ namespace aFuncore {
     template <typename Callable,typename...T>
     void VarSpace::forEach(Callable func, T...arg) {
         for (int i = 0; i < VAR_HASH_SIZE; i++) {
-            for (auto tmp = var[i]; tmp != nullptr; tmp = tmp->next)
-                func(tmp, arg...);
+            for (auto &tmp : var)
+                func(tmp.second, arg...);
         }
     }
 
     template <typename Callable,typename...T>
     void VarList::forEach(Callable func, T...arg) {
-        for (auto vs : varspace)
+        for (auto &vs : varspace)
             func(vs, arg...);
     }
 }
