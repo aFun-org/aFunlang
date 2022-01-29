@@ -3,7 +3,8 @@
 #include "env-var.h"
 
 namespace aFuncore {
-    inline size_t EnvVarSpace::getCount() const{
+    inline size_t EnvVarSpace::getCount() {
+        std::unique_lock<std::mutex> mut(lock);
         return var.size();
     }
 }
