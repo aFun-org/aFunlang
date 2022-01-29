@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_ENV_VAR_H
 #define AFUN_ENV_VAR_H
+#include <unordered_map>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "shared_mutex"
@@ -7,8 +8,8 @@
 namespace aFuncore {
     class AFUN_CORE_EXPORT EnvVarSpace {  // 环境变量
     public:
-        EnvVarSpace();
-        ~EnvVarSpace();
+        EnvVarSpace() = default;
+        ~EnvVarSpace() = default;
         EnvVarSpace(const EnvVarSpace &)=delete;
         EnvVarSpace &operator=(const EnvVarSpace &)=delete;
 
@@ -26,16 +27,13 @@ namespace aFuncore {
         static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
         struct EnvVar;
 
-        size_t count;
-        EnvVar *var[ENV_VAR_HASH_SIZE] {};
+        std::unordered_map<std::string, EnvVar> var;
         std::shared_mutex lock;
     };
 
     struct EnvVarSpace::EnvVar {  // 环境变量
-        std::string name;
         std::string str;
-        int32_t num = 0;  // 可以同时记录字符串和数字
-        struct EnvVar *next = nullptr;
+        int32_t num;  // 可以同时记录字符串和数字
     };
 }
 

@@ -4,7 +4,7 @@
 
 namespace aFuncore {
     inline size_t EnvVarSpace::getCount() const{
-        return count;
+        return var.size();
     }
 }
 
