@@ -18,11 +18,10 @@ namespace aFuncore {
         ~Object() override = default;
     };
 
-    class AFUN_CORE_EXPORT Function : public Object {
+    class AFUN_CORE_EXPORT Function : public virtual Object {
     public:
         class AFUN_CORE_EXPORT CallFunction;
 
-        inline Function(const std::string &type_, Inter &inter_);
         virtual CallFunction *getCallFunction(Code::ByteCode *code, Inter &inter) = 0;
         virtual inline bool isInfix();
     };
@@ -45,17 +44,15 @@ namespace aFuncore {
         Object *ret = nullptr;
     };
 
-    class AFUN_CORE_EXPORT Literaler : public Object {
+    class AFUN_CORE_EXPORT Literaler : public virtual Object {
     public:
-        inline Literaler(const std::string &type_, Inter &inter_);
         virtual void getObject(const std::string &literal, char prefix, Inter &inter, Activation &activation) = 0;
     };
 
-    class AFUN_CORE_EXPORT CallBackVar : public Object {
+    class AFUN_CORE_EXPORT CallBackVar : public virtual Object {
     public:
-        inline CallBackVar(const std::string &type_, Inter &inter_);
-        virtual inline bool isCallBack(Inter &inte, Activation &activation);
-        virtual void callBack(Inter &inte, Activation &activation) = 0;
+        virtual inline bool isCallBack(Inter &inter, Activation &activation);
+        virtual void callBack(Inter &inter, Activation &activation) = 0;
     };
 };
 

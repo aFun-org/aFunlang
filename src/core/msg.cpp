@@ -12,8 +12,8 @@ namespace aFuncore {
         aFuntool::printf_stdout(0, "NORMAL: %p\n", obj);  // TODO-szh 使用 Event
     }
 
-    ErrorMessage::ErrorMessage(const std::string &error_type_, const std::string &error_info_, Activation *activation)  // TODO-szh 使用Event
-            : TopMessage("ERROR"), error_type{error_type_}, error_info{error_info_}, inter{activation->inter}{
+    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation)  // TODO-szh 使用Event
+            : Message("ERROR"), error_type{std::move(error_type_)}, error_info{std::move(error_info_)}, inter{activation->inter}{
         for (NULL; activation != nullptr; activation = activation->toPrev()) {
             if (activation->getFileLine() != 0)
                 trackback.push_front({activation->getFilePath(), activation->getFileLine()});

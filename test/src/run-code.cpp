@@ -32,7 +32,7 @@ class Func1 : public Function {
 
     Code func_code;
 public:
-    explicit Func1(Inter &inter_) : Function("Function", inter_), func_code {"run-code.aun"} {
+    explicit Func1(Inter &inter_) : Object("Function", inter_), func_code {"run-code.aun"} {
         func_code.getByteCode()->connect(
                 new Code::ByteCode(func_code, Code::ByteCode::block_p,
                                    new Code::ByteCode(func_code, "test-var", 1), 0));
@@ -50,7 +50,7 @@ public:
 class Literaler1 : public Literaler {
     Code func_code;
 public:
-    explicit Literaler1(Inter &inter_) : Literaler("Data", inter_), func_code{"run-code.aun"} {
+    explicit Literaler1(Inter &inter_) : Object("Data", inter_), func_code{"run-code.aun"} {
         func_code.getByteCode()->connect(
                 new Code::ByteCode(func_code, Code::ByteCode::block_p,
                                    new Code::ByteCode(func_code, "test-var", 1), 0));
@@ -67,7 +67,7 @@ public:
 class CBV1 : public CallBackVar {
     Code func_code;
 public:
-    explicit CBV1(Inter &inter_) : CallBackVar("CBV1", inter_), func_code{"run-code.aun"} {
+    explicit CBV1(Inter &inter_) : Object("CBV1", inter_), func_code{"run-code.aun"} {
         func_code.getByteCode()->connect(
                 new Code::ByteCode(func_code, Code::ByteCode::block_p,
                                    new Code::ByteCode(func_code, "test-var", 1), 0));

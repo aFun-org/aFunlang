@@ -7,11 +7,7 @@ namespace aFuncore {
 
     }
 
-    inline TopMessage::TopMessage(const std::string &type_) : Message(type_) {
-
-    }
-
-    inline NormalMessage::NormalMessage(Object *obj_) : TopMessage("NORMAL"), obj {obj_} {
+    inline NormalMessage::NormalMessage(Object *obj_) : Message("NORMAL"), obj {obj_} {
 
     }
 
