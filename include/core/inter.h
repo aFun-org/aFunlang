@@ -1,6 +1,7 @@
 ﻿#ifndef AFUN_INTER_H
 #define AFUN_INTER_H
 #include <list>
+#include <mutex>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 
@@ -37,13 +38,14 @@ namespace aFuncore {
         Object *obj;
         Var *var;
         VarSpace *varspace;
-
-        ProtectVarSpace *protect;  // 保护变量空间
-        VarSpace *global;  // 全局变量空间
-        VarList *global_varlist;  // global + protect
-        EnvVarSpace envvar;
-
         size_t reference;  // 引用计数
+        bool destruct;
+        std::mutex lock;
+
+        ProtectVarSpace *const protect;  // 保护变量空间
+        VarSpace *const global;  // 全局变量空间
+        VarList *const global_varlist;  // global + protect
+        EnvVarSpace envvar;
     };
 
     class AFUN_CORE_EXPORT Inter {

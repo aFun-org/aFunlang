@@ -167,24 +167,19 @@ namespace aFuncore {
         return true;
     }
 
-    Environment::Environment() : envvar{}{
-        obj = nullptr;
-        var = nullptr;
-        varspace = nullptr;
-
-        protect = new ProtectVarSpace(*this);  // 放到最后
-        global = new VarSpace(*this);  // 放到最后
-        global_varlist = new VarList(protect);
+    Environment::Environment()
+        : obj{nullptr}, var{nullptr}, varspace{nullptr},
+          protect{new ProtectVarSpace(*this)}, global{new VarSpace(*this)},
+          global_varlist{new VarList(protect)}, destruct{false} {
         global_varlist->push(global);
-
         reference = 0;
     }
 
-    Environment::~Environment() noexcept(false){
+    Environment::~Environment() noexcept(false) {
         if (reference != 0)
             throw EnvironmentDestructException();
 
-        if (global_varlist == nullptr)
+        if (destruct)
             return;
 
         delete global_varlist;
@@ -196,9 +191,6 @@ namespace aFuncore {
         obj = nullptr;
         var = nullptr;
         varspace = nullptr;
-
-        protect = nullptr;  // 放到最后
-        global = nullptr;  // 放到最后
-        global_varlist = nullptr;
+        destruct = true;
     }
 }

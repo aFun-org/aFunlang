@@ -52,18 +52,22 @@ namespace aFuncore {
     }
 
     inline size_t Environment::operator++(){
+        std::unique_lock<std::mutex> mutex{lock};
         return ++reference;
     }
 
     inline size_t Environment::operator--(){
+        std::unique_lock<std::mutex> mutex{lock};
         return --reference;
     }
 
     inline size_t Environment::operator++(int){
+        std::unique_lock<std::mutex> mutex{lock};
         return reference++;
     }
 
     inline size_t Environment::operator--(int){
+        std::unique_lock<std::mutex> mutex{lock};
         return reference--;
     }
 
