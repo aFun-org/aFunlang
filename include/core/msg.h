@@ -43,7 +43,7 @@ namespace aFuncore {
             aFuntool::FileLine line;
         };
 
-        explicit ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation);
+        explicit ErrorMessage(std::string error_type_, std::string error_info_, Activation *start);
         inline ErrorMessage(ErrorMessage &&msg) noexcept;
         void topProgress(Inter &inter_, Activation &activation) override;
         [[nodiscard]] inline std::string getErrorType() const;

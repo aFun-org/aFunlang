@@ -12,9 +12,9 @@ namespace aFuncore {
         inter.getOutMessageStream().pushMessage("NORMAL", new NormalMessage(std::move(*this)));
     }
 
-    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *activation)
-        : error_type{std::move(error_type_)}, error_info{std::move(error_info_)}, inter{activation->inter}{
-        for (NULL; activation != nullptr; activation = activation->toPrev()) {
+    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *start)
+        : error_type{std::move(error_type_)}, error_info{std::move(error_info_)}, inter{start->inter}{
+        for (const auto activation : inter.getStack()) {
             if (activation->getFileLine() != 0)
                 trackback.push_front({activation->getFilePath(), activation->getFileLine()});
         }

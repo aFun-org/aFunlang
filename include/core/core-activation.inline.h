@@ -12,10 +12,6 @@ namespace aFuncore {
         return varlist;
     }
 
-    inline Activation *Activation::toPrev() const{
-        return prev;
-    }
-
     inline UpMessage &Activation::getUpStream() {
         return up;
     }

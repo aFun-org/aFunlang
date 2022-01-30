@@ -8,7 +8,21 @@ namespace aFuncore {
     }
 
     inline void Inter::pushActivation(Activation *new_activation) {
+        stack.push_front(new_activation);
         activation = new_activation;
+    }
+
+    inline Activation *Inter::popActivation() {
+        if (activation == nullptr)
+            return nullptr;
+
+        Activation *ret = activation;
+        stack.pop_front();
+        if (stack.empty())
+            activation = nullptr;
+        else
+            activation = stack.front();
+        return ret;
     }
 
     inline Inter::InterStatus Inter::getStatus() const {
@@ -33,6 +47,10 @@ namespace aFuncore {
 
     inline VarList *Inter::getGlobalVarlist() const {
         return env.global_varlist;
+    }
+
+    inline const std::list<Activation *> &Inter::getStack() const {
+        return stack;
     }
 
     inline Activation *Inter::getActivation() const {

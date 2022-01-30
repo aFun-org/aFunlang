@@ -12,12 +12,12 @@ namespace aFuncore {
      * @param inter_
      */
     Activation::Activation(Inter &inter_)
-            : inter{inter_}, prev{inter_.getActivation()}, line{0},
-              up{prev == nullptr ? nullptr : &prev->up}, down{}{
-        if (prev != nullptr) {
-            varlist = new VarList(prev->varlist);
-            line = prev->line;
-            path = prev->path;
+            : inter{inter_}, line{0},
+              up{inter_.activation == nullptr ? nullptr : &inter_.activation->up}, down{}{
+        if (inter_.activation != nullptr) {
+            varlist = new VarList(inter_.activation->varlist);
+            line = inter_.activation->line;
+            path = inter_.activation->path;
         } else {
             varlist = new VarList();
             path = "";
@@ -31,8 +31,8 @@ namespace aFuncore {
      * 释放Varlist并且将DownMessage压入上层
      */
     Activation::~Activation(){
-        if (prev != nullptr)
-            down.joinMsg(prev->down);
+        if (inter.activation != nullptr)
+            down.joinMsg(inter.activation->down);
         delete varlist;
     }
 
@@ -151,7 +151,7 @@ namespace aFuncore {
         on_tail = false;  // 跳过所有阶段
         status = func_get_func;
         func = func_;
-        if (prev == nullptr)
+        if (inter_.getActivation() == nullptr)
             varlist->connect(inter_.getGlobalVarlist());
     }
 

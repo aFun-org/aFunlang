@@ -85,6 +85,7 @@ namespace aFuncore {
         [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
         [[nodiscard]] inline VarSpace *getGlobalVarSpace() const;
         [[nodiscard]] inline VarList *getGlobalVarlist() const;
+        [[nodiscard]] inline const std::list<Activation *> &getStack() const;
         [[nodiscard]] inline Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
@@ -105,6 +106,7 @@ namespace aFuncore {
 
         Environment &env;
 
+        std::list<Activation *> stack;
         Activation *activation;  // 活动记录
 
         InterOutMessage out;
@@ -113,6 +115,7 @@ namespace aFuncore {
         std::list<LiteralRegex> literal;
 
         inline void pushActivation(Activation *new_activation);
+        inline Activation *popActivation();
     };
 
     struct Inter::LiteralRegex {

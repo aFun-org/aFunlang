@@ -52,11 +52,8 @@ namespace aFuncore {
 
         while (activation != nullptr) {
             if (isInterStop()) {
-                while (activation != nullptr) {
-                    Activation *prev = activation->toPrev();
-                    delete activation;
-                    activation = prev;
-                }
+                while (activation != nullptr)
+                    delete popActivation();
                 return false;
             }
 
@@ -64,9 +61,7 @@ namespace aFuncore {
             Activation::ActivationStatus as = activation->getCode(code);
             switch (as) {
                 case Activation::as_end: {
-                    Activation *prev = activation->toPrev();
-                    delete activation;
-                    activation = prev;
+                    delete popActivation();
                     break;
                 }
                 case Activation::as_run:

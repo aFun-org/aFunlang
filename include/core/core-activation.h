@@ -20,9 +20,6 @@ namespace aFuncore {
 
         Inter &inter;
 
-        template <typename Callable,typename...T>
-        static void forEach(Activation *activation, Callable func, T...arg);
-
         explicit Activation(Inter &inter_);
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
@@ -32,7 +29,6 @@ namespace aFuncore {
         virtual inline void endRun();
 
         [[nodiscard]] inline VarList *getVarlist() const;
-        [[nodiscard]] inline Activation *toPrev() const;
         [[nodiscard]] inline UpMessage &getUpStream();
         [[nodiscard]] inline DownMessage &getDownStream();
 
@@ -40,8 +36,6 @@ namespace aFuncore {
         [[nodiscard]] inline  const aFuntool::FilePath &getFilePath() const;
 
     protected:
-        Activation *prev;
-
         VarList *varlist;
 
         UpMessage up;
@@ -107,6 +101,5 @@ namespace aFuncore {
 }
 
 #include "core-activation.inline.h"
-#include "core-activation.template.h"
 
 #endif //AFUN_CORE_ACTIVATION_H
