@@ -1,27 +1,66 @@
-﻿#include "tool.h"
+﻿#include <mutex>
+#include <stack>
 #include "tool-exit.h"
 #include "tool-exception.h"
-#include "mutex"
 
 namespace aFuntool {
-    static const int exit_func_size = 1024;
-    static std::mutex exit_mutex;
-    struct ExitFuncData {
-        aFunExitFunc *func;
-        void *data;
-    } exit_func[exit_func_size];
+    class ExitManager {
+    public:
+        ExitManager() noexcept = default;
+
+        ~ExitManager() noexcept {
+            runExitData();
+        }
+
+        void runExitData() {
+            std::unique_lock<std::mutex> ul{exit_mutex};
+            while(!data.empty()) {
+                auto tmp = data.top();
+                tmp.func(tmp.data);
+                data.pop();
+            }
+        }
+
+        void pushExitData(aFunExitFunc *func, void *data_) {
+            std::unique_lock<std::mutex> ul{exit_mutex};
+            data.emplace(func, data_);
+        }
+
+        bool tryRunExitData() {
+            if (!exit_mutex.try_lock())
+                return false;
+            std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
+            while(!data.empty()) {
+                auto tmp = data.top();
+                tmp.func(tmp.data);
+                data.pop();
+            }
+            return true;
+        }
+
+        bool tryPushExitData(aFunExitFunc *func, void *data_) {
+            if (!exit_mutex.try_lock())
+                return false;
+            std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
+            data.emplace(func, data_);
+            return true;
+        }
+
+    private:
+        std::mutex exit_mutex;
+        struct ExitFuncData {
+            aFunExitFunc *func;
+            void *data;
+        };
+        std::stack<ExitFuncData> data;
+    } manager;
 
     /**
      * 退出程序
      * @param exit_code 退出代码
      */
     void aFunExit(int exit_code) noexcept(false) {
-        std::unique_lock<std::mutex> ul{exit_mutex};
-        for (int i = exit_func_size - 1; i >= 0; i--) {
-            if (exit_func[i].func != nullptr)
-                exit_func[i].func(exit_func[i].data);
-        }
-        ul.unlock();
+        manager.runExitData();
         throw Exit(exit_code);
     }
 
@@ -30,44 +69,22 @@ namespace aFuntool {
      * @param exit_code 退出代码
      */
     [[noreturn]] void aFunExitReal(int exit_code) {
-        std::unique_lock<std::mutex> ul{exit_mutex};
-        for (int i = exit_func_size - 1; i >= 0; i--) {
-            if (exit_func[i].func != nullptr)
-                exit_func[i].func(exit_func[i].data);
-        }
-        ul.unlock();
+        manager.runExitData();
         exit(exit_code);
     }
 
     /**
      * 尝试执行退出函数
      */
-    int aFunTryExitPseudo(){
-        if (exit_mutex.try_lock()) {
-            std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
-            for (int i = exit_func_size - 1; i >= 0; i--) {
-                if (exit_func[i].func != nullptr)
-                    exit_func[i].func(exit_func[i].data);
-                exit_func[i].func = nullptr;
-                exit_func[i].data = nullptr;
-            }
-            return 1;
-        }
-        return 0;
+    bool aFunTryExitPseudo(){
+        return manager.tryRunExitData();
     }
 
     /**
      * 执行退出函数, 但不退出
      */
-    int aFunExitPseudo(){
-        std::unique_lock<std::mutex> ul{exit_mutex};
-        for (int i = exit_func_size - 1; i >= 0; i--) {
-            if (exit_func[i].func != nullptr)
-                exit_func[i].func(exit_func[i].data);
-            exit_func[i].func = nullptr;
-            exit_func[i].data = nullptr;
-        }
-        return 0;
+    void aFunExitPseudo(){
+        manager.runExitData();
     }
 
     /**
@@ -75,21 +92,8 @@ namespace aFuntool {
      * @param func 退出函数
      * @param data 参数
      */
-    int aFunAtExitTry(aFunExitFunc *func, void *data){
-        if (exit_mutex.try_lock()) {
-            std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
-            struct ExitFuncData *tmp = exit_func;
-            int count = 0;
-            for (NULL; tmp->func != nullptr; tmp++, count++) {
-                if (count >= exit_func_size) {
-                    return -1;
-                }
-            }
-            tmp->func = func;
-            tmp->data = data;
-            return count;
-        }
-        return -1;
+    bool aFunAtExitTry(aFunExitFunc *func, void *data){
+        return manager.tryPushExitData(func, data);
     }
 
     /**
@@ -98,17 +102,7 @@ namespace aFuntool {
      * @param data 参数
      * @return
      */
-    int aFunAtExit(aFunExitFunc *func, void *data){
-        std::unique_lock<std::mutex> ul{exit_mutex};
-        struct ExitFuncData *tmp = exit_func;
-        int count = 0;
-        for (NULL; tmp->func != nullptr; tmp++, count++) {
-            if (count >= exit_func_size) {
-                return -1;
-            }
-        }
-        tmp->func = func;
-        tmp->data = data;
-        return count;
+    void aFunAtExit(aFunExitFunc *func, void *data){
+        manager.pushExitData(func, data);
     }
 }
