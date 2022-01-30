@@ -20,10 +20,17 @@ namespace aFuncore {
             path = inter_.activation->path;
         } else {
             varlist = new VarList();
+            varlist->connect(inter_.getGlobalVarlist());
             path = "";
         }
         inter.pushActivation(this);
     }
+
+    static void ActivationTopProgress(Message *msg, Inter &inter, Activation &activation){
+        auto *t = dynamic_cast<TopMessage *>(msg);
+        if (t)
+            t->topProgress(inter, activation);
+    };
 
     /**
      * 析构Activation
@@ -33,6 +40,8 @@ namespace aFuncore {
     Activation::~Activation(){
         if (inter.activation != nullptr)
             down.joinMsg(inter.activation->down);
+        else
+            down.forEach(ActivationTopProgress, std::ref(inter), std::ref(*this));
         delete varlist;
     }
 
@@ -130,17 +139,7 @@ namespace aFuncore {
     }
 
     TopActivation::TopActivation(const Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
-        varlist->connect(inter_.getGlobalVarlist());
-    }
 
-    static void ActivationTopProgress(Message *msg, Inter &inter, Activation &activation){
-        auto *t = dynamic_cast<TopMessage *>(msg);
-        if (t)
-            t->topProgress(inter, activation);
-    };
-
-    TopActivation::~TopActivation(){
-        down.forEach(ActivationTopProgress, std::ref(inter), std::ref(*this));
     }
 
     FuncActivation::~FuncActivation(){
@@ -151,8 +150,6 @@ namespace aFuncore {
         on_tail = false;  // 跳过所有阶段
         status = func_get_func;
         func = func_;
-        if (inter_.getActivation() == nullptr)
-            varlist->connect(inter_.getGlobalVarlist());
     }
 
     Activation::ActivationStatus FuncActivation::getCode(const Code::ByteCode *&code) {

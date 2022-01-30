@@ -66,7 +66,7 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
     public:
         explicit TopActivation(const Code &code, Inter &inter_);
-        ~TopActivation() override;
+        ~TopActivation() override = default;
         [[nodiscard]] inline const Code &getBase() const;
 
     private:
