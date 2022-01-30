@@ -6,14 +6,16 @@ using namespace aFuntool;
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
         Code &func_code;
-        const Code::ByteCode *code;
+        const Code::ByteCode *call_code;
         Inter &inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, code{code_}, inter{inter_} {
+        CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, call_code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
-            ArgCodeList agr1 = {code_->getSon()->toNext()};
-            acl->push_front(agr1);
+            if (code_ != nullptr) {
+                ArgCodeList agr1 = {code_->getSon()->toNext()};
+                acl->push_front(agr1);
+            }
         }
 
         std::list<ArgCodeList> *getArgCodeList(Inter &inter_, Activation &activation, const Code::ByteCode *call) override {
@@ -21,7 +23,10 @@ class Func1 : public Function {
         }
 
         void runFunction() override {
-            printf_stdout(0, "runFunction : %p\n", acl->begin()->ret);
+            if (acl->empty())
+                printf_stdout(0, "runFunction No AegCodeList\n");
+            else
+                printf_stdout(0, "runFunction : %p\n", acl->begin()->ret);
             new ExeActivation(func_code, inter);
         }
 
@@ -202,8 +207,15 @@ int main() {
     }
 
     {
+        fputs_stdout("Test-6: run-function\n");
+        inter.runCode(func);
+        printInterEvent(inter);
+        fputs_stdout("\n");
+    }
+
+    {
         /* 多线程 */
-        fputs_stdout("Test-6: thread\n");
+        fputs_stdout("Test-7: thread\n");
         Inter son{inter};
         std::thread thread{thread_test, std::ref(son)};
 

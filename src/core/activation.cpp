@@ -147,6 +147,14 @@ namespace aFuncore {
         delete call_func;
     }
 
+    FuncActivation::FuncActivation(Function *func_, Inter &inter_) : Activation(inter_), call{nullptr} {
+        on_tail = false;  // 跳过所有阶段
+        status = func_get_func;
+        func = func_;
+        if (prev == nullptr)
+            varlist->connect(inter_.getGlobalVarlist());
+    }
+
     Activation::ActivationStatus FuncActivation::getCode(const Code::ByteCode *&code) {
         if (on_tail)
             return as_end;

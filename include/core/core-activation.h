@@ -82,15 +82,16 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT FuncActivation : public Activation {
     public:
         explicit inline FuncActivation(const Code::ByteCode *code, Inter &inter_);
+        explicit FuncActivation(Function *func, Inter &inter_);
         ~FuncActivation() override;
         ActivationStatus getCode(const Code::ByteCode *&code) override;
         void endRun() override;
 
     private:
         enum {
-            func_first = 0,
-            func_get_func = 1,
-            func_get_arg = 2,
+            func_first = 0,  // 获取函数体前准备
+            func_get_func = 1,  // 获取函数体后，开始获取参数前
+            func_get_arg = 2,  // 获取参数过程
         } status = func_first;
 
         bool on_tail = false;

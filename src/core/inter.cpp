@@ -101,6 +101,27 @@ namespace aFuncore {
     }
 
     /**
+     * 函数调用
+     * @param code 代码
+     * @return
+     */
+    bool Inter::runCode(Object *func){
+        if (activation != nullptr) {
+            errorLog(aFunCoreLogger, "Run function with activation");
+            return false;
+        }
+
+        Function *func_obj = dynamic_cast<Function *>(func);
+        if (func_obj == nullptr) {
+            errorLog(aFunCoreLogger, "Run without function");
+            return false;
+        }
+
+        new FuncActivation(func_obj, *this);
+        return runCode();
+    }
+
+    /**
      * 检查字面量是否匹配
      * @param element 字面量
      * @return

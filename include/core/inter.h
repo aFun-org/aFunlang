@@ -96,6 +96,7 @@ namespace aFuncore {
 
         bool runCode();
         bool runCode(const Code &code);
+        bool runCode(Object *obj);
 
         inline InterStatus setInterStop();
         inline InterStatus setInterExit();
