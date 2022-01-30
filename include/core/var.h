@@ -11,7 +11,7 @@
 namespace aFuncore {
     class Object;
 
-    class AFUN_CORE_EXPORT Var : public GcObject<class Var> {
+    class AFUN_CORE_EXPORT Var : public GcObjectBase {
     public:
         Environment &env;
 
@@ -26,7 +26,7 @@ namespace aFuncore {
         Object *data;
     };
 
-    class AFUN_CORE_EXPORT VarSpace : public GcObject<class VarSpace> {
+    class AFUN_CORE_EXPORT VarSpace : public GcObjectBase {
     public:
         typedef enum VarOperationFlat {
             vof_success = 0,  // 成功

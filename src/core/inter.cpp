@@ -172,11 +172,11 @@ namespace aFuncore {
     }
 
     Environment::Environment(int argc, char **argv)
-        : obj{nullptr}, var{nullptr}, varspace{nullptr},
+        : reference{0}, gc_inter{*(new Inter(*this))},
           protect{new ProtectVarSpace(*this)}, global{new VarSpace(*this)},
           global_varlist{new VarList(protect)}, destruct{false} {
         global_varlist->push(global);
-        reference = 0;
+        /* 生成 gc_inter 后, reference == 1 */
 
         envvar.setNumber("sys:gc-runtime", 2);
         envvar.setString("sys:prefix", "''");  // 引用，顺序执行
@@ -192,24 +192,26 @@ namespace aFuncore {
     }
 
     Environment::~Environment() noexcept(false) {
+        {   /* 使用互斥锁, 防止与gc线程出现不同步的情况 */
+            std::unique_lock<std::mutex> mutex{lock};
+            if (reference != 1)  // gc_inter 有一个引用
+                throw EnvironmentDestructException();
+
+            if (destruct)
+                return;
+
+            delete global_varlist;
+
+            protect->delReference();
+            global->delReference();
+
+            destruct = true;
+        }
+
+        GcObjectBase::destructAll(gc, gc_inter);
+
+        delete &gc_inter;
         if (reference != 0)
             throw EnvironmentDestructException();
-
-        if (destruct)
-            return;
-
-        delete global_varlist;
-
-        protect->delReference();
-        global->delReference();
-
-        Object::destruct(obj);
-        Var::destruct(var);
-        VarSpace::destruct(varspace);
-
-        obj = nullptr;
-        var = nullptr;
-        varspace = nullptr;
-        destruct = true;
     }
 }

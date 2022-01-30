@@ -1,11 +1,13 @@
 ﻿#ifndef AFUN_GC_H
 #define AFUN_GC_H
+#include <queue>
+#include <list>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "queue"
 
 namespace aFuncore {
     typedef unsigned GcCount;
+    class Inter;
 
     class AFUN_CORE_EXPORT GcObjectBase {
     public:
@@ -14,10 +16,11 @@ namespace aFuncore {
 
         inline void addReference();
         inline void delReference();
-        inline GcCount getReference() const;
+        [[nodiscard]] inline GcCount getReference() const;
         inline void setClear(bool clear=false);
         inline void setReachable(bool is_reference=false);
 
+        static void destructAll(std::list<GcObjectBase *> &list, Inter &gc_inter);
     protected:
         std::mutex lock;
 
@@ -46,6 +49,5 @@ namespace aFuncore {
 };
 
 #include "gc.inline.h"
-#include "gc.template.h"
 
 #endif //AFUN_GC_H

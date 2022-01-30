@@ -11,11 +11,13 @@
 
 namespace aFuncore {
     class Activation;
+    class GcObjectBase;
     class Var;
     class ProtectVarSpace;
     class VarSpace;
     class VarList;
     class Object;
+    class Inter;
 
     class AFUN_CORE_EXPORT Environment {
         friend class Object;
@@ -35,12 +37,11 @@ namespace aFuncore {
         inline size_t operator--(int);
 
     private:
-        Object *obj;
-        Var *var;
-        VarSpace *varspace;
+        std::mutex lock;
         size_t reference;  // 引用计数
         bool destruct;
-        std::mutex lock;
+        std::list<GcObjectBase *> gc;
+        Inter &gc_inter;  /* 需要在lock和reference后初始化 */
 
         ProtectVarSpace *const protect;  // 保护变量空间
         VarSpace *const global;  // 全局变量空间

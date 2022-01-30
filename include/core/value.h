@@ -9,7 +9,7 @@
 #include "inter.h"
 
 namespace aFuncore {
-    class AFUN_CORE_EXPORT Object : public GcObject<class Object> {
+    class AFUN_CORE_EXPORT Object : public GcObjectBase {
     public:
         Environment &env;
         const std::string type;  // 标识 Object 的字符串

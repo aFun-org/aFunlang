@@ -5,12 +5,12 @@
 namespace aFuncore {
     Var::Var(Object *data_, Inter &inter) : data{data_}, env{inter.getEnvironment()}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        addObject(env.var);
+        env.gc.push_front(this);
     }
     
     Var::Var(Object *data_, Environment &env_) : data{data_}, env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        addObject(env.var);
+        env.gc.push_front(this);
     }
 
     Var::~Var() {
@@ -20,12 +20,12 @@ namespace aFuncore {
     
     VarSpace::VarSpace(Inter &inter) : env{inter.getEnvironment()}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        addObject(env.varspace);
+        env.gc.push_front(this);
     }
     
     VarSpace::VarSpace(Environment &env_) : env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        addObject(env.varspace);
+        env.gc.push_front(this);
     }
 
     VarSpace::~VarSpace() {
