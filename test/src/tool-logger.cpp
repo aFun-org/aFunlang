@@ -2,6 +2,7 @@
 using namespace aFuntool;
 
 int main(int argc, char **argv){
+    int exit_code = 0;
     try {
         std::string base_path = getExedir(1);
         if (base_path.empty()) {
@@ -18,6 +19,7 @@ int main(int argc, char **argv){
         infoLog(&logger, "Test logger");
         aFunExit(0);
     } catch (aFuntool::Exit &e) {
-        aFunExitReal(e.getExitCode());
+        exit_code = e.getExitCode();
     }
+    aFunExitReal(exit_code);
 }

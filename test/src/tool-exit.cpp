@@ -11,11 +11,13 @@ void exit_func_push2(void *) {
 }
 
 int main(int argc, char **argv) {
+    int exit_code = 0;
     try {
         aFunAtExit(exit_func_push1, nullptr);
         aFunAtExit(exit_func_push2, nullptr);
         aFunExit(0);
     } catch (aFuntool::Exit &e) {
-        aFunExitReal(e.getExitCode());
+        exit_code = e.getExitCode();
     }
+    aFunExitReal(exit_code);
 }
