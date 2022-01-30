@@ -23,6 +23,7 @@ namespace aFuncore {
         delete code;
     }
 
+#ifdef aFunDEBUG
     /**
      * 显式自己以及其子、兄代码块
      */
@@ -51,6 +52,7 @@ namespace aFuncore {
                 tmp = tmp->next;
         }
     }
+#endif
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
     /**
@@ -364,6 +366,7 @@ RETURN_FALSE:
         return new_code;
     }
 
+#ifdef aFunDEBUG
     /**
      * 显式代码块内容
      */
@@ -376,6 +379,7 @@ RETURN_FALSE:
         else
             aFuntool::cout << "\n";
     }
+#endif
 
 #define Done(write) do{if(!(write)){return false;}}while(0)
 

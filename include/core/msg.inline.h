@@ -1,7 +1,5 @@
 ﻿#ifndef AFUN_MSG_INLINE_H
 #define AFUN_MSG_INLINE_H
-#include <utility>
-
 #include "msg.h"
 
 namespace aFuncore {

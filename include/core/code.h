@@ -12,10 +12,13 @@ namespace aFuncore {
         ~Code();
         Code &operator=(const Code &)=delete;
 
-        void display() const;
         [[nodiscard]] std::string getMD5_v1() const;
         bool writeByteCode(const aFuntool::FilePath &file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
         bool readByteCode(const aFuntool::FilePath &file_path);
+
+#ifdef aFunDEBUG
+        void display() const;
+#endif
 
         [[nodiscard]] inline const aFuntool::FilePath &getFilePath() const;
         [[nodiscard]] inline ByteCode *getByteCode() const;
@@ -48,10 +51,13 @@ namespace aFuncore {
         ByteCode &operator=(const ByteCode &)=delete;
 
         ByteCode *connect(ByteCode *new_code);
-        void display() const;
         bool write_v1(FILE *f, bool debug=false) const;
         ByteCode *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
         [[nodiscard]] std::string getMD5_v1() const;
+
+#ifdef aFunDEBUG
+        void display() const;
+#endif
 
         [[nodiscard]] CodeType getType() const;
         [[nodiscard]] char getPrefix() const;
