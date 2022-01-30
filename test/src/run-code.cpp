@@ -129,26 +129,30 @@ void thread_test(Inter &son) {
     fputs_stdout("\n");
 }
 
-int main() {
+int Main() {
     Environment env {};
     Inter inter {env};
 
     auto obj = new Object("Object", inter);
     inter.getGlobalVarlist()->defineVar("test-var", obj);
     aFuntool::cout << "obj: " << obj << "\n";
+    obj->delReference();
 
     auto func = new Func1(inter);
     inter.getGlobalVarlist()->defineVar("test-func", func);
     aFuntool::cout << "func: " << func << "\n";
+    func->delReference();
 
     auto literaler = new Literaler1(inter);
     inter.getGlobalVarlist()->defineVar("test-literaler", literaler);
     aFuntool::cout << "literaler: " << literaler << "\n";
+    literaler->delReference();
 
     auto cbv = new CBV1(inter);
     inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
     aFuntool::cout << "cbv: " << cbv << "\n\n";
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
+    cbv->delReference();
 
     {
         fputs_stdout("Test-1: block-p & get test-var\n");
@@ -252,4 +256,27 @@ int main() {
     }
 
     return 0;
+}
+
+int main() {
+    std::string base_path = getExedir(1);
+    if (base_path.empty()) {
+        printf_stderr(0, "aFunlang init error.");
+        aFunExitReal(EXIT_FAILURE);
+    }
+
+    aFuntool::LogFactory factor {};
+    aFuncore::InitInfo info = {.base_dir=base_path,
+                               .factor=factor,
+                               .log_asyn=true,
+                               .level=log_debug,
+    };
+
+    if (!aFunCoreInit(&info)) {
+        printf_stderr(0, "aFunlang init error.");
+        aFunExitReal(EXIT_FAILURE);
+    }
+
+    int exit_code = Main();
+    aFunExitReal(exit_code);
 }

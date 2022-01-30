@@ -24,7 +24,7 @@ namespace aFuncore {
         friend class Inter;
 
     public:
-        Environment(int argc = 0, char **argv = nullptr);
+        explicit Environment(int argc = 0, char **argv = nullptr);
         ~Environment() noexcept(false);
         Environment(Environment &) = delete;
         Environment &operator=(Environment &) = delete;

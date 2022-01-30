@@ -3,10 +3,6 @@
 #include "msg.h"
 
 namespace aFuncore {
-    inline NormalMessage::NormalMessage(Object *obj_) : obj {obj_} {
-
-    }
-
     inline NormalMessage::NormalMessage(NormalMessage &&msg) noexcept : obj {msg.obj}{
         msg.obj = nullptr;
     }

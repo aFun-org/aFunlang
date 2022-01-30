@@ -1,5 +1,6 @@
 ﻿#include "var.h"
 #include "inter.h"
+#include "init.h"
 
 namespace aFuncore {
     Var::Var(Object *data_, Inter &inter) : data{data_}, env{inter.getEnvironment()}{
@@ -11,6 +12,11 @@ namespace aFuncore {
         std::unique_lock<std::mutex> mutex{env.lock};
         addObject(env.var);
     }
+
+    Var::~Var() {
+        if (getReference() != 0)
+            warningLog(aFunCoreLogger, "Var %p destruct reference: %d", this, getReference());
+    }
     
     VarSpace::VarSpace(Inter &inter) : env{inter.getEnvironment()}{
         std::unique_lock<std::mutex> mutex{env.lock};
@@ -20,6 +26,11 @@ namespace aFuncore {
     VarSpace::VarSpace(Environment &env_) : env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
         addObject(env.varspace);
+    }
+
+    VarSpace::~VarSpace() {
+        if (getReference() != 0)
+            warningLog(aFunCoreLogger, "VarSpace %p destruct reference: %d", this, getReference());
     }
     
     /**
@@ -45,7 +56,9 @@ namespace aFuncore {
         std::unique_lock<std::mutex> mutex{lock};
         if (var.find(name) != var.end())
             return vof_redefine_var;
-        var.emplace(name, new Var(data, env));
+        auto new_var = new Var(data, env);
+        var.emplace(name, new_var);
+        new_var->delReference();
         return vof_success;
     }
     

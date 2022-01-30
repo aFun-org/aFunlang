@@ -16,10 +16,7 @@ namespace aFuncore {
 
         Object(std::string type_, Inter &inter);
         Object(std::string type_, Environment &env_);
-        ~Object() override = default;
-
-    protected:
-        std::mutex lock;
+        ~Object() override;
     };
 
     class AFUN_CORE_EXPORT Function : public virtual Object {

@@ -17,13 +17,10 @@ namespace aFuncore {
 
         Var(Object *data_, Inter &inter);
         Var(Object *data_, Environment &env_);
-        ~Var() override = default;
+        ~Var() override;
 
         [[nodiscard]] inline virtual Object *getData();
         virtual void inline setData(Object *data_);
-
-    protected:
-        std::mutex lock;
 
     private:
         Object *data;
@@ -42,7 +39,7 @@ namespace aFuncore {
 
         explicit VarSpace(Inter &inter);
         explicit VarSpace(Environment &env_);
-        ~VarSpace() override = default;
+        ~VarSpace() override;
 
         template <typename Callable,typename...T>
         void forEach(Callable func, T...arg);
@@ -60,9 +57,6 @@ namespace aFuncore {
         [[nodiscard]] Object *findObject(const std::string &name);
 
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
-
-    protected:
-        std::mutex lock;
 
     private:
         std::unordered_map<std::string, Var *> var;

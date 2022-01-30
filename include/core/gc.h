@@ -14,10 +14,13 @@ namespace aFuncore {
 
         inline void addReference();
         inline void delReference();
+        inline GcCount getReference() const;
         inline void setClear(bool clear=false);
         inline void setReachable(bool is_reference=false);
 
     protected:
+        std::mutex lock;
+
         inline GcObjectBase();
         virtual ~GcObjectBase() = default;
 

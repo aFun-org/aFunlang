@@ -1,5 +1,6 @@
 ﻿#include "value.h"
 #include "inter.h"
+#include "init.h"
 
 namespace aFuncore {
     Object::Object(std::string type_, Inter &inter)
@@ -12,5 +13,10 @@ namespace aFuncore {
             : type{std::move(type_)}, env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
         this->addObject(env.obj);
+    }
+
+    Object::~Object() {
+        if (getReference() != 0)
+            warningLog(aFunCoreLogger, "Object %p destruct reference: %d", this, getReference());
     }
 }

@@ -4,8 +4,14 @@
 #include "env-var.h"
 
 namespace aFuncore {
+    NormalMessage::NormalMessage(Object *obj_) : obj {obj_} {
+        obj->addReference();
+    }
+
     NormalMessage::~NormalMessage(){
-        this->obj = nullptr;
+        if (obj != nullptr)
+            obj->delReference();
+            obj = nullptr;
     }
 
     void NormalMessage::topProgress(Inter &inter, Activation &activation){

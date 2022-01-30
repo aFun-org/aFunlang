@@ -26,7 +26,7 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
     public:
-        explicit inline NormalMessage(Object *obj_);
+        explicit NormalMessage(Object *obj_);
         inline NormalMessage(NormalMessage &&msg) noexcept;
         ~NormalMessage() override;
         void topProgress(Inter &inter, Activation &activation) override;

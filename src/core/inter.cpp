@@ -106,7 +106,7 @@ namespace aFuncore {
             return false;
         }
 
-        Function *func_obj = dynamic_cast<Function *>(func);
+        auto func_obj = dynamic_cast<Function *>(func);
         if (func_obj == nullptr) {
             errorLog(aFunCoreLogger, "Run without function");
             return false;
@@ -199,6 +199,9 @@ namespace aFuncore {
             return;
 
         delete global_varlist;
+
+        protect->delReference();
+        global->delReference();
 
         Object::destruct(obj);
         Var::destruct(var);

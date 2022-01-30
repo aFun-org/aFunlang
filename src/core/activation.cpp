@@ -54,6 +54,7 @@ namespace aFuncore {
         if (code_type == Code::ByteCode::code_start) {  // start 不处理 msg
             auto *none = new Object("None", inter);
             down.pushMessage("NORMAL", new NormalMessage(none));
+            none->delReference();
         } else {
             if (code_type == Code::ByteCode::code_element) {
                 runCodeElement(code);
@@ -142,14 +143,17 @@ namespace aFuncore {
 
     }
 
-    FuncActivation::~FuncActivation(){
-        delete call_func;
-    }
-
     FuncActivation::FuncActivation(Function *func_, Inter &inter_) : Activation(inter_), call{nullptr} {
         on_tail = false;  // 跳过所有阶段
         status = func_get_func;
         func = func_;
+        func->addReference();
+    }
+
+    FuncActivation::~FuncActivation(){
+        if (func != nullptr)
+            func->delReference();
+        delete call_func;
     }
 
     Activation::ActivationStatus FuncActivation::getCode(const Code::ByteCode *&code) {
@@ -187,6 +191,7 @@ namespace aFuncore {
                         func = dynamic_cast<Function *>(obj);
                         if (func == nullptr || !func->isInfix())
                             continue;
+                        func->addReference();
                         status = func_get_func;
                         break;  /* 跳转到: 执行变量获取前的准备 */
                     }
@@ -218,6 +223,7 @@ namespace aFuncore {
                     down.pushMessage("ERROR", new ErrorMessage("TypeError", "Callback without function.", this));
                     return as_end;
                 }
+                func->addReference();
             }
 
             /* Label: 执行变量获取前的准备 */
