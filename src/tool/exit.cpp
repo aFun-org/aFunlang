@@ -6,7 +6,10 @@
 namespace aFuntool {
     class ExitManager {
     public:
-        ExitManager() noexcept = default;
+        ExitManager() noexcept : exit_mutex{},  data{} {
+            /* 不能将改函数改为default,
+             * 否则 (implicitly deleted because its exception-specification does not match the implicit ) */
+        }
 
         ~ExitManager() noexcept {
             runExitData();
@@ -23,7 +26,7 @@ namespace aFuntool {
 
         void pushExitData(aFunExitFunc *func, void *data_) {
             std::unique_lock<std::mutex> ul{exit_mutex};
-            data.emplace(func, data_);
+            data.push({func, data_});
         }
 
         bool tryRunExitData() {
@@ -42,7 +45,7 @@ namespace aFuntool {
             if (!exit_mutex.try_lock())
                 return false;
             std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
-            data.emplace(func, data_);
+            data.push({func, data_});
             return true;
         }
 
