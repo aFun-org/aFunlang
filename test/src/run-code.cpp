@@ -3,6 +3,8 @@
 using namespace aFuncore;
 using namespace aFuntool;
 
+void printInterEvent(Inter &inter);
+
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
         Code &func_code;
@@ -50,6 +52,16 @@ public:
     }
 
     bool isInfix() override {return true;}
+
+    void destruct(Inter &gc_inter) override {
+        aFuntool::printf_stdout(0, "%p destruct\n", this);
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
+                                                       new Code::ByteCode(code, "test-var", 1), 0));
+        gc_inter.runCode(code);
+        printInterEvent(gc_inter);
+        fputs_stdout("\n");
+    };
 };
 
 class Literaler1 : public Literaler {
@@ -150,9 +162,16 @@ int Main() {
 
     auto cbv = new CBV1(inter);
     inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
-    aFuntool::cout << "cbv: " << cbv << "\n\n";
+    aFuntool::cout << "cbv: " << cbv << "\n";
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
     cbv->delReference();
+
+    auto tmp = new Func1(inter);
+    aFuntool::cout << "tmp: " << tmp << "\n\n";
+    tmp->delReference();
+
+    aFuntool::cout << "Checking gc ...\n";
+    aFuntool::safeSleep(3);
 
     {
         fputs_stdout("Test-1: block-p & get test-var\n");

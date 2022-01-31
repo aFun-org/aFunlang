@@ -21,6 +21,7 @@ namespace aFuncore {
 
         [[nodiscard]] inline virtual Object *getData();
         virtual void inline setData(Object *data_);
+        void linkObject(std::queue<GcObjectBase *> &queue) override;
 
     private:
         Object *data;
@@ -55,6 +56,7 @@ namespace aFuncore {
         virtual VarOperationFlat delVar(const std::string &name);
 
         [[nodiscard]] Object *findObject(const std::string &name);
+        void linkObject(std::queue<GcObjectBase *> &queue) override;
 
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
 
@@ -103,6 +105,8 @@ namespace aFuncore {
         virtual bool setVar(const std::string &name, Object *data);
         virtual bool delVar(const std::string &name);
         [[nodiscard]] inline Object *findObject(const std::string &name);
+
+        inline void GcLinkObject(std::queue<GcObjectBase *> &queue);  /* 虽然不是GcObject, 但是也设定改函数便于将其包含的varspace快速压入queue中 */
 
     protected:
         std::mutex lock;

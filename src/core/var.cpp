@@ -1,38 +1,47 @@
 ﻿#include "var.h"
+#include "value.h"
 #include "inter.h"
 #include "init.h"
 
 namespace aFuncore {
     Var::Var(Object *data_, Inter &inter) : data{data_}, env{inter.getEnvironment()}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        env.gc.push_front(this);
+        env.gc.push_back(this);
     }
     
     Var::Var(Object *data_, Environment &env_) : data{data_}, env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        env.gc.push_front(this);
+        env.gc.push_back(this);
     }
 
     Var::~Var() {
         if (getReference() != 0)
             warningLog(aFunCoreLogger, "Var %p destruct reference: %d", this, getReference());
+        std::unique_lock<std::mutex> mutex{env.lock};
+        env.gc.remove(this);
     }
     
     VarSpace::VarSpace(Inter &inter) : env{inter.getEnvironment()}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        env.gc.push_front(this);
+        env.gc.push_back(this);
     }
     
     VarSpace::VarSpace(Environment &env_) : env{env_}{
         std::unique_lock<std::mutex> mutex{env.lock};
-        env.gc.push_front(this);
+        env.gc.push_back(this);
     }
 
     VarSpace::~VarSpace() {
         if (getReference() != 0)
             warningLog(aFunCoreLogger, "VarSpace %p destruct reference: %d", this, getReference());
+        std::unique_lock<std::mutex> mutex{env.lock};
+        env.gc.remove(this);
     }
-    
+
+    void Var::linkObject(std::queue<GcObjectBase *> &queue) {
+        queue.push(getData());
+    }
+
     /**
      * 访问指定变量
      * @param name 变量名
@@ -103,6 +112,11 @@ namespace aFuncore {
             return vof_not_var;
         var.erase(v);
         return vof_success;
+    }
+
+    void VarSpace::linkObject(std::queue<GcObjectBase *> &queue) {
+        for (auto tmp : var)
+            queue.push(tmp.second);
     }
     
     VarList::VarList(VarList *varlist){

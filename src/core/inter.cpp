@@ -171,6 +171,25 @@ namespace aFuncore {
         return true;
     }
 
+    void Environment::gcThread() {
+        while(true) {
+            std::queue<GcObjectBase *> del;
+            std::queue<GcObjectBase *> des;
+            {
+                std::unique_lock<std::mutex> mutex{lock};
+                if (destruct)
+                    break;
+                GcObjectBase::checkReachable(gc);
+                GcObjectBase::setReachable(gc, des, del);
+            }
+            GcObjectBase::deleteUnreachable(del);
+            GcObjectBase::destructUnreachable(des, gc_inter);
+            aFuntool::safeSleep(1);
+        }
+
+        GcObjectBase::destructAll(gc, gc_inter); /* 不需要mutex锁 */
+    }
+
     Environment::Environment(int argc, char **argv)
         : reference{0}, gc_inter{*(new Inter(*this))},
           protect{new ProtectVarSpace(*this)}, global{new VarSpace(*this)},
@@ -189,6 +208,8 @@ namespace aFuncore {
             snprintf(buf, 10, "sys:arg%d", i);
             envvar.setString(buf, argv[i]);
         }
+
+        gc_thread = std::thread([this](){this->gcThread();});
     }
 
     Environment::~Environment() noexcept(false) {
@@ -200,17 +221,18 @@ namespace aFuncore {
             if (destruct)
                 return;
 
-            delete global_varlist;
-
-            protect->delReference();
-            global->delReference();
-
             destruct = true;
         }
 
-        GcObjectBase::destructAll(gc, gc_inter);
-
+        gc_thread.join();
         delete &gc_inter;
+
+        delete global_varlist;
+        protect->delReference();
+        global->delReference();
+
+        GcObjectBase::deleteAll(gc); /* 不需要mutex锁 */
+
         if (reference != 0)
             throw EnvironmentDestructException();
     }

@@ -3,7 +3,7 @@
 #include "gc.h"
 
 namespace aFuncore {
-    inline GcObjectBase::GcObjectBase() : not_clear{false}, reference{1}, reachable{false} {
+    inline GcObjectBase::GcObjectBase() : not_clear{false}, reference{1}, reachable{false}, done_destruct{false} {
 
     }
 
@@ -23,19 +23,6 @@ namespace aFuncore {
 
     inline void GcObjectBase::setClear(bool clear) {
         not_clear=!clear;
-    }
-
-    inline void GcObjectBase::setReachable(bool is_reference) {
-        reachable=is_reference;
-    }
-
-
-    inline size_t GcList::getSize() const {
-        return queue.size();
-    }
-
-    inline size_t GcList::isEmpty() const {
-        return queue.empty();
     }
 }
 

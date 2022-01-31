@@ -18,32 +18,27 @@ namespace aFuncore {
         inline void delReference();
         [[nodiscard]] inline GcCount getReference() const;
         inline void setClear(bool clear=false);
-        inline void setReachable(bool is_reference=false);
 
+        static void checkReachable(std::list<GcObjectBase *> &list);
+        static void setReachable(std::list<GcObjectBase *> &list, std::queue<GcObjectBase *> &des, std::queue<GcObjectBase *> &del);
+        static void destructUnreachable(std::queue<GcObjectBase *> &des, Inter &gc_inter);
+        static void deleteUnreachable(std::queue<GcObjectBase *> &del);
         static void destructAll(std::list<GcObjectBase *> &list, Inter &gc_inter);
+        static void deleteAll(std::list<GcObjectBase *> &list);
     protected:
         std::mutex lock;
 
         inline GcObjectBase();
         virtual ~GcObjectBase() = default;
 
+        virtual void destruct(Inter &gc_inter);
+        virtual void linkObject(std::queue<GcObjectBase *> &queue);
+
     private:
+        bool done_destruct;
         bool not_clear;  // 不清除
         bool reachable;  // 可达标记 [同时标识已迭代]
         GcCount reference;  // 引用计数
-    };
-
-
-    class AFUN_CORE_EXPORT GcList {
-    public :
-        size_t add(GcObjectBase *obj);
-        GcObjectBase *pop();
-
-        [[nodiscard]] inline size_t getSize() const;
-        [[nodiscard]] inline size_t isEmpty() const;
-
-    private:
-        std::queue<GcObjectBase *> queue;
     };
 
 };

@@ -4,7 +4,7 @@
 #include "tool-regex.h"
 
 namespace aFuntool {
-    inline Regex::Regex(std::string pattern_) noexcept(false) : re{pattern_}, pattern{std::move(pattern_)} {
+    inline Regex::Regex(const std::string &pattern_) noexcept(false) : re{pattern_}, pattern{pattern_} {
         if (!isCharUTF8(pattern))
             throw RegexException("Pattern not utf-8");
     }

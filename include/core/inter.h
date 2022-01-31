@@ -42,11 +42,14 @@ namespace aFuncore {
         bool destruct;
         std::list<GcObjectBase *> gc;
         Inter &gc_inter;  /* 需要在lock和reference后初始化 */
+        std::thread gc_thread;
 
         ProtectVarSpace *const protect;  // 保护变量空间
         VarSpace *const global;  // 全局变量空间
         VarList *const global_varlist;  // global + protect
         EnvVarSpace envvar;
+
+        void gcThread();
     };
 
     class AFUN_CORE_EXPORT Inter {

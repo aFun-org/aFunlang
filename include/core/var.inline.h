@@ -52,6 +52,11 @@ namespace aFuncore {
         Var *var = findVar(name);
         return var ? var->getData() : nullptr;
     }
+
+    inline void VarList::GcLinkObject(std::queue<GcObjectBase *> &queue) {
+        for (auto var : varspace)
+            queue.push(var);
+    }
 }
 
 #endif //AFUN_VAR_INLINE_H
