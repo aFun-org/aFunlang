@@ -53,7 +53,9 @@ set(_print_dir ${PRINT_DIR_INFO})
 
 include(tool)
 
-include(CFEP)  # 搜索CFEP.cmake
+include(InstallDir)
+include(WindowsInstall)
+
 if (_print_dir)
     set(PRINT_DIR_INFO OFF CACHE BOOL "Print install and build dirs info." FORCE)
     wi_set_install_dir(NAMES aFunlang)  # 设置安装路径
@@ -121,7 +123,7 @@ configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in
                ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunbase.h
                @ONLY)
 
-include(${CMAKE_CURRENT_LIST_DIR}/deps/deps.cmake)  # 安装依赖
+include(deps)  # 安装依赖
 #include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
 add_subdirectory(src)
 include(aFunHeader)

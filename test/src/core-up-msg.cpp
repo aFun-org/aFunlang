@@ -4,11 +4,11 @@ using namespace aFuntool;
 
 int main() {
     auto *um = new UpMessage(nullptr);
-    um->pushMessage(new Message("test-1"));
+    um->pushMessage("test-1", new Message());
     std::cout << um->getMessage<Message>("test-1") << std::endl;
 
     auto *um2 = new UpMessage(um);
-    um2->pushMessage(new Message("test-2"));
+    um2->pushMessage("test-2", new Message());
     std::cout << um2->getMessage<Message>("test-1") << std::endl;
     std::cout << um2->getMessage<Message>("test-2") << std::endl;
 

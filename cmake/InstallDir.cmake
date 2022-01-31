@@ -3,6 +3,8 @@
 设置安装路径的程序
 ]]
 
+include_guard(GLOBAL)  # 防止二次导入
+
 function(wi_set_install_dir_quiet)
     if (NOT CMAKE_SIZEOF_VOID_P)  # 如果还未设定CMAKE_SIZEOF_VOID_P, 则现在设定该值
         try_run(run_re com_re ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/_void_p_test.c)

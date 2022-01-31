@@ -45,7 +45,6 @@ target_sources(hgt-base
                PUBLIC $<BUILD_INTERFACE:${hgt_dir}/${hgt_name}_ht.h> $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${hgt_name}_ht.h>)
 target_link_libraries(hgt-base ${dlfcn_lib})
 add_dependencies(hgt-base hgt)
-set(hgt-lib hgt-base)
 
 include(GenerateExportHeader)
 generate_export_header(hgt-base EXPORT_FILE_NAME "${hgt_dir}/baseHTExport.h" BASE_NAME "baseHT")

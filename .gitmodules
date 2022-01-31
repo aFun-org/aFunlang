@@ -1,7 +1,9 @@
-
+[submodule "deps/pcre2"]
+	path = deps/pcre2
+	url = git@github.com:aFun-org/pcre2.git
 [submodule "deps/fflags"]
 	path = deps/fflags
-	url = https://github.com/aFun-org/fflags.git
-[submodule "deps/dlfcn"]
-	path = deps/dlfcn
-	url = https://github.com/aFun-org/dlfcn-win32.git
+	url = git@github.com:aFun-org/fflags.git
+[submodule "deps/dlfcn-win32"]
+	path = deps/dlfcn-win32
+	url = git@github.com:aFun-org/dlfcn-win32.git

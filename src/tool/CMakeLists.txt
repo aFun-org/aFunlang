@@ -37,8 +37,8 @@ foreach(tgt tool-shared tool-static)
     define_FILENAME(${tgt})
 endforeach()
 
-target_link_libraries(tool-shared PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${thread_lib})
-target_link_libraries(tool-static PUBLIC ${hgt-lib} ${dlfcn_lib} ${pcre2_lib} ${thread_lib})
+target_link_libraries(tool-shared PUBLIC ${dlfcn_lib} PCRE2::8BIT Threads::Threads)
+target_link_libraries(tool-static PUBLIC ${dlfcn_lib} PCRE2::8BIT Threads::Threads)
 
 set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFuntool")
 set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFuntool-s")
