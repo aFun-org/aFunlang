@@ -1,4 +1,5 @@
 ﻿#include "rt-reader.h"
+#include "rt-init.h"
 
 namespace aFunrt {
     size_t StringReader::readText(char *dest, size_t read_len, ReadMode &mode) {
@@ -31,10 +32,10 @@ namespace aFunrt {
                     mode = read_mode_error;
                     return 0;
                 }
-//                writeTrackLog(aFunRTLogger, "Parser utf-8 with BOM");
+                trackLog(aFunLogger, "Parser utf-8 with BOM");
             } else {
                 ungetc(ch, file);
-//                writeTrackLog(aFunRTLogger, "Parser utf-8 without BOM");
+                trackLog(aFunLogger, "Parser utf-8 without BOM");
             }
         }
 

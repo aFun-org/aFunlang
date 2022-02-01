@@ -1,6 +1,6 @@
 ﻿#include "object.h"
 #include "inter.h"
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     Object::Object(std::string type_, Inter &inter)

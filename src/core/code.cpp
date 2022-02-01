@@ -1,5 +1,5 @@
 ﻿#include "code.h"
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     Code::~Code(){

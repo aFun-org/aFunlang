@@ -105,13 +105,13 @@ namespace aFuntool {
 #include "log-macro.h"
 
 #if aFunWriteTrack
-#define trackLog(logger, ...) (logger)->writeTrackLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define trackLog(logger, ...) ((logger) ? (logger)->writeTrackLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
 #else
 #define trackLog(logger, ...) (nullptr)
 #endif
 
 #if aFunWriteDebug
-#define debugLog(logger, ...) (logger)->writeDebugLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define debugLog(logger, ...) ((logger) ? (logger)->writeDebugLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
 #define assertDebugLog(c, logger, ...) ((c) || debugLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define debugLog(logger, ...) (nullptr)
@@ -119,7 +119,7 @@ namespace aFuntool {
 #endif
 
 #if aFunWriteInfo
-#define infoLog(logger, ...) (logger)->writeInfoLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define infoLog(logger, ...) ((logger) ? (logger)->writeInfoLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
 #define assertInfoLog(c, logger, ...) ((c) || infoLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define infoLog(logger, ...) (nullptr)
@@ -127,7 +127,7 @@ namespace aFuntool {
 #endif
 
 #if !aFunIgnoreWarning
-#define warningLog(logger, ...) (logger)->writeWarningLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define warningLog(logger, ...) ((logger) ? (logger)->writeWarningLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
 #define assertWarningLog(c, logger, ...) ((c) || warningLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define warningLog(logger, ...) (nullptr)
@@ -135,7 +135,7 @@ namespace aFuntool {
 #endif
 
 #if !aFunIgnoreError
-#define errorLog(logger, ...) (logger)->writeErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
+#define errorLog(logger, ...) ((logger) ? (logger)->writeErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
 #define assertErrorLog(c, logger, ...) ((c) || errorLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #else
 #define errorLog(logger, ...) (nullptr)
@@ -143,8 +143,8 @@ namespace aFuntool {
 #endif
 
 #if !aFunOFFAllLog
-#define sendErrorLog(logger, ...) (logger)->writeSendErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__)
-#define fatalErrorLog(logger, exit_code, ...) (logger)->writeFatalErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, exit_code, __VA_ARGS__)
+#define sendErrorLog(logger, ...) ((logger) ? (logger)->writeSendErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, __VA_ARGS__) : 0)
+#define fatalErrorLog(logger, exit_code, ...) ((logger) ? (logger)->writeFatalErrorLog(__FILENAME__ , (int)__LINE__, __FUNCTION__, exit_code, __VA_ARGS__) : 0)
 #define assertSendErrorLog(c, logger, ...) ((c) || sendErrorLog(logger, "Assert " #c " error : " __VA_ARGS__))
 #define assertFatalErrorLog(c, logger, exit_code, ...) ((c) || fatalErrorLog(logger, exit_code, "Assert " #c " error : " __VA_ARGS__))
 #else

@@ -1,10 +1,10 @@
 ﻿#include <clocale>
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     std::string log_path;
     std::string varlib_path;
-    aFuntool::Logger *aFunCoreLogger;
+    aFuntool::Logger *aFunCoreLogger = nullptr;
 
     /**
      * 初始化程序

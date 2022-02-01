@@ -370,7 +370,7 @@ namespace aFuntool {
 #if aFunWriteTrack
         va_list ap;
         va_start(ap, format);
-        return this->factor_.newLog(this, aFunConsoleTrack, log_track, file, line, func, format, ap);
+        return factor_.newLog(this, aFunConsoleTrack, log_track, file, line, func, format, ap);
 #endif
     }
 
@@ -381,7 +381,7 @@ namespace aFuntool {
 #if aFunWriteDebug
         va_list ap;
         va_start(ap, format);
-        return this->factor_.newLog(this, aFunConsoleDebug, log_debug, file, line, func, format, ap);
+        return factor_.newLog(this, aFunConsoleDebug, log_debug, file, line, func, format, ap);
 #endif
     }
 
@@ -392,7 +392,7 @@ namespace aFuntool {
 #if aFunWriteInfo
         va_list ap;
         va_start(ap, format);
-        return this->factor_.newLog(this, aFunConsoleInfo, log_info, file, line, func, format, ap);
+        return factor_.newLog(this, aFunConsoleInfo, log_info, file, line, func, format, ap);
 #endif
     }
 
@@ -403,7 +403,7 @@ namespace aFuntool {
 #if !aFunIgnoreWarning
         va_list ap;
         va_start(ap, format);
-        return this->factor_.newLog(this, aFunConsoleWarning, log_warning, file, line, func, format, ap);
+        return factor_.newLog(this, aFunConsoleWarning, log_warning, file, line, func, format, ap);
 #endif
     }
 
@@ -414,7 +414,7 @@ namespace aFuntool {
 #if !aFunIgnoreError
         va_list ap;
         va_start(ap, format);
-        return this->factor_.newLog(this, aFunConsoleError, log_error, file, line, func, format, ap);
+        return factor_.newLog(this, aFunConsoleError, log_error, file, line, func, format, ap);
 #endif
     }
 
@@ -426,7 +426,7 @@ namespace aFuntool {
 #if !aFunIgnoreSendError
         va_list ap;
         va_start(ap, format);
-        this->factor_.newLog(this, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
+        factor_.newLog(this, aFunConsoleSendError, log_send_error, file, line, func, format, ap);
 #endif
 
         if (this->exit_)

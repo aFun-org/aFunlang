@@ -4,7 +4,7 @@
  */
 #include <cctype>
 #include "core-parser.h"
-#include "init.h"
+#include "core-init.h"
 #include "inter.h"
 
 #ifndef isascii

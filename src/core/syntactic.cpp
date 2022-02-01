@@ -1,5 +1,5 @@
 ﻿#include "core-parser.h"
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     bool Parser::getToken() {

@@ -1,6 +1,6 @@
 ﻿#include "object-value.h"
 #include "inter.h"
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     Var::Var(Object *data_, Inter &inter) : Object("Var", inter), data{data_}, env{inter.getEnvironment()}{

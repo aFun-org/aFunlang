@@ -7,7 +7,7 @@ const char *str2 = "{if true [HelloWorld (10)\n";
 class ConsoleReader : public aFuncore::Reader {
 public:
     size_t STDIN_MAX_SIZE = 1024;
-    ConsoleReader(std::function<bool()> interrupt_, const aFuntool::FilePath &path_="console.aun");
+    explicit ConsoleReader(std::function<bool()> interrupt_, const aFuntool::FilePath &path_="console.aun");
     size_t readText(char *dest, size_t read_len, ReadMode &mode) override;
 private:
     char *data;

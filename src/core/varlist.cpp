@@ -1,7 +1,7 @@
 ﻿#include "varlist.h"
 #include "object-value.h"
 #include "inter.h"
-#include "init.h"
+#include "core-init.h"
 
 namespace aFuncore {
     VarList::VarList(VarList *varlist){

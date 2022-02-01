@@ -1,6 +1,6 @@
 ﻿#include "core-activation.h"
 #include "inter.h"
-#include "init.h"
+#include "core-init.h"
 #include "msg.h"
 #include "code.h"
 

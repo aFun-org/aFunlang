@@ -291,11 +291,7 @@ int main() {
         }
 
         aFuntool::LogFactory factor{};
-        aFuncore::InitInfo info = {.base_dir=base_path,
-            .factor=factor,
-            .log_asyn=true,
-            .level=log_debug,
-        };
+        aFuncore::InitInfo info{base_path, factor, true, log_debug};
 
         if (!aFunCoreInit(&info)) {
             printf_stderr(0, "aFunlang init error.");
