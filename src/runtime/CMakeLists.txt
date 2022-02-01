@@ -2,21 +2,9 @@
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
 
-file(GLOB source_tool
-     LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*/*.cpp)
-
 file(GLOB private_h
      LIST_DIRECTORIES FALSE
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
-
-file(GLOB private_tool_h
-     LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/*/*.h)
-
-file(GLOB private_h_core
-     LIST_DIRECTORIES FALSE
-     ${CMAKE_CURRENT_LIST_DIR}/../core/*.h)  # 需要使用 core 的特定头文件 (高级开发)
 
 file(GLOB public_h
      LIST_DIRECTORIES FALSE
@@ -32,13 +20,12 @@ foreach(h IN LISTS public_h)
     list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_runtime}/${h}>")
 endforeach()
 
-
 add_library(rt-shared SHARED "")  # xx表示均为动态链接 core-share-t
 add_library(rt-static STATIC "")  # ct表示均静态链接 core-static
 
 foreach(tgt rt-shared rt-static)
     target_sources(${tgt}
-                   PRIVATE ${source} ${source_tool} ${private_h} ${private_tool_h} ${private_h_core}
+                   PRIVATE ${source} ${private_h}
                    PUBLIC ${public_h_build} ${public_h_install})
     target_include_directories(${tgt}
                                PRIVATE

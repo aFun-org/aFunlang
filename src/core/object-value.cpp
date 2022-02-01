@@ -24,6 +24,16 @@ namespace aFuncore {
         queue.push(getData());
     }
 
+    Object *Var::getData() {
+        std::unique_lock<std::mutex> mutex{lock};
+        return data;
+    }
+
+    void Var::setData(Object *data_) {
+        std::unique_lock<std::mutex> mutex{lock};
+        data = data_;
+    }
+
     /**
      * 访问指定变量
      * @param name 变量名
@@ -151,5 +161,13 @@ namespace aFuncore {
         if (is_protect)
             return findVar(name) ? vof_fail : vof_not_var;
         return VarSpace::delVar(name);
+    }
+
+    bool Function::isInfix() {
+        return false;
+    }
+
+    bool CallBackVar::isCallBack(Inter &inter, Activation &activation) {
+        return true;
     }
 }

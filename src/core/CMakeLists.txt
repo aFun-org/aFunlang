@@ -11,22 +11,11 @@ file(GLOB public_h
      RELATIVE "${build_include_core}"
      "${build_include_core}/*.h")
 
-file(GLOB public_h_info
-     LIST_DIRECTORIES FALSE
-     RELATIVE "${build_include_core_info}"
-     "${build_include_core_info}/*.h")
-
 set(public_h_build)
 set(public_h_install)
 
 foreach(h IN LISTS public_h)
     file(RELATIVE_PATH _path ${CMAKE_CURRENT_LIST_DIR} "${build_include_core}/${h}")
-    list(APPEND public_h_build   "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${_path}>")  # 相对路径的转换, 此处只能使用相对路径
-    list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_core}/${h}>")
-endforeach()
-
-foreach(h IN LISTS public_h_info)
-    file(RELATIVE_PATH _path ${CMAKE_CURRENT_LIST_DIR} "${build_include_core_info}/${h}")
     list(APPEND public_h_build   "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${_path}>")  # 相对路径的转换, 此处只能使用相对路径
     list(APPEND public_h_install "$<INSTALL_INTERFACE:${install_include_core}/${h}>")
 endforeach()

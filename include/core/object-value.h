@@ -17,8 +17,8 @@ namespace aFuncore {
         Var(Object *data_, Environment &env_);
         ~Var() override = default;
 
-        [[nodiscard]] inline virtual Object *getData();
-        virtual void inline setData(Object *data_);
+        [[nodiscard]] virtual Object *getData();
+        virtual void setData(Object *data_);
         void linkObject(std::queue<Object *> &queue) override;
 
     private:
@@ -84,7 +84,7 @@ namespace aFuncore {
         class AFUN_CORE_EXPORT CallFunction;
 
         virtual CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) = 0;
-        virtual inline bool isInfix();
+        virtual bool isInfix();
     };
 
     class AFUN_CORE_EXPORT Function::CallFunction {
@@ -112,7 +112,7 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT CallBackVar : public virtual Object {
     public:
-        virtual inline bool isCallBack(Inter &inter, Activation &activation);
+        virtual bool isCallBack(Inter &inter, Activation &activation);
         virtual void callBack(Inter &inter, Activation &activation) = 0;
     };
 };

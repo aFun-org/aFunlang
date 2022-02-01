@@ -26,7 +26,7 @@ namespace aFuncore {
 
         virtual ActivationStatus getCode(const Code::ByteCode *&code) = 0;
         virtual void runCode(const Code::ByteCode *code);
-        virtual inline void endRun();
+        virtual void endRun();
 
         [[nodiscard]] inline VarList *getVarlist() const;
         [[nodiscard]] inline UpMessage &getUpStream();

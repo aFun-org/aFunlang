@@ -45,6 +45,10 @@ namespace aFuncore {
         delete varlist;
     }
 
+    void Activation::endRun() {
+
+    }
+
     /**
      * 运行代码
      * @param code

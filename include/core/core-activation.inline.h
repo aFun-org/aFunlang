@@ -4,10 +4,6 @@
 #include "core-activation.h"
 
 namespace aFuncore {
-    inline void Activation::endRun() {
-
-    }
-
     inline VarList *Activation::getVarlist() const{
         return varlist;
     }

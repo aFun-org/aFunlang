@@ -2,7 +2,6 @@
 set(install_include_tool ${INSTALL_INCLUDEDIR})
 
 set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
-set(build_include_core_info ${PROJECT_SOURCE_DIR}/include/core/info)
 set(install_include_core ${INSTALL_INCLUDEDIR})
 
 set(build_include_runtime ${PROJECT_SOURCE_DIR}/include/runtime)
@@ -26,7 +25,7 @@ set(install_include $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
 
 add_subdirectory(tool)
 add_subdirectory(core)  # core 依赖 tool
-#add_subdirectory(runtime)  # runtime 依赖 core
+add_subdirectory(runtime)  # runtime 依赖 core
 
 # source在子目录中被使用, 为了避免子目录访问到source, 子目录将在此前面被执行
 #file(GLOB source

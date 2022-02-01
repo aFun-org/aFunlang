@@ -7,7 +7,7 @@ namespace aFuntool {
         std::string message;
     public:
         inline explicit aFunException(std::string msg);
-        inline virtual const char *what();
+        virtual const char *what();
     };
 
     class aFuntoolException : public aFunException {
