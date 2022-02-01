@@ -375,7 +375,7 @@ RETURN_FALSE:
         if (type == code_element)
             aFuntool::cout << " element: " << data.element << "\n";
         else if (type == code_block)
-            aFuntool::cout << " block: '" << data.block_type << "' son: " << data.son << "\n";
+            aFuntool::cout << " block: '" << (char)(data.block_type) << "' son: " << data.son << "\n";
         else
             aFuntool::cout << "\n";
     }

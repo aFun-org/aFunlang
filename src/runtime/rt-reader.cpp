@@ -1,7 +1,7 @@
 ﻿#include "rt-reader.h"
 
 namespace aFunrt {
-    size_t ReaderString::readText(char *dest, size_t read_len, ReadMode &mode) {
+    size_t StringReader::readText(char *dest, size_t read_len, ReadMode &mode) {
         if (index == len)  // 读取到末尾
             return 0;
 
@@ -15,7 +15,7 @@ namespace aFunrt {
         return read_len;
     }
 
-    size_t ReaderFile::readText(char *dest, size_t read_len, aFuncore::Reader::ReadMode &mode) {
+    size_t FileReader::readText(char *dest, size_t read_len, aFuncore::Reader::ReadMode &mode) {
         if (!no_first) {
             no_first = true;
             char ch;

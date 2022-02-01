@@ -1,11 +1,12 @@
 ﻿#ifndef AFUN_RT_READER_H
 #define AFUN_RT_READER_H
+#include <functional>
 #include "aFuncore.h"
 
 namespace aFunrt {
-    class ReaderString : public aFuncore::Reader {
+    class StringReader : public aFuncore::Reader {
     public:
-        inline ReaderString(std::string str_, const aFuntool::FilePath &path_);
+        inline StringReader(std::string str_, const aFuntool::FilePath &path_);
         size_t readText(char *dest, size_t read_len, ReadMode &mode) override;
     private:
         std::string str;
@@ -13,14 +14,15 @@ namespace aFunrt {
         size_t len;
     };
 
-    class ReaderFile : public aFuncore::Reader {
+    class FileReader : public aFuncore::Reader {
     public:
-        inline explicit ReaderFile(const aFuntool::FilePath &path_) noexcept(false);
+        inline explicit FileReader(const aFuntool::FilePath &path_) noexcept(false);
         size_t readText(char *dest, size_t read_len, ReadMode &mode) override;
     private:
         FILE *file;
         bool no_first;
     };
+
 }
 
 #include "rt-reader.inline.h"

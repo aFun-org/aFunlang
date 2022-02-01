@@ -331,8 +331,10 @@ namespace aFuncore {
 
         while (true) {
             char ch = reader.getChar();
-            if (reader.isError())
+            if (reader.isError()) {
+                pushEvent({ParserEvent::reader_error, reader.getFileLine(), ""});
                 return TK_ERROR;
+            }
 
             if (isascii(ch) && iscntrl(ch) && !isspace(ch) && ch != aFuntool::NUL)  // ascii 控制字符
                 pushEvent({ParserEvent::lexical_error_char, reader.getFileLine(), ""});

@@ -61,6 +61,7 @@ namespace aFuncore {
                 syntactic_error_block_b_end = -6,
                 syntactic_error_block_c_end = -7,
                 syntactic_error_prefix = -8,
+                reader_error = -9,
 
                 lexical_warning_comment_end = 1,  // 注释未结束
             } EventType;
