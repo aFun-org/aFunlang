@@ -29,7 +29,7 @@ namespace aFuncore {
      */
     void Code::display() const{
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "Code dsplay all did not with `start`");
+            errorLog(aFunCoreLogger, "Code display all did not with `start`");
             return;
         }
 
@@ -371,7 +371,7 @@ RETURN_FALSE:
      * 显式代码块内容
      */
     void Code::ByteCode::display() const{
-        aFuntool::cout << (prefix == aFuntool::NUL ? '-' : prefix) << "[father: " << father << "] type=" << type << " " << this;
+        aFuntool::cout << (char)(prefix == aFuntool::NUL ? '-' : prefix) << "[father: " << father << "] type=" << type << " " << this;
         if (type == code_element)
             aFuntool::cout << " element: " << data.element << "\n";
         else if (type == code_block)

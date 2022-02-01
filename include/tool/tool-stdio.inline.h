@@ -101,43 +101,53 @@ namespace aFuntool {
 
     }
 
-    inline OutStream &OutStream::operator<<(int8_t a) {
+    inline OutStream &OutStream::operator<<(signed char a) {
         func(0, "%c", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(int16_t a) {
+    inline OutStream &OutStream::operator<<(short a) {
         func(0, "%d", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(int32_t a) {
+    inline OutStream &OutStream::operator<<(int a) {
         func(0, "%d", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(int64_t a) {
+    inline OutStream &OutStream::operator<<(long a) {
         func(0, "%ld", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(uint8_t a) {
+    inline OutStream &OutStream::operator<<(long long a) {
+        func(0, "%lld", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(unsigned char a) {
         func(0, "%c", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(uint16_t a) {
+    inline OutStream &OutStream::operator<<(unsigned short a) {
         func(0, "%u", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(uint32_t a) {
+    inline OutStream &OutStream::operator<<(unsigned int a) {
         func(0, "%u", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(uint64_t a) {
+    inline OutStream &OutStream::operator<<(unsigned long a) {
         func(0, "%lu", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(unsigned long long a) {
+        func(0, "%llu", a);
         return *this;
     }
 

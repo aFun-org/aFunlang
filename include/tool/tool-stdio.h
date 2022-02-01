@@ -72,14 +72,16 @@ namespace aFuntool {
         PrintFunction *func;
     public:
         inline explicit OutStream(PrintFunction *func_);
-        inline OutStream &operator<<(int8_t a);
-        inline OutStream &operator<<(int16_t a);
-        inline OutStream &operator<<(int32_t a);
-        inline OutStream &operator<<(int64_t a);
-        inline OutStream &operator<<(uint8_t a);
-        inline OutStream &operator<<(uint16_t a);
-        inline OutStream &operator<<(uint32_t a);
-        inline OutStream &operator<<(uint64_t a);
+        inline OutStream &operator<<(signed char a);
+        inline OutStream &operator<<(short a);
+        inline OutStream &operator<<(int a);
+        inline OutStream &operator<<(long a);
+        inline OutStream &operator<<(long long a);
+        inline OutStream &operator<<(unsigned char a);
+        inline OutStream &operator<<(unsigned short a);
+        inline OutStream &operator<<(unsigned int a);
+        inline OutStream &operator<<(unsigned long a);
+        inline OutStream &operator<<(unsigned long long a);
         inline OutStream &operator<<(float a);
         inline OutStream &operator<<(double a);
         inline OutStream &operator<<(long double a);
