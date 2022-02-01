@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "aFunToolExport.h"
-#include "tool.h"
+#include "tool-type.h"
 #include "thread"
 #include "mutex"
 #include "condition_variable"

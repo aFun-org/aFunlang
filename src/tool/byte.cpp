@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "tool.h"
+#include "tool-type.h"
 #include "byte.h"
 
 namespace aFuntool {

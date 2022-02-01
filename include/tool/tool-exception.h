@@ -1,6 +1,6 @@
 ﻿#ifndef AFUN_TOOL_EXCEPTION_H
 #define AFUN_TOOL_EXCEPTION_H
-#include "tool.h"
+#include "tool-type.h"
 
 namespace aFuntool {
     class aFunException : public std::exception {

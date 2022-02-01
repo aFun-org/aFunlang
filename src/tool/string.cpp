@@ -5,7 +5,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "tool.h"
+#include "tool-type.h"
 #include "str.h"
 
 #define EQ_STR(str1, str2) (!strcmp((str1), (str2)))

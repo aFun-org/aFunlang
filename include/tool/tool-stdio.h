@@ -2,7 +2,7 @@
 #define AFUN_STDIO_H
 #include <cstdio>
 #include <cinttypes>
-#include "tool.h"
+#include "tool-type.h"
 #include "aFunToolExport.h"
 
 namespace aFuntool {

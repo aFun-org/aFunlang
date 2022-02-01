@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "tool.h"
+#include "tool-type.h"
 #include "md5.h"
 #include "file.h"
 #include "tool-exception.h"

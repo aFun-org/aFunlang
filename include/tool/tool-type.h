@@ -3,8 +3,8 @@
  * 目标: 定义公共宏 和 公共头文件
  */
 
-#ifndef AFUN_TOOL_H
-#define AFUN_TOOL_H
+#ifndef AFUN_TOOL_TYPE_H
+#define AFUN_TOOL_TYPE_H
 #include <iostream>
 #include <cinttypes>
 #include <cstdarg>
@@ -19,4 +19,4 @@ namespace aFuntool {
 
 #include "mem.h"
 
-#endif //AFUN_TOOL_H
+#endif //AFUN_TOOL_TYPE_H

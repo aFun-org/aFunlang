@@ -4,7 +4,7 @@
  */
 
 #include <ctime>
-#include "tool.h"
+#include "tool-type.h"
 #include "tool-time.h"
 #include "tool-stdio.h"
 #include "str.h"

@@ -7,7 +7,7 @@
 #ifndef AFUN_AFUNTOOL_H
 #define AFUN_AFUNTOOL_H
 
-#include "tool.h"
+#include "tool-type.h"
 #include "aFunToolExport.h"
 
 #include "tool-exception.h"

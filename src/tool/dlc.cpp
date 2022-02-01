@@ -1,4 +1,4 @@
-﻿#include "tool.h"
+﻿#include "tool-type.h"
 #include "dlc.h"
 
 namespace aFuntool {

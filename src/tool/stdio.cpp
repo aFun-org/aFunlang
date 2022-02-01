@@ -5,7 +5,7 @@
  */
 
 #include <cstdio>
-#include "tool.h"
+#include "tool-type.h"
 #include "tool-stdio.h"
 #include "mutex"
 
