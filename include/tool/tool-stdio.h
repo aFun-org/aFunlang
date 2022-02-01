@@ -72,6 +72,7 @@ namespace aFuntool {
         PrintFunction *func;
     public:
         inline explicit OutStream(PrintFunction *func_);
+        inline OutStream &operator<<(char a);
         inline OutStream &operator<<(signed char a);
         inline OutStream &operator<<(short a);
         inline OutStream &operator<<(int a);

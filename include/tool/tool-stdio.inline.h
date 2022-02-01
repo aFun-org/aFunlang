@@ -101,6 +101,11 @@ namespace aFuntool {
 
     }
 
+    inline OutStream &OutStream::operator<<(char a) {
+        func(0, "%c", a);
+        return *this;
+    }
+
     inline OutStream &OutStream::operator<<(signed char a) {
         func(0, "%c", a);
         return *this;
