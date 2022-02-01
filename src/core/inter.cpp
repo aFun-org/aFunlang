@@ -173,21 +173,21 @@ namespace aFuncore {
 
     void Environment::gcThread() {
         while(true) {
-            std::queue<GcObjectBase *> del;
-            std::queue<GcObjectBase *> des;
+            std::queue<Object *> del;
+            std::queue<Object *> des;
             {
                 std::unique_lock<std::mutex> mutex{lock};
                 if (destruct)
                     break;
-                GcObjectBase::checkReachable(gc);
-                GcObjectBase::setReachable(gc, des, del);
+                Object::checkReachable(gc);
+                Object::setReachable(gc, des, del);
             }
-            GcObjectBase::deleteUnreachable(del);
-            GcObjectBase::destructUnreachable(des, gc_inter);
+            Object::deleteUnreachable(del);
+            Object::destructUnreachable(des, gc_inter);
             aFuntool::safeSleep(1);
         }
 
-        GcObjectBase::destructAll(gc, gc_inter); /* 不需要mutex锁 */
+        Object::destructAll(gc, gc_inter); /* 不需要mutex锁 */
     }
 
     Environment::Environment(int argc, char **argv)
@@ -231,7 +231,7 @@ namespace aFuncore {
         protect->delReference();
         global->delReference();
 
-        GcObjectBase::deleteAll(gc); /* 不需要mutex锁 */
+        Object::deleteAll(gc); /* 不需要mutex锁 */
 
         if (reference != 0)
             throw EnvironmentDestructException();

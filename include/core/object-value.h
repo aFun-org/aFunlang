@@ -1,33 +1,31 @@
-﻿#ifndef AFUN_VAR_H
-#define AFUN_VAR_H
+﻿#ifndef AFUN_OBJECT_VALUE_H
+#define AFUN_OBJECT_VALUE_H
 #include <list>
-#include <unordered_map>
 #include <mutex>
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
-#include "gc.h"
+#include "object.h"
+#include "code.h"
 #include "inter.h"
 
 namespace aFuncore {
-    class Object;
-
-    class AFUN_CORE_EXPORT Var : public GcObjectBase {
+    class AFUN_CORE_EXPORT Var : public Object {
     public:
         Environment &env;
 
         Var(Object *data_, Inter &inter);
         Var(Object *data_, Environment &env_);
-        ~Var() override;
+        ~Var() override = default;
 
         [[nodiscard]] inline virtual Object *getData();
         virtual void inline setData(Object *data_);
-        void linkObject(std::queue<GcObjectBase *> &queue) override;
+        void linkObject(std::queue<Object *> &queue) override;
 
     private:
         Object *data;
     };
 
-    class AFUN_CORE_EXPORT VarSpace : public GcObjectBase {
+    class AFUN_CORE_EXPORT VarSpace : public Object {
     public:
         typedef enum VarOperationFlat {
             vof_success = 0,  // 成功
@@ -40,7 +38,7 @@ namespace aFuncore {
 
         explicit VarSpace(Inter &inter);
         explicit VarSpace(Environment &env_);
-        ~VarSpace() override;
+        ~VarSpace() override = default;
 
         template <typename Callable,typename...T>
         void forEach(Callable func, T...arg);
@@ -56,7 +54,7 @@ namespace aFuncore {
         virtual VarOperationFlat delVar(const std::string &name);
 
         [[nodiscard]] Object *findObject(const std::string &name);
-        void linkObject(std::queue<GcObjectBase *> &queue) override;
+        void linkObject(std::queue<Object *> &queue) override;
 
         static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
 
@@ -81,42 +79,45 @@ namespace aFuncore {
         bool is_protect;
     };
 
-    class AFUN_CORE_EXPORT VarList {
+    class AFUN_CORE_EXPORT Function : public virtual Object {
     public:
-        explicit inline VarList() = default;
-        explicit VarList(VarList *varlist);
-        explicit VarList(VarSpace *varspace);
-        ~VarList() = default;
-        VarList(const VarList &) = delete;
-        VarList &operator=(const VarList &) = delete;
+        class AFUN_CORE_EXPORT CallFunction;
 
-        void connect(VarList *varlist);
-        inline void push(VarSpace *varspace_);
-
-        template <typename Callable,typename...T>
-        void forEach(Callable func, T...arg);
-
-        template <typename Callable,typename...T>
-        void forEachLock(Callable func, T...arg);
-
-        [[nodiscard]] virtual Var *findVar(const std::string &name);
-        virtual bool defineVar(const std::string &name, Object *data);
-        virtual bool defineVar(const std::string &name, Var *data);
-        virtual bool setVar(const std::string &name, Object *data);
-        virtual bool delVar(const std::string &name);
-        [[nodiscard]] inline Object *findObject(const std::string &name);
-
-        inline void GcLinkObject(std::queue<GcObjectBase *> &queue);  /* 虽然不是GcObject, 但是也设定改函数便于将其包含的varspace快速压入queue中 */
-
-    protected:
-        std::mutex lock;
-
-    private:
-        std::list<VarSpace *> varspace;
+        virtual CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) = 0;
+        virtual inline bool isInfix();
     };
-}
 
-#include "var.inline.h"
-#include "var.template.h"
+    class AFUN_CORE_EXPORT Function::CallFunction {
+    public:
+        struct ArgCodeList;
 
-#endif //AFUN_VAR_H
+        CallFunction() = default;
+        virtual ~CallFunction() = default;
+        CallFunction(const CallFunction &)=delete;
+        CallFunction &operator=(const CallFunction &)=delete;
+
+        virtual std::list<ArgCodeList> *getArgCodeList(Inter &inter, Activation &activation, const Code::ByteCode *call) = 0;
+        virtual void runFunction() = 0;
+    };
+
+    struct Function::CallFunction::ArgCodeList {
+        const Code::ByteCode *code = nullptr;
+        Object *ret = nullptr;
+    };
+
+    class AFUN_CORE_EXPORT Literaler : public virtual Object {
+    public:
+        virtual void getObject(const std::string &literal, char prefix, Inter &inter, Activation &activation) = 0;
+    };
+
+    class AFUN_CORE_EXPORT CallBackVar : public virtual Object {
+    public:
+        virtual inline bool isCallBack(Inter &inter, Activation &activation);
+        virtual void callBack(Inter &inter, Activation &activation) = 0;
+    };
+};
+
+#include "object-value.inline.h"
+#include "object-value.template.h"
+
+#endif //AFUN_OBJECT_VALUE_H

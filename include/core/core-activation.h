@@ -4,8 +4,8 @@
 #include "aFunCoreExport.h"
 #include "msg.h"
 #include "code.h"
-#include "value.h"
-#include "var.h"
+#include "object-value.h"
+#include "varlist.h"
 
 namespace aFuncore {
     class Inter;

@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_VAR_INLINE_H
-#define AFUN_VAR_INLINE_H
-#include "var.h"
+﻿#ifndef AFUN_OBJECT_VALUE_INLINE_H
+#define AFUN_OBJECT_VALUE_INLINE_H
+#include "object-value.h"
 
 namespace aFuncore {
     inline Object *Var::getData() {
@@ -39,24 +39,13 @@ namespace aFuncore {
         bool ret = is_protect; is_protect = protect; return ret;
     }
 
-    inline VarList::VarList(VarSpace *varspace) {
-        this->varspace.push_front(varspace);
+    inline bool Function::isInfix() {
+        return false;
     }
 
-    inline void VarList::push(VarSpace *varspace_) {
-        std::unique_lock<std::mutex> mutex{lock};
-        varspace.push_front(varspace_);
+    inline bool CallBackVar::isCallBack(Inter &inter, Activation &activation) {
+        return true;
     }
+};
 
-    inline Object *VarList::findObject(const std::string &name) {
-        Var *var = findVar(name);
-        return var ? var->getData() : nullptr;
-    }
-
-    inline void VarList::GcLinkObject(std::queue<GcObjectBase *> &queue) {
-        for (auto var : varspace)
-            queue.push(var);
-    }
-}
-
-#endif //AFUN_VAR_INLINE_H
+#endif //AFUN_OBJECT_VALUE_INLINE_H

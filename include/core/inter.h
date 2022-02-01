@@ -11,7 +11,7 @@
 
 namespace aFuncore {
     class Activation;
-    class GcObjectBase;
+    class Object;
     class Var;
     class ProtectVarSpace;
     class VarSpace;
@@ -40,7 +40,7 @@ namespace aFuncore {
         std::mutex lock;
         size_t reference;  // 引用计数
         bool destruct;
-        std::list<GcObjectBase *> gc;
+        std::list<Object *> gc;
         Inter &gc_inter;  /* 需要在lock和reference后初始化 */
         std::thread gc_thread;
 
