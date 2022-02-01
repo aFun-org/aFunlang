@@ -155,6 +155,21 @@ namespace aFuntool {
         func(0, "%p", a);
         return *this;
     }
+
+    inline OutStream &OutStream::operator<<(float a) {
+        func(0, "%f", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(double a) {
+        func(0, "%f", a);
+        return *this;
+    }
+
+    inline OutStream &OutStream::operator<<(long double a) {
+        func(0, "%lf", a);
+        return *this;
+    }
 }
 
 #endif //AFUN_STDIO_INLINE_H

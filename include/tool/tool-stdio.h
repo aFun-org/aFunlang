@@ -80,6 +80,9 @@ namespace aFuntool {
         inline OutStream &operator<<(uint16_t a);
         inline OutStream &operator<<(uint32_t a);
         inline OutStream &operator<<(uint64_t a);
+        inline OutStream &operator<<(float a);
+        inline OutStream &operator<<(double a);
+        inline OutStream &operator<<(long double a);
         inline OutStream &operator<<(const char *a);
         inline OutStream &operator<<(const std::string &a);
         inline OutStream &operator<<(const void *a);

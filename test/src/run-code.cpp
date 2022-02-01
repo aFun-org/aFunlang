@@ -60,7 +60,6 @@ public:
                                                        new Code::ByteCode(code, "test-var", 1), 0));
         gc_inter.runCode(code);
         printInterEvent(gc_inter);
-        fputs_stdout("\n");
     };
 };
 
@@ -171,7 +170,12 @@ int Main() {
     tmp->delReference();
 
     aFuntool::cout << "Checking gc ...\n";
-    aFuntool::safeSleep(3);
+    for (int i = 0; i <= 12; i++) {
+        aFuntool::cout << "Wait " << (i * 0.25) << "\n";
+        aFuntool::safeSleep(0.25);
+    }
+    aFuntool::cout << "Check gc finished.\n\n";
+
 
     {
         fputs_stdout("Test-1: block-p & get test-var\n");
