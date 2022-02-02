@@ -1,5 +1,6 @@
-﻿#include "aFuncore.h"
+﻿#include "aFunrt.h"
 
+using namespace aFunrt;
 using namespace aFuncore;
 using namespace aFuntool;
 
@@ -15,7 +16,7 @@ class Func1 : public Function {
         CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, call_code{code_}, inter{inter_} {
             acl = new std::list<ArgCodeList>;
             if (code_ != nullptr) {
-                ArgCodeList agr1 = {code_->getSon()->toNext()};
+                ArgCodeList agr1 {code_->getSon()->toNext()};
                 acl->push_front(agr1);
             }
         }
@@ -28,7 +29,7 @@ class Func1 : public Function {
             if (acl->empty())
                 printf_stdout(0, "runFunction No AegCodeList\n");
             else
-                printf_stdout(0, "runFunction : %p\n", acl->begin()->ret);
+                printf_stdout(0, "runFunction : %p\n", acl->begin()->getObject());
             new ExeActivation(func_code, inter);
         }
 
@@ -141,7 +142,7 @@ void thread_test(Inter &son) {
 }
 
 int Main() {
-    Environment env {};
+    aFunEnvironment env{};
     Inter inter {env};
 
     auto obj = new Object("Object", inter);
@@ -260,6 +261,7 @@ int Main() {
 
     /* 执行错误的代码 */
     {
+        fputs_stdout("Test-a: error not var\n");
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
@@ -267,8 +269,15 @@ int Main() {
         fputs_stdout("\n");
     }
 
-    /* 不会执行的代码 */
-    inter.setInterExit();
+    {
+        fputs_stdout("Test-last: {exit}\n");
+        auto code = Code("run-code.aun");
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c,
+                                                       new Code::ByteCode(code, "exit", 1), 0));
+        inter.runCode(code);
+        printInterEvent(inter);
+        fputs_stdout("\n");
+    }
 
     {
         auto code = Code("run-code.aun");

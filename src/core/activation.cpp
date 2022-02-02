@@ -250,7 +250,7 @@ namespace aFuncore {
                 return as_end;
             down.popMessage("NORMAL");
 
-            acl_begin->ret = msg->getObject();
+            acl_begin->setObject(msg->getObject());
             delete msg;
 
             acl_begin++;

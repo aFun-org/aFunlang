@@ -28,6 +28,27 @@ namespace aFuncore {
     inline bool ProtectVarSpace::setProtect(bool protect) {
         bool ret = is_protect; is_protect = protect; return ret;
     }
+
+    inline Function::CallFunction::ArgCodeList::ArgCodeList(const Code::ByteCode *code_) : code{code_}, ret{nullptr} {
+
+    }
+
+    inline Function::CallFunction::ArgCodeList::~ArgCodeList() {
+        if (ret != nullptr)
+            ret->delReference();
+    }
+
+    Object *Function::CallFunction::ArgCodeList::setObject(Object *res) {
+        Object *obj = ret;
+        ret = res;
+        if (ret != nullptr)
+            ret->addReference();
+        return obj;
+    }
+
+    Object *Function::CallFunction::ArgCodeList::getObject() {
+        return ret;
+    }
 };
 
 #endif //AFUN_OBJECT_VALUE_INLINE_H

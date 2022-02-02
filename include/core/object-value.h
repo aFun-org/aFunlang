@@ -89,7 +89,7 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT Function::CallFunction {
     public:
-        struct ArgCodeList;
+        class ArgCodeList;
 
         CallFunction() = default;
         virtual ~CallFunction() = default;
@@ -100,8 +100,14 @@ namespace aFuncore {
         virtual void runFunction() = 0;
     };
 
-    struct Function::CallFunction::ArgCodeList {
+    class Function::CallFunction::ArgCodeList {
+    public:
         const Code::ByteCode *code = nullptr;
+        inline explicit ArgCodeList(const Code::ByteCode *code = nullptr);
+        inline ~ArgCodeList();
+        inline Object *setObject(Object *res);
+        inline Object *getObject();
+    private:
         Object *ret = nullptr;
     };
 

@@ -21,8 +21,6 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT Environment {
         friend class Object;
-        friend class Var;
-        friend class VarSpace;
         friend class Inter;
 
     public:
@@ -43,13 +41,13 @@ namespace aFuncore {
         std::list<Object *> gc;
         Inter &gc_inter;  /* 需要在lock和reference后初始化 */
         std::thread gc_thread;
+        void gcThread();
 
+    protected:  // 位于 mutex 之下
         ProtectVarSpace *const protect;  // 保护变量空间
         VarSpace *const global;  // 全局变量空间
         VarList *const global_varlist;  // global + protect
         EnvVarSpace envvar;
-
-        void gcThread();
     };
 
     class AFUN_CORE_EXPORT Inter {
