@@ -1,2 +1,2 @@
-﻿global
-{str,}
+﻿{import aFun-1.0}
+{exit}

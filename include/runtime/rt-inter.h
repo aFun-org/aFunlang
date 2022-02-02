@@ -4,7 +4,7 @@
 #include "aFuncore.h"
 
 namespace aFunrt {
-    class aFunEnvironment : public aFuncore::Environment {
+    class AFUN_LANG_EXPORT aFunEnvironment : public aFuncore::Environment {
     public:
         explicit aFunEnvironment(int argc = 0, char **argv = nullptr);
     };

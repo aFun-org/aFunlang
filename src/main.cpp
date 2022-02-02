@@ -14,10 +14,10 @@ char **argv_s = nullptr;
 
 static void convertArgs(int argc, char *argv_ansi[]) {
     argc_s = argc;
-    argv_s = aFuntool::safeCalloc<char *>((size_t)argc);
+    argv_s = aFun::safeCalloc<char *>((size_t)argc);
     for(int i = 0; i < argc; i++) {
-        if (aFuntool::convertMultiByte(argv_s + i, argv_ansi[i], CP_ACP, CP_UTF8) == 0) {
-            aFuntool::cerr << "Argument conversion error";
+        if (aFun::convertMultiByte(argv_s + i, argv_ansi[i], CP_ACP, CP_UTF8) == 0) {
+            aFun::cerr << "Argument conversion error";
             exit(EXIT_FAILURE);
         }
     }
@@ -31,36 +31,36 @@ static void convertArgsFree(void *) {
 
 int main(int argc, char **argv_ansi) {
     convertArgs(argc, argv_ansi);
-    aFuntool::aFunAtExit(convertArgsFree, nullptr);
+    aFun::aFunAtExit(convertArgsFree, nullptr);
 
     char **argv = argv_s;
 #else
     int main(int argc, char **argv) {
 #endif
     tty_stdin = isatty(fileno(stdin));
-    home_path = aFuntool::getExedir(1);
+    home_path = aFun::getExedir(1);
     if (home_path.empty()) {
-        aFuntool::cerr << "aFunlang init error.";
+        aFun::cerr << "aFunlang init error.";
         exit(EXIT_FAILURE);
     }
 
     try {
-        aFuntool::LogFactory factor{};
-        factor.initLogSystem(home_path + aFuntool::SEP + "aFunlog");
+        aFun::LogFactory factor{};
+        factor.initLogSystem(home_path + aFun::SEP + "aFunlog");
 
 #ifdef aFunDEBUG
-        aFunrt::aFunInitInfo info{home_path, factor, true, aFuntool::log_debug, aFuntool::log_debug};
+        aFun::aFunInitInfo info{home_path, factor, true, aFun::log_debug, aFun::log_debug};
 #else
-        aFunrt::aFunInitInfo info{base_path, factor, true, aFuntool::log_info, aFuntool::log_info};
+        aFun::aFunInitInfo info{base_path, factor, true, aFun::log_info, aFun::log_info};
 #endif
 
         ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
         if (ff == nullptr)
-            aFuntool::aFunExit(EXIT_FAILURE);
+            aFun::aFunExit(EXIT_FAILURE);
 
         if (!aFunInit(&info)) {
-            aFuntool::cerr << "aFunlang init error.";
-            aFuntool::aFunExit(EXIT_FAILURE);
+            aFun::cerr << "aFunlang init error.";
+            aFun::aFunExit(EXIT_FAILURE);
         }
 
         int exit_code = EXIT_SUCCESS;
@@ -77,8 +77,8 @@ int main(int argc, char **argv_ansi) {
             exit_code = mainHelp(ff);
 
         ff_freeFFlags(ff);
-        aFuntool::aFunExit(exit_code);
-    } catch (aFuntool::Exit &e) {
+        aFun::aFunExit(exit_code);
+    } catch (aFun::Exit &e) {
         return e.getExitCode();
     }
 }

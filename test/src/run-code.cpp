@@ -4,7 +4,7 @@ using namespace aFunrt;
 using namespace aFuncore;
 using namespace aFuntool;
 
-void printInterEvent(Inter &inter);
+static void progressInterEvent(Inter &inter);
 
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
@@ -60,7 +60,7 @@ public:
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                        new Code::ByteCode(code, "test-var", 1), 0));
         gc_inter.runCode(code);
-        printInterEvent(gc_inter);
+        progressInterEvent(gc_inter);
     };
 };
 
@@ -124,7 +124,7 @@ static void printMessage(const std::string &type, Message *msg, Inter &inter) {
     }
 }
 
-void printInterEvent(Inter &inter) {
+static void progressInterEvent(Inter &inter) {
     std::string type;
     for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
         printMessage(type, msg, inter);
@@ -132,12 +132,12 @@ void printInterEvent(Inter &inter) {
     }
 }
 
-void thread_test(Inter &son) {
+static void thread_test(Inter &son) {
     auto code = Code("run-code.aun");
     code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                    new Code::ByteCode(code, "test-var", 1), 0));
     son.runCode(code);
-    printInterEvent(son);
+    progressInterEvent(son);
     fputs_stdout("\n");
 }
 
@@ -184,7 +184,7 @@ int Main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                        new Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -198,7 +198,7 @@ int Main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
 
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -211,7 +211,7 @@ int Main() {
 
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_b, arg, 0));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -221,7 +221,7 @@ int Main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "data4", 1));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -230,14 +230,14 @@ int Main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-cbv", 1));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
     {
         fputs_stdout("Test-6: run-function\n");
         inter.runCode(func);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -251,7 +251,7 @@ int Main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
 
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -266,7 +266,7 @@ int Main() {
             code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                            new Code::ByteCode(code, "test-var", 1), 0));
             inter.runCode(code);
-            printInterEvent(inter);
+            progressInterEvent(inter);
             fputs_stdout("\n");
         }
 
@@ -279,7 +279,7 @@ int Main() {
         auto code = Code("run-code.aun");
         code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -289,7 +289,7 @@ int Main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c,
                                                        new Code::ByteCode(code, "exit", 1), 0));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
         fputs_stdout("\n");
     }
 
@@ -298,7 +298,7 @@ int Main() {
         code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                        new Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
-        printInterEvent(inter);
+        progressInterEvent(inter);
     }
 
     return 0;

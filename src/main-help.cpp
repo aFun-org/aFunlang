@@ -1,31 +1,21 @@
 ﻿#include "__main.h"
 
-/*
- * 函数名: printError
- * 目标: 打印参数错误信息
- */
-void printError(ff_FFlags *ff) {
-    errorLog(aFunrt::aFunLogger, "%s argument error", ff_getChild(ff));
-    aFuntool::cout << "Command line argument error (" << ff_getChild(ff) << ")\n";
-    printHelp();
-}
-
 void printVersion() {
     /* Version的显示不被翻译, 因为它通常还需要被其他程序读取而进行处理, 必须保证一致性 */
-    aFuntool::cout << "aFunlang at      " << program_name << "\n";
-    aFuntool::cout << "aFunlang home at " << home_path << "\n";
-    aFuntool::cout << "version: " aFunVersion "\n";
-    aFuntool::cout << aFunDescription "\n";
+    aFun::cout << "aFunlang at      " << program_name << "\n";
+    aFun::cout << "aFunlang home at " << home_path << "\n";
+    aFun::cout << "version: " aFunVersion "\n";
+    aFun::cout << aFunDescription "\n";
 }
 
 void printWelcomeInfo() {
-    aFuntool::cout << "aFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n";
-    aFuntool::cout << "[" compilerID "] on " systemName "\n";
-    aFuntool::cout << "(Enter the aFun code to run in the top activity)\n";
+    aFun::cout << "aFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n";
+    aFun::cout << "[" compilerID "] on " systemName "\n";
+    aFun::cout << "(Enter the aFun code to run in the top activity)\n";
 }
 
 void printHelp() {
-    aFuntool::cout << "aFunlang Usage:\n";
+    aFun::cout << "aFunlang Usage:\n";
 }
 
 int mainHelp(ff_FFlags *ff) {
