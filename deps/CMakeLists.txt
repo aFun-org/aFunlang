@@ -11,7 +11,7 @@ if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 
-    add_custom_target(dlfcn-win32-build ALL)
+    add_custom_target(dlfcn-win32-build)
     add_custom_command(TARGET dlfcn-win32-build POST_BUILD
             COMMAND ${CMAKE_COMMAND}
                     "${CMAKE_CURRENT_LIST_DIR}/dlfcn-win32"
@@ -28,7 +28,7 @@ execute_process(
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-add_custom_target(FFlags-build ALL)
+add_custom_target(FFlags-build)
 add_custom_command(TARGET FFlags-build POST_BUILD
         COMMAND ${CMAKE_COMMAND}
         "${CMAKE_CURRENT_LIST_DIR}/fflags"
@@ -44,7 +44,7 @@ execute_process(
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-add_custom_target(PCRE2-build ALL)
+add_custom_target(PCRE2-build)
 add_custom_command(TARGET PCRE2-build POST_BUILD
         COMMAND ${CMAKE_COMMAND}
         "${CMAKE_CURRENT_LIST_DIR}/pcre2"
