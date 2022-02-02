@@ -1,5 +1,6 @@
 ﻿#include "rt-inter.h"
 #include "func-exit.h"
+#include "func-import.h"
 
 namespace aFunrt {
     aFunEnvironment::aFunEnvironment(int argc, char **argv) : Environment(argc, argv)  {
@@ -10,7 +11,9 @@ namespace aFunrt {
         }
 
         {  // 导入函数
-
+            auto import = new ImportFunction(*this);
+            protect->defineVar("import", import);
+            import->delReference();
         }
     }
 }

@@ -8,6 +8,7 @@ namespace aFuntool {
     public:
         inline explicit aFunException(std::string msg);
         virtual const char *what();
+        inline const std::string &getMessage() const;
     };
 
     class aFuntoolException : public aFunException {

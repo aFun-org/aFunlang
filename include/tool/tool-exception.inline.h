@@ -8,6 +8,10 @@ namespace aFuntool {
 
     }
 
+    inline const std::string &aFunException::getMessage() const {
+        return message;
+    }
+
     inline aFuntoolException::aFuntoolException(const std::string &msg) : aFunException{msg} {
 
     }

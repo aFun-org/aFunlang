@@ -242,8 +242,22 @@ int Main() {
     }
 
     {
+        fputs_stdout("Test-7: {import test}\n");
+        auto code = Code("run-code.aun");
+
+        auto arg = new Code::ByteCode(code, "import", 1);
+        arg->connect(new Code::ByteCode(code, "test", 1));
+
+        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
+
+        inter.runCode(code);
+        printInterEvent(inter);
+        fputs_stdout("\n");
+    }
+
+    {
         /* 多线程 */
-        fputs_stdout("Test-7: thread\n");
+        fputs_stdout("Test-8: thread\n");
         Inter son{inter};
         std::thread thread{thread_test, std::ref(son)};
 

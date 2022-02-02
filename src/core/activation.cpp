@@ -3,6 +3,7 @@
 #include "core-init.h"
 #include "msg.h"
 #include "code.h"
+#include "core-exception.h"
 
 namespace aFuncore {
     /**
@@ -232,8 +233,13 @@ namespace aFuncore {
 
             /* Label: 执行变量获取前的准备 */
             status = func_get_arg;
-            call_func = func->getCallFunction(call, inter);
-            acl = call_func->getArgCodeList(inter, *this, call);
+            try {
+                call_func = func->getCallFunction(call, inter);
+                acl = call_func->getArgCodeList(inter, *this, call);
+            } catch (RuntimeError &e) {
+                down.pushMessage("ERROR", new ErrorMessage(e.getType(), e.getMessage(), this));
+                return as_end;
+            }
             acl_begin = acl->begin();
             acl_end = acl->end();
             if (acl_begin != acl_end) {  // 如果有参数需要计算
