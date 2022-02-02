@@ -17,20 +17,33 @@ find_library(fflags_lib NAMES FFlags libFFlags HINTS ${_root}/lib DOC "FFlags li
 set(fflags_INCLUDE_DIRS ${fflags_h})
 set(fflags_LIBRARIES ${fflags_lib})
 
+if (WIN32 AND NOT CYGWIN)
+    find_file(fflags_dll NAMES FFlags.dll libFFlags.dll HINTS ${_root}/bin DOC "FFlags ddl" NO_DEFAULT_PATH)
+    if (fflags_dll)
+        set(fflags_DLL ${fflags_dll})
+    else()
+        set(fflags_DLL)
+    endif()
+else()
+    set(fflags_DLL ${fflags_LIBRARIES})
+endif()
+
 unset(fflags_h CACHE)
 unset(fflags_lib CACHE)
 
 find_package_handle_standard_args(FFlags
-                                  FOUND_VAR FFlags_FOUND
-                                  REQUIRED_VARS
-                                  fflags_INCLUDE_DIRS
-                                  fflags_LIBRARIES)  # 强制搜不到包
+        FOUND_VAR FFlags_FOUND
+        REQUIRED_VARS
+        fflags_INCLUDE_DIRS
+        fflags_LIBRARIES
+        fflags_DLL)  # 强制搜不到包
 
 if (FFlags_FOUND)
     add_library(FFlags::fflags STATIC IMPORTED)
     set_target_properties(FFlags::fflags PROPERTIES
-                          IMPORTED_LOCATION "${fflags_LIBRARIES}"
-                          INTERFACE_INCLUDE_DIRECTORIES "${fflags_INCLUDE_DIRS}"
-                          INTERFACE_SOURCES "${fflags_INCLUDE_DIRS}/fflags.h"
-                          PUBLIC_HEADER "${fflags_INCLUDE_DIRS}/fflags.h")
+            IMPORTED_IMPLIB "${fflags_DLL}"
+            IMPORTED_LOCATION "${fflags_LIBRARIES}"
+            INTERFACE_INCLUDE_DIRECTORIES "${fflags_INCLUDE_DIRS}"
+            INTERFACE_SOURCES "${fflags_INCLUDE_DIRS}/fflags.h"
+            PUBLIC_HEADER "${fflags_INCLUDE_DIRS}/fflags.h")
 endif()
