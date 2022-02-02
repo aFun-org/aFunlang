@@ -1,14 +1,15 @@
 ﻿#ifndef AFUN_TOOL_EXCEPTION_H
 #define AFUN_TOOL_EXCEPTION_H
+#include "aFunToolExport.h"
 #include "tool-type.h"
 
 namespace aFuntool {
-    class aFunException : public std::exception {
+    class AFUN_TOOL_EXPORT aFunException : public std::exception {
         std::string message;
     public:
         inline explicit aFunException(std::string msg);
         virtual const char *what();
-        inline const std::string &getMessage() const;
+        [[nodiscard]] inline const std::string &getMessage() const;
     };
 
     class aFuntoolException : public aFunException {
