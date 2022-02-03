@@ -2,7 +2,7 @@
 #define AFUN_FUNC_IMPORT_INLINE_H
 #include "func-import.h"
 
-namespace aFunrt {
+namespace aFunit {
     inline ImportFunction::ImportFunction(aFuncore::Inter &inter_) : Object("Function", inter_) {
 
     }

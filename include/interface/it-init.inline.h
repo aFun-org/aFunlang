@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_RT_INIT_INLINE_H
-#define AFUN_RT_INIT_INLINE_H
+﻿#ifndef AFUN_IT_INIT_INLINE_H
+#define AFUN_IT_INIT_INLINE_H
 
-#include "rt-init.h"
+#include "it-init.h"
 
-namespace aFunrt {
+namespace aFunit {
     inline aFunInitInfo::aFunInitInfo(const std::string &base_dir_,
                                       aFuntool::LogFactory &factor_,
                                       bool log_asyn_,
@@ -15,4 +15,4 @@ namespace aFunrt {
 }
 
 
-#endif //AFUN_RT_INIT_INLINE_H
+#endif //AFUN_IT_INIT_INLINE_H

@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_RT_INIT_H
-#define AFUN_RT_INIT_H
+﻿#ifndef AFUN_IT_INIT_H
+#define AFUN_IT_INIT_H
 #include "aFunlangExport.h"
 #include "aFuncore.h"
 
-namespace aFunrt {
+namespace aFunit {
     struct aFunInitInfo : public aFuncore::InitInfo {
         aFuntool::LogLevel lang_level;
 
@@ -18,6 +18,6 @@ namespace aFunrt {
     AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
 }
 
-#include "rt-init.inline.h"
+#include "it-init.inline.h"
 
-#endif //AFUN_RT_INIT_H
+#endif //AFUN_IT_INIT_H

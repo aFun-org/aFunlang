@@ -1,7 +1,7 @@
-﻿#include "rt-reader.h"
-#include "rt-init.h"
+﻿#include "it-reader.h"
+#include "it-init.h"
 
-namespace aFunrt {
+namespace aFunit {
     size_t StringReader::readText(char *dest, size_t read_len, ReadMode &mode) {
         if (index == len)  // 读取到末尾
             return 0;

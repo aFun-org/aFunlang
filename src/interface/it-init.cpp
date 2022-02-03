@@ -1,6 +1,6 @@
-﻿#include "rt-init.h"
+﻿#include "it-init.h"
 
-namespace aFunrt {
+namespace aFunit {
     aFuntool::Logger *aFunLogger = nullptr;
 
     bool aFunInit(aFunInitInfo *info) {

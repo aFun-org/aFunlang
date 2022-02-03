@@ -1,12 +1,12 @@
 ﻿#ifndef AFUN_MAIN_H
 #define AFUN_MAIN_H
-#include "aFunrt.h"
+#include "aFunit.h"
 #include "fflags.h"
 
 namespace aFun {
     using namespace aFuntool;
     using namespace aFuncore;
-    using namespace aFunrt;
+    using namespace aFunit;
 };
 
 void printError(ff_FFlags *ff);

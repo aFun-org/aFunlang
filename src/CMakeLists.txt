@@ -4,8 +4,8 @@ set(install_include_tool ${INSTALL_INCLUDEDIR})
 set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
 set(install_include_core ${INSTALL_INCLUDEDIR})
 
-set(build_include_runtime ${PROJECT_SOURCE_DIR}/include/runtime)
-set(install_include_runtime ${INSTALL_INCLUDEDIR})
+set(build_include_interface ${PROJECT_SOURCE_DIR}/include/interface)
+set(install_include_interface ${INSTALL_INCLUDEDIR})
 
 set(build_include_
     ${hgt_dir}
@@ -13,7 +13,7 @@ set(build_include_
     ${build_include_tool}
     ${build_include_core}
     ${build_include_core_info}
-    ${build_include_runtime})
+    ${build_include_interface})
 
 set(build_include)
 foreach(dir IN LISTS build_include_)
@@ -25,7 +25,7 @@ set(install_include $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
 
 add_subdirectory(tool)
 add_subdirectory(core)  # core 依赖 tool
-add_subdirectory(runtime)  # runtime 依赖 core
+add_subdirectory(interface)  # interface 依赖 core
 
 # source在子目录中被使用, 为了避免子目录访问到source, 子目录将在此前面被执行
 file(GLOB source
@@ -50,6 +50,6 @@ target_link_libraries(aFun-xx PUBLIC rt-shared FFlags::fflags)
 target_link_libraries(aFun-ct PUBLIC rt-static FFlags::fflags)
 
 install(TARGETS aFun-xx aFun-ct
-        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT advanced-runtime
+        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT dev
         PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)
+        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev)

@@ -1,15 +1,14 @@
-﻿#ifndef AFUN_FUNC_IMPORT_H
-#define AFUN_FUNC_IMPORT_H
+﻿#ifndef AFUN_FUNC_EXIT_H
+#define AFUN_FUNC_EXIT_H
 #include "aFunlangExport.h"
 #include "aFuncore.h"
 
-namespace aFunrt {
-    class ImportFunction : public aFuncore::Function {
+namespace aFunit {
+    class ExitFunction : public aFuncore::Function {
         class CallFunc : public CallFunction {
             const aFuncore::Code::ByteCode *call_code;
             aFuncore::Inter &inter;
             std::list<ArgCodeList> *acl;
-            std::string import;
         public:
             CallFunc(const aFuncore::Code::ByteCode *code_, aFuncore::Inter &inter_);
             std::list<ArgCodeList> *getArgCodeList(aFuncore::Inter &inter_,
@@ -21,14 +20,14 @@ namespace aFunrt {
         };
 
     public:
-        inline explicit ImportFunction(aFuncore::Inter &inter_);
-        inline explicit ImportFunction(aFuncore::Environment &env_);
-        ~ImportFunction() override = default;
+        inline explicit ExitFunction(aFuncore::Inter &inter_);
+        inline explicit ExitFunction(aFuncore::Environment &env_);
+        ~ExitFunction() override = default;
 
         CallFunction *getCallFunction(const aFuncore::Code::ByteCode *code, aFuncore::Inter &inter) override;
     };
 }
 
-#include "func-import.inline.h"
+#include "func-exit.inline.h"
 
-#endif //AFUN_FUNC_IMPORT_H
+#endif //AFUN_FUNC_EXIT_H

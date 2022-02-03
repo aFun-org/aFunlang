@@ -1,6 +1,6 @@
 ﻿#include "func-import.h"
 
-namespace aFunrt {
+namespace aFunit {
     aFuncore::Function::CallFunction *ImportFunction::getCallFunction(const aFuncore::Code::ByteCode *code, aFuncore::Inter &inter) {
         return dynamic_cast<CallFunction *>(new CallFunc(code, inter));
     }

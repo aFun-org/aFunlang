@@ -61,7 +61,7 @@ int main() {
         printf("rtest8 = %d, test = %d\n", rtest8, test8);
         printf("rtest16 = %d, test = %d\n", rtest16, test16);
         printf("rtest32 = %d, test = %d\n", rtest32, test32);
-        printf("rtest64 = %ld, test = %ld\n", rtest64, test64);
+        printf("rtest64 = %lld, test = %lld\n", rtest64, test64);
         printf("rtestStr = %s\ntestStr = %s\n", rtestStr.c_str(), testStr.c_str());
         return EXIT_FAILURE;
     }

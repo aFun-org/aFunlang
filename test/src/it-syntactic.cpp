@@ -1,5 +1,5 @@
 ﻿#include <cstdio>
-#include "aFunrt.h"
+#include "aFunit.h"
 
 const char *str = "{if true [HelloWorld (10)]}\n";
 const char *str2 = "{if true [HelloWorld (10)\n";
@@ -89,7 +89,7 @@ int main(int argc, char **) {
     std::string md5_2;
 
     {
-        auto reader = aFunrt::StringReader(str, "str");
+        auto reader = aFunit::StringReader(str, "str");
         auto parser = aFuncore::Parser(reader);
         auto code = aFuncore::Code("test.aun");
         bool ret = parser.parserCode(code);
@@ -101,7 +101,7 @@ int main(int argc, char **) {
     }
 
     {
-        auto reader = aFunrt::StringReader(str2, "str2");
+        auto reader = aFunit::StringReader(str2, "str2");
         auto parser = aFuncore::Parser(reader);
         auto code = aFuncore::Code("test2.aun");
         parser.parserCode(code);
@@ -121,7 +121,7 @@ int main(int argc, char **) {
         fprintf(file, "%s", str);
         aFuntool::fileClose(file);
 
-        auto reader = aFunrt::FileReader("test.aun");
+        auto reader = aFunit::FileReader("test.aun");
         auto parser = aFuncore::Parser(reader);
         auto code = aFuncore::Code("test.aun");
         bool ret = parser.parserCode(code);

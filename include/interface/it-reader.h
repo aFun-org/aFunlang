@@ -1,11 +1,11 @@
-﻿#ifndef AFUN_RT_READER_H
-#define AFUN_RT_READER_H
+﻿#ifndef AFUN_IT_READER_H
+#define AFUN_IT_READER_H
 #include <functional>
 #include "aFunlangExport.h"
 #include "aFuncore.h"
-#include "rt-init.h"
+#include "it-init.h"
 
-namespace aFunrt {
+namespace aFunit {
     class AFUN_LANG_EXPORT StringReader : public aFuncore::Reader {
     public:
         inline StringReader(std::string str_, const aFuntool::FilePath &path_);
@@ -27,6 +27,6 @@ namespace aFunrt {
 
 }
 
-#include "rt-reader.inline.h"
+#include "it-reader.inline.h"
 
-#endif //AFUN_RT_READER_H
+#endif //AFUN_IT_READER_H

@@ -1,6 +1,6 @@
-﻿#include "aFunrt.h"
+﻿#include "aFunit.h"
 
-using namespace aFunrt;
+using namespace aFunit;
 using namespace aFuncore;
 using namespace aFuntool;
 

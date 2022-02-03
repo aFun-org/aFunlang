@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_RT_READER_INLINE_H
-#define AFUN_RT_READER_INLINE_H
-#include "rt-reader.h"
-#include "rt-exception.h"
+﻿#ifndef AFUN_IT_READER_INLINE_H
+#define AFUN_IT_READER_INLINE_H
+#include "it-reader.h"
+#include "it-exception.h"
 
-namespace aFunrt {
+namespace aFunit {
     inline StringReader::StringReader(std::string str_, const aFuntool::FilePath &path_)
         : Reader{path_, 0}, str{std::move(str_)} {
         index = 0;
@@ -19,4 +19,4 @@ namespace aFunrt {
     }
 }
 
-#endif //AFUN_RT_READER_INLINE_H
+#endif //AFUN_IT_READER_INLINE_H

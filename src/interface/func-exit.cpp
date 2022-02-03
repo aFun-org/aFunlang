@@ -1,6 +1,6 @@
 ﻿#include "func-exit.h"
 
-namespace aFunrt {
+namespace aFunit {
     aFuncore::Function::CallFunction *ExitFunction::getCallFunction(const aFuncore::Code::ByteCode *code, aFuncore::Inter &inter) {
         return dynamic_cast<CallFunction *>(new CallFunc(code, inter));
     }

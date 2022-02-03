@@ -1,8 +1,8 @@
-﻿#include "rt-inter.h"
+﻿#include "it-inter.h"
 #include "func-exit.h"
 #include "func-import.h"
 
-namespace aFunrt {
+namespace aFunit {
     aFunEnvironment::aFunEnvironment(int argc, char **argv) : Environment(argc, argv)  {
         {  // 退出函数
             auto exit = new ExitFunction(*this);

@@ -3,7 +3,7 @@
 
 #include "func-exit.h"
 
-namespace aFunrt {
+namespace aFunit {
     inline ExitFunction::ExitFunction(aFuncore::Inter &inter_) : Object("Function", inter_) {
 
     }
