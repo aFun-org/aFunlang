@@ -146,22 +146,22 @@ int Main() {
     Inter inter {env};
 
     auto obj = new Object("Object", inter);
-    inter.getGlobalVarlist()->defineVar("test-var", obj);
+    inter.getProtectVarSpace()->defineVar("test-var", obj);
     aFuntool::cout << "obj: " << obj << "\n";
     obj->delReference();
 
     auto func = new Func1(inter);
-    inter.getGlobalVarlist()->defineVar("test-func", func);
+    inter.getProtectVarSpace()->defineVar("test-func", func);
     aFuntool::cout << "func: " << func << "\n";
     func->delReference();
 
     auto literaler = new Literaler1(inter);
-    inter.getGlobalVarlist()->defineVar("test-literaler", literaler);
+    inter.getProtectVarSpace()->defineVar("test-literaler", literaler);
     aFuntool::cout << "literaler: " << literaler << "\n";
     literaler->delReference();
 
     auto cbv = new CBV1(inter);
-    inter.getGlobalVarlist()->defineVar("test-cbv", cbv);
+    inter.getProtectVarSpace()->defineVar("test-cbv", cbv);
     aFuntool::cout << "cbv: " << cbv << "\n";
     inter.getEnvVarSpace().setNumber("sys:error_std", 1);
     cbv->delReference();

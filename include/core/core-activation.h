@@ -5,7 +5,6 @@
 #include "msg.h"
 #include "code.h"
 #include "object-value.h"
-#include "varlist.h"
 
 namespace aFuncore {
     class Inter;
@@ -18,6 +17,34 @@ namespace aFuncore {
             as_end_run = 2,
         } ActivationStatus;
 
+        class AFUN_CORE_EXPORT VarList {
+        public:
+            inline explicit VarList();
+            virtual ~VarList();
+            VarList(VarList &&new_varlist);
+            VarList &operator=(VarList &&new_varlist);
+            VarList(const VarList &) = delete;
+            VarList &operator=(const VarList &) = delete;
+
+            void clear();
+            void connect(VarList &new_varlist);
+            inline void push(VarSpace *varspace_);
+            inline size_t count();
+
+            template <typename Callable,typename...T>
+            void forEach(Callable func, T...arg);
+
+            [[nodiscard]] virtual Var *findVar(const std::string &name);
+            virtual bool defineVar(const std::string &name, Object *data);
+            virtual bool defineVar(const std::string &name, Var *data);
+            virtual bool setVar(const std::string &name, Object *data);
+            virtual bool delVar(const std::string &name);
+            [[nodiscard]] inline Object *findObject(const std::string &name);
+
+        private:
+            std::list<VarSpace *> varspace;
+        };
+
         Inter &inter;
 
         explicit Activation(Inter &inter_);
@@ -28,7 +55,7 @@ namespace aFuncore {
         virtual void runCode(const Code::ByteCode *code);
         virtual void endRun();
 
-        [[nodiscard]] inline VarList *getVarlist() const;
+        [[nodiscard]] inline VarList &getVarlist();
         [[nodiscard]] inline UpMessage &getUpStream();
         [[nodiscard]] inline DownMessage &getDownStream();
 
@@ -36,7 +63,7 @@ namespace aFuncore {
         [[nodiscard]] inline  const aFuntool::FilePath &getFilePath() const;
 
     protected:
-        VarList *varlist;
+        VarList varlist;
 
         UpMessage up;
         DownMessage down;
@@ -101,5 +128,6 @@ namespace aFuncore {
 }
 
 #include "core-activation.inline.h"
+#include "core-activation.template.h"
 
 #endif //AFUN_CORE_ACTIVATION_H

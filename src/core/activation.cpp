@@ -16,14 +16,17 @@ namespace aFuncore {
             : inter{inter_}, line{0},
               up{inter_.activation == nullptr ? nullptr : &inter_.activation->up}, down{}{
         if (inter_.activation != nullptr) {
-            varlist = new VarList(inter_.activation->varlist);
+            varlist.connect(inter_.activation->varlist);
             line = inter_.activation->line;
             path = inter_.activation->path;
         } else {
-            varlist = new VarList();
-            varlist->connect(inter_.getGlobalVarlist());
+            auto global = new VarSpace(inter);
+            varlist.push(inter_.getProtectVarSpace());
+            varlist.push(global);
+            global->delReference();
             path = "";
         }
+
         inter.pushActivation(this);
     }
 
@@ -43,7 +46,6 @@ namespace aFuncore {
             down.joinMsg(inter.activation->down);
         else
             down.forEach(ActivationTopProgress, std::ref(inter), std::ref(*this));
-        delete varlist;
     }
 
     void Activation::endRun() {
@@ -89,15 +91,14 @@ namespace aFuncore {
             if (in_protect)
                 obj = inter.getProtectVarSpace()->findObject(literaler_name);
             else
-                obj = varlist->findObject(literaler_name);
+                obj = varlist.findObject(literaler_name);
             auto literaler = dynamic_cast<Literaler *>(obj);
             if (literaler != nullptr)
                 literaler->getObject(code->getElement(), code->getPrefix(), inter, *this);
             else
                 down.pushMessage("ERROR", new ErrorMessage("TypeError", "Error type of literal.", this));
         } else {
-            if (varlist != nullptr)
-                obj = varlist->findObject(code->getElement());
+            obj = varlist.findObject(code->getElement());
             if (obj != nullptr) {
                 auto cbv = dynamic_cast<CallBackVar *>(obj);
                 if (cbv != nullptr && cbv->isCallBack(inter, *this))
@@ -144,11 +145,100 @@ namespace aFuncore {
         return as_run;
     }
 
+    Activation::VarList::~VarList() {
+        for (auto &t : varspace)
+            t->delReference();
+    }
+
+    /**
+     * 访问变量
+     * @param name 变量名
+     * @return
+     */
+    Var *Activation::VarList::findVar(const std::string &name){
+        Var *ret = nullptr;
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == nullptr; tmp++)
+            ret = (*tmp)->findVar(name);
+        return ret;
+    }
+
+    /**
+     * 定义变量
+     * 若定义出现redefine则退出报错
+     * 若出现fail则跳到下一个变量空间尝试定义
+     * @param name 变量名
+     * @param data 变量（Object）
+     * @return
+     */
+    bool Activation::VarList::defineVar(const std::string &name, Object *data){
+        VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
+            ret = (*tmp)->defineVar(name, data);
+        return ret == VarSpace::vof_success;
+    }
+
+    /**
+     * 定义变量
+     * 若定义出现redefine则退出报错
+     * 若出现fail则跳到下一个变量空间尝试定义
+     * @param name 变量名
+     * @param data 变量（Var）
+     * @return
+     */
+    bool Activation::VarList::defineVar(const std::string &name, Var *data){
+        VarSpace::VarOperationFlat ret = VarSpace::vof_fail;
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_fail; tmp++)
+            ret = (*tmp)->defineVar(name, data);
+        return ret == VarSpace::vof_success;
+    }
+
+    /**
+     * 设置变量的值
+     * 若not_var则跳到下一个变量空间
+     * 若fail则结束
+     * @param name 变量名
+     * @param data 数据
+     * @return
+     */
+    bool Activation::VarList::setVar(const std::string &name, Object *data){
+        VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
+            ret = (*tmp)->setVar(name, data);
+        return ret == VarSpace::vof_success;
+    }
+
+    /**
+     * 删除变量
+     * 若not_var则跳到下一个变量空间
+     * 若fail则结束
+     * @param name
+     * @return
+     */
+    bool Activation::VarList::delVar(const std::string &name){
+        VarSpace::VarOperationFlat ret = VarSpace::vof_not_var;
+        for (auto tmp = varspace.begin(), end = varspace.end(); tmp != end && ret == VarSpace::vof_not_var; tmp++)
+            ret = (*tmp)->delVar(name);
+        return ret == VarSpace::vof_success;
+    }
+
+    void Activation::VarList::clear(){
+        for (auto &t: varspace)
+            t->delReference();
+        varspace.clear();
+    }
+
+    void Activation::VarList::connect(VarList &new_varlist){
+        for (auto &t: new_varlist.varspace) {
+            t->addReference();
+            this->varspace.push_back(t);
+        }
+    }
+
     TopActivation::TopActivation(const Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
 
     }
 
-    FuncActivation::FuncActivation(Function *func_, Inter &inter_) : Activation(inter_), call{nullptr} {
+    FuncActivation::FuncActivation(Function *func_, Inter &inter_) : Activation(inter_), call{nullptr}, acl_begin{}, acl_end{} {
         on_tail = false;  // 跳过所有阶段
         status = func_get_func;
         func = func_;
@@ -189,7 +279,7 @@ namespace aFuncore {
                         if (var->getType() != Code::ByteCode::code_element || var->getPrefix() == quote ||
                             inter.checkLiteral(var->getElement()))
                             continue;
-                        Object *obj = varlist->findObject(var->getElement());
+                        Object *obj = varlist.findObject(var->getElement());
                         if (obj == nullptr || !dynamic_cast<Function *>(obj) ||
                             !dynamic_cast<Function *>(obj)->isInfix())
                             continue;

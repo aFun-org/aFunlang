@@ -8,7 +8,6 @@
 #include "inter.h"
 #include "object.h"
 #include "object-value.h"
-#include "varlist.h"
 #include "core-activation.h"
 #include "core-exception.h"
 #include "reader.h"

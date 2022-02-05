@@ -192,9 +192,7 @@ namespace aFuncore {
 
     Environment::Environment(int argc, char **argv)
         : reference{0}, gc_inter{*(new Inter(*this))},
-          protect{new ProtectVarSpace(*this)}, global{new VarSpace(*this)},
-          global_varlist{new VarList(protect)}, destruct{false} {
-        global_varlist->push(global);
+          protect{new ProtectVarSpace(*this)}, destruct{false} {
         /* 生成 gc_inter 后, reference == 1 */
 
         envvar.setNumber("sys:gc-runtime", 2);
@@ -233,9 +231,7 @@ namespace aFuncore {
         gc_thread.join();
         delete &gc_inter;
 
-        delete global_varlist;
         protect->delReference();
-        global->delReference();
 
         Object::deleteAll(gc); /* 不需要mutex锁 */
 

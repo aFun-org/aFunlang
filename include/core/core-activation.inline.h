@@ -4,7 +4,7 @@
 #include "core-activation.h"
 
 namespace aFuncore {
-    inline VarList *Activation::getVarlist() const{
+    inline Activation::VarList &Activation::getVarlist(){
         return varlist;
     }
 
@@ -22,6 +22,34 @@ namespace aFuncore {
 
     inline const aFuntool::FilePath &Activation::getFilePath() const{
         return path;
+    }
+
+    inline Activation::VarList::VarList() : varspace{} {
+
+    }
+
+    inline Activation::VarList::VarList(VarList &&new_varlist) : varspace{std::move(new_varlist.varspace)} {
+
+    }
+
+    inline Activation::VarList &Activation::VarList::operator=(VarList &&new_varlist) {
+        clear();
+        varspace = std::move(new_varlist.varspace);
+        return *this;
+    }
+
+    inline void Activation::VarList::push(VarSpace *varspace_) {
+        varspace_->addReference();
+        varspace.push_front(varspace_);
+    }
+
+    inline size_t Activation::VarList::count() {
+        return varspace.size();
+    }
+
+    inline Object *Activation::VarList::findObject(const std::string &name) {
+        Var *var = findVar(name);
+        return var ? var->getData() : nullptr;
     }
 
     inline ExeActivation::ExeActivation(const Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {

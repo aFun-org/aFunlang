@@ -41,14 +41,6 @@ namespace aFuncore {
         return env.protect;
     }
 
-    inline VarSpace *Inter::getGlobalVarSpace() const {
-        return env.global;
-    }
-
-    inline VarList *Inter::getGlobalVarlist() const {
-        return env.global_varlist;
-    }
-
     inline const std::list<Activation *> &Inter::getStack() const {
         return stack;
     }

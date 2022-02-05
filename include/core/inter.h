@@ -15,7 +15,6 @@ namespace aFuncore {
     class Var;
     class ProtectVarSpace;
     class VarSpace;
-    class VarList;
     class Object;
     class Inter;
 
@@ -45,8 +44,6 @@ namespace aFuncore {
 
     protected:  // 位于 mutex 之下
         ProtectVarSpace *const protect;  // 保护变量空间
-        VarSpace *const global;  // 全局变量空间
-        VarList *const global_varlist;  // global + protect
         EnvVarSpace envvar;
     };
 
@@ -85,8 +82,6 @@ namespace aFuncore {
         [[nodiscard]] inline bool isInterExit() const;
         [[nodiscard]] inline Environment &getEnvironment();
         [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
-        [[nodiscard]] inline VarSpace *getGlobalVarSpace() const;
-        [[nodiscard]] inline VarList *getGlobalVarlist() const;
         [[nodiscard]] inline const std::list<Activation *> &getStack() const;
         [[nodiscard]] inline Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
