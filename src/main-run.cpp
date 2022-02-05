@@ -13,7 +13,7 @@ static void runCodeThread(aFun::Inter &inter, aFun::Code &code, std::mutex &mute
     is_end = true;
 }
 
-static int runCode(aFun::Code &code, aFun::aFunEnvironment &env, aFun::Inter &inter, int argc, char **argv) {
+static int runCode(aFun::Code &code, aFun::Environment &env, aFun::Inter &inter, int argc, char **argv) {
     std::mutex mutex;
     bool is_end = false;
     auto thread = std::thread(runCodeThread, std::ref(inter), std::ref(code), std::ref(mutex), std::ref(is_end));
@@ -49,7 +49,7 @@ int mainRun(ff_FFlags *ff) {
             printParserError(parser, argv[0]);
             if (!ret)
                 return EXIT_FAILURE;
-            auto env = aFun::aFunEnvironment(argc - 1, argv + 1);
+            auto env = aFun::Environment(argc - 1, argv + 1);
             auto inter = aFun::Inter(env);
             return runCode(code, env, inter, argc, argv);
         } catch (aFun::readerFileOpenError &e) {

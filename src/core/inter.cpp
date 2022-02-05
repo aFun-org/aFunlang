@@ -3,6 +3,8 @@
 #include "core-init.h"
 #include "msg.h"
 #include "core-exception.h"
+#include "func-import.h"
+#include "func-exit.h"
 
 namespace aFuncore {
     Inter::Inter(Environment &env_)
@@ -210,6 +212,18 @@ namespace aFuncore {
         }
 
         gc_thread = std::thread([this](){this->gcThread();});
+
+        {  // 退出函数
+            auto exit = new ExitFunction(*this);
+            protect->defineVar("exit", exit);
+            exit->delReference();
+        }
+
+        {  // 导入函数
+            auto import = new ImportFunction(*this);
+            protect->defineVar("import", import);
+            import->delReference();
+        }
     }
 
     Environment::~Environment() noexcept(false) {

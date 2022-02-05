@@ -142,7 +142,7 @@ static void thread_test(Inter &son) {
 }
 
 int Main() {
-    aFunEnvironment env{};
+    Environment env{};
     Inter inter {env};
 
     auto obj = new Object("Object", inter);
