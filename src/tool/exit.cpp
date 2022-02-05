@@ -1,5 +1,6 @@
 ﻿#include <mutex>
 #include <stack>
+#include <utility>
 #include "tool-exit.h"
 #include "tool-exception.h"
 
@@ -24,9 +25,9 @@ namespace aFuntool {
             }
         }
 
-        void pushExitData(aFunExitFunc *func, void *data_) {
+        void pushExitData(aFunExitFunc func, void *data_) {
             std::unique_lock<std::mutex> ul{exit_mutex};
-            data.push({func, data_});
+            data.push({std::move(func), data_});
         }
 
         bool tryRunExitData() {
@@ -41,18 +42,18 @@ namespace aFuntool {
             return true;
         }
 
-        bool tryPushExitData(aFunExitFunc *func, void *data_) {
+        bool tryPushExitData(aFunExitFunc func, void *data_) {
             if (!exit_mutex.try_lock())
                 return false;
             std::unique_lock<std::mutex> ul{exit_mutex, std::adopt_lock};
-            data.push({func, data_});
+            data.push({std::move(func), data_});
             return true;
         }
 
     private:
         std::mutex exit_mutex;
         struct ExitFuncData {
-            aFunExitFunc *func;
+            aFunExitFunc func;
             void *data;
         };
         std::stack<ExitFuncData> data;
@@ -95,8 +96,8 @@ namespace aFuntool {
      * @param func 退出函数
      * @param data 参数
      */
-    bool aFunAtExitTry(aFunExitFunc *func, void *data){
-        return manager.tryPushExitData(func, data);
+    bool aFunAtExitTry(aFunExitFunc func, void *data){
+        return manager.tryPushExitData(std::move(func), data);
     }
 
     /**
@@ -105,7 +106,7 @@ namespace aFuntool {
      * @param data 参数
      * @return
      */
-    void aFunAtExit(aFunExitFunc *func, void *data){
-        manager.pushExitData(func, data);
+    void aFunAtExit(aFunExitFunc func, void *data){
+        manager.pushExitData(std::move(func), data);
     }
 }
