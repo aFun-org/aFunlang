@@ -25,7 +25,7 @@ namespace aFuncore {
 
 #ifdef aFunDEBUG
     /**
-     * 显式自己以及其子、兄代码块
+     * 显式代码内容
      */
     void Code::display() const{
         if (code->type != ByteCode::code_start) {
@@ -54,19 +54,24 @@ namespace aFuncore {
     }
 #endif
 
-#define Done(write) do{if(!(write)){return false;}}while(0)
+#define Done(write) do{ \
+if(!(write)){ \
+    errorLog(aFunCoreLogger, "Write/Read bytecode fail: %s [%p]", #write, f); \
+    return false; \
+}} while(0)
     /**
-     * 将的子、兄code写入到文件中 (版本: 1)
-     * 注意: 不包括自己(`start`)
+     * 代码写入到文件中 (版本: 1)
+     * 注意: 不包括 `start`
      * @param f
-     * @param debug
+     * @param debug 是否记录详细的调试信息
      * @return
      */
     bool Code::write_v1(FILE *f, bool debug) const{
         if (code->type != ByteCode::code_start) {
             errorLog(aFunCoreLogger, "Code write all did not with `start`");
             return false;
-        }
+        } else
+            debugLog(aFunCoreLogger, "Write Bytecode to %p (debug: %d)", f, debug);
 
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
@@ -101,7 +106,8 @@ namespace aFuncore {
         if (code->type != ByteCode::code_start) {
             errorLog(aFunCoreLogger, "Code read all did not with `start`");
             return false;
-        }
+        } else
+            debugLog(aFunCoreLogger, "Read Bytecode from %p (debug: %d)", f, debug);
 
         Code::ByteCode *father_ = nullptr;
         Code::ByteCode *next_ = code;
@@ -114,24 +120,24 @@ namespace aFuncore {
                     goto RETURN;
                 case 3:
                     if (next_ == nullptr) {
-                        errorLog(aFunCoreLogger, "Code read all error");
+                        errorLog(aFunCoreLogger, "Code without father");
                         return false;
                     }
                     next_ = next_->father;
                     break;
                 default: {
-                    Code::ByteCode *ret = nullptr;
+                    Code::ByteCode *ret;
                     if (next_ == nullptr && father_ != nullptr)
                         ret = father_->read_v1(f, debug, type_, true);
                     else if (next_ != nullptr)
                         ret = next_->read_v1(f, debug, type_, false);
                     else {
-                        errorLog(aFunCoreLogger, "Code read all error");
+                        errorLog(aFunCoreLogger, "Code read with unknown error");
                         return false;
                     }
 
                     if (ret == nullptr) {
-                        errorLog(aFunCoreLogger, "Code read error");
+                        errorLog(aFunCoreLogger, "Code read fail");
                         return false;
                     } else if (type_ == ByteCode::code_block) {
                         next_ = nullptr;
@@ -151,7 +157,7 @@ RETURN:
 #undef Done
 
     /**
-     * 计算代码（子、兄）的MD5值（版本：1）
+     * 计算代码的MD5值（版本：1）
      * @return md5
      */
     std::string Code::getMD5_v1() const{
@@ -194,7 +200,11 @@ RETURN:
     static const std::string ByteCodeHead = "aFunByteCode";  // NOLINT
     static const int MaxByteCodeVersion = 1;  // 字节码版本号, 有别于 aFun 版本号
 
-#define Done(write) do{if(!(write)){goto RETURN_FALSE;}}while(0)
+#define Done(write) do{ \
+if(!(write)){           \
+    errorLog(aFunCoreLogger, "Write/Read bytecode file fail: %s [%p]", #write, f); \
+    goto RETURN_FALSE; \
+}}while(0)
 
     /**
      * 生成字节码文件（版本: MaxByteCodeVersion）
@@ -210,9 +220,10 @@ RETURN:
 
         FILE *f = aFuntool::fileOpen(file_path, "wb");
         if (f == nullptr) {
-            warningLog(aFunCoreLogger, "Write ByteCode create file error.");
+            errorLog(aFunCoreLogger, "Write ByteCode file create file fail.");
             return false;
-        }
+        } else
+            debugLog(aFunCoreLogger, "Write Bytecode file %s [%p] (debug: %d)", file_path.c_str(), f, debug);
 
         Done(aFuntool::byteWriteStr(f, ByteCodeHead));
         Done(aFuntool::byteWriteInt(f, int16_t(MaxByteCodeVersion)));
@@ -220,10 +231,12 @@ RETURN:
         Done(aFuntool::byteWriteInt(f, int8_t(debug)));
         Done(write_v1(f, debug));
         aFuntool::fileClose(f);
+        debugLog(aFunCoreLogger, "Write Bytecode file success");
         return true;
 
 RETURN_FALSE:
         aFuntool::fileClose(f);
+        debugLog(aFunCoreLogger, "Write Bytecode file fail");
         return false;
     }
 
@@ -240,9 +253,10 @@ RETURN_FALSE:
 
         FILE *f = aFuntool::fileOpen(file_path, "rb");
         if (f == nullptr) {
-            warningLog(aFunCoreLogger, "Read ByteCode read file error.");
+            warningLog(aFunCoreLogger, "Read ByteCode read file fail.");
             return false;
-        }
+        } else
+            debugLog(aFunCoreLogger, "Read Bytecode file %s [%p]", file_path.c_str(), f);
 
         std::string head;
         Done(aFuntool::byteReadStr(f, head));
@@ -253,6 +267,7 @@ RETURN_FALSE:
         Done(aFuntool::byteReadInt(f, &version));
         switch (version) {  // NOLINT 为拓展方便, 使用switch-case而不是if-else
             case 1: {
+                debugLog(aFunCoreLogger, "Read Bytecode file version 1");
                 std::string md5;
                 int8_t debug;
                 Done(aFuntool::byteReadStr(f, md5));
@@ -262,16 +277,19 @@ RETURN_FALSE:
                 std::string md5_ = getMD5_v1();
                 if (md5_ != md5)
                     goto RETURN_FALSE;
-                return true;
+                break;
             }
             default:
+                errorLog(aFunCoreLogger, "Read Bytecode file bad version");
                 goto RETURN_FALSE;
         }
         aFuntool::fileClose(f);
+        debugLog(aFunCoreLogger, "Read Bytecode file success");
         return true;
 
 RETURN_FALSE:
         aFuntool::fileClose(f);
+        debugLog(aFunCoreLogger, "Read Bytecode file fail");
         return false;
     }
 
@@ -381,7 +399,11 @@ RETURN_FALSE:
     }
 #endif
 
-#define Done(write) do{if(!(write)){return false;}}while(0)
+#define Done(write) do{ \
+if(!(write)){           \
+    errorLog(aFunCoreLogger, "Write Code::ByteCode fail: %s [%p]", #write, f); \
+    return false; \
+}}while(0)
 
     /**
      * 将code写入到文件中 (版本: 1)
@@ -414,7 +436,11 @@ RETURN_FALSE:
     }
 
 #undef Done
-#define Done(write) do{if(!(write)){return nullptr;}}while(0)
+#define Done(write) do{ \
+if(!(write)){           \
+    errorLog(aFunCoreLogger, "Read Code::ByteCode fail: %s [%p]", #write, f); \
+    return nullptr;         \
+}}while(0)
 
     /**
      * 读取 code 并拼接到 next 或 son 中 (版本: 1)
@@ -445,7 +471,7 @@ RETURN_FALSE:
                 break;
             }
             default:
-                errorLog(aFunCoreLogger, "Read code with error type.");
+                errorLog(aFunCoreLogger, "Read code with bad type.");
                 return nullptr;
         }
 
@@ -457,7 +483,7 @@ RETURN_FALSE:
 
         if (to_son) {
             if (type != code_block || data.son != nullptr) {
-                errorLog(aFunCoreLogger, "Read son with error type.");
+                errorLog(aFunCoreLogger, "Read son with bad type.");
                 delete ret;
                 return nullptr;
             }
