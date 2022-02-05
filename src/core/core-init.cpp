@@ -29,8 +29,10 @@ namespace aFuncore {
         if (re == 0)
             return false;
 
-        static aFuntool::Logger logger{info->factor, "aFunlang-core", info->level};
-        aFunCoreLogger = &logger;
+        static aFuntool::Logger core_logger{info->factor, "aFunlang-core", info->level};
+        static aFuntool::Logger sys_logger{info->factor, "aFunlang-sys", info->level};
+        aFunCoreLogger = &core_logger;
+        aFuntool::setSysLogger(&sys_logger);
 
         debugLog(aFunCoreLogger, "aFunCore log path: %s", log_path.c_str());
         debugLog(aFunCoreLogger, "aFunCore var.lib path: %s", varlib_path.c_str());
