@@ -31,9 +31,6 @@ foreach(tgt tool-shared tool-static)
     target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
     set_target_properties(${tgt} PROPERTIES
                           PUBLIC_HEADER "${public_h_build}")
-    if(_build_mem)
-        target_compile_definitions(${tgt} PUBLIC BUILD_MEM=1)
-    endif()
     define_FILENAME(${tgt})
 endforeach()
 

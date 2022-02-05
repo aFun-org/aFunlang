@@ -283,15 +283,7 @@ int Main() {
         fputs_stdout("\n");
     }
 
-    {
-        fputs_stdout("Test-last: {exit}\n");
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c,
-                                                       new Code::ByteCode(code, "exit", 1), 0));
-        inter.runCode(code);
-        progressInterEvent(inter);
-        fputs_stdout("\n");
-    }
+    inter.setInterExit();
 
     {
         auto code = Code("run-code.aun");
