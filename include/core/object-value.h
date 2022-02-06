@@ -108,7 +108,7 @@ namespace aFuncore {
         inline Object *setObject(Object *res);
         inline Object *getObject();
     private:
-        Object *ret = nullptr;
+        Object *ret;
     };
 
     class AFUN_CORE_EXPORT Literaler : public virtual Object {

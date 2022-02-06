@@ -53,11 +53,10 @@ namespace aFuncore {
         struct LiteralRegex;
     public:
         typedef enum InterStatus {
-            inter_creat = 0,
-            inter_init = 1,  // 执行初始化程序
-            inter_normal = 2,  // 正常执行
-            inter_stop = 3,  // 当前运算退出
-            inter_exit = 4,  // 解释器退出
+            inter_init = 0,  // 执行初始化程序
+            inter_normal = 1,  // 正常执行
+            inter_stop = 2,  // 当前运算退出
+            inter_exit = 3,  // 解释器退出
         } InterStatus;
 
         typedef enum Prefix {

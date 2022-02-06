@@ -238,10 +238,8 @@ namespace aFuncore {
 
     }
 
-    FuncActivation::FuncActivation(Function *func_, Inter &inter_) : Activation(inter_), call{nullptr}, acl_begin{}, acl_end{} {
-        on_tail = false;  // 跳过所有阶段
-        status = func_get_func;
-        func = func_;
+    FuncActivation::FuncActivation(Function *func_, Inter &inter_)
+        : Activation(inter_), call{nullptr}, acl_begin{}, acl_end{}, on_tail{false}, status{func_get_func}, func{func_}  {
         func->addReference();
     }
 

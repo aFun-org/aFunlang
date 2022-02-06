@@ -6,25 +6,14 @@
 
 namespace aFuncore {
     Inter::Inter(Environment &env_)
-            : out{}, in{}, env{env_}{
-        status = inter_creat;
-
-        activation = nullptr;
-
-        status = inter_init;
+            : out{}, in{}, env{env_}, status{inter_init}, activation{nullptr} {
         env++;
     }
 
     Inter::Inter(const Inter &base_inter)
-            : out{}, in{}, env{base_inter.env}{
-        status = inter_creat;
-
-        activation = nullptr;
-
+            : out{}, in{}, env{base_inter.env}, status{inter_init}, activation{nullptr}{
         for (auto &i: base_inter.literal)
             literal.push_back(i);
-
-        status = inter_normal;
         env++;
     }
 
