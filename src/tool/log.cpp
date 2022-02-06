@@ -27,7 +27,7 @@
 
 #ifdef aFunWIN32
 
-#include <windows.h>
+#include <Windows.h>
 
 #define getpid() static_cast<long>(GetCurrentProcessId())
 #define gettid() static_cast<long>(GetCurrentThreadId())
@@ -57,38 +57,10 @@ namespace aFuntool {
 
     void staticAnsyWritrLog(LogFactory::ansyData *data);
 
-    LogFactory::LogFactory() : sys_log{*this, "SYSTEM", log_info}{
-        init_ = false;
-        pid_ = 0;
-        log_ = nullptr;
-        csv_ = nullptr;
-
-        asyn_ = false;
-        log_buf_ = nullptr;
-        plog_buf_ = nullptr;
-    }
-
-/**
- * 函数名: initLogSystem
- * 目标: 初始化日志系统
- * 返回值:
- * 1 表示初始化成功
- * 2 表示已经初始化
- * 0 表示初始化失败
- *
- * 该程序线程不安全
- * @param path 日志保存的地址
- * @param is_asyn 是否启用异步
- * @return
- */
-    int LogFactory::initLogSystem(const aFuntool::FilePath &path, bool is_asyn) {
-        if (path.size() >= 218)  // 路径过长
-            return 0;
-
+    LogFactory::LogFactory(const aFuntool::FilePath &path, bool is_async) noexcept(false)
+        : sys_log{*this, "SYSTEM", log_info}{
         int re = 1;
         std::unique_lock<std::mutex> ul{mutex_};
-        if (init_)
-            return 2;
 
         char log_path[218] = {0};
         char csv_path[218] = {0};
@@ -104,14 +76,12 @@ namespace aFuntool {
         bool csv_head_write = (checkFile(csv_path) == 0);  // 文件不存在时才写入头部
 
         log_ = fileOpen(log_path, "a");
-        if (log_ == nullptr) {
-            perror("ERROR: ");
-            return 0;
-        }
+        if (log_ == nullptr)
+            throw FileOpenException(log_path);
 
         csv_ = fileOpen(csv_path, (char *) "a");
         if (csv_ == nullptr)
-            return 0;
+            throw FileOpenException(csv_path);
 
 #define CSV_FORMAT "%s,%s,%d,%d,%s,%lld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
@@ -122,8 +92,8 @@ namespace aFuntool {
 #undef CSV_TITLE
 
         init_ = true;
-        asyn_ = is_asyn;
-        if (is_asyn) {
+        async_ = is_async;
+        if (is_async) {
             plog_buf_ = &log_buf_;
             auto *data = new ansyData{*this, mutex_};
             thread_ = std::thread(staticAnsyWritrLog, data);
@@ -133,7 +103,6 @@ namespace aFuntool {
         infoLog(&this->sys_log, "Log system init success");
         infoLog(&this->sys_log, "Log .log size %lld", log_size);
         infoLog(&this->sys_log, "Log .csv size %lld", csv_size);
-        return re;
     }
 
     LogFactory::~LogFactory(){
@@ -144,7 +113,7 @@ namespace aFuntool {
 
         ul.lock();
         init_ = false;
-        if (asyn_) {
+        if (async_) {
             ul.unlock();
             cond_.notify_all();
             thread_.join();
@@ -348,7 +317,7 @@ namespace aFuntool {
         vsnprintf(tmp, 1024, format, ap);  // ap只使用一次
         va_end(ap);
 
-        if (asyn_)
+        if (async_)
             writeLogAsyn(level, logger->id_.c_str(), tid, ti, t, file, line, func, tmp);
         else
             writeLog(level, logger->id_.c_str(), tid, ti, t, file, line, func, tmp);
@@ -357,7 +326,7 @@ namespace aFuntool {
             writeConsole(level, logger->id_.c_str(), tid, ti, t, file, line, func, tmp);
 
         ul.unlock();
-        if (asyn_)
+        if (async_)
             cond_.notify_all();
         safeFree(ti);
         return 0;

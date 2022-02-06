@@ -1,5 +1,5 @@
-﻿#ifndef AFUN_MEM_INLINE_H
-#define AFUN_MEM_INLINE_H
+﻿#ifndef AFUN_MEM_TEMPLATE_H
+#define AFUN_MEM_TEMPLATE_H
 
 #include <cstdlib>
 #include "log.h"
@@ -15,8 +15,8 @@ namespace aFuntool {
     static T *safeCalloc(size_t n, size_t size){
         T *re = (T *)calloc(n, size);
         if (re == nullptr) {
-            if (SysLogger)
-                fatalErrorLog(SysLogger, EXIT_FAILURE, "The memory error");
+            if (aFunSysLogger)
+                fatalErrorLog(aFunSysLogger, EXIT_FAILURE, "The memory error");
             else
                 aFunExit(EXIT_FAILURE);
         }
@@ -27,8 +27,8 @@ namespace aFuntool {
     static T *safeCalloc(size_t n = 1){
         T *re = (T *)calloc(n, sizeof(T));  // 自动推断类型
         if (re == nullptr) {
-            if (SysLogger)
-                fatalErrorLog(SysLogger, EXIT_FAILURE, "The memory error");
+            if (aFunSysLogger)
+                fatalErrorLog(aFunSysLogger, EXIT_FAILURE, "The memory error");
             else
                 aFunExit(EXIT_FAILURE);
         }
@@ -36,4 +36,4 @@ namespace aFuntool {
     }
 }
 
-#endif //AFUN_MEM_INLINE_H
+#endif //AFUN_MEM_TEMPLATE_H

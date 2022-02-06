@@ -6,11 +6,15 @@
 namespace aFunit {
     inline aFunInitInfo::aFunInitInfo(const std::string &base_dir_,
                                       aFuntool::LogFactory &factor_,
-                                      bool log_asyn_,
-                                      aFuntool::LogLevel core_level_,
-                                      aFuntool::LogLevel lang_level_) :
-        InitInfo(base_dir_, factor_, log_asyn_, core_level_), lang_level{lang_level_} {
+                                      aFuntool::Logger &afun_logger_,
+                                      aFuntool::Logger &core_logger_,
+                                      aFuntool::Logger &sys_logger_) :
+        InitInfo(base_dir_, factor_, sys_logger_, sys_logger_), afun_logger{afun_logger_} {
 
+    }
+
+    static void setAFunLogger(aFuntool::Logger *log) {
+        aFunLogger = log;
     }
 }
 

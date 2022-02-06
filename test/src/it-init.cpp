@@ -1,4 +1,4 @@
-﻿#include "core-init.h"
+﻿#include "it-init.h"
 using namespace aFuncore;
 using namespace aFuntool;
 
@@ -12,9 +12,10 @@ int main() {
     auto factor = aFuntool::LogFactory(base_path + aFuntool::SEP + "aFunlog", true);
     auto core_logger = aFuntool::Logger(factor, "aFun-core");
     auto sys_logger = aFuntool::Logger(factor, "aFun-sys");
-    aFuncore::InitInfo info {base_path, factor, core_logger, sys_logger};
+    auto aFun_logger = aFuntool::Logger(factor, "aFun");
+    aFunit::aFunInitInfo info {base_path, factor, core_logger, sys_logger, aFun_logger};
 
-    if (!aFunCoreInit(&info)) {
+    if (!aFunInit(&info)) {
         printf_stderr(0, "aFunlang init error.");
         aFunExit(EXIT_FAILURE);
     }

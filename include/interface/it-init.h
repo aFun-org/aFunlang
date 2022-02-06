@@ -5,17 +5,18 @@
 
 namespace aFunit {
     struct aFunInitInfo : public aFuncore::InitInfo {
-        aFuntool::LogLevel lang_level;
+        aFuntool::Logger &afun_logger;
 
         inline aFunInitInfo(const std::string &base_dir_,
-                           aFuntool::LogFactory &factor_,
-                           bool log_asyn_,
-                           aFuntool::LogLevel core_level_,
-                           aFuntool::LogLevel lang_level_);
+                            aFuntool::LogFactory &factor_,
+                            aFuntool::Logger &afun_logger_,
+                            aFuntool::Logger &core_logger_,
+                            aFuntool::Logger &sys_logger_);
     };
 
     AFUN_LANG_EXPORT extern aFuntool::Logger *aFunLogger;
     AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
+    static void setAFunLogger(aFuntool::Logger *log);
 }
 
 #include "it-init.inline.h"

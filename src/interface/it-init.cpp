@@ -6,8 +6,7 @@ namespace aFunit {
     bool aFunInit(aFunInitInfo *info) {
         if (!aFuncore::aFunCoreInit(info))
             return false;
-        static aFuntool::Logger logger{info->factor, "aFunlang", info->lang_level};
-        aFunLogger = &logger;
+        setAFunLogger(&info->afun_logger);
         return true;
     }
 

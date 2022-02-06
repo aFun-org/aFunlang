@@ -12,10 +12,8 @@ int main(int argc, char **argv){
 
         setlocale(LC_ALL, "");
 
-        static LogFactory factor{};
-        factor.initLogSystem(base_path + SEP + "aFunlog");
-
-        static auto logger = Logger(factor, "Test", aFuntool::log_info);
+        auto factor = LogFactory(base_path + SEP + "aFunlog", true);
+        auto logger = Logger(factor, "Test", aFuntool::log_info);
         infoLog(&logger, "Test logger");
         aFunExit(0);
     } catch (aFuntool::Exit &e) {

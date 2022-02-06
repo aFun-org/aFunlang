@@ -6,6 +6,6 @@
 #ifndef AFUN_MEM_H
 #define AFUN_MEM_H
 
-#include "mem.inline.h"
+#include "mem.template.h"
 
 #endif  // AFUN_MEM_H

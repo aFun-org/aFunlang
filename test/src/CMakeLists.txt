@@ -35,5 +35,6 @@ add_new_test(core-reader COMMAND "$<TARGET_FILE:core-reader>")
 add_new_test(core-lexical COMMAND "$<TARGET_FILE:core-lexical>")
 
 add_new_test(it-syntactic COMMAND "$<TARGET_FILE:it-syntactic>")
+add_new_test(it-init COMMAND "$<TARGET_FILE:it-init>")
 
 add_new_test(run-code COMMAND "$<TARGET_FILE:run-code>")

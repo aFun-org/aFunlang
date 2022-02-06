@@ -49,12 +49,11 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT LogFactory {
     public:
         Logger sys_log = Logger(*this, "SYSTEM");
-        LogFactory();
+        LogFactory(const aFuntool::FilePath &path, bool is_async) noexcept(false);
         ~LogFactory();
         LogFactory(const LogFactory &)=delete;
         LogFactory &operator=(const LogFactory &)=delete;
 
-        int initLogSystem(const aFuntool::FilePath &path, bool is_asyn = true);
         void writeLog(LogLevel level,
                       const char *id, pid_t tid,
                       const char *ti, time_t t,
@@ -85,7 +84,7 @@ namespace aFuntool {
         FILE *log_;  // 记录文件输出的位置
         FILE *csv_;
 
-        bool asyn_;  // 异步
+        bool async_;  // 异步
         std::thread thread_;
         std::condition_variable cond_;  // 有日志
         std::mutex mutex_;

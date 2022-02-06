@@ -45,14 +45,19 @@ int main(int argc, char **argv_ansi) {
     }
 
     try {
-        aFun::LogFactory factor{};
-        factor.initLogSystem(home_path + aFun::SEP + "aFunlog");
+        auto factor = aFun::LogFactory(home_path + aFun::SEP + "aFunlog", true);
 
 #ifdef aFunDEBUG
-        aFun::aFunInitInfo info{home_path, factor, true, aFun::log_debug, aFun::log_debug};
+        auto core_logger = aFuntool::Logger(factor, "aFun-core", aFun::log_track);
+        auto sys_logger = aFuntool::Logger(factor, "aFun-sys", aFun::log_track);
+        auto aFun_logger = aFuntool::Logger(factor, "aFun", aFun::log_track);
 #else
-        aFun::aFunInitInfo info{base_path, factor, true, aFun::log_info, aFun::log_info};
+        auto core_logger = aFuntool::Logger(factor, "aFun-core", aFun::log_info);
+        auto sys_logger = aFuntool::Logger(factor, "aFun-sys", aFun::log_info);
+        auto aFun_logger = aFuntool::Logger(factor, "aFun", aFun::log_info);
 #endif
+
+        aFunit::aFunInitInfo info {home_path, factor, core_logger, sys_logger, aFun_logger};
 
         ff_FFlags *ff = ff_initFFlags(argc, argv, true, false, stderr, aFunlang_exe);
         if (ff == nullptr)

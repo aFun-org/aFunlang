@@ -7,22 +7,20 @@ namespace aFuncore {
     struct InitInfo {
         const std::string &base_dir;
         aFuntool::LogFactory &factor;
-        bool log_asyn;
-        aFuntool::LogLevel level;
+        aFuntool::Logger &core_logger;
+        aFuntool::Logger &sys_logger;
 
         inline InitInfo(const std::string &base_dir_,
                         aFuntool::LogFactory &factor_,
-                        bool log_asyn_,
-                        aFuntool::LogLevel level_);
+                        aFuntool::Logger &core_logger_,
+                        aFuntool::Logger &sys_logger_);
 
     };
 
-    AFUN_CORE_EXPORT extern std::string log_path;
-    AFUN_CORE_EXPORT extern std::string lang_path;
-    AFUN_CORE_EXPORT extern std::string varlib_path;
     AFUN_CORE_EXPORT extern aFuntool::Logger *aFunCoreLogger;
 
     AFUN_CORE_EXPORT bool aFunCoreInit(InitInfo *info);
+    static void setCoreLogger(aFuntool::Logger *log);
 }
 
 #include "core-init.inline.h"
