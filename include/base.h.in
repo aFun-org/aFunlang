@@ -24,11 +24,6 @@
 #define aFunStaticSuffix "@CMAKE_STATIC_LIBRARY_SUFFIX@"
 #define aFunExeSuffix "@CMAKE_EXECUTABLE_SUFFIX@"
 
-// 运行路径
-#define aFunLogDir "@INSTALL_LOGDIR_NATIVE@"
-#define aFunVarLibDir "@INSTALL_LOCALSTATEDIR_NATIVE@"
-#define aFunLangDir "@INSTALL_LANGDIR_NATIVE@"
-
 #cmakedefine aFunWIN32
 #cmakedefine aFunWIN32_NO_CYGWIN
 #cmakedefine aFunCYGWIN

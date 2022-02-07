@@ -37,17 +37,11 @@ function(wi_set_install_dir_quiet)
         set(DEF_INSTALL_CMAKEDIR cmake)
         set(DEF_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
         set(DEF_INSTALL_RESOURCEDIR ${CMAKE_INSTALL_DATAROOTDIR})  # 关联文件
-        set(DEF_INSTALL_LOCALSTATEDIR ${CMAKE_INSTALL_LOCALSTATEDIR}/lib)
-        set(DEF_INSTALL_LANGDIR ${DEF_INSTALL_LOCALSTATEDIR}/lang)
-        set(DEF_INSTALL_LOGDIR ${CMAKE_INSTALL_LOCALSTATEDIR}/log)
     else()
         # unix类系统(Unix, Linux, MacOS, Cygwin等)把cmake文件安装到指定的系统的cmake文件夹中
         set(DEF_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATAROOTDIR}/cmake/${_names})
         set(DEF_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR}/${_names})
         set(DEF_INSTALL_RESOURCEDIR ${CMAKE_INSTALL_DATAROOTDIR}/${_names})  # 关联文件 CMAKE_INSTALL_DATAROOTDIR指: share
-        set(DEF_INSTALL_LOCALSTATEDIR ${CMAKE_INSTALL_LOCALSTATEDIR}/lib/${_names})
-        set(DEF_INSTALL_LANGDIR ${DEF_INSTALL_LOCALSTATEDIR}/lang)
-        set(DEF_INSTALL_LOGDIR ${CMAKE_INSTALL_LOCALSTATEDIR}/log/${_names})
     endif()
 
     # 设定安装的目录
@@ -56,16 +50,10 @@ function(wi_set_install_dir_quiet)
     set(INSTALL_CMAKEDIR ${DEF_INSTALL_CMAKEDIR} CACHE PATH "Installation directory for CMake files")
     set(INSTALL_INCLUDEDIR ${DEF_INSTALL_INCLUDEDIR} CACHE PATH "Installation directory for header files")
     set(INSTALL_RESOURCEDIR ${DEF_INSTALL_RESOURCEDIR} CACHE PATH "Installation directory for resource files")  # 关联文件
-    set(INSTALL_LOCALSTATEDIR ${DEF_INSTALL_LOCALSTATEDIR} CACHE PATH "Installation directory for lib files")
-    set(INSTALL_LANGDIR ${DEF_INSTALL_LANGDIR} CACHE PATH "Installation directory for lang files")
-    set(INSTALL_LOGDIR ${DEF_INSTALL_LOGDIR} CACHE PATH "Installation directory for log files")
 
     unset(DEF_INSTALL_CMAKEDIR)
     unset(DEF_INSTALL_INCLUDEDIR)
     unset(DEF_INSTALL_RESOURCEDIR)
-    unset(DEF_INSTALL_LOCALSTATEDIR)
-    unset(DEF_INSTALL_LANGDIR)
-    unset(DEF_INSTALL_LOGDIR)
 endfunction()
 
 function(wi_set_install_dir)

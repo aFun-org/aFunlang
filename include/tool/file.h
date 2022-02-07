@@ -13,7 +13,8 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT std::string getFileSurfix(const std::string &path);
     AFUN_TOOL_EXPORT std::string fileNameToVar(const std::string &name);
     AFUN_TOOL_EXPORT std::string findPath(const std::string &path, const std::string &env);
-    AFUN_TOOL_EXPORT std::string getExedir(int dep);
+    AFUN_TOOL_EXPORT std::string getHomePath();
+    AFUN_TOOL_EXPORT std::string getExePath();
     AFUN_TOOL_EXPORT uintmax_t getFileSize(const std::string &path);
     AFUN_TOOL_EXPORT bool isCharUTF8(const char *str);
     AFUN_TOOL_EXPORT bool isCharUTF8(const std::string &str);

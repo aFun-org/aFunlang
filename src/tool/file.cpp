@@ -198,23 +198,47 @@ namespace aFuntool {
      * 获取可执行程序目录
      * @param dep 从可执行程序往回跳出的层数
      */
-    std::string getExedir(int dep) {
-        aFun_path exepath[218] = {0};
+    std::string getHomePath() {
+        aFun_path exe_path[218] = {0};
 #ifdef aFunWIN32_NO_CYGWIN
-        DWORD ret = GetModuleFileNameW(nullptr, exepath, 217);  // 预留一位给NUL
-        if (ret == 0 || wcslen(exepath) == 0)
+        DWORD ret = GetModuleFileNameW(nullptr, exe_path, 217);  // 预留一位给NUL
+        if (ret == 0 || wcslen(exe_path) == 0)
             return "";
         char *path = nullptr;
-        if (convertFromWideByte(&path, exepath, CP_UTF8) == 0)
+        if (convertFromWideByte(&path, exe_path, CP_UTF8) == 0)
             return "";
-        std::string re = getFilePath(path, dep + 1);
+        std::string re = getFilePath(path, 2);
         safeFree(path);
         return re;
 #else
-        ssize_t ret =  readlink("/proc/self/exe", exepath, 217);  // 预留一位给NUL
-        if (ret == -1 || strlen(exepath) == 0)
+        ssize_t ret =  readlink("/proc/self/exe", exe_path, 217);  // 预留一位给NUL
+        if (ret == -1 || strlen(exe_path) == 0)
             return "";
-        return getFilePath(exepath, dep + 1);
+        return getFilePath(exe_path, 2);
+#endif
+    }
+
+    /**
+     * 获取可执行程序目录
+     * @param dep 从可执行程序往回跳出的层数
+     */
+    std::string getExePath() {
+        aFun_path exe_path[218] = {0};
+#ifdef aFunWIN32_NO_CYGWIN
+        DWORD ret = GetModuleFileNameW(nullptr, exe_path, 217);  // 预留一位给NUL
+        if (ret == 0 || wcslen(exe_path) == 0)
+            return "";
+        char *path = nullptr;
+        if (convertFromWideByte(&path, exe_path, CP_UTF8) == 0)
+            return "";
+        std::string re = path;
+        safeFree(path);
+        return re;
+#else
+        ssize_t ret =  readlink("/proc/self/exe", exe_path, 217);  // 预留一位给NUL
+        if (ret == -1 || strlen(exe_path) == 0)
+            return "";
+        return exe_path;
 #endif
     }
 

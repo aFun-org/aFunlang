@@ -63,10 +63,6 @@ else()
     wi_set_install_dir_quiet(NAMES aFunlang)  # 设置安装路径
 endif()
 
-to_native_path(${INSTALL_LOGDIR} INSTALL_LOGDIR_NATIVE)
-to_native_path(${INSTALL_LOCALSTATEDIR} INSTALL_LOCALSTATEDIR_NATIVE)
-to_native_path(${INSTALL_LANGDIR} INSTALL_LANGDIR_NATIVE)
-
 include(filename)
 
 # CMake对象属性的初始化值的相关设定
@@ -78,7 +74,6 @@ set(CMAKE_MACOSX_RPATH TRUE)
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
 
 set(definitions
-
     aFunVersion="${PROJECT_VERSION}"
     aFunDescription="${PROJECT_DESCRIPTION}"
 
@@ -93,11 +88,7 @@ set(definitions
     aFunShareSuffix="${CMAKE_SHARED_LIBRARY_SUFFIX}"
     aFunStaticPrefix="${CMAKE_STATIC_LIBRARY_PREFIX}"
     aFunStaticSuffix="${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    aFunExeSuffix="${CMAKE_EXECUTABLE_SUFFIX}"
-
-    aFunLogDir="${INSTALL_LOGDIR_NATIVE}"
-    aFunVarLibDir="${INSTALL_LOCALSTATEDIR_NATIVE}"
-    aFunLangDir="${INSTALL_LANGDIR_NATIVE}")  # 默认的预定义宏
+    aFunExeSuffix="${CMAKE_EXECUTABLE_SUFFIX}")  # 默认的预定义宏
 
 if (WIN32 OR CYGWIN)
     list(APPEND definitions aFunWIN32=1)
@@ -191,14 +182,6 @@ include(aFunHeader)
 #        ${CMAKE_BINARY_DIR}/cmake-tmp/aFunlangConfigVersion.cmake
 #        DESTINATION ${INSTALL_CMAKEDIR})
 #
-function(install_directory dir)
-    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/${dir})  # 安装log输出的目录
-    install(CODE "file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${dir})")  # 创建log目录
-endfunction()
-
-install_directory(${INSTALL_LOGDIR})
-install_directory(${INSTALL_LOCALSTATEDIR})
-install_directory(${INSTALL_LANGDIR})
 
 set(BUILD_TEST FALSE CACHE BOOL "Enable run test program")
 set(_build_test ${BUILD_TEST})
