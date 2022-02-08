@@ -35,6 +35,8 @@ int main(int argc, char **argv_ansi) {
 
     char **argv = argv_s;
 #else
+#include "unistd.h"
+
     int main(int argc, char **argv) {
 #endif
     tty_stdin = isatty(fileno(stdin));
