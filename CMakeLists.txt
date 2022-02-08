@@ -21,29 +21,39 @@ set(CXX_STANDARD_REQUIRED OFF)
 set(BUILD_SHARED_LIBS OFF)  # 默认编译静态库 (该设定不可被修改)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_BUILD_TYPE DEBUG CACHE STRING "Build type")
+set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
+if(CMAKE_BUILD_TYPE EQUAL Debug AND CMAKE_BUILD_TYPE EQUAL Release)
+    message(WARNING "Unknown build type.")
+endif()
 
 # 系统检查
 include(CheckCCompilerFlag)
-check_c_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
-if (fpic_work)
+check_c_compiler_flag("-fPIC" fpic_enable)  # 检查是否有fPIC选项
+if (fpic_enable)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
-unset(fpic_work)
+unset(fpic_enable)
 
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
-if (fpic_work)
+check_cxx_compiler_flag("-fPIC" fpic_enable)  # 检查是否有fPIC选项
+if (fpic_enable)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
-unset(fpic_work)
+unset(fpic_enable)
 
 if (MSVC)
+    if(CMAKE_BUILD_TYPE EQUAL Debug)
+        set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /Debug /Wall")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Debug /Wall")
+    else()
+        set(CMAKE_C_FLAGS "/DWIN32 /D_WINDOWS /Wall")
+        set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /GR /EHsc /Wall")
+    endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8 -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8 -Wall")
 endif()
 
 # 相关参数
