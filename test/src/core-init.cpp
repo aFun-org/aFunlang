@@ -3,7 +3,7 @@ using namespace aFuncore;
 using namespace aFuntool;
 
 int main() {
-    std::string base_path = getExedir(1);
+    std::string base_path = getHomePath();
     if (base_path.empty()) {
         printf_stderr(0, "aFunlang init error.");
         aFunExit(EXIT_FAILURE);

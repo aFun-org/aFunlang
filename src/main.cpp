@@ -38,7 +38,7 @@ int main(int argc, char **argv_ansi) {
     int main(int argc, char **argv) {
 #endif
     tty_stdin = isatty(fileno(stdin));
-    home_path = aFun::getExedir(1);
+    home_path = aFun::getHomePath();
     if (home_path.empty()) {
         aFun::cerr << "aFunlang init error.";
         exit(EXIT_FAILURE);

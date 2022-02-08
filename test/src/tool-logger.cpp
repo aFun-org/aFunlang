@@ -4,7 +4,7 @@ using namespace aFuntool;
 int main(int argc, char **argv){
     int exit_code = 0;
     try {
-        std::string base_path = getExedir(1);
+        std::string base_path = getHomePath();
         if (base_path.empty()) {
             printf("Not Exe Dir\n");
             aFunExit(0);

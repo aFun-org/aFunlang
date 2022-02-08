@@ -116,9 +116,11 @@ configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in
 
 include(deps)  # 安装依赖
 add_subdirectory(deps)
-#include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
-add_subdirectory(src)
-include(aFunHeader)
+if (DEPS_FOUND)
+    #include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
+    add_subdirectory(src)
+    include(aFunHeader)
+endif()
 
 #install(EXPORT aFunlang
 #        NAMESPACE "aFunlang::"

@@ -59,7 +59,6 @@ namespace aFuntool {
 
     LogFactory::LogFactory(const aFuntool::FilePath &path, bool is_async) noexcept(false)
         : sys_log{*this, "SYSTEM", log_info}{
-        int re = 1;
         std::unique_lock<std::mutex> ul{mutex_};
 
         char log_path[218] = {0};
@@ -94,6 +93,7 @@ namespace aFuntool {
         init_ = true;
         async_ = is_async;
         if (is_async) {
+            log_buf_ = nullptr;
             plog_buf_ = &log_buf_;
             auto *data = new ansyData{*this, mutex_};
             thread_ = std::thread(staticAnsyWritrLog, data);

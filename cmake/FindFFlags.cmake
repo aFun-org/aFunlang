@@ -1,18 +1,19 @@
 ﻿include(FindPackageHandleStandardArgs)
 set(_root ${FFlags_ROOT})
 
-if (NOT _root)
-    find_package_handle_standard_args(FFlags
-                                      FOUND_VAR FFlags_FOUND
-                                      REQUIRED_VARS _root)  # 强制搜不到包
-    unset(_root)
+if (_root)
+    set(_root_include ${_root}/include)
+    set(_root_lib ${_root}/lib)
 endif()
 
 # FFlags_ROOT 必须是 FFlags的安装目录
 
 # FFlags
-find_path(fflags_h NAMES fflags.h HINTS ${_root}/include DOC "FFlags include directory" NO_DEFAULT_PATH)
-find_library(fflags_lib NAMES FFlags libFFlags HINTS ${_root}/lib DOC "FFlags library" NO_DEFAULT_PATH)
+find_path(fflags_h NAMES fflags.h HINTS ${_root_include} DOC "FFlags include directory" NO_DEFAULT_PATH)
+find_library(fflags_lib NAMES FFlags libFFlags HINTS ${_root_lib} DOC "FFlags library" NO_DEFAULT_PATH)
+
+unset(_root_include)
+unset(_root_lib)
 
 set(fflags_INCLUDE_DIRS ${fflags_h})
 set(fflags_LIBRARIES ${fflags_lib})
@@ -30,6 +31,7 @@ endif()
 
 unset(fflags_h CACHE)
 unset(fflags_lib CACHE)
+unset(_root)
 
 find_package_handle_standard_args(FFlags
         FOUND_VAR FFlags_FOUND

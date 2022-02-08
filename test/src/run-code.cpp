@@ -299,7 +299,7 @@ int Main() {
 int main() {
     int exit_code = 0;
     try {
-        std::string base_path = getExedir(1);
+        std::string base_path = getHomePath();
         if (base_path.empty()) {
             printf_stderr(0, "aFunlang init error.");
             aFunExitReal(EXIT_FAILURE);
