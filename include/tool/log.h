@@ -64,7 +64,7 @@ namespace aFuntool {
         AFUN_STATIC void writeConsole(LogLevel level,
                                  const char *id, pid_t tid,
                                  const char *ti, time_t t,
-                                 const char *file, int line, const char *func,
+                                 const char *file, int line,
                                  const char *info);
         void writeLogAsyn(LogLevel level,
                           const char *id, pid_t tid,

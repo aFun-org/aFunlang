@@ -32,13 +32,13 @@ namespace aFuncore {
     Code::ByteCode::BlockType Code::ByteCode::getBlockType() const {
         if (type != code_block)
             return block_p;
-        return data.block_type;
+        return data.block.block_type;
     }
 
     Code::ByteCode *Code::ByteCode::getSon() const {
         if (type != code_block)
             return nullptr;
-        return data.son;
+        return data.block.son;
     }
 
     Code::ByteCode *Code::ByteCode::toNext() const {

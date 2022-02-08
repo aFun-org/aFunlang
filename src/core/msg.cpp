@@ -15,7 +15,7 @@ namespace aFuncore {
         }
     }
 
-    void NormalMessage::topProgress(Inter &inter, Activation &activation){
+    void NormalMessage::topProgress(Inter &inter, Activation &){
         inter.getOutMessageStream().pushMessage("NORMAL", new NormalMessage(std::move(*this)));
     }
 
@@ -27,7 +27,7 @@ namespace aFuncore {
         }
     }
 
-    void ErrorMessage::topProgress(Inter &inter_, Activation &activation){
+    void ErrorMessage::topProgress(Inter &inter_, Activation &){
         inter_.getOutMessageStream().pushMessage("ERROR", new ErrorMessage(std::move(*this)));
     }
 

@@ -198,7 +198,7 @@ namespace aFuntool {
     void LogFactory::writeConsole(LogLevel level,
                                   const char *id, pid_t tid,
                                   const char *ti, time_t t,
-                                  const char *file, int line, const char *func,
+                                  const char *file, int line,
                                   const char *info){
         if (level < log_warning) {
             cout << "\r* " << LogLevelName[level] << "/[" << id << "] " << tid;
@@ -323,7 +323,7 @@ namespace aFuntool {
             writeLog(level, logger->id_.c_str(), tid, ti, t, file, line, func, tmp);
 
         if (pc)
-            writeConsole(level, logger->id_.c_str(), tid, ti, t, file, line, func, tmp);
+            writeConsole(level, logger->id_.c_str(), tid, ti, t, file, line, tmp);
 
         ul.unlock();
         if (async_)

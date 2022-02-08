@@ -16,6 +16,7 @@ public:
             memset(dest, 'w', len - 5);
             return len - 5;
         }
+        mode = read_mode_finished;
         return 0;
     }
 };

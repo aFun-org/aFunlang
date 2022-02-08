@@ -1,5 +1,5 @@
 ﻿#include "__main.h"
 
-int mainCL(ff_FFlags *ff) {
+int mainCL(ff_FFlags *) {
     return 0;
 }

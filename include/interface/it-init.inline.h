@@ -9,7 +9,7 @@ namespace aFunit {
                                       aFuntool::Logger &afun_logger_,
                                       aFuntool::Logger &core_logger_,
                                       aFuntool::Logger &sys_logger_) :
-        InitInfo(base_dir_, factor_, sys_logger_, sys_logger_), afun_logger{afun_logger_} {
+        InitInfo(base_dir_, factor_, core_logger_, sys_logger_), afun_logger{afun_logger_} {
 
     }
 

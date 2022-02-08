@@ -11,11 +11,11 @@ project(aFun
 
 # CMake系统的相关设定
 set(CMAKE_C_STANDARD 11)
-set(C_EXTENSIONS ON)  # 启动编译器拓展
+set(C_EXTENSIONS OFF)  # 启动编译器拓展
 set(C_STANDARD_REQUIRED OFF)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CXX_EXTENSIONS ON)  # 启动编译器拓展
+set(CXX_EXTENSIONS OFF)  # 启动编译器拓展
 set(CXX_STANDARD_REQUIRED OFF)
 
 set(BUILD_SHARED_LIBS OFF)  # 默认编译静态库 (该设定不可被修改)
@@ -43,8 +43,8 @@ unset(fpic_enable)
 
 if (MSVC)
     if(CMAKE_BUILD_TYPE EQUAL Debug)
-        set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /Debug /Wall")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Debug /Wall")
+        set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /Debug /W4")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Debug /W4")
     else()
         set(CMAKE_C_FLAGS "/DWIN32 /D_WINDOWS /Wall")
         set(CMAKE_CXX_FLAGS "/DWIN32 /D_WINDOWS /GR /EHsc /Wall")
@@ -52,8 +52,8 @@ if (MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8 -Wall")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8 -Wall")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic -ansi")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic -ansi")
 endif()
 
 # 相关参数

@@ -1,7 +1,7 @@
 ﻿#include "aFuntool.h"
 using namespace aFuntool;
 
-int main(int argc, char **argv){
+int main(){
     int exit_code = 0;
     try {
         std::string base_path = getHomePath();

@@ -10,7 +10,7 @@ void exit_func_push2(void *) {
     std::cout << "I am exit push-2" << std::endl;
 }
 
-int main(int argc, char **argv) {
+int main() {
     int exit_code = 0;
     try {
         aFunAtExit(exit_func_push1, nullptr);

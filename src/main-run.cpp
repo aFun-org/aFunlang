@@ -13,7 +13,7 @@ static void runCodeThread(aFun::Inter &inter, aFun::Code &code, std::mutex &mute
     is_end = true;
 }
 
-static int runCode(aFun::Code &code, aFun::Environment &env, aFun::Inter &inter, int argc, char **argv) {
+static int runCode(aFun::Code &code, aFun::Environment &, aFun::Inter &inter) {
     std::mutex mutex;
     bool is_end = false;
     auto thread = std::thread(runCodeThread, std::ref(inter), std::ref(code), std::ref(mutex), std::ref(is_end));
@@ -51,7 +51,7 @@ int mainRun(ff_FFlags *ff) {
                 return EXIT_FAILURE;
             auto env = aFun::Environment(argc - 1, argv + 1);
             auto inter = aFun::Inter(env);
-            return runCode(code, env, inter, argc, argv);
+            return runCode(code, env, inter);
         } catch (aFun::readerFileOpenError &e) {
             aFun::cout << "Cannot open file: " << argv[0] << "\n";
             return EXIT_FAILURE;

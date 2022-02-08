@@ -169,7 +169,7 @@ namespace aFuncore {
         return false;
     }
 
-    bool CallBackVar::isCallBack(Inter &inter, Activation &activation) {
+    bool CallBackVar::isCallBack(Inter &, Activation &) {
         return true;
     }
 
@@ -187,9 +187,9 @@ namespace aFuncore {
         import = code_->getSon()->toNext()->getElement();
     }
 
-    std::list<Function::CallFunction::ArgCodeList> *ImportFunction::CallFunc::getArgCodeList(Inter &inter_,
-                                                                                             Activation &activation,
-                                                                                             const Code::ByteCode *call) {
+    std::list<Function::CallFunction::ArgCodeList> *ImportFunction::CallFunc::getArgCodeList(Inter &,
+                                                                                             Activation &,
+                                                                                             const Code::ByteCode *) {
         return acl;
     }
 

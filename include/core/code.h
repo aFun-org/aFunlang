@@ -78,10 +78,10 @@ namespace aFuncore {
 
         union CodeData {
             char *element;  // union 内不使用 std::string
-            struct {  // NOLINT 不需要初始化
+            struct Block {  // NOLINT 不需要初始化
                 BlockType block_type;
                 ByteCode *son;
-            };
+            } block;
             AFUN_INLINE CodeData();
         } data;
 

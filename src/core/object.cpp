@@ -39,11 +39,11 @@ namespace aFuncore {
             warningLog(aFunCoreLogger, "After Object destructAll, list is not empty");
     }
 
-    void Object::destruct(Inter &inter) {
+    void Object::destruct(Inter &) {
         /* 什么都不做, 但virtual函数不能是inline */
     }
 
-    void Object::linkObject(std::queue<Object *> &queue) {
+    void Object::linkObject(std::queue<Object *> &) {
         /* 什么都不做, 但virtual函数不能是inline */
     }
 

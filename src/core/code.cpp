@@ -5,20 +5,20 @@ namespace aFuncore {
     Code::~Code(){
         ByteCode *next_tmp;
         while (code != nullptr) {
-            if (code->type != ByteCode::code_block || code->data.son == nullptr) {
+            if (code->type != ByteCode::code_block || code->data.block.son == nullptr) {
                 if (code->next == nullptr) {
                     if (code->father == nullptr)
                         next_tmp = nullptr;
                     else {
                         next_tmp = code->father;
-                        next_tmp->data.son = nullptr;
+                        next_tmp->data.block.son = nullptr;
                     }
                 } else
                     next_tmp = code->next;
                 delete code;
                 code = next_tmp;
             } else
-                code = code->data.son;
+                code = code->data.block.son;
         }
         delete code;
     }
@@ -36,8 +36,8 @@ namespace aFuncore {
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
             tmp->display();
-            if (tmp->type == ByteCode::code_block && tmp->data.son != nullptr) {
-                tmp = tmp->data.son;
+            if (tmp->type == ByteCode::code_block && tmp->data.block.son != nullptr) {
+                tmp = tmp->data.block.son;
                 continue;
             }
 
@@ -76,8 +76,8 @@ if(!(write)){ \
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
             Done(tmp->write_v1(f, debug));
-            if (tmp->type == ByteCode::code_block && tmp->data.son != nullptr) {
-                tmp = tmp->data.son;
+            if (tmp->type == ByteCode::code_block && tmp->data.block.son != nullptr) {
+                tmp = tmp->data.block.son;
                 continue;
             }
 
@@ -175,8 +175,8 @@ RETURN:
             std::string code_md5 = tmp->getMD5_v1();
             MD5Update(md5, (unsigned char *) code_md5.c_str(), code_md5.size());
 
-            if (tmp->type == ByteCode::code_block && tmp->data.son != nullptr) {
-                tmp = tmp->data.son;
+            if (tmp->type == ByteCode::code_block && tmp->data.block.son != nullptr) {
+                tmp = tmp->data.block.son;
                 continue;
             }
 
@@ -339,8 +339,8 @@ RETURN_FALSE:
         this->prefix = prefix;
         this->line = line;
 
-        this->data.block_type = block_type;
-        this->data.son = son;
+        this->data.block.block_type = block_type;
+        this->data.block.son = son;
 
         for (Code::ByteCode *tmp = son; tmp != nullptr; tmp = tmp->next)
             tmp->father = this;
@@ -393,7 +393,7 @@ RETURN_FALSE:
         if (type == code_element)
             aFuntool::cout << " element: " << data.element << "\n";
         else if (type == code_block)
-            aFuntool::cout << " block: '" << (char)(data.block_type) << "' son: " << data.son << "\n";
+            aFuntool::cout << " block: '" << (char)(data.block.block_type) << "' son: " << data.block.son << "\n";
         else
             aFuntool::cout << "\n";
     }
@@ -419,12 +419,12 @@ if(!(write)){           \
                 Done(aFuntool::byteWriteStr(f, (data.element)));
                 break;
             case code_block:
-                if (data.son == nullptr)
+                if (data.block.son == nullptr)
                     Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(4)));  // 空 block 标注为 4
                 else
                     Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_block)));
                 Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
-                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(data.block_type)));
+                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(data.block.block_type)));
                 break;
             default:
                 break;
@@ -482,13 +482,13 @@ if(!(write)){           \
         }
 
         if (to_son) {
-            if (type != code_block || data.son != nullptr) {
+            if (type != code_block || data.block.son != nullptr) {
                 errorLog(aFunCoreLogger, "Read son with bad type.");
                 delete ret;
                 return nullptr;
             }
             ret->father = this;
-            data.son = ret;
+            data.block.son = ret;
         } else
             connect(ret);
         return ret;
@@ -509,8 +509,8 @@ if(!(write)){           \
         if (prefix == aFuntool::NUL)
             head[1] = '-';
         if (type == code_block) {
-            head[2] = data.son == nullptr ? 'n' : 's';
-            head[3] = data.block_type;
+            head[2] = data.block.son == nullptr ? 'n' : 's';
+            head[3] = data.block.block_type;
         }
 
         MD5Update(md5, (unsigned char *) head, strlen((char *) head));
