@@ -29,22 +29,21 @@ check_c_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
 if (fpic_work)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 endif()
+unset(fpic_work)
+
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-fPIC" fpic_work)  # 检查是否有fPIC选项
+if (fpic_work)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif()
+unset(fpic_work)
 
 if (MSVC)
-    set(CMAKE_GNUtoMS TRUE)
-    check_c_compiler_flag("/utf-8" utf8_work)
-    if (NOT utf8_work)
-        message(FATAL_ERROR "The msvc not support utf-8")
-    endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /utf-8 /EHsc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 else()
-    check_c_compiler_flag("-fexec-charset=UTF-8" utf8_work)
-    if (NOT utf8_work)
-        message(FATAL_ERROR "The compiler not support utf-8")
-    endif()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8")
 endif()
 
 # 相关参数
@@ -114,8 +113,8 @@ configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in
                ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunbase.h
                @ONLY)
 
-include(deps)  # 安装依赖
-add_subdirectory(deps)
+add_subdirectory(deps)   # 安装依赖
+include(deps)  # 查找依赖
 if (DEPS_FOUND)
     #include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
     add_subdirectory(src)
@@ -192,4 +191,4 @@ if (_build_test)
 endif()
 add_subdirectory(test)  # test的相关内容仍会被构建
 #
-#include(info)
+include(info)

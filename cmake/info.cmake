@@ -1,16 +1,10 @@
 ﻿include_guard(GLOBAL)
 
-set(PRINT_INFO ON CACHE BOOL "Print system info.")  # 默认设定为 ON 即打印一次
-set(_print ${PRINT_INFO})
-
-if (NOT _print)
-    return()
-endif()
-
 # 显示编译器信息(1)
 message(STATUS "CMAKE_C_COMPILER = ${CMAKE_C_COMPILER}")  # 显示C编译器的路径
 message(STATUS "CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER}")  # 显示CPP编译器的路径
 message(STATUS "CMAKE_C_FLAGS = ${CMAKE_C_FLAGS}")  # 显示C编译器的选项
+message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")  # 显示C编译器的选项
 message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")  # 当前的构建类型(若为设置则为空)
 
 # 显示CMake信息
@@ -22,6 +16,7 @@ message(STATUS "CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
 
 # 显示编译器信息(2)
 message(STATUS "CMAKE_C_COMPILER_ID = ${CMAKE_C_COMPILER_ID}")
+message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(STATUS "Target is 64 bits")
@@ -30,6 +25,12 @@ else()
 endif()
 
 message(STATUS "CMAKE_HOST_SYSTEM_PROCESSOR = ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+
+set(PRINT_INFO ON CACHE BOOL "Print system info.")  # 默认设定为 ON 即打印一次
+set(_print ${PRINT_INFO})
+if (NOT _print)
+    return()
+endif()
 
 # 查询主机信息
 foreach(key
