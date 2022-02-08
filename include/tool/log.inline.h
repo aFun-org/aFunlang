@@ -3,7 +3,7 @@
 #include "log.h"
 
 namespace aFuntool {
-    inline aFuntool::Logger::Logger(LogFactory &factor, std::string id, LogLevel level, bool exit) noexcept
+    aFuntool::Logger::Logger(LogFactory &factor, std::string id, LogLevel level, bool exit) noexcept
         : factor_{factor}, id_{std::move(id)}, level_{level}, exit_{exit} {
 
     }

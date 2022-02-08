@@ -3,7 +3,7 @@
 #include "core-parser.h"
 
 namespace aFuncore {
-    inline Parser::Parser(Reader &reader_)
+    Parser::Parser(Reader &reader_)
         : reader{reader_},
           lexical{lex_begin, TK_PREFIX, 0, 0, false, false},
           syntactic{false, TK_PREFIX, "", false}{
@@ -11,25 +11,25 @@ namespace aFuncore {
         reader.readFirstWord();
     }
 
-    inline Parser::ParserEvent Parser::popEvent() {
+    Parser::ParserEvent Parser::popEvent() {
         ParserEvent pop = event.front();
         event.pop();
         return pop;
     }
 
-    inline size_t Parser::countEvent() const {
+    size_t Parser::countEvent() const {
         return event.size();
     }
 
-    inline void Parser::pushEvent(const ParserEvent &new_event) {
+    void Parser::pushEvent(const ParserEvent &new_event) {
         event.push(new_event);
     }
 
-    inline void Parser::pushEvent(ParserEvent &&new_event) {
+    void Parser::pushEvent(ParserEvent &&new_event) {
         event.push(new_event);
     }
 
-    inline const Parser::ParserEvent &Parser::checkEvent() const {
+    const Parser::ParserEvent &Parser::checkEvent() const {
             return event.front();
     }
 }

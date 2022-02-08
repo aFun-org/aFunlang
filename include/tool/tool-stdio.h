@@ -2,15 +2,16 @@
 #define AFUN_STDIO_H
 #include <cstdio>
 #include <cinttypes>
-#include "tool-type.h"
 #include "aFunToolExport.h"
+#include "macro.h"
+#include "tool-type.h"
 
 namespace aFuntool {
     AFUN_TOOL_EXPORT int fgets_stdin(char **dest, int len);
     AFUN_TOOL_EXPORT bool checkStdin();
     AFUN_TOOL_EXPORT bool fclear_stdin();
-    static bool clear_ferror(FILE *file);
-    static bool clear_stdin();
+    AFUN_STATIC bool clear_ferror(FILE *file);
+    AFUN_STATIC bool clear_stdin();
 }
 
 #ifdef aFunWIN32_NO_CYGWIN
@@ -35,33 +36,33 @@ namespace aFuntool {
     AFUN_TOOL_EXPORT int fungetc_stdin(int ch);
 
     AFUN_TOOL_EXPORT int fputs_std_(const char *str, FILE *std);
-    static int fputs_stdout(const char *str);
-    static int fputs_stderr(const char *str);
+    AFUN_STATIC int fputs_stdout(const char *str);
+    AFUN_STATIC int fputs_stderr(const char *str);
 
     AFUN_TOOL_EXPORT size_t vprintf_std_(FILE *std, size_t buf_len, const char *format, va_list ap);
 
-    static size_t vprintf_stderr(size_t buf_len, const char *format, va_list ap);
-    static size_t vprintf_stdout(size_t buf_len, const char *format, va_list ap);
+    AFUN_STATIC size_t vprintf_stderr(size_t buf_len, const char *format, va_list ap);
+    AFUN_STATIC size_t vprintf_stdout(size_t buf_len, const char *format, va_list ap);
 
-    static size_t printf_stdout(size_t buf_len, const char *format, ...);
-    static size_t printf_stderr(size_t buf_len, const char *format, ...);
+    AFUN_STATIC size_t printf_stdout(size_t buf_len, const char *format, ...);
+    AFUN_STATIC size_t printf_stderr(size_t buf_len, const char *format, ...);
 }
 
 #else
 
 namespace aFuntool {
-    static int fgetc_stdin();
-    static int fgets_stdin_(char *buf, int len, FILE *file);
-    static int fungetc_stdin(char ch);
+    AFUN_STATIC int fgetc_stdin();
+    AFUN_STATIC int fgets_stdin_(char *buf, int len, FILE *file);
+    AFUN_STATIC int fungetc_stdin(char ch);
 
-    static int fputs_stdout(const char *str);
-    static int fputs_stderr(const char *str);
+    AFUN_STATIC int fputs_stdout(const char *str);
+    AFUN_STATIC int fputs_stderr(const char *str);
 
-    static int vprintf_stdout(size_t, const char *format, va_list ap);
-    static int vprintf_stderr(size_t, const char *format, va_list ap);
+    AFUN_STATIC int vprintf_stdout(size_t, const char *format, va_list ap);
+    AFUN_STATIC int vprintf_stderr(size_t, const char *format, va_list ap);
 
-    static size_t printf_stdout(size_t, const char *format, ...);
-    static size_t printf_stderr(size_t, const char *format, ...);
+    AFUN_STATIC size_t printf_stdout(size_t, const char *format, ...);
+    AFUN_STATIC size_t printf_stderr(size_t, const char *format, ...);
 }
 
 #endif
@@ -71,24 +72,24 @@ namespace aFuntool {
         typedef size_t PrintFunction(size_t, const char *, ...);
         PrintFunction *func;
     public:
-        inline explicit OutStream(PrintFunction *func_);
-        inline OutStream &operator<<(char a);
-        inline OutStream &operator<<(signed char a);
-        inline OutStream &operator<<(short a);
-        inline OutStream &operator<<(int a);
-        inline OutStream &operator<<(long a);
-        inline OutStream &operator<<(long long a);
-        inline OutStream &operator<<(unsigned char a);
-        inline OutStream &operator<<(unsigned short a);
-        inline OutStream &operator<<(unsigned int a);
-        inline OutStream &operator<<(unsigned long a);
-        inline OutStream &operator<<(unsigned long long a);
-        inline OutStream &operator<<(float a);
-        inline OutStream &operator<<(double a);
-        inline OutStream &operator<<(long double a);
-        inline OutStream &operator<<(const char *a);
-        inline OutStream &operator<<(const std::string &a);
-        inline OutStream &operator<<(const void *a);
+        AFUN_INLINE explicit OutStream(PrintFunction *func_);
+        AFUN_INLINE OutStream &operator<<(char a);
+        AFUN_INLINE OutStream &operator<<(signed char a);
+        AFUN_INLINE OutStream &operator<<(short a);
+        AFUN_INLINE OutStream &operator<<(int a);
+        AFUN_INLINE OutStream &operator<<(long a);
+        AFUN_INLINE OutStream &operator<<(long long a);
+        AFUN_INLINE OutStream &operator<<(unsigned char a);
+        AFUN_INLINE OutStream &operator<<(unsigned short a);
+        AFUN_INLINE OutStream &operator<<(unsigned int a);
+        AFUN_INLINE OutStream &operator<<(unsigned long a);
+        AFUN_INLINE OutStream &operator<<(unsigned long long a);
+        AFUN_INLINE OutStream &operator<<(float a);
+        AFUN_INLINE OutStream &operator<<(double a);
+        AFUN_INLINE OutStream &operator<<(long double a);
+        AFUN_INLINE OutStream &operator<<(const char *a);
+        AFUN_INLINE OutStream &operator<<(const std::string &a);
+        AFUN_INLINE OutStream &operator<<(const void *a);
     };
 
     AFUN_TOOL_EXPORT extern OutStream cout;

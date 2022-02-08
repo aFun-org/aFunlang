@@ -7,6 +7,8 @@
 #ifndef AFUN_AFUNTOOL_H
 #define AFUN_AFUNTOOL_H
 
+#include "macro.h"
+
 #include "tool-type.h"
 #include "aFunToolExport.h"
 

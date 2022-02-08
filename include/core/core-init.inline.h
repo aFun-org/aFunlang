@@ -4,7 +4,7 @@
 #include "core-init.h"
 
 namespace aFuncore {
-    inline InitInfo::InitInfo(const std::string &base_dir_,
+    InitInfo::InitInfo(const std::string &base_dir_,
                               aFuntool::LogFactory &factor_,
                               aFuntool::Logger &core_logger_,
                               aFuntool::Logger &sys_logger_) :
@@ -12,7 +12,7 @@ namespace aFuncore {
 
     }
 
-    static void setCoreLogger(aFuntool::Logger *log) {
+    void setCoreLogger(aFuntool::Logger *log) {
         aFunCoreLogger = log;
     }
 }

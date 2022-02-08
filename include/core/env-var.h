@@ -14,7 +14,7 @@ namespace aFuncore {
         EnvVarSpace(const EnvVarSpace &)=delete;
         EnvVarSpace &operator=(const EnvVarSpace &)=delete;
 
-        [[nodiscard]] inline size_t getCount();
+        [[nodiscard]] AFUN_INLINE size_t getCount();
         bool findString(const std::string &name, std::string &str);
         bool findNumber(const std::string &name, int32_t &num);
 
@@ -25,7 +25,7 @@ namespace aFuncore {
         void addNumber(const std::string &name, int32_t num);
 
     private:
-        static const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
+        AFUN_STATIC const size_t ENV_VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
         struct EnvVar {  // 环境变量
             std::string str;
             int32_t num;  // 可以同时记录字符串和数字

@@ -5,11 +5,11 @@
 #include "core-activation.h"
 
 namespace aFuncore {
-    Var::Var(Object *data_, Inter &inter) : Object("Var", inter), data{data_}, env{inter.getEnvironment()}{
+    Var::Var(Object *data_, Inter &inter) : Object("Var", inter), env{inter.getEnvironment()}, data{data_}{
 
     }
 
-    Var::Var(Object *data_, Environment &env_) : Object("Var", env_), data{data_}, env{env_}{
+    Var::Var(Object *data_, Environment &env_) : Object("Var", env_), env{env_}, data{data_}{
 
     }
 

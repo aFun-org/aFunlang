@@ -15,15 +15,15 @@ int main(int argc, char **argv) {
     std::wcout << tmp << std::endl;
     std::wcout << tmp2 << std::endl;
 
-    for (int i = 0; i < wcslen(tmp); i++)
+    for (size_t i = 0; i < wcslen(tmp); i++)
         printf("%x ", tmp[i]);
     printf("\n");
 
-    for (int i = 0; i < wcslen(tmp2); i++)
+    for (size_t i = 0; i < wcslen(tmp2); i++)
         printf("%x ", tmp2[i]);
     printf("\n");
 
-    for (int i = 0; i < strlen(tmp3); i++)
+    for (size_t i = 0; i < strlen(tmp3); i++)
         printf("%x ", (unsigned int)tmp3[i]);
     printf("\n");
 #endif

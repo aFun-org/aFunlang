@@ -18,17 +18,17 @@ namespace aFuncore {
         Object(const Object &) = delete;
         Object &operator=(const Object &) = delete;
 
-        inline void addReference();
-        inline void delReference();
-        [[nodiscard]] inline GcCount getReference() const;
-        inline void setClear(bool clear=false);
+        AFUN_INLINE void addReference();
+        AFUN_INLINE void delReference();
+        [[nodiscard]] AFUN_INLINE GcCount getReference() const;
+        AFUN_INLINE void setClear(bool clear=false);
 
-        static void checkReachable(std::list<Object *> &list);
-        static void setReachable(std::list<Object *> &list, std::queue<Object *> &des, std::queue<Object *> &del);
-        static void destructUnreachable(std::queue<Object *> &des, Inter &gc_inter);
-        static void deleteUnreachable(std::queue<Object *> &del);
-        static void destructAll(std::list<Object *> &list, Inter &gc_inter);
-        static void deleteAll(std::list<Object *> &list);
+        AFUN_STATIC void checkReachable(std::list<Object *> &list);
+        AFUN_STATIC void setReachable(std::list<Object *> &list, std::queue<Object *> &des, std::queue<Object *> &del);
+        AFUN_STATIC void destructUnreachable(std::queue<Object *> &des, Inter &gc_inter);
+        AFUN_STATIC void deleteUnreachable(std::queue<Object *> &del);
+        AFUN_STATIC void destructAll(std::list<Object *> &list, Inter &gc_inter);
+        AFUN_STATIC void deleteAll(std::list<Object *> &list);
     protected:
         Environment &env;
         const std::string type;  // 标识 Object 的字符串

@@ -46,17 +46,17 @@ namespace aFuncore {
         template <typename Callable,typename...T>
         void forEachLock(Callable func, T...arg);
 
-        [[nodiscard]] inline size_t getCount();
+        [[nodiscard]] AFUN_INLINE size_t getCount();
         [[nodiscard]] virtual Var *findVar(const std::string &name);
         virtual VarOperationFlat defineVar(const std::string &name, Object *data);
         virtual VarOperationFlat defineVar(const std::string &name, Var *data);
         virtual VarOperationFlat setVar(const std::string &name, Object *data);
         virtual VarOperationFlat delVar(const std::string &name);
 
-        [[nodiscard]] Object *findObject(const std::string &name);
+        [[nodiscard]] AFUN_INLINE Object *findObject(const std::string &name);
         void linkObject(std::queue<Object *> &queue) override;
 
-        static const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
+        AFUN_STATIC const size_t VAR_HASH_SIZE = 100;  // 环境变量哈希表大小
 
     private:
         std::unordered_map<std::string, Var *> var;
@@ -64,11 +64,11 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT ProtectVarSpace : public VarSpace {
     public:
-        explicit inline ProtectVarSpace(Inter &inter);
-        explicit inline ProtectVarSpace(Environment &env_);
+        AFUN_INLINE explicit ProtectVarSpace(Inter &inter);
+        AFUN_INLINE explicit ProtectVarSpace(Environment &env_);
 
-        [[nodiscard]] inline bool getProtect() const;
-        inline bool setProtect(bool protect);
+        [[nodiscard]] AFUN_INLINE bool getProtect() const;
+        AFUN_INLINE bool setProtect(bool protect);
 
         VarOperationFlat defineVar(const std::string &name, Object *data) override;
         VarOperationFlat defineVar(const std::string &name, Var *data) override;
@@ -103,10 +103,10 @@ namespace aFuncore {
     class Function::CallFunction::ArgCodeList {
     public:
         const Code::ByteCode *code = nullptr;
-        inline explicit ArgCodeList(const Code::ByteCode *code = nullptr);
-        inline ~ArgCodeList();
-        inline Object *setObject(Object *res);
-        inline Object *getObject();
+        AFUN_INLINE explicit ArgCodeList(const Code::ByteCode *code = nullptr);
+        AFUN_INLINE ~ArgCodeList();
+        AFUN_INLINE Object *setObject(Object *res);
+        AFUN_INLINE Object *getObject();
     private:
         Object *ret;
     };
@@ -139,8 +139,8 @@ namespace aFuncore {
         };
 
     public:
-        inline explicit ImportFunction(Inter &inter_);
-        inline explicit ImportFunction(Environment &env_);
+        AFUN_INLINE explicit ImportFunction(Inter &inter_);
+        AFUN_INLINE explicit ImportFunction(Environment &env_);
         ~ImportFunction() override = default;
 
         CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) override;

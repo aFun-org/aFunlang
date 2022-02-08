@@ -12,21 +12,21 @@ namespace aFuncore {
             read_mode_error = 2,
         } ReadMode;
 
-        static const size_t DEFAULT_BUF_SIZE = 1024;
-        static const size_t NEW_BUF_SIZE  = 512;
+        AFUN_STATIC const size_t DEFAULT_BUF_SIZE = 1024;
+        AFUN_STATIC const size_t NEW_BUF_SIZE  = 512;
 
-        explicit inline Reader(aFuntool::FilePath path_, aFuntool::FileLine line_ = 1);
+        AFUN_INLINE explicit Reader(aFuntool::FilePath path_, aFuntool::FileLine line_ = 1);
         Reader(const Reader &) = delete;
         virtual ~Reader();
         Reader &operator=(const Reader &) = delete;
 
         virtual size_t readText(char *dest, size_t len, ReadMode &mode) = 0;
 
-        [[nodiscard]] inline size_t countRead() const;
-        [[nodiscard]] inline bool isEnd() const;
-        [[nodiscard]] inline bool isError() const;
-        [[nodiscard]] inline aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] inline const aFuntool::FilePath &getFilePath() const;
+        [[nodiscard]] AFUN_INLINE size_t countRead() const;
+        [[nodiscard]] AFUN_INLINE bool isEnd() const;
+        [[nodiscard]] AFUN_INLINE bool isError() const;
+        [[nodiscard]] AFUN_INLINE aFuntool::FileLine getFileLine() const;
+        [[nodiscard]] AFUN_INLINE const aFuntool::FilePath &getFilePath() const;
         char *readWord(size_t del_index);
         void readFirstWord();
         char getChar();

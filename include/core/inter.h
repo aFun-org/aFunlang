@@ -28,10 +28,10 @@ namespace aFuncore {
         Environment(Environment &) = delete;
         Environment &operator=(Environment &) = delete;
 
-        inline size_t operator++();
-        inline size_t operator--();
-        inline size_t operator++(int);
-        inline size_t operator--(int);
+        AFUN_INLINE size_t operator++();
+        AFUN_INLINE size_t operator--();
+        AFUN_INLINE size_t operator++(int);
+        AFUN_INLINE size_t operator--(int);
 
     private:
         std::mutex lock;
@@ -64,10 +64,10 @@ namespace aFuncore {
             prefix_exec_first = 1,
         } Prefix;
 
-        static const int PREFIX_COUNT = 2;
-        constexpr static const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
-        constexpr static const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
-        constexpr static const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+        AFUN_STATIC const int PREFIX_COUNT = 2;
+        AFUN_STATIC constexpr const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
+        AFUN_STATIC constexpr const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+        AFUN_STATIC constexpr const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
 
         explicit Inter(Environment &env_);
         Inter(const Inter &base_inter);
@@ -76,18 +76,18 @@ namespace aFuncore {
 
         void enable();
 
-        [[nodiscard]] inline InterStatus getStatus() const;
-        [[nodiscard]] inline bool isInterStop() const;
-        [[nodiscard]] inline bool isInterExit() const;
-        [[nodiscard]] inline Environment &getEnvironment();
-        [[nodiscard]] inline ProtectVarSpace *getProtectVarSpace() const;
-        [[nodiscard]] inline const std::list<Activation *> &getStack() const;
-        [[nodiscard]] inline Activation *getActivation() const;
+        [[nodiscard]] AFUN_INLINE InterStatus getStatus() const;
+        [[nodiscard]] AFUN_INLINE bool isInterStop() const;
+        [[nodiscard]] AFUN_INLINE bool isInterExit() const;
+        [[nodiscard]] AFUN_INLINE Environment &getEnvironment();
+        [[nodiscard]] AFUN_INLINE ProtectVarSpace *getProtectVarSpace() const;
+        [[nodiscard]] AFUN_INLINE const std::list<Activation *> &getStack() const;
+        [[nodiscard]] AFUN_INLINE Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
-        [[nodiscard]] inline EnvVarSpace &getEnvVarSpace();
-        [[nodiscard]] inline InterOutMessage &getOutMessageStream();
-        [[nodiscard]] inline InterInMessage &getInMessageStream();
+        [[nodiscard]] AFUN_INLINE EnvVarSpace &getEnvVarSpace();
+        [[nodiscard]] AFUN_INLINE InterOutMessage &getOutMessageStream();
+        [[nodiscard]] AFUN_INLINE InterInMessage &getInMessageStream();
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
@@ -95,8 +95,8 @@ namespace aFuncore {
         bool runCode(const Code &code);
         bool runCode(Object *obj);
 
-        inline InterStatus setInterStop();
-        inline InterStatus setInterExit();
+        AFUN_INLINE InterStatus setInterStop();
+        AFUN_INLINE InterStatus setInterExit();
     private:
         InterStatus status;
 
@@ -110,8 +110,8 @@ namespace aFuncore {
 
         std::list<LiteralRegex> literal;
 
-        inline void pushActivation(Activation *new_activation);
-        inline Activation *popActivation();
+        AFUN_INLINE void pushActivation(Activation *new_activation);
+        AFUN_INLINE Activation *popActivation();
     };
 
     struct Inter::LiteralRegex {

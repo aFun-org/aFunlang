@@ -47,7 +47,7 @@ namespace aFuntool {
      * @param path 路径 (utf-8)
      * @return
      */
-    static int get_stat(aFun_stat &stat_, const std::string &path_){
+    int get_stat(aFun_stat &stat_, const std::string &path_){
         int re;
 #ifdef aFunWIN32_NO_CYGWIN
         aFun_path *tmp = nullptr;

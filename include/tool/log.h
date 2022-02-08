@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include "aFunToolExport.h"
+#include "macro.h"
+
 #include "tool-type.h"
 #include "thread"
 #include "mutex"
@@ -30,7 +32,7 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT Logger {
         friend class LogFactory;
     public:
-        inline explicit Logger(LogFactory &factor, std::string id, LogLevel level = log_warning, bool exit = true) noexcept;
+        AFUN_INLINE explicit Logger(LogFactory &factor, std::string id, LogLevel level = log_warning, bool exit = true) noexcept;
 
         int writeTrackLog(const char *file, int line, const char *func, const char *format, ...);
         int writeDebugLog(const char *file, int line, const char *func, const char *format, ...);
@@ -40,10 +42,10 @@ namespace aFuntool {
         int writeSendErrorLog(const char *file, int line, const char *func, const char *format, ...) noexcept(false);
         int writeFatalErrorLog(const char *file, int line, const char *func, int exit_code, const char *format, ...) noexcept(false);
     private:
+        LogFactory &factor_;
         const std::string id_;
         LogLevel level_ = log_debug;
         bool exit_ = true;
-        LogFactory &factor_;
     };
 
     class AFUN_TOOL_EXPORT LogFactory {
@@ -59,7 +61,7 @@ namespace aFuntool {
                       const char *ti, time_t t,
                       const char *file, int line, const char *func,
                       const char *info);
-        static void writeConsole(LogLevel level,
+        AFUN_STATIC void writeConsole(LogLevel level,
                                  const char *id, pid_t tid,
                                  const char *ti, time_t t,
                                  const char *file, int line, const char *func,

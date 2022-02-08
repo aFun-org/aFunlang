@@ -3,16 +3,16 @@
 #include "inter.h"
 
 namespace aFuncore {
-    inline Environment &Inter::getEnvironment() {
+    Environment &Inter::getEnvironment() {
         return env;
     }
 
-    inline void Inter::pushActivation(Activation *new_activation) {
+    void Inter::pushActivation(Activation *new_activation) {
         stack.push_front(new_activation);
         activation = new_activation;
     }
 
-    inline Activation *Inter::popActivation() {
+    Activation *Inter::popActivation() {
         if (activation == nullptr)
             return nullptr;
 
@@ -25,70 +25,70 @@ namespace aFuncore {
         return ret;
     }
 
-    inline Inter::InterStatus Inter::getStatus() const {
+    Inter::InterStatus Inter::getStatus() const {
         return status;
     }
 
-    inline bool Inter::isInterStop() const {
+    bool Inter::isInterStop() const {
         return (status == inter_exit || status == inter_stop);
     }
 
-    inline bool Inter::isInterExit() const {
+    bool Inter::isInterExit() const {
         return (status == inter_exit);
     }
 
-    inline ProtectVarSpace *Inter::getProtectVarSpace() const {
+    ProtectVarSpace *Inter::getProtectVarSpace() const {
         return env.protect;
     }
 
-    inline const std::list<Activation *> &Inter::getStack() const {
+    const std::list<Activation *> &Inter::getStack() const {
         return stack;
     }
 
-    inline Activation *Inter::getActivation() const {
+    Activation *Inter::getActivation() const {
         return activation;
     }
 
-    inline EnvVarSpace &Inter::getEnvVarSpace() {
+    EnvVarSpace &Inter::getEnvVarSpace() {
         return env.envvar;
     }
 
-    inline InterOutMessage &Inter::getOutMessageStream() {
+    InterOutMessage &Inter::getOutMessageStream() {
         return out;
     }
 
-    inline InterInMessage &Inter::getInMessageStream() {
+    InterInMessage &Inter::getInMessageStream() {
         return in;
     }
 
-    inline size_t Environment::operator++(){
+    size_t Environment::operator++(){
         std::unique_lock<std::mutex> mutex{lock};
         return ++reference;
     }
 
-    inline size_t Environment::operator--(){
+    size_t Environment::operator--(){
         std::unique_lock<std::mutex> mutex{lock};
         return --reference;
     }
 
-    inline size_t Environment::operator++(int){
+    size_t Environment::operator++(int){
         std::unique_lock<std::mutex> mutex{lock};
         return reference++;
     }
 
-    inline size_t Environment::operator--(int){
+    size_t Environment::operator--(int){
         std::unique_lock<std::mutex> mutex{lock};
         return reference--;
     }
 
-    inline Inter::InterStatus Inter::setInterStop() {
+    Inter::InterStatus Inter::setInterStop() {
         InterStatus ret = status;
         if (status != inter_exit)
             status = inter_stop;
         return ret;
     }
 
-    inline Inter::InterStatus Inter::setInterExit() {
+    Inter::InterStatus Inter::setInterExit() {
         InterStatus ret = status;
         status = inter_exit;
         return ret;

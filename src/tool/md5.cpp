@@ -19,11 +19,11 @@ namespace aFuntool {
         unsigned char buffer[64];
     };
 
-    static void MD5Transform(unsigned int state[4], unsigned char block[64]);
+    void MD5Transform(unsigned int state[4], unsigned char block[64]);
 
-    static void MD5Encode(unsigned char *output, const unsigned int *input, unsigned int len);
+    void MD5Encode(unsigned char *output, const unsigned int *input, unsigned int len);
 
-    static void MD5Decode(unsigned int *output, const unsigned char *input, unsigned int len);
+    void MD5Decode(unsigned int *output, const unsigned char *input, unsigned int len);
 
     unsigned char PADDING[] = {
             0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -83,7 +83,7 @@ namespace aFuntool {
         safeFree(context);
     }
 
-    static void MD5Encode(unsigned char *output, const unsigned int *input, unsigned int len){
+    void MD5Encode(unsigned char *output, const unsigned int *input, unsigned int len){
         unsigned int i = 0;
         unsigned int j = 0;
 
@@ -97,7 +97,7 @@ namespace aFuntool {
         }
     }
 
-    static void MD5Decode(unsigned int *output, const unsigned char *input, unsigned int len){
+    void MD5Decode(unsigned int *output, const unsigned char *input, unsigned int len){
         for (unsigned int i = 0, j = 0; j < len; i++, j += 4) {
             output[i] = (input[j]) |
                         (input[j + 1] << (unsigned) 8) |
@@ -106,7 +106,7 @@ namespace aFuntool {
         }
     }
 
-    static void MD5Transform(unsigned int state[4], unsigned char block[64]){
+    void MD5Transform(unsigned int state[4], unsigned char block[64]){
         unsigned int a = state[0];
         unsigned int b = state[1];
         unsigned int c = state[2];

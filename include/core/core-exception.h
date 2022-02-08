@@ -5,25 +5,25 @@
 namespace aFuncore {
     class aFuncoreException : public aFuntool::aFunException {
     public:
-        inline explicit aFuncoreException(const std::string &msg);
+        AFUN_INLINE explicit aFuncoreException(const std::string &msg);
     };
 
     class EnvironmentDestructException : public aFuncoreException {
     public:
-        inline EnvironmentDestructException();
+        AFUN_INLINE EnvironmentDestructException();
     };
 
     class RuntimeError : public aFuncoreException {
         std::string type;
     public:
-        inline RuntimeError(const std::string &msg, std::string type);
-        inline const std::string &getType() const;
+        AFUN_INLINE RuntimeError(const std::string &msg, std::string type);
+        AFUN_INLINE const std::string &getType() const;
     };
 
     class ArgumentError : public RuntimeError {
         std::string type;
     public:
-        inline ArgumentError();
+        AFUN_INLINE ArgumentError();
     };
 }
 

@@ -71,14 +71,14 @@ namespace aFuncore {
             std::string info;
         };
 
-        inline explicit Parser(Reader &reader_);
+        AFUN_INLINE explicit Parser(Reader &reader_);
 
         TokenType getTokenFromLexical(std::string &text);
         bool parserCode(Code &code);
 
-        [[nodiscard]] inline size_t countEvent() const;
-        inline ParserEvent popEvent();
-        [[nodiscard]] inline const ParserEvent &checkEvent() const;
+        [[nodiscard]] AFUN_INLINE size_t countEvent() const;
+        AFUN_INLINE ParserEvent popEvent();
+        [[nodiscard]] AFUN_INLINE const ParserEvent &checkEvent() const;
     private:
         typedef enum DoneStatus {
             DEL_TOKEN = 0,
@@ -119,14 +119,14 @@ namespace aFuncore {
         bool getToken();
         bool goBackToken();
 
-        static const size_t SYNTACTIC_MAX_DEPTH = 218;
+        AFUN_STATIC const size_t SYNTACTIC_MAX_DEPTH = 218;
         Code::ByteCode *codeSelf(Code &code, size_t deep, char prefix);
         Code::ByteCode *codePrefix(Code &code, size_t deep);
         Code::ByteCode *codeList(Code &code, size_t deep);
         Code::ByteCode *codeListEnd(Code &code);
 
-        inline void pushEvent(const ParserEvent &new_event);
-        inline void pushEvent(ParserEvent &&new_event);
+        AFUN_INLINE void pushEvent(const ParserEvent &new_event);
+        AFUN_INLINE void pushEvent(ParserEvent &&new_event);
     };
 
 }

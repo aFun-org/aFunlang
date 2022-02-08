@@ -9,7 +9,7 @@
 namespace aFuncore {
     class AFUN_CORE_EXPORT Message {
     public:
-        explicit inline Message() = default;
+        AFUN_INLINE explicit Message() = default;
         virtual ~Message() = default;
         Message &operator=(const Message &)=delete;
 
@@ -27,10 +27,10 @@ namespace aFuncore {
     class AFUN_CORE_EXPORT NormalMessage : public TopMessage {
     public:
         explicit NormalMessage(Object *obj_);
-        inline NormalMessage(NormalMessage &&msg) noexcept;
+        AFUN_INLINE NormalMessage(NormalMessage &&msg) noexcept;
         ~NormalMessage() override;
         void topProgress(Inter &inter, Activation &activation) override;
-        inline Object *getObject();
+        AFUN_INLINE Object *getObject();
 
     private:
         Object *obj;
@@ -44,11 +44,11 @@ namespace aFuncore {
         };
 
         explicit ErrorMessage(std::string error_type_, std::string error_info_, Activation *start);
-        inline ErrorMessage(ErrorMessage &&msg) noexcept;
+        AFUN_INLINE ErrorMessage(ErrorMessage &&msg) noexcept;
         void topProgress(Inter &inter_, Activation &activation) override;
-        [[nodiscard]] inline std::string getErrorType() const;
-        [[nodiscard]] inline std::string getErrorInfo() const;
-        [[nodiscard]] inline const std::list<TrackBack> &getTrackBack() const;
+        [[nodiscard]] AFUN_INLINE std::string getErrorType() const;
+        [[nodiscard]] AFUN_INLINE std::string getErrorInfo() const;
+        [[nodiscard]] AFUN_INLINE const std::list<TrackBack> &getTrackBack() const;
 
     private:
         Inter &inter;

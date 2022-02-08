@@ -4,12 +4,12 @@
 #include "it-exception.h"
 
 namespace aFunit {
-    inline StringReader::StringReader(std::string str_, const aFuntool::FilePath &path_)
+    StringReader::StringReader(std::string str_, const aFuntool::FilePath &path_)
         : Reader{path_, 0}, str{std::move(str_)}, index{0}, len{str.size()} {
 
     }
 
-    inline FileReader::FileReader(const aFuntool::FilePath &path_)
+    FileReader::FileReader(const aFuntool::FilePath &path_)
         : Reader{path_, 0}, file{aFuntool::fileOpen(path_, "rb")}, no_first{false} {
         if (file == nullptr)
             throw readerFileOpenError(path_);

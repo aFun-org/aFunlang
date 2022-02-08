@@ -4,11 +4,11 @@
 #include "it-exception.h"
 
 namespace aFunit {
-    inline aFunitException::aFunitException(const std::string &msg) : aFunException{msg} {
+    aFunitException::aFunitException(const std::string &msg) : aFunException{msg} {
 
     }
 
-    inline readerFileOpenError::readerFileOpenError(const aFuntool::FilePath &file)
+    readerFileOpenError::readerFileOpenError(const aFuntool::FilePath &file)
         : aFunitException("Reader cannot open file: " + file) {
 
     }

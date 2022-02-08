@@ -9,9 +9,10 @@ namespace aFuncore {
     }
 
     NormalMessage::~NormalMessage(){
-        if (obj != nullptr)
+        if (obj != nullptr) {
             obj->delReference();
             obj = nullptr;
+        }
     }
 
     void NormalMessage::topProgress(Inter &inter, Activation &activation){
@@ -19,7 +20,7 @@ namespace aFuncore {
     }
 
     ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *start)
-        : error_type{std::move(error_type_)}, error_info{std::move(error_info_)}, inter{start->inter}{
+        : inter{start->inter}, error_type{std::move(error_type_)}, error_info{std::move(error_info_)} {
         for (const auto activation : inter.getStack()) {
             if (activation->getFileLine() != 0)
                 trackback.push_front({activation->getFilePath(), activation->getFileLine()});

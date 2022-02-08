@@ -10,7 +10,7 @@ namespace aFuncore {
         aFuntool::Logger &core_logger;
         aFuntool::Logger &sys_logger;
 
-        inline InitInfo(const std::string &base_dir_,
+        AFUN_INLINE InitInfo(const std::string &base_dir_,
                         aFuntool::LogFactory &factor_,
                         aFuntool::Logger &core_logger_,
                         aFuntool::Logger &sys_logger_);
@@ -20,7 +20,7 @@ namespace aFuncore {
     AFUN_CORE_EXPORT extern aFuntool::Logger *aFunCoreLogger;
 
     AFUN_CORE_EXPORT bool aFunCoreInit(InitInfo *info);
-    static void setCoreLogger(aFuntool::Logger *log);
+    AFUN_STATIC void setCoreLogger(aFuntool::Logger *log);
 }
 
 #include "core-init.inline.h"

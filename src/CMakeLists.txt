@@ -37,7 +37,7 @@ file(GLOB private_h
      ${CMAKE_CURRENT_LIST_DIR}/*.h)
 
 add_executable(aFun-xx "")  # xx表示均为动态链接
-add_executable(aFun-ct "")  # ct表示均静态链接
+add_executable(aFun-ct "" ../include/tool/macro.h)  # ct表示均静态链接
 set(aFunList aFun-xx aFun-ct)
 
 foreach(tgt IN LISTS aFunList)

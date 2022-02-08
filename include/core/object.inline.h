@@ -3,21 +3,21 @@
 #include "object.h"
 
 namespace aFuncore {
-    inline void Object::addReference() {
+    void Object::addReference() {
         std::unique_lock<std::mutex> mutex{lock};
         reference++;
     }
 
-    inline void Object::delReference() {
+    void Object::delReference() {
         std::unique_lock<std::mutex> mutex{lock};
         reference--;
     }
 
-    inline GcCount Object::getReference() const {
+    GcCount Object::getReference() const {
         return reference;
     }
 
-    inline void Object::setClear(bool clear) {
+    void Object::setClear(bool clear) {
         not_clear=!clear;
     }
 }

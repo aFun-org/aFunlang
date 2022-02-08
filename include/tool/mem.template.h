@@ -9,10 +9,10 @@
 /* 取代calloc函数 */
 namespace aFuntool {
     template <typename T = void *>
-    static T *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
+    T *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
 
     template <typename T = void *>
-    static T *safeCalloc(size_t n, size_t size){
+    T *safeCalloc(size_t n, size_t size){
         T *re = (T *)calloc(n, size);
         if (re == nullptr) {
             if (aFunSysLogger)
@@ -24,7 +24,7 @@ namespace aFuntool {
     }
 
     template <typename T = void *>
-    static T *safeCalloc(size_t n = 1){
+    T *safeCalloc(size_t n = 1){
         T *re = (T *)calloc(n, sizeof(T));  // 自动推断类型
         if (re == nullptr) {
             if (aFunSysLogger)

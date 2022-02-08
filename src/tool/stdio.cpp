@@ -31,14 +31,14 @@ namespace aFuntool {
 
 namespace aFuntool {
     const int BUFF_SIZE = 40960;
-    static char buffer[BUFF_SIZE + 1] = "";
-    static size_t index = 0;
-    static size_t next = 0;
-    static size_t end = 0;
+    char buffer[BUFF_SIZE + 1] = "";
+    size_t index = 0;
+    size_t next = 0;
+    size_t end = 0;
     volatile sig_atomic_t ctrl_c = 0;
-    static std::mutex buffer_mutex;  // 只有 export 的函数统一处理该互斥锁
+    std::mutex buffer_mutex;  // 只有 export 的函数统一处理该互斥锁
 
-    static int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_){
+    int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_){
         CONSOLE_SCREEN_BUFFER_INFO info;
         if (info_ == nullptr) {
             if (!GetConsoleScreenBufferInfo(std_o, &info))
@@ -69,7 +69,7 @@ namespace aFuntool {
         return 1;
     }
 
-    static int nextToEnd(HANDLE std_o){
+    int nextToEnd(HANDLE std_o){
         CONSOLE_SCREEN_BUFFER_INFO info;
         if (!GetConsoleScreenBufferInfo(std_o, &info))
             return 0;
@@ -79,7 +79,7 @@ namespace aFuntool {
         return 1;
     }
 
-    static int moveBuffer(){
+    int moveBuffer(){
         if (index == 0)
             return 0;
         memmove(buffer, buffer + index, BUFF_SIZE - index);
@@ -90,7 +90,7 @@ namespace aFuntool {
         return 1;
     }
 
-    static int backChar(HANDLE std_o){
+    int backChar(HANDLE std_o){
         if (index != next) {  // 删除一个字符
             if (setCursorPosition(std_o, nullptr, -1) == -1)  // 先一定位置在-1
                 return 0;
@@ -114,7 +114,7 @@ namespace aFuntool {
         return 1;
     }
 
-    static int enterChar(HANDLE std_o){
+    int enterChar(HANDLE std_o){
         if (!nextToEnd(std_o))
             return 0;
         buffer[end] = '\n';
@@ -130,7 +130,7 @@ namespace aFuntool {
      * 返回1表示成功
      * 返回0表示失败
      */
-    static int newChar(HANDLE std_i, char ch){
+    int newChar(HANDLE std_i, char ch){
         if (ch == 0)
             return 1;
         if (end == BUFF_SIZE && !moveBuffer())  // 对比 end 而不是 next
@@ -162,16 +162,16 @@ namespace aFuntool {
      * 返回0表示未完成行读取
      * 返回1表示完成行读取
      */
-    static int checkNewInput(HANDLE std_i, HANDLE std_o){
+    int checkNewInput(HANDLE std_i, HANDLE std_o){
         DWORD len = 0;
-        DWORD oldm;
-        if (!GetConsoleMode(std_i, &oldm))
+        DWORD old_mode;
+        if (!GetConsoleMode(std_i, &old_mode))
             return -1;
 
         if (!GetNumberOfConsoleInputEvents(std_i, &len))
             return -1;
 
-        for (int i = 0; i < len; i++) {
+        for (DWORD i = 0; i < len; i++) {
             INPUT_RECORD record;
             DWORD read_len;
             if (!ReadConsoleInputA(std_i, &record, 1, &read_len) || read_len == 0)
@@ -219,7 +219,7 @@ namespace aFuntool {
         return 0;
     }
 
-    static int fcheck_stdin(HANDLE std_i, HANDLE std_o){
+    int fcheck_stdin(HANDLE std_i, HANDLE std_o){
         if (end == index || end == 0 || buffer[end - 1] != '\n')
             return checkNewInput(std_i, std_o);
         return 1;
@@ -396,7 +396,7 @@ namespace aFuntool {
             return ungetc(ch, stdin);
 
         std::unique_lock<std::mutex> ul{buffer_mutex};
-        if (ch == 0 || index == 0 && end == BUFF_SIZE) {
+        if (ch == 0 || (index == 0 && end == BUFF_SIZE)) {
             return 0;
         }
 
@@ -469,7 +469,7 @@ namespace aFuntool {
 #include <fcntl.h>
 
 namespace aFuntool {
-    static std::mutex fcntl_mutex;  // 只有 export 的函数统一处理该互斥锁
+    std::mutex fcntl_mutex;  // 只有 export 的函数统一处理该互斥锁
     
     // 用于Linux平台的IO函数
     // 默认Linux平台均使用utf-8

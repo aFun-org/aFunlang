@@ -4,7 +4,7 @@
 #include "string"
 
 namespace aFuntool {
-    Regex::Regex(std::string pattern_) noexcept(false): re{nullptr}, pattern{std::move(pattern_)} {
+    Regex::Regex(std::string pattern_) noexcept(false): pattern{std::move(pattern_)}, re{nullptr} {
         int error_code;
         size_t error_offset;
         pcre2_code *ret = pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, 0, &error_code,

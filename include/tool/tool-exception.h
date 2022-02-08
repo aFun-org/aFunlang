@@ -1,42 +1,43 @@
 ﻿#ifndef AFUN_TOOL_EXCEPTION_H
 #define AFUN_TOOL_EXCEPTION_H
 #include "aFunToolExport.h"
+#include "macro.h"
 #include "tool-type.h"
 
 namespace aFuntool {
     class AFUN_TOOL_EXPORT aFunException : public std::exception {
         std::string message;
     public:
-        inline explicit aFunException(std::string msg);
+        AFUN_INLINE explicit aFunException(std::string msg);
         virtual const char *what();
-        [[nodiscard]] inline const std::string &getMessage() const;
+        [[nodiscard]] AFUN_INLINE const std::string &getMessage() const;
     };
 
     class aFuntoolException : public aFunException {
     public:
-        inline explicit aFuntoolException(const std::string &msg);
+        AFUN_INLINE explicit aFuntoolException(const std::string &msg);
     };
 
     class FileOpenException : public aFuntoolException {
     public:
-        inline explicit FileOpenException(const FilePath &file);
+        AFUN_INLINE explicit FileOpenException(const FilePath &file);
     };
 
     class RegexException : public aFuntoolException {
     public:
-        inline explicit RegexException(const std::string &msg);
+        AFUN_INLINE explicit RegexException(const std::string &msg);
     };
 
     class LogFatalError : public aFuntoolException {
     public:
-        inline explicit LogFatalError(const char *msg);
+        AFUN_INLINE explicit LogFatalError(const char *msg);
     };
 
     class Exit : public aFuntoolException {
         int exit_code;
     public:
-        inline explicit Exit(int exit_code_);
-        inline int getExitCode() const;
+        AFUN_INLINE explicit Exit(int exit_code_);
+        AFUN_INLINE int getExitCode() const;
     };
 }
 

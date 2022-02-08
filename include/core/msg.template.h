@@ -12,7 +12,7 @@ namespace aFuncore {
 
 
     template <typename Callable, typename...T>
-    inline void MessageStream::forEach(Callable func, T...arg) {
+    void MessageStream::forEach(Callable func, T...arg) {
         for (auto &msg : stream)
             func(msg.second, arg...);
     }

@@ -4,35 +4,35 @@
 #include "tool-exception.h"
 
 namespace aFuntool {
-    inline aFunException::aFunException(std::string msg) : message{std::move(msg)} {
+    aFunException::aFunException(std::string msg) : message{std::move(msg)} {
 
     }
 
-    inline const std::string &aFunException::getMessage() const {
+    const std::string &aFunException::getMessage() const {
         return message;
     }
 
-    inline aFuntoolException::aFuntoolException(const std::string &msg) : aFunException{msg} {
+    aFuntoolException::aFuntoolException(const std::string &msg) : aFunException{msg} {
 
     }
 
-    inline FileOpenException::FileOpenException(const FilePath &file) : aFuntoolException("File cannot open: " + file) {
+    FileOpenException::FileOpenException(const FilePath &file) : aFuntoolException("File cannot open: " + file) {
 
     }
 
-    inline RegexException::RegexException(const std::string &msg) : aFuntoolException("Regex error: " + msg) {
+    RegexException::RegexException(const std::string &msg) : aFuntoolException("Regex error: " + msg) {
 
     }
 
-    inline LogFatalError::LogFatalError(const char *msg) : aFuntoolException(msg) {
+    LogFatalError::LogFatalError(const char *msg) : aFuntoolException(msg) {
 
     }
 
-    inline Exit::Exit(int exit_code_) : aFuntoolException("Exit by user"), exit_code{exit_code_} {
+    Exit::Exit(int exit_code_) : aFuntoolException("Exit by user"), exit_code{exit_code_} {
 
     }
 
-    inline int Exit::getExitCode() const {
+    int Exit::getExitCode() const {
         return exit_code;
     }
 }

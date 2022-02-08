@@ -8,7 +8,7 @@
 namespace aFunit {
     class AFUN_LANG_EXPORT StringReader : public aFuncore::Reader {
     public:
-        inline StringReader(std::string str_, const aFuntool::FilePath &path_);
+        AFUN_INLINE StringReader(std::string str_, const aFuntool::FilePath &path_);
         size_t readText(char *dest, size_t read_len, ReadMode &mode) override;
     private:
         std::string str;
@@ -18,7 +18,7 @@ namespace aFunit {
 
     class AFUN_LANG_EXPORT FileReader : public aFuncore::Reader {
     public:
-        inline explicit FileReader(const aFuntool::FilePath &path_) noexcept(false);
+        AFUN_INLINE explicit FileReader(const aFuntool::FilePath &path_) noexcept(false);
         size_t readText(char *dest, size_t read_len, ReadMode &mode) override;
     private:
         FILE *file;

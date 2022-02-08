@@ -3,11 +3,11 @@
 #include "tool-regex.h"
 
 namespace aFuntool {
-    inline Regex::Regex(const Regex &regex) noexcept: Regex(regex.pattern) {
+    Regex::Regex(const Regex &regex) noexcept: Regex(regex.pattern) {
 
     }
 
-    inline Regex::Regex(Regex &&regex) noexcept : pattern {std::move(regex.pattern)}, re {regex.re} {
+    Regex::Regex(Regex &&regex) noexcept : pattern {std::move(regex.pattern)}, re {regex.re} {
         regex.re = nullptr;
     }
 

@@ -19,17 +19,17 @@ namespace aFuncore {
 
         class AFUN_CORE_EXPORT VarList {
         public:
-            inline explicit VarList();
+            AFUN_INLINE explicit VarList();
             virtual ~VarList();
-            VarList(VarList &&new_varlist);
-            VarList &operator=(VarList &&new_varlist);
+            AFUN_INLINE VarList(VarList &&new_varlist);
+            AFUN_INLINE VarList &operator=(VarList &&new_varlist) noexcept;
             VarList(const VarList &) = delete;
             VarList &operator=(const VarList &) = delete;
 
             void clear();
             void connect(VarList &new_varlist);
-            inline void push(VarSpace *varspace_);
-            inline size_t count();
+            AFUN_INLINE void push(VarSpace *varspace_);
+            AFUN_INLINE size_t count();
 
             template <typename Callable,typename...T>
             void forEach(Callable func, T...arg);
@@ -39,7 +39,7 @@ namespace aFuncore {
             virtual bool defineVar(const std::string &name, Var *data);
             virtual bool setVar(const std::string &name, Object *data);
             virtual bool delVar(const std::string &name);
-            [[nodiscard]] inline Object *findObject(const std::string &name);
+            [[nodiscard]] AFUN_INLINE Object *findObject(const std::string &name);
 
         private:
             std::list<VarSpace *> varspace;
@@ -55,12 +55,12 @@ namespace aFuncore {
         virtual void runCode(const Code::ByteCode *code);
         virtual void endRun();
 
-        [[nodiscard]] inline VarList &getVarlist();
-        [[nodiscard]] inline UpMessage &getUpStream();
-        [[nodiscard]] inline DownMessage &getDownStream();
+        [[nodiscard]] AFUN_INLINE VarList &getVarlist();
+        [[nodiscard]] AFUN_INLINE UpMessage &getUpStream();
+        [[nodiscard]] AFUN_INLINE DownMessage &getDownStream();
 
-        [[nodiscard]] inline aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] inline  const aFuntool::FilePath &getFilePath() const;
+        [[nodiscard]] AFUN_INLINE aFuntool::FileLine getFileLine() const;
+        [[nodiscard]] AFUN_INLINE  const aFuntool::FilePath &getFilePath() const;
 
     protected:
         VarList varlist;
@@ -79,10 +79,10 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
     public:
-        inline ExeActivation(const Code &code, Inter &inter_);
-        inline ExeActivation(const Code::ByteCode *code, Inter &inter_);
+        AFUN_INLINE ExeActivation(const Code &code, Inter &inter_);
+        AFUN_INLINE ExeActivation(const Code::ByteCode *code, Inter &inter_);
         ActivationStatus getCode(const Code::ByteCode *&code) override;
-        [[nodiscard]] inline const Code::ByteCode *getStart() const;
+        [[nodiscard]] AFUN_INLINE const Code::ByteCode *getStart() const;
 
     private:
         const Code::ByteCode *start;
@@ -94,7 +94,7 @@ namespace aFuncore {
     public:
         explicit TopActivation(const Code &code, Inter &inter_);
         ~TopActivation() override = default;
-        [[nodiscard]] inline const Code &getBase() const;
+        [[nodiscard]] AFUN_INLINE const Code &getBase() const;
 
     private:
         const Code &base;
@@ -102,7 +102,7 @@ namespace aFuncore {
 
     class AFUN_CORE_EXPORT FuncActivation : public Activation {
     public:
-        explicit inline FuncActivation(const Code::ByteCode *code, Inter &inter_);
+        AFUN_INLINE explicit FuncActivation(const Code::ByteCode *code, Inter &inter_);
         explicit FuncActivation(Function *func, Inter &inter_);
         ~FuncActivation() override;
         ActivationStatus getCode(const Code::ByteCode *&code) override;

@@ -8,7 +8,7 @@ namespace aFuncore {
     public:
         class ByteCode;
 
-        inline explicit Code(aFuntool::FilePath file_);
+        AFUN_INLINE explicit Code(aFuntool::FilePath file_);
         ~Code();
         Code &operator=(const Code &)=delete;
 
@@ -20,8 +20,8 @@ namespace aFuncore {
         void display() const;
 #endif
 
-        [[nodiscard]] inline const aFuntool::FilePath &getFilePath() const;
-        [[nodiscard]] inline ByteCode *getByteCode() const;
+        [[nodiscard]] AFUN_INLINE const aFuntool::FilePath &getFilePath() const;
+        [[nodiscard]] AFUN_INLINE ByteCode *getByteCode() const;
     private:
         ByteCode *code;
         aFuntool::FilePath file;
@@ -59,18 +59,18 @@ namespace aFuncore {
         void display() const;
 #endif
 
-        [[nodiscard]] CodeType getType() const;
-        [[nodiscard]] char getPrefix() const;
+        [[nodiscard]] AFUN_INLINE CodeType getType() const;
+        [[nodiscard]] AFUN_INLINE char getPrefix() const;
 
-        [[nodiscard]] const char *getElement() const;
-        [[nodiscard]] BlockType getBlockType() const;
-        [[nodiscard]] ByteCode *getSon() const;
-        [[nodiscard]] aFuntool::FileLine getFileLine() const;
-        [[nodiscard]] const aFuntool::FilePath &getFilePath() const;
+        [[nodiscard]] AFUN_INLINE const char *getElement() const;
+        [[nodiscard]] AFUN_INLINE BlockType getBlockType() const;
+        [[nodiscard]] AFUN_INLINE ByteCode *getSon() const;
+        [[nodiscard]] AFUN_INLINE aFuntool::FileLine getFileLine() const;
+        [[nodiscard]] AFUN_INLINE const aFuntool::FilePath &getFilePath() const;
 
-        [[nodiscard]] ByteCode *toNext() const;
-        [[nodiscard]] ByteCode *toPrev() const;
-        [[nodiscard]] ByteCode *toFather() const;
+        [[nodiscard]] AFUN_INLINE ByteCode *toNext() const;
+        [[nodiscard]] AFUN_INLINE ByteCode *toPrev() const;
+        [[nodiscard]] AFUN_INLINE ByteCode *toFather() const;
 
     private:
         CodeType type;
@@ -82,7 +82,7 @@ namespace aFuncore {
                 BlockType block_type;
                 ByteCode *son;
             };
-            inline CodeData();
+            AFUN_INLINE CodeData();
         } data;
 
         ByteCode *father = nullptr;

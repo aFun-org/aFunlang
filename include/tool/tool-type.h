@@ -8,10 +8,12 @@
 #include <iostream>
 #include <cinttypes>
 #include <cstdarg>
+#include "macro.h"
+#include "macro.h"
 #include "aFunbase.h"
 
 namespace aFuntool {
-    static const char NUL = 0;
+    AFUN_STATIC const char NUL = 0;
 
     typedef uint32_t FileLine;  // 文件行号
     typedef std::string FilePath;  // 文件路径

@@ -2,8 +2,8 @@
 #define AFUN_DLC_H
 #include <iostream>
 #include "aFunToolExport.h"
+#include "macro.h"
 #include "dlfcn.h"  // CMake 处理 dlfcn.h 的位置
-
 
 /* 动态库工具(dlc): 处理动态库的使用 */
 
@@ -37,12 +37,12 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT DlcHandle {
     public:
         DlcHandle(const char *file, int mode) noexcept;  // 仅 openLibary 可用
-        inline DlcHandle(const DlcHandle &dlc_handle) noexcept;
-        inline DlcHandle(DlcHandle &&dlc_handle) noexcept;
-        inline ~DlcHandle() noexcept;
-        inline DlcHandle &operator=(const DlcHandle &dlc_handle) noexcept;
+        AFUN_INLINE DlcHandle(const DlcHandle &dlc_handle) noexcept;
+        AFUN_INLINE DlcHandle(DlcHandle &&dlc_handle) noexcept;
+        AFUN_INLINE ~DlcHandle() noexcept;
+        AFUN_INLINE DlcHandle &operator=(const DlcHandle &dlc_handle) noexcept;
 
-        [[nodiscard]] inline bool isOpen() const;
+        [[nodiscard]] AFUN_INLINE bool isOpen() const;
 
         /**
          * 获得动态库中指定名字的符号
@@ -56,11 +56,11 @@ namespace aFuntool {
         /**
          * 关闭动态库句柄
          */
-        inline void close();
-        inline int operator++(int);
-        inline int operator--(int);
+        AFUN_INLINE void close();
+        AFUN_INLINE int operator++(int);
+        AFUN_INLINE int operator--(int);
 
-        static void dlcExit();
+        AFUN_STATIC void dlcExit();
 
         class AFUN_TOOL_EXPORT Handle {
             friend class DlcHandle;
@@ -70,7 +70,7 @@ namespace aFuntool {
             Handle &operator=(const Handle *dlc) = delete;
             ~Handle();
 
-            [[nodiscard]] inline bool isOpen() const;
+            [[nodiscard]] AFUN_INLINE bool isOpen() const;
 
             /**
              * 获得动态库中指定名字的符号
@@ -93,7 +93,7 @@ namespace aFuntool {
 
     private:
         class Handle *handle_;
-        static Handle *dlc;
+        AFUN_STATIC Handle *dlc;
     };
 
 }

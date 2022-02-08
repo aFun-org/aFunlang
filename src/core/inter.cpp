@@ -6,12 +6,12 @@
 
 namespace aFuncore {
     Inter::Inter(Environment &env_)
-            : out{}, in{}, env{env_}, status{inter_init}, activation{nullptr} {
+            : status{inter_init}, env{env_}, activation{nullptr}, out{}, in{} {
         env++;
     }
 
     Inter::Inter(const Inter &base_inter)
-            : out{}, in{}, env{base_inter.env}, status{inter_init}, activation{nullptr}{
+            : status{inter_init}, env{base_inter.env}, activation{nullptr}, out{}, in{}{
         for (auto &i: base_inter.literal)
             literal.push_back(i);
         env++;
@@ -180,8 +180,7 @@ namespace aFuncore {
     }
 
     Environment::Environment(int argc, char **argv)
-        : reference{0}, gc_inter{*(new Inter(*this))},
-          protect{new ProtectVarSpace(*this)}, destruct{false} {
+        : reference{0}, destruct{false}, gc_inter{*(new Inter(*this))}, protect{new ProtectVarSpace(*this)} {
         /* 生成 gc_inter 后, reference == 1 */
 
         envvar.setNumber("sys:gc-runtime", 2);

@@ -7,7 +7,7 @@ namespace aFunit {
     struct aFunInitInfo : public aFuncore::InitInfo {
         aFuntool::Logger &afun_logger;
 
-        inline aFunInitInfo(const std::string &base_dir_,
+        AFUN_INLINE aFunInitInfo(const std::string &base_dir_,
                             aFuntool::LogFactory &factor_,
                             aFuntool::Logger &afun_logger_,
                             aFuntool::Logger &core_logger_,
@@ -16,7 +16,7 @@ namespace aFunit {
 
     AFUN_LANG_EXPORT extern aFuntool::Logger *aFunLogger;
     AFUN_LANG_EXPORT bool aFunInit(aFunInitInfo *info);
-    static void setAFunLogger(aFuntool::Logger *log);
+    AFUN_STATIC void setAFunLogger(aFuntool::Logger *log);
 }
 
 #include "it-init.inline.h"

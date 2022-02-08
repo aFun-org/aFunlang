@@ -9,30 +9,30 @@ namespace aFuntool {
         return handle_ != nullptr ? handle_->getSymbol<SYMBOL>(name) : DlcSymbol<SYMBOL>();
     }
 
-    inline DlcHandle::~DlcHandle() noexcept {
+    DlcHandle::~DlcHandle() noexcept {
         this->close();
     }
 
-    inline bool DlcHandle::isOpen() const {
+    bool DlcHandle::isOpen() const {
         return handle_ != nullptr ? handle_->isOpen() : false;
     }
 
-    inline void DlcHandle::close(){
+    void DlcHandle::close(){
         if (handle_ == nullptr)
             return;
         (*handle_)--;
         handle_ = nullptr;
     }
 
-    inline int DlcHandle::operator++(int){
+    int DlcHandle::operator++(int){
         return (*handle_)++;
     }
 
-    inline int DlcHandle::operator--(int){
+    int DlcHandle::operator--(int){
         return (*handle_)--;
     }
 
-    inline DlcHandle &DlcHandle::operator=(const DlcHandle &dlc_handle) noexcept {
+    DlcHandle &DlcHandle::operator=(const DlcHandle &dlc_handle) noexcept {
         if (&dlc_handle == this)
             return *this;
 
@@ -43,13 +43,13 @@ namespace aFuntool {
         return *this;
     }
 
-    inline DlcHandle::DlcHandle(const DlcHandle &dlc_handle) noexcept {
+    DlcHandle::DlcHandle(const DlcHandle &dlc_handle) noexcept {
         handle_ = dlc_handle.handle_;
         if (handle_ != nullptr)
             (*handle_)++;
     }
 
-    inline DlcHandle::DlcHandle(DlcHandle &&dlc_handle)noexcept {
+    DlcHandle::DlcHandle(DlcHandle &&dlc_handle)noexcept {
         handle_ = dlc_handle.handle_;
         dlc_handle.handle_ = nullptr;
     }
@@ -64,7 +64,7 @@ namespace aFuntool {
         return DlcSymbol<SYMBOL>(symbol, this);
     }
 
-    inline bool DlcHandle::Handle::isOpen() const {
+    bool DlcHandle::Handle::isOpen() const {
         return handle_ != nullptr;
     }
 }

@@ -130,7 +130,7 @@ namespace aFuntool {
 
 
 /* LogLevel和字符串的转换 */
-    static const char *LogLevelName[] = {
+    const char *LogLevelName[] = {
             "TK",  // track 0
             "DE",  // debug 1
             "IN",  // info 2
@@ -140,7 +140,7 @@ namespace aFuntool {
             "FE",  // fatal_error 6
     };
 
-    static const char *LogLevelNameLong[] = {
+    const char *LogLevelNameLong[] = {
             /* 内容输出到终端时使用*/
             "Track",  // track 0
             "Debug",  // debug 1

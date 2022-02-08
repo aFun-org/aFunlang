@@ -4,7 +4,7 @@ using namespace aFunit;
 using namespace aFuncore;
 using namespace aFuntool;
 
-static void progressInterEvent(Inter &inter);
+void progressInterEvent(Inter &inter);
 
 class Func1 : public Function {
     class CallFunc1 : public CallFunction {
@@ -98,7 +98,7 @@ public:
     }
 };
 
-static void printMessage(const std::string &type, Message *msg, Inter &inter) {
+void printMessage(const std::string &type, Message *msg, Inter &inter) {
     if (type == "NORMAL") {
         auto *msg_ = dynamic_cast<NormalMessage *>(msg);
         if (msg_ == nullptr)
@@ -124,7 +124,7 @@ static void printMessage(const std::string &type, Message *msg, Inter &inter) {
     }
 }
 
-static void progressInterEvent(Inter &inter) {
+void progressInterEvent(Inter &inter) {
     std::string type;
     for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
         printMessage(type, msg, inter);
@@ -132,7 +132,7 @@ static void progressInterEvent(Inter &inter) {
     }
 }
 
-static void thread_test(Inter &son) {
+void thread_test(Inter &son) {
     auto code = Code("run-code.aun");
     code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
                                                    new Code::ByteCode(code, "test-var", 1), 0));

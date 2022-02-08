@@ -3,7 +3,7 @@
 #include "tool-logger.h"
 
 namespace aFuntool {
-    static void setSysLogger(aFuntool::Logger *log) {
+    void setSysLogger(aFuntool::Logger *log) {
         aFunSysLogger = log;
     }
 }

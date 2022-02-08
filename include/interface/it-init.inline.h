@@ -4,7 +4,7 @@
 #include "it-init.h"
 
 namespace aFunit {
-    inline aFunInitInfo::aFunInitInfo(const std::string &base_dir_,
+    aFunInitInfo::aFunInitInfo(const std::string &base_dir_,
                                       aFuntool::LogFactory &factor_,
                                       aFuntool::Logger &afun_logger_,
                                       aFuntool::Logger &core_logger_,
@@ -13,7 +13,7 @@ namespace aFunit {
 
     }
 
-    static void setAFunLogger(aFuntool::Logger *log) {
+    void setAFunLogger(aFuntool::Logger *log) {
         aFunLogger = log;
     }
 }

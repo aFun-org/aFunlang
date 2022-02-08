@@ -406,7 +406,7 @@ namespace aFuncore {
                     bool flat = false;
                     char *p = word + 1;
                     size_t count = 0;
-                    for (NULL; *p != aFuntool::NUL; p++) {
+                    for(AFUN_NULL; *p != aFuntool::NUL; p++) {
                         if (*p == '|' && !flat) {  // 跳过第一个 `|`, 如果是末尾|则自然跳过, 若不是则在遇到第二个`|`时写入数据
                             flat = true; /* count不需要递增 */
                             continue;

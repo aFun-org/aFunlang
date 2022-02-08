@@ -5,12 +5,12 @@
 namespace aFunit {
     class aFunitException : public aFuntool::aFunException {
     public:
-        inline explicit aFunitException(const std::string &msg);
+        AFUN_INLINE explicit aFunitException(const std::string &msg);
     };
 
     class readerFileOpenError : public aFunitException {
     public:
-        inline explicit readerFileOpenError(const aFuntool::FilePath &file);
+        AFUN_INLINE explicit readerFileOpenError(const aFuntool::FilePath &file);
     };
 
 }

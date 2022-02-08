@@ -20,7 +20,7 @@ namespace aFuntool {
                 uint8_t b[len];//元素b，占1个字节，b在内存中的地址为a最低字节的地址
             } in{.a = num}, out{};
 
-            for (int i = 0; i < len; i++)
+            for (size_t i = 0; i < len; i++)
                 out.b[len - i] = in.b[i];  // 大小端序转换
             num = out.a;
         }
@@ -46,7 +46,7 @@ namespace aFuntool {
                 uint8_t b[len];//元素b，占1个字节，b在内存中的地址为a最低字节的地址
             } in{.a = *num}, out{};
 
-            for (int i = 0; i < len; i++)
+            for (size_t i = 0; i < len; i++)
                 out.b[len - i] = in.b[i];  // 大小端序转换
             *num = out.a;
         }

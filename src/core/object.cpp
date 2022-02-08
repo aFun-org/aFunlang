@@ -4,15 +4,15 @@
 
 namespace aFuncore {
     Object::Object(std::string type_, Inter &inter)
-        : not_clear{false}, reference{1}, reachable{false}, done_destruct{false},
-          type{std::move(type_)}, env{inter.getEnvironment()}{
+        : env{inter.getEnvironment()}, type{std::move(type_)}, done_destruct{false}, not_clear{false},
+          reachable{false}, reference{1}{
         std::unique_lock<std::mutex> mutex{env.lock};
         env.gc.push_back(this);
     }
 
     Object::Object(std::string type_, Environment &env_)
-        : not_clear{false}, reference{1}, reachable{false}, done_destruct{false},
-          type{std::move(type_)}, env{env_}{
+        : env{env_}, type{std::move(type_)}, done_destruct{false}, not_clear{false},
+          reachable{false}, reference{1}{
         std::unique_lock<std::mutex> mutex{env.lock};
         env.gc.push_back(this);
     }

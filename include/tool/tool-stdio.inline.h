@@ -4,11 +4,11 @@
 #include "tool-stdio.h"
 
 namespace aFuntool {
-    static bool clear_ferror(FILE *file) {
+    bool clear_ferror(FILE *file) {
         return ferror(file) && (clearerr(file), ferror(file));
     }
 
-    static bool clear_stdin() {
+    bool clear_stdin() {
         return (ferror(stdin) || feof(stdin)) &&
                (clearerr(stdin), (ferror(stdin) || feof(stdin)));
     }
@@ -16,22 +16,22 @@ namespace aFuntool {
 
 #ifdef aFunWIN32_NO_CYGWIN
 namespace aFuntool {
-    static int fputs_stdout(const char *str) {
+    int fputs_stdout(const char *str) {
         return fputs_std_(str, stdout);
     }
 
-    static int fputs_stderr(const char *str) {
+    int fputs_stderr(const char *str) {
         return fputs_std_(str, stderr);
     }
 
-    static size_t vprintf_stderr(size_t buf_len, const char *format, va_list ap) {
+    size_t vprintf_stderr(size_t buf_len, const char *format, va_list ap) {
         return vprintf_std_(stderr, buf_len, format, ap);
     }
-    static size_t vprintf_stdout(size_t buf_len, const char *format, va_list ap) {
+    size_t vprintf_stdout(size_t buf_len, const char *format, va_list ap) {
         return vprintf_std_(stdout, buf_len, format, ap);
     }
 
-    static size_t printf_stdout(size_t buf_len, const char *format, ...) {
+    size_t printf_stdout(size_t buf_len, const char *format, ...) {
         va_list ap;
         va_start(ap, format);
         size_t re = vprintf_std_(stdout, buf_len, format, ap);
@@ -39,7 +39,7 @@ namespace aFuntool {
         return re;
     }
 
-    static size_t printf_stderr(size_t buf_len, const char *format, ...) {
+    size_t printf_stderr(size_t buf_len, const char *format, ...) {
         va_list ap;
         va_start(ap, format);
         size_t re = vprintf_std_(stderr, buf_len, format, ap);
@@ -49,35 +49,35 @@ namespace aFuntool {
 }
 #else
 namespace aFuntool {
-    static int fgetc_stdin(){
+    int fgetc_stdin(){
         return fgetc(stdout);
     }
 
-    static int fgets_stdin_(char *buf, int len, FILE *file){
+    int fgets_stdin_(char *buf, int len, FILE *file){
         return fgets(buf, len, file) != nullptr;
     }
 
-    static int fungetc_stdin(char ch){
+    int fungetc_stdin(char ch){
         return ungetc(ch, stdin);
     }
 
-    static int fputs_stdout(const char *str){
+    int fputs_stdout(const char *str){
         return fputs(str, stdout);
     }
 
-    static int fputs_stderr(const char *str){
+    int fputs_stderr(const char *str){
         return fputs(str, stderr);
     }
 
-    static int vprintf_stdout(size_t, const char *format, va_list ap){
+    int vprintf_stdout(size_t, const char *format, va_list ap){
         return vfprintf(stdout, format, ap);
     }
 
-    static int vprintf_stderr(size_t, const char *format, va_list ap){
+    int vprintf_stderr(size_t, const char *format, va_list ap){
         return vfprintf(stderr, format, ap);
     }
 
-    static size_t printf_stdout(size_t, const char *format, ...) {
+    size_t printf_stdout(size_t, const char *format, ...) {
         va_list ap;
         va_start(ap, format);
         size_t re = vfprintf(stdout, format, ap);
@@ -85,7 +85,7 @@ namespace aFuntool {
         return re;
     }
 
-    static size_t printf_stderr(size_t, const char *format, ...) {
+    size_t printf_stderr(size_t, const char *format, ...) {
         va_list ap;
         va_start(ap, format);
         size_t re = vfprintf(stderr, format, ap);
@@ -97,91 +97,91 @@ namespace aFuntool {
 #endif
 
 namespace aFuntool {
-    inline OutStream::OutStream(PrintFunction *func_) : func {func_} {
+    OutStream::OutStream(PrintFunction *func_) : func {func_} {
 
     }
 
-    inline OutStream &OutStream::operator<<(char a) {
+    OutStream &OutStream::operator<<(char a) {
         func(0, "%c", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(signed char a) {
+    OutStream &OutStream::operator<<(signed char a) {
         func(0, "%c", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(short a) {
+    OutStream &OutStream::operator<<(short a) {
         func(0, "%d", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(int a) {
+    OutStream &OutStream::operator<<(int a) {
         func(0, "%d", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(long a) {
+    OutStream &OutStream::operator<<(long a) {
         func(0, "%ld", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(long long a) {
+    OutStream &OutStream::operator<<(long long a) {
         func(0, "%lld", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(unsigned char a) {
+    OutStream &OutStream::operator<<(unsigned char a) {
         func(0, "%c", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(unsigned short a) {
+    OutStream &OutStream::operator<<(unsigned short a) {
         func(0, "%u", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(unsigned int a) {
+    OutStream &OutStream::operator<<(unsigned int a) {
         func(0, "%u", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(unsigned long a) {
+    OutStream &OutStream::operator<<(unsigned long a) {
         func(0, "%lu", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(unsigned long long a) {
+    OutStream &OutStream::operator<<(unsigned long long a) {
         func(0, "%llu", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(const char *a){
+    OutStream &OutStream::operator<<(const char *a){
         func(0, "%s", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(const std::string &a) {
+    OutStream &OutStream::operator<<(const std::string &a) {
         func(0, "%s", a.c_str());
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(const void *a) {
+    OutStream &OutStream::operator<<(const void *a) {
         func(0, "%p", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(float a) {
+    OutStream &OutStream::operator<<(float a) {
         func(0, "%f", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(double a) {
+    OutStream &OutStream::operator<<(double a) {
         func(0, "%f", a);
         return *this;
     }
 
-    inline OutStream &OutStream::operator<<(long double a) {
+    OutStream &OutStream::operator<<(long double a) {
         func(0, "%lf", a);
         return *this;
     }

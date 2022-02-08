@@ -13,8 +13,7 @@ namespace aFuncore {
      * @param inter_
      */
     Activation::Activation(Inter &inter_)
-            : inter{inter_}, line{0},
-              up{inter_.activation == nullptr ? nullptr : &inter_.activation->up}, down{}{
+            : inter{inter_}, up{inter_.activation == nullptr ? nullptr : &inter_.activation->up}, down{}, line{0} {
         if (inter_.activation != nullptr) {
             varlist.connect(inter_.activation->varlist);
             line = inter_.activation->line;
@@ -239,7 +238,7 @@ namespace aFuncore {
     }
 
     FuncActivation::FuncActivation(Function *func_, Inter &inter_)
-        : Activation(inter_), call{nullptr}, acl_begin{}, acl_end{}, on_tail{false}, status{func_get_func}, func{func_}  {
+        : Activation(inter_), status{func_get_func}, on_tail{false}, call{nullptr}, func{func_}, acl_begin{}, acl_end{}  {
         func->addReference();
     }
 
