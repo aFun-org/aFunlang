@@ -34,12 +34,13 @@ int main(int argc, char **argv_ansi) {
     aFun::aFunAtExit(convertArgsFree, nullptr);
 
     char **argv = argv_s;
+    tty_stdin = _isatty(_fileno(stdin));
 #else
 #include "unistd.h"
 
-    int main(int argc, char **argv) {
-#endif
+int main(int argc, char **argv) {
     tty_stdin = isatty(fileno(stdin));
+#endif
     home_path = aFun::getHomePath();
     if (home_path.empty()) {
         aFun::cerr << "aFunlang init error.";

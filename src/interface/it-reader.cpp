@@ -25,10 +25,12 @@ namespace aFunit {
                 return 0;
             }
 
-            if (ch == (char)0xEF) {
+            if ((unsigned char)ch == (unsigned char)0xEF) {
                 /* 处理BOM编码 */
-                char ch_[2];
-                if (fread(ch_, sizeof(char), 2, file) != 2 || ch_[0] != (char)0xBB || ch_[1] != (char)0xBF) {
+                unsigned char ch_[2];
+                if (fread(ch_, sizeof(unsigned char), 2, file) != 2
+                    || ch_[0] != (unsigned char)0xBB
+                    || ch_[1] != (unsigned char)0xBF) {
                     mode = read_mode_error;
                     return 0;
                 }

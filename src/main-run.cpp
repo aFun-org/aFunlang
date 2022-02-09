@@ -52,7 +52,7 @@ int mainRun(ff_FFlags *ff) {
             auto env = aFun::Environment(argc - 1, argv + 1);
             auto inter = aFun::Inter(env);
             return runCode(code, env, inter);
-        } catch (aFun::readerFileOpenError &e) {
+        } catch (aFun::readerFileOpenError &) {  // TODO: szh readerFileOpenError包含文件名
             aFun::cout << "Cannot open file: " << argv[0] << "\n";
             return EXIT_FAILURE;
         }

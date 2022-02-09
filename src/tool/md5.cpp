@@ -196,7 +196,7 @@ namespace aFuntool {
     T getFileMd5(T &path) noexcept(false) {
         FILE *fd;
 
-        unsigned long ret;
+        size_t ret;
         unsigned char data[READ_DATA_SIZE];
         unsigned char md5_value[MD5_SIZE];
 
@@ -207,7 +207,7 @@ namespace aFuntool {
         MD5_CTX *md5 = MD5Init();
         while (true) {
             ret = fread(data, 1, READ_DATA_SIZE, fd);
-            MD5Update(md5, data, ret);
+            MD5Update(md5, data, (unsigned int)ret);
             if (ret < READ_DATA_SIZE)
                 break;
         }

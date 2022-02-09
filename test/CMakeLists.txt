@@ -2,7 +2,7 @@
 include(function)
 
 if (_build_test)
-    message(STATUS "Build test")
+    message(STATUS "Build CTest")
     add_subdirectory(lib)
     add_subdirectory(src)
 endif()

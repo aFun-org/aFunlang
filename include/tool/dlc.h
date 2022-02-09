@@ -87,8 +87,8 @@ namespace aFuntool {
         private:
             void *handle_;
             int link_;  // 引用计数
-            struct Handle *next_;
-            struct Handle *prev_;
+            class Handle *next_;
+            class Handle *prev_;
         };
 
     private:

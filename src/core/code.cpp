@@ -173,7 +173,7 @@ RETURN:
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
             std::string code_md5 = tmp->getMD5_v1();
-            MD5Update(md5, (unsigned char *) code_md5.c_str(), code_md5.size());
+            MD5Update(md5, (unsigned char *) code_md5.c_str(), (unsigned int)code_md5.size());
 
             if (tmp->type == ByteCode::code_block && tmp->data.block.son != nullptr) {
                 tmp = tmp->data.block.son;
@@ -510,12 +510,12 @@ if(!(write)){           \
             head[1] = '-';
         if (type == code_block) {
             head[2] = data.block.son == nullptr ? 'n' : 's';
-            head[3] = data.block.block_type;
+            head[3] = (char)data.block.block_type;
         }
 
-        MD5Update(md5, (unsigned char *) head, strlen((char *) head));
+        MD5Update(md5, (unsigned char *) head, (unsigned int)strlen((char *) head));
         if (type == code_element)
-            MD5Update(md5, (unsigned char *) data.element, strlen((char *) data.element));
+            MD5Update(md5, (unsigned char *) data.element, (unsigned int)strlen((char *) data.element));
         else if (type == code_block)
             MD5Update(md5, (unsigned char *) "block", 5);
         else

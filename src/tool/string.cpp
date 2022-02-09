@@ -8,14 +8,8 @@
 #include "tool-type.h"
 #include "str.h"
 
-#define EQ_STR(str1, str2) (!strcmp((str1), (str2)))
-#define EQ_WSTR(wid1, wid2) (!wcscmp((wid1), (wid2)))
-
 #define NEW_STR(size) safeCalloc<char>((size) + 1)
-#define NEW_WSTR(size) safeCalloc<wchar_t>((size) + 1)
-
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
-#define WSTR_LEN(p) (((p) == NULL) ? 0 : wcslen((p)))
 
 namespace aFuntool {
     char *charToStr(char ch){
@@ -28,8 +22,9 @@ namespace aFuntool {
 
     char *strCopy(const char *str){
         if (str != nullptr) {
-            char *tmp = NEW_STR(STR_LEN(str));
-            strcpy(tmp, str);
+            auto size = STR_LEN(str);
+            char *tmp = NEW_STR(size);
+            strcpy_s(tmp, size + 1, str);
             return tmp;
         }
         return nullptr;
@@ -48,10 +43,11 @@ namespace aFuntool {
             free_last = false;
         }
 
-        char *new_str = NEW_STR(STR_LEN(first) + STR_LEN(second));
-        strcat(new_str, first);
+        auto size = STR_LEN(first) + STR_LEN(second);
+        char *new_str = NEW_STR(size);
+        strcat_s(new_str, size + 1, first);
         if (second != nullptr)
-            strcat(new_str, second);
+            strcat_s(new_str, size + 1, second);
 
         if (free_first) {
             auto free_ = const_cast<char *>(first);
@@ -63,35 +59,5 @@ namespace aFuntool {
             safeFree(free_);
         }
         return new_str;
-    }
-
-    /**
-     * char *转换为wchar_t *
-     */
-    wchar_t *convertToWstr(const char *str, bool free_old){
-        size_t len = STR_LEN(str);
-        auto tmp = NEW_WSTR(len);
-        mbstowcs(tmp, str, len);
-
-        if (free_old) {
-            auto free_ = const_cast<char *>(str);
-            safeFree(free_);
-        }
-        return tmp;
-    }
-
-    /**
-     * wchar_t *转换为char *
-     */
-    char *convertToStr(const wchar_t *wstr, bool free_old){
-        size_t len = WSTR_LEN(wstr);
-        auto tmp = NEW_STR(len);
-        wcstombs(tmp, wstr, len);
-
-        if (free_old) {
-            auto free_ = const_cast<wchar_t *>(wstr);
-            safeFree(free_);
-        }
-        return tmp;
     }
 }

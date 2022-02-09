@@ -119,7 +119,7 @@ namespace aFuncore {
                 if (i.rg.match(element) != 1)
                     continue;
                 return true;
-            } catch (aFuntool::RegexException &e) {
+            } catch (aFuntool::RegexException &) {
                 continue;
             }
         }
@@ -144,7 +144,7 @@ namespace aFuncore {
                 literaler = i.literaler;
                 in_protect = i.in_protect;
                 return true;
-            } catch (aFuntool::RegexException &e) {
+            } catch (aFuntool::RegexException &) {
                 continue;
             }
         }
@@ -154,7 +154,7 @@ namespace aFuncore {
     bool Inter::pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect){
         try {
             literal.push_front({aFuntool::Regex(pattern), pattern, literaler, in_protect});
-        } catch (aFuntool::RegexException &e) {
+        } catch (aFuntool::RegexException &) {
             return false;
         }
         return true;

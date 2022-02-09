@@ -1,14 +1,15 @@
 ﻿#ifndef AFUN_MD5_H
 #define AFUN_MD5_H
 #include "aFunToolExport.h"
+#include "macro.h"
 
 /* md5计算工具 */
 
 namespace aFuntool {
-    const int READ_DATA_SIZE = 1024;
-    const int MD5_SIZE = 16;
-    const int MD5_STR_LEN = MD5_SIZE * 2;
-    const int MD5_STRING = MD5_STR_LEN + 1;
+    AFUN_STATIC const size_t READ_DATA_SIZE = 1024;
+    AFUN_STATIC const size_t MD5_SIZE = 16;
+    AFUN_STATIC const size_t MD5_STR_LEN = MD5_SIZE * 2;
+    AFUN_STATIC const size_t MD5_STRING = MD5_STR_LEN + 1;
 
     typedef struct MD5_CTX MD5_CTX;
 
