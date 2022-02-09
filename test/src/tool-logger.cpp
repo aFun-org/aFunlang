@@ -4,15 +4,9 @@ using namespace aFuntool;
 int main(){
     int exit_code = 0;
     try {
-        std::string base_path = getHomePath();
-        if (base_path.empty()) {
-            printf("Not Exe Dir\n");
-            aFunExit(0);
-        }
-
         setlocale(LC_ALL, "");
 
-        auto factor = LogFactory(base_path + SEP + "aFunlog", true);
+        auto factor = LogFactory(std::string(".") + SEP + "aFunlog", true);
         auto logger = Logger(factor, "Test", aFuntool::log_info);
         infoLog(&logger, "Test logger");
         aFunExit(0);

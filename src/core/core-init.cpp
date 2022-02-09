@@ -16,8 +16,6 @@ namespace aFuncore {
         aFuntool::getEndian();
         if (setlocale(LC_ALL, "") == nullptr)
             return false;
-        if (info->base_dir.empty())
-            return false;
 
         setCoreLogger(&info->core_logger);
         aFuntool::setSysLogger(&info->sys_logger);

@@ -62,8 +62,7 @@ set(_print_dir ${PRINT_DIR_INFO})
 
 include(tool)
 
-include(InstallDir)
-include(WindowsInstall)
+include(directory)
 
 if (_print_dir)
     set(PRINT_DIR_INFO OFF CACHE BOOL "Print install and build dirs info." FORCE)

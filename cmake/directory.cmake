@@ -1,5 +1,5 @@
 ﻿#[[
-文件名: InstallDir.cmake
+文件名: directory.cmake
 设置安装路径的程序
 ]]
 

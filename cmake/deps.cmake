@@ -1,4 +1,5 @@
 include_guard(GLOBAL)
+include(deps-install)
 
 set(PRINT_DEPS_INFO ON CACHE BOOL "Print deps info.")  # 默认设定为 ON
 set(_print ${PRINT_DEPS_INFO})

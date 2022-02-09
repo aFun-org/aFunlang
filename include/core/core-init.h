@@ -5,15 +5,13 @@
 
 namespace aFuncore {
     struct InitInfo {
-        const std::string &base_dir;
         aFuntool::LogFactory &factor;
         aFuntool::Logger &core_logger;
         aFuntool::Logger &sys_logger;
 
-        AFUN_INLINE InitInfo(const std::string &base_dir_,
-                        aFuntool::LogFactory &factor_,
-                        aFuntool::Logger &core_logger_,
-                        aFuntool::Logger &sys_logger_);
+        AFUN_INLINE InitInfo(aFuntool::LogFactory &factor_,
+                             aFuntool::Logger &core_logger_,
+                             aFuntool::Logger &sys_logger_);
 
     };
 

@@ -14,7 +14,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
-#include <cstring>
 #include "tool-type.h"
 #include "log.h"
 #include "tool-exception.h"
@@ -128,9 +127,8 @@ namespace aFuntool {
         csv_ = nullptr;
     }
 
-
-/* LogLevel和字符串的转换 */
-    const char *LogLevelName[] = {
+    static const char *LogLevelName[] = {
+            /* LogLevel和字符串的转换 */
             "TK",  // track 0
             "DE",  // debug 1
             "IN",  // info 2
@@ -140,7 +138,7 @@ namespace aFuntool {
             "FE",  // fatal_error 6
     };
 
-    const char *LogLevelNameLong[] = {
+    static const char *LogLevelNameLong[] = {
             /* 内容输出到终端时使用*/
             "Track",  // track 0
             "Debug",  // debug 1
@@ -201,11 +199,11 @@ namespace aFuntool {
                                   const char *file, int line,
                                   const char *info){
         if (level < log_warning) {
-            cout << "\r* " << LogLevelName[level] << "/[" << id << "] " << tid;
+            cout << "\r* " << LogLevelNameLong[level] << "/[" << id << "] " << tid;
             cout << " " << t << " " << ti << " (" << file << ":" << line << ") : '" << info << "'\n";
             fflush(stdout);
         } else {
-            cerr << "\r* " << LogLevelName[level] << "/[" << id << "] " << tid;
+            cerr << "\r* " << LogLevelNameLong[level] << "/[" << id << "] " << tid;
             cerr << " " << t << " " << ti << " (" << file << ":" << line << ") : '" << info << "'\n";
             fflush(stderr);
         }

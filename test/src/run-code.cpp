@@ -299,16 +299,10 @@ int Main() {
 int main() {
     int exit_code = 0;
     try {
-        std::string base_path = getHomePath();
-        if (base_path.empty()) {
-            printf_stderr(0, "aFunlang init error.");
-            aFunExitReal(EXIT_FAILURE);
-        }
-
-        auto factor = aFuntool::LogFactory(base_path + aFuntool::SEP + "aFunlog", true);
+        auto factor = aFuntool::LogFactory(std::string(".") + aFuntool::SEP + "aFunlog", true);
         auto core_logger = aFuntool::Logger(factor, "aFun-core");
         auto sys_logger = aFuntool::Logger(factor, "aFun-sys");
-        aFuncore::InitInfo info {base_path, factor, core_logger, sys_logger};
+        auto info = aFuncore::InitInfo(factor, core_logger, sys_logger);
 
         if (!aFunCoreInit(&info)) {
             printf_stderr(0, "aFunlang init error.");

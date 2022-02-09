@@ -17,6 +17,8 @@
 #include "tool-exit.h"
 #include "byte.h"
 #include "dlc.h"
+#include "directory.h"
+#include "encoding.h"
 #include "file.h"
 #include "hash.h"
 #include "md5.h"

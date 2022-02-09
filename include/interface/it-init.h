@@ -7,11 +7,10 @@ namespace aFunit {
     struct aFunInitInfo : public aFuncore::InitInfo {
         aFuntool::Logger &afun_logger;
 
-        AFUN_INLINE aFunInitInfo(const std::string &base_dir_,
-                            aFuntool::LogFactory &factor_,
-                            aFuntool::Logger &afun_logger_,
-                            aFuntool::Logger &core_logger_,
-                            aFuntool::Logger &sys_logger_);
+        AFUN_INLINE aFunInitInfo(aFuntool::LogFactory &factor_,
+                                 aFuntool::Logger &afun_logger_,
+                                 aFuntool::Logger &core_logger_,
+                                 aFuntool::Logger &sys_logger_);
     };
 
     AFUN_LANG_EXPORT extern aFuntool::Logger *aFunLogger;

@@ -1,6 +1,6 @@
 ﻿#include "tool-exception.h"
 #include "tool-regex.h"
-#include "file.h"
+#include "encoding.h"
 #include "string"
 
 namespace aFuntool {
