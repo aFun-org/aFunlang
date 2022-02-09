@@ -215,7 +215,7 @@ namespace aFuntool {
         fileClose(fd);
         MD5Final(md5, md5_value);
 
-        for (int i = 0; i < MD5_SIZE; i++)
+        for (size_t i = 0; i < MD5_SIZE; i++)
             snprintf(md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
 
         return md5str;

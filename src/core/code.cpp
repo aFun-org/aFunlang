@@ -192,7 +192,7 @@ RETURN:
         }
 
         MD5Final(md5, (unsigned char *) md5_value);
-        for (int i = 0; i < aFuntool::MD5_SIZE; i++)
+        for (size_t i = 0; i < aFuntool::MD5_SIZE; i++)
             snprintf((char *) md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
         return md5str;
     }
@@ -522,7 +522,7 @@ if(!(write)){           \
             MD5Update(md5, (unsigned char *) "start", 5);
 
         MD5Final(md5, (unsigned char *) md5_value);
-        for (int i = 0; i < aFuntool::MD5_SIZE; i++)
+        for (size_t i = 0; i < aFuntool::MD5_SIZE; i++)
             snprintf((char *) md5str + i * 2, 2 + 1, "%02x", md5_value[i]);
         return md5str;
     }

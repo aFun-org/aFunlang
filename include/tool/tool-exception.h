@@ -9,7 +9,7 @@ namespace aFuntool {
         std::string message;
     public:
         AFUN_INLINE explicit aFunException(std::string msg);
-        virtual const char *what();
+        [[nodiscard]] const char *what() const noexcept override;
         [[nodiscard]] AFUN_INLINE const std::string &getMessage() const;
     };
 

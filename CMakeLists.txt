@@ -52,8 +52,8 @@ if (MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /utf-8")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic -ansi")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic -ansi")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexec-charset=UTF-8 -Wall -Wextra -pedantic")
 endif()
 
 # 相关参数

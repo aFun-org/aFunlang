@@ -58,11 +58,11 @@ int main() {
 
     if (rtest8 != test8 || rtest16 != test16 || rtest32 != test32 || rtest64 != test64 || rtestStr != testStr) {
         printf("error.\n");
-        printf("rtest8 = %d, test = %d\n", rtest8, test8);
-        printf("rtest16 = %d, test = %d\n", rtest16, test16);
-        printf("rtest32 = %d, test = %d\n", rtest32, test32);
-        printf("rtest64 = %lld, test = %lld\n", rtest64, test64);
-        printf("rtestStr = %s\ntestStr = %s\n", rtestStr.c_str(), testStr.c_str());
+        aFuntool::cout << "rtest8: " << rtest8 << "， test: " << test8 << "\n";
+        aFuntool::cout << "rtest16: " << rtest16 << "， test: " << test16 << "\n";
+        aFuntool::cout << "rtest32: " << rtest32 << "， test: " << test32 << "\n";
+        aFuntool::cout << "rtest64: " << rtest64 << "， test: " << test64 << "\n";
+        aFuntool::cout << "rtestStr: " << rtestStr << "\ntestStr: " << testStr << "\n";
         return EXIT_FAILURE;
     }
 

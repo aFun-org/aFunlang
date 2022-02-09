@@ -198,7 +198,7 @@ namespace aFuncore {
         auto none = new Object("None", inter);
         stream.pushMessage("NORMAL", new NormalMessage(none));
         none->delReference();
-        aFuntool::cout << "Import " << import << "\n";
+        aFuntool::cout << "Import " << import << " : " << call_code << "\n";
     }
 
     ImportFunction::CallFunc::~CallFunc() {

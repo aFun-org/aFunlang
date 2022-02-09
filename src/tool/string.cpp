@@ -24,7 +24,11 @@ namespace aFuntool {
         if (str != nullptr) {
             auto size = STR_LEN(str);
             char *tmp = NEW_STR(size);
+#ifdef aFunWIN32_NO_CYGWIN
             strcpy_s(tmp, size + 1, str);
+#else
+            strcpy(tmp, str);
+#endif
             return tmp;
         }
         return nullptr;
@@ -45,9 +49,18 @@ namespace aFuntool {
 
         auto size = STR_LEN(first) + STR_LEN(second);
         char *new_str = NEW_STR(size);
+#ifdef aFunWIN32_NO_CYGWIN
         strcat_s(new_str, size + 1, first);
-        if (second != nullptr)
+#else
+        strcat(new_str, first);
+#endif
+        if (second != nullptr) {
+#ifdef aFunWIN32_NO_CYGWIN
             strcat_s(new_str, size + 1, second);
+#else
+            strcat(new_str, second);
+#endif
+        }
 
         if (free_first) {
             auto free_ = const_cast<char *>(first);

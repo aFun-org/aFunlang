@@ -2,14 +2,14 @@
 #include <clocale>
 using namespace aFuntool;
 
-int main(int argc, char **argv) {
+int main() {
+    setlocale(LC_ALL, "");
+
+#ifdef aFunWIN32_NO_CYGWIN
     wchar_t *tmp;
     const wchar_t *tmp2 = L"你好";
     const char *tmp3 = "你好";
 
-    setlocale(LC_ALL, "");
-
-#ifdef aFunWIN32_NO_CYGWIN
     convertWideByte(&tmp, tmp3, CP_UTF8);
 
     std::wcout << tmp << std::endl;
