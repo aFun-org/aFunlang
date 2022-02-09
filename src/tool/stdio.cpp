@@ -21,7 +21,7 @@ namespace aFuntool {
     OutStream cerr{printf_stderr};
 }
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 #include <cstring>
 #include <cstdarg>
 #include <csignal>

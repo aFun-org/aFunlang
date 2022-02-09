@@ -7,7 +7,7 @@ std::string program_name;
 std::string home_path;
 bool tty_stdin = false;
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 
 int argc_s = 0;
 char **argv_s = nullptr;
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     try {
         auto factor = aFun::LogFactory(home_path + aFun::SEP + "aFunlog", true);
 
-#ifdef aFunDEBUG
+#ifdef AFUN_DEBUG
         auto core_logger = aFuntool::Logger(factor, "aFun-core", aFun::log_track);
         auto sys_logger = aFuntool::Logger(factor, "aFun-sys", aFun::log_track);
         auto aFun_logger = aFuntool::Logger(factor, "aFun", aFun::log_track);

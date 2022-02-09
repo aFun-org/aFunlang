@@ -27,7 +27,7 @@
 #undef aFunWriteTrack
 #define aFunIgnoreFatalError 0  /* 必须忽略FatalError */
 
-#elif defined aFunDEBUG
+#elif defined AFUN_DEBUG
 
 #ifndef aFunWriteTrack
 #define aFunWriteTrack 1  /* 是否记录Track */
@@ -94,7 +94,7 @@
 
 #endif
 
-#if defined aFunDEBUG
+#if defined AFUN_DEBUG
 #undef aFunConsoleTrack
 #define aFunConsoleTrack 1
 #elif (!aFunWriteTrack || !defined aFunConsoleTrack)

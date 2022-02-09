@@ -81,54 +81,15 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH TRUE)
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR})  # 添加默认的include路径
 
-set(definitions
-    aFunVersion="${PROJECT_VERSION}"
-    aFunDescription="${PROJECT_DESCRIPTION}"
-
-    systemName="${CMAKE_SYSTEM_NAME}"
-    compilerID="${CMAKE_C_COMPILER_ID}"
-
-    aFunMajorVersion=${PROJECT_VERSION_MAJOR}
-    aFunMinorVersion=${PROJECT_VERSION_MINOR}
-    aFunPatchVersion=${PROJECT_VERSION_PATCH}
-
-    aFunSharePrefix="${CMAKE_SHARED_LIBRARY_PREFIX}"
-    aFunShareSuffix="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    aFunStaticPrefix="${CMAKE_STATIC_LIBRARY_PREFIX}"
-    aFunStaticSuffix="${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    aFunExeSuffix="${CMAKE_EXECUTABLE_SUFFIX}")  # 默认的预定义宏
-
-if (WIN32 OR CYGWIN)
-    list(APPEND definitions aFunWIN32=1)
-    set(aFunWIN32 1)
-endif()
-
-if (WIN32 AND NOT CYGWIN)
-    list(APPEND definitions aFunWIN32_NO_CYGWIN=1)
-    set(aFunWIN32_NO_CYGWIN 1)
-endif()
-
-if (CYGWIN)
-    list(APPEND definitions aFunCYGWIN=1)
-    set(aFunCYGWIN 1)
-endif()
-
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    list(APPEND definitions aFunDEBUG=1)
-    set(aFunDEBUG 1)
-endif()
-
-configure_file(${CMAKE_SOURCE_DIR}/include/base.h.in
-               ${CMAKE_BINARY_DIR}/${INSTALL_INCLUDEDIR}/aFunbase.h
-               @ONLY)
-
 add_subdirectory(deps)   # 安装依赖
 include(deps)  # 查找依赖
-if (DEPS_FOUND)
-    #include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
-    add_subdirectory(src)
-    include(aFunHeader)
+if (NOT DEPS_FOUND)
+    return()
 endif()
+
+#include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
+add_subdirectory(src)
+include(aFunHeader)
 
 #install(EXPORT aFunlang
 #        NAMESPACE "aFunlang::"

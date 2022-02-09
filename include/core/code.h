@@ -16,7 +16,7 @@ namespace aFuncore {
         bool writeByteCode(const aFuntool::FilePath &file_path, bool debug=false) const;  // NOLINT 允许忽略返回值
         bool readByteCode(const aFuntool::FilePath &file_path);
 
-#ifdef aFunDEBUG
+#ifdef AFUN_DEBUG
         void display() const;
 #endif
 
@@ -55,7 +55,7 @@ namespace aFuncore {
         ByteCode *read_v1(FILE *f, bool debug=false, int8_t read_type=code_element, bool to_son=false);
         [[nodiscard]] std::string getMD5_v1() const;
 
-#ifdef aFunDEBUG
+#ifdef AFUN_DEBUG
         void display() const;
 #endif
 

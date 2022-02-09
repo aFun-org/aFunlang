@@ -10,7 +10,7 @@ void printVersion() {
 
 void printWelcomeInfo() {
     aFun::cout << "aFunlang " aFunVersion " CommandLine (" __DATE__ ", " __TIME__ ")\n";
-    aFun::cout << "[" compilerID "] on " systemName "\n";
+    aFun::cout << "[" COMPILER_ID "] on " SYSTEM_NAME "\n";
     aFun::cout << "(Enter the aFun code to run in the top activity)\n";
 }
 

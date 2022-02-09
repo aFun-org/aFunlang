@@ -26,11 +26,37 @@ endforeach()
 add_library(tool-shared SHARED "")
 add_library(tool-static STATIC "")
 
+# 基础宏定义
+set(definitions)
+if (WIN32 OR CYGWIN)
+    list(APPEND definitions AFUN_WIN32=1)
+endif()
+if (WIN32 AND NOT CYGWIN)
+    list(APPEND definitions AFUN_WIN32_NO_CYGWIN=1)
+endif()
+if (CYGWIN)
+    list(APPEND definitions AFUN_CYGWIN=1)
+endif()
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    list(APPEND definitions AFUN_DEBUG=1)
+endif()
+
+
 foreach(tgt tool-shared tool-static)
     target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
     target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
-    set_target_properties(${tgt} PROPERTIES
-                          PUBLIC_HEADER "${public_h_build}")
+    target_compile_definitions(${tgt}
+            PUBLIC
+                ${definitions}
+                SYSTEM_NAME="${CMAKE_SYSTEM_NAME}"
+                COMPILER_CXX_ID="${CMAKE_CXX_COMPILER_ID}"
+                COMPILER_C_ID="${CMAKE_C_COMPILER_ID}"
+                AFUN_SHARE_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
+                AFUN_SHARE_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                AFUN_STATIC_PREFIX="${CMAKE_STATIC_LIBRARY_PREFIX}"
+                AFUN_STATIC_SUFFIX="${CMAKE_STATIC_LIBRARY_SUFFIX}"
+                AFUN_EXE_SUFFIX="${CMAKE_EXECUTABLE_SUFFIX}")
+    set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
     define_FILENAME(${tgt})
 endforeach()
 

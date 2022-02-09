@@ -9,8 +9,6 @@
 #include <cinttypes>
 #include <cstdarg>
 #include "macro.h"
-#include "macro.h"
-#include "aFunbase.h"
 
 namespace aFuntool {
     AFUN_STATIC const char NUL = 0;

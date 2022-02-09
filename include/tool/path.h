@@ -4,7 +4,7 @@
 #include "tool-type.h"
 
 /* 路径工具 */
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 
 namespace aFuntool {
     AFUN_STATIC const char *SEP = "\\";
@@ -21,13 +21,13 @@ namespace aFuntool {
 #endif
 
 namespace aFuntool {
-    AFUN_STATIC const char *SHARED_PREFIX = aFunSharePrefix;
-    AFUN_STATIC const char *SHARED_SUFFIX = aFunShareSuffix;
+    AFUN_STATIC const char *SHARED_PREFIX = AFUN_SHARE_PREFIX;
+    AFUN_STATIC const char *SHARED_SUFFIX = AFUN_SHARE_SUFFIX;
 
-    AFUN_STATIC const char *STATIC_PREFIX = aFunStaticPrefix;
-    AFUN_STATIC const char *STATIC_SUFFIX = aFunStaticSuffix;
+    AFUN_STATIC const char *STATIC_PREFIX = AFUN_STATIC_PREFIX;
+    AFUN_STATIC const char *STATIC_SUFFIX = AFUN_STATIC_SUFFIX;
 
-    AFUN_STATIC const char *EXE_SUFFIX = aFunExeSuffix;
+    AFUN_STATIC const char *EXE_SUFFIX = AFUN_EXE_SUFFIX;
 }
 
 #endif //AFUN_PATH_H

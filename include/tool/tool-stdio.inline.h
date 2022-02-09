@@ -14,7 +14,7 @@ namespace aFuntool {
     }
 }
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 namespace aFuntool {
     int fputs_stdout(const char *str) {
         return fputs_std_(str, stdout);

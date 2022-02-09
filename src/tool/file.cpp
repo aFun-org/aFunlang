@@ -2,7 +2,7 @@
 #include "file.h"
 #include "tool-stdio.h"
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif
@@ -20,7 +20,7 @@
 #endif
 
 namespace aFuntool {
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
     typedef struct _stat64 aFun_stat;
     typedef wchar_t aFun_path;
 #else
@@ -36,7 +36,7 @@ namespace aFuntool {
      */
     int get_stat(aFun_stat &stat_, const std::string &path_){
         int re;
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
         aFun_path *tmp = nullptr;
         if (convertWideByte(&tmp, path_.c_str(), CP_UTF8) == 0)
             return -1;
@@ -98,7 +98,7 @@ namespace aFuntool {
     FILE *fileOpen(const char *path_, const char *mode_) {
         if (strlen(mode_) >= 5)
             return nullptr;
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
         FILE *file = nullptr;
         wchar_t *path = nullptr;
         wchar_t mode[5];

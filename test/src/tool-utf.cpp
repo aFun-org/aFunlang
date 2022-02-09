@@ -5,7 +5,7 @@ using namespace aFuntool;
 int main() {
     setlocale(LC_ALL, "");
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
     wchar_t *tmp;
     const wchar_t *tmp2 = L"你好";
     const char *tmp3 = "你好";

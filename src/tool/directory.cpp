@@ -11,7 +11,7 @@
 #include "log.h"
 #include "tool-stdio.h"
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif
@@ -21,7 +21,7 @@
 #endif
 
 namespace aFuntool {
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
     typedef wchar_t aFun_path;
 #else
     typedef char aFun_path;
@@ -138,7 +138,7 @@ namespace aFuntool {
      */
     std::string getExePath() {
         aFun_path exe_path[218] = {0};
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
         DWORD ret = GetModuleFileNameW(nullptr, exe_path, 217);  // 预留一位给NUL
         if (ret == 0 || wcslen(exe_path) == 0)
             return "";

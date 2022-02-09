@@ -23,7 +23,7 @@ namespace aFuncore {
         delete code;
     }
 
-#ifdef aFunDEBUG
+#ifdef AFUN_DEBUG
     /**
      * 显式代码内容
      */
@@ -54,7 +54,7 @@ namespace aFuncore {
     }
 #endif
 
-#define Done(write) do{ \
+#define done(write) do{ \
 if(!(write)){ \
     errorLog(aFunCoreLogger, "Write/Read bytecode fail: %s [%p]", #write, f); \
     return false; \
@@ -75,7 +75,7 @@ if(!(write)){ \
 
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
-            Done(tmp->write_v1(f, debug));
+            done(tmp->write_v1(f, debug));
             if (tmp->type == ByteCode::code_block && tmp->data.block.son != nullptr) {
                 tmp = tmp->data.block.son;
                 continue;
@@ -84,7 +84,7 @@ if(!(write)){ \
             if (tmp->next == nullptr) {
                 do {
                     tmp = tmp->father;
-                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(3)));
+                    done(aFuntool::byteWriteInt(f, static_cast<int8_t>(3)));
                 } while (tmp != nullptr && tmp->next == nullptr);
                 if (tmp == nullptr)
                     break;
@@ -92,7 +92,7 @@ if(!(write)){ \
             } else
                 tmp = tmp->next;
         }
-        Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(0)));
+        done(aFuntool::byteWriteInt(f, static_cast<int8_t>(0)));
         return true;
     }
 
@@ -114,7 +114,7 @@ if(!(write)){ \
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
             int8_t type_ = aFuntool::NUL;
-            Done(aFuntool::byteReadInt(f, &type_));
+            done(aFuntool::byteReadInt(f, &type_));
             switch (type_) {
                 case 0:
                     goto RETURN;
@@ -154,7 +154,7 @@ RETURN:
         return true;
     }
 
-#undef Done
+#undef done
 
     /**
      * 计算代码的MD5值（版本：1）
@@ -200,7 +200,7 @@ RETURN:
     static const std::string ByteCodeHead = "aFunByteCode";  // NOLINT
     static const int MaxByteCodeVersion = 1;  // 字节码版本号, 有别于 aFun 版本号
 
-#define Done(write) do{ \
+#define done(write) do{ \
 if(!(write)){           \
     errorLog(aFunCoreLogger, "Write/Read bytecode file fail: %s [%p]", #write, f); \
     goto RETURN_FALSE; \
@@ -225,11 +225,11 @@ if(!(write)){           \
         } else
             debugLog(aFunCoreLogger, "Write Bytecode file %s [%p] (debug: %d)", file_path.c_str(), f, debug);
 
-        Done(aFuntool::byteWriteStr(f, ByteCodeHead));
-        Done(aFuntool::byteWriteInt(f, int16_t(MaxByteCodeVersion)));
-        Done(aFuntool::byteWriteStr(f, getMD5_v1()));
-        Done(aFuntool::byteWriteInt(f, int8_t(debug)));
-        Done(write_v1(f, debug));
+        done(aFuntool::byteWriteStr(f, ByteCodeHead));
+        done(aFuntool::byteWriteInt(f, int16_t(MaxByteCodeVersion)));
+        done(aFuntool::byteWriteStr(f, getMD5_v1()));
+        done(aFuntool::byteWriteInt(f, int8_t(debug)));
+        done(write_v1(f, debug));
         aFuntool::fileClose(f);
         debugLog(aFunCoreLogger, "Write Bytecode file success");
         return true;
@@ -259,21 +259,21 @@ RETURN_FALSE:
             debugLog(aFunCoreLogger, "Read Bytecode file %s [%p]", file_path.c_str(), f);
 
         std::string head;
-        Done(aFuntool::byteReadStr(f, head));
+        done(aFuntool::byteReadStr(f, head));
         if (head != ByteCodeHead)
             return false;
 
         int16_t version;
-        Done(aFuntool::byteReadInt(f, &version));
+        done(aFuntool::byteReadInt(f, &version));
         switch (version) {  // NOLINT 为拓展方便, 使用switch-case而不是if-else
             case 1: {
                 debugLog(aFunCoreLogger, "Read Bytecode file version 1");
                 std::string md5;
                 int8_t debug;
-                Done(aFuntool::byteReadStr(f, md5));
-                Done(aFuntool::byteReadInt(f, &debug));
+                done(aFuntool::byteReadStr(f, md5));
+                done(aFuntool::byteReadInt(f, &debug));
 
-                Done(read_v1(f, debug));
+                done(read_v1(f, debug));
                 std::string md5_ = getMD5_v1();
                 if (md5_ != md5)
                     goto RETURN_FALSE;
@@ -293,7 +293,7 @@ RETURN_FALSE:
         return false;
     }
 
-#undef Done
+#undef done
 
     /**
      * 创建 `start` 代码块
@@ -384,7 +384,7 @@ RETURN_FALSE:
         return new_code;
     }
 
-#ifdef aFunDEBUG
+#ifdef AFUN_DEBUG
     /**
      * 显式代码块内容
      */
@@ -399,7 +399,7 @@ RETURN_FALSE:
     }
 #endif
 
-#define Done(write) do{ \
+#define done(write) do{ \
 if(!(write)){           \
     errorLog(aFunCoreLogger, "Write Code::ByteCode fail: %s [%p]", #write, f); \
     return false; \
@@ -414,29 +414,29 @@ if(!(write)){           \
     bool Code::ByteCode::write_v1(FILE *f, bool debug) const{
         switch (type) {
             case code_element:
-                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_element)));
-                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
-                Done(aFuntool::byteWriteStr(f, (data.element)));
+                done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_element)));
+                done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
+                done(aFuntool::byteWriteStr(f, (data.element)));
                 break;
             case code_block:
                 if (data.block.son == nullptr)
-                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(4)));  // 空 block 标注为 4
+                    done(aFuntool::byteWriteInt(f, static_cast<int8_t>(4)));  // 空 block 标注为 4
                 else
-                    Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_block)));
-                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
-                Done(aFuntool::byteWriteInt(f, static_cast<int8_t>(data.block.block_type)));
+                    done(aFuntool::byteWriteInt(f, static_cast<int8_t>(code_block)));
+                done(aFuntool::byteWriteInt(f, static_cast<int8_t>(prefix)));
+                done(aFuntool::byteWriteInt(f, static_cast<int8_t>(data.block.block_type)));
                 break;
             default:
                 break;
 
         }
         if (debug)
-            Done(aFuntool::byteWriteInt(f, static_cast<int16_t>(line)));
+            done(aFuntool::byteWriteInt(f, static_cast<int16_t>(line)));
         return true;
     }
 
-#undef Done
-#define Done(write) do{ \
+#undef done
+#define done(write) do{ \
 if(!(write)){           \
     errorLog(aFunCoreLogger, "Read Code::ByteCode fail: %s [%p]", #write, f); \
     return nullptr;         \
@@ -456,8 +456,8 @@ if(!(write)){           \
             case code_element: {
                 int8_t prefix_ = aFuntool::NUL;
                 std::string element_;
-                Done(aFuntool::byteReadInt(f, &prefix_));
-                Done(aFuntool::byteReadStr(f, element_));
+                done(aFuntool::byteReadInt(f, &prefix_));
+                done(aFuntool::byteReadStr(f, element_));
                 ret = new Code::ByteCode(belong, element_, 0, char(prefix_));
                 break;
             }
@@ -465,8 +465,8 @@ if(!(write)){           \
             case code_block: {
                 int8_t prefix_ = aFuntool::NUL;
                 int8_t block_type = aFuntool::NUL;
-                Done(aFuntool::byteReadInt(f, &prefix_));
-                Done(aFuntool::byteReadInt(f, &block_type));
+                done(aFuntool::byteReadInt(f, &prefix_));
+                done(aFuntool::byteReadInt(f, &block_type));
                 ret = new Code::ByteCode(belong, BlockType(block_type), nullptr, 0, char(prefix_));
                 break;
             }
@@ -477,7 +477,7 @@ if(!(write)){           \
 
         if (debug) {
             int16_t line_ = aFuntool::NUL;
-            Done(aFuntool::byteReadInt(f, &line_));
+            done(aFuntool::byteReadInt(f, &line_));
             ret->line = line;
         }
 
@@ -494,7 +494,7 @@ if(!(write)){           \
         return ret;
     }
 
-#undef Done
+#undef done
 
     /**
      * 计算代码的MD5值（版本：1）

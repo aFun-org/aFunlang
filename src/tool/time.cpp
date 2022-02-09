@@ -34,7 +34,7 @@ namespace aFuntool {
             t = &tmp;
 
         time(t);  // 获取时间戳
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
         struct tm lt{};
         if (localtime_s(&lt, t) != 0)
             return nullptr;
@@ -63,7 +63,7 @@ namespace aFuntool {
             t = &tmp;
 
         time(t);  // 获取时间戳
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
         struct tm lt{};
         if (localtime_s(&lt, t) != 0)
             return "";

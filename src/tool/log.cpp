@@ -24,7 +24,7 @@
 #include "str.h"
 #include "tool-exit.h"
 
-#ifdef aFunWIN32
+#ifdef AFUN_WIN32
 
 #include <Windows.h>
 

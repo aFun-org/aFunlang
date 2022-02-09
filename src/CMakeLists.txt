@@ -43,6 +43,13 @@ add_subdirectory(interface)  # interface 依赖 core
 #foreach(tgt IN LISTS aFunList)
 #    target_sources(${tgt} PRIVATE ${source} ${private_h} ${include_h})
 #    target_include_directories(${tgt} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+#    target_compile_definitions(${tgt}
+#            PRIVATE
+#                AFUN_VERSION="${PROJECT_VERSION}"
+#                AFUN_DESCRIPTION="${PROJECT_DESCRIPTION}"
+#                AFUN_MAJOR_VERSION=${PROJECT_VERSION_MAJOR}
+#                AFUN_MINOR_VERSION=${PROJECT_VERSION_MINOR}
+#                AFUN_PATCH_VERSION=${PROJECT_VERSION_PATCH})
 #    define_FILENAME(${tgt})
 #endforeach()
 #

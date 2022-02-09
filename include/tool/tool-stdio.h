@@ -14,7 +14,7 @@ namespace aFuntool {
     AFUN_STATIC bool clear_stdin();
 }
 
-#ifdef aFunWIN32_NO_CYGWIN
+#ifdef AFUN_WIN32_NO_CYGWIN
 
 #ifdef _MSC_VER
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
