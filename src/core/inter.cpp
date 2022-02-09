@@ -196,12 +196,6 @@ namespace aFuncore {
         }
 
         gc_thread = std::thread([this](){this->gcThread();});
-
-        {  // 导入函数
-            auto import = new ImportFunction(*this);
-            protect->defineVar("import", import);
-            import->delReference();
-        }
     }
 
     Environment::~Environment() noexcept(false) {

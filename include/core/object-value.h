@@ -121,30 +121,6 @@ namespace aFuncore {
         virtual bool isCallBack(Inter &inter, Activation &activation);
         virtual void callBack(Inter &inter, Activation &activation) = 0;
     };
-
-    class ImportFunction : public Function {
-        class CallFunc : public CallFunction {
-            const Code::ByteCode *call_code;
-            Inter &inter;
-            std::list<ArgCodeList> *acl;
-            std::string import;
-        public:
-            CallFunc(const Code::ByteCode *code_, Inter &inter_);
-            std::list<ArgCodeList> *getArgCodeList(Inter &inter_,
-                                                   Activation &activation,
-                                                   const Code::ByteCode *call) override;
-
-            void runFunction() override;
-            ~CallFunc() override;
-        };
-
-    public:
-        AFUN_INLINE explicit ImportFunction(Inter &inter_);
-        AFUN_INLINE explicit ImportFunction(Environment &env_);
-        ~ImportFunction() override = default;
-
-        CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) override;
-    };
 };
 
 #include "object-value.inline.h"

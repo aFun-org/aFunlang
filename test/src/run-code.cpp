@@ -48,8 +48,8 @@ public:
 
     ~Func1() override = default;
 
-    CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
-        return dynamic_cast<CallFunction *>(new CallFunc1(func_code, code, inter));
+    CallFunc1 *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
+        return new CallFunc1(func_code, code, inter);
     }
 
     bool isInfix() override {return true;}
@@ -95,6 +95,58 @@ public:
     void callBack(Inter &inter, Activation &) override {
         aFuntool::cout << "CallBackVar callback\n";
         new ExeActivation(func_code, inter);
+    }
+};
+
+class ImportFunction : public Function {
+    class CallFunc : public CallFunction {
+        const Code::ByteCode *call_code;
+        Inter &inter;
+        std::list<ArgCodeList> *acl;
+        std::string import;
+    public:
+        CallFunc(const Code::ByteCode *code_, Inter &inter_) : call_code{code_}, inter{inter_} {
+            if (code_ == nullptr ||
+                code_->getSon() == nullptr ||
+                code_->getSon()->toNext() == nullptr ||
+                code_->getSon()->toNext()->getType() != Code::ByteCode::code_element)
+                throw ArgumentError();
+            acl = new std::list<ArgCodeList>;
+            import = code_->getSon()->toNext()->getElement();
+        }
+
+        std::list<ArgCodeList> *getArgCodeList(Inter &,
+                                               Activation &,
+                                               const Code::ByteCode *) override {
+            return acl;
+        }
+
+        void runFunction() override {
+            auto &stream = inter.getActivation()->getDownStream();
+            auto none = new Object("None", inter);
+            stream.pushMessage("NORMAL", new NormalMessage(none));
+            none->delReference();
+            aFuntool::cout << "Import " << import << " : " << call_code << "\n";
+        }
+
+        ~CallFunc() override {
+            delete acl;
+        }
+    };
+
+public:
+    AFUN_INLINE explicit ImportFunction(Inter &inter_) : Object("Function", inter_) {
+
+    }
+
+    AFUN_INLINE explicit ImportFunction(Environment &env_) : Object("Function", env_) {
+
+    }
+
+    ~ImportFunction() override = default;
+
+    CallFunc *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
+        return new CallFunc(code, inter);
     }
 };
 
@@ -163,9 +215,14 @@ int Main() {
     auto cbv = new CBV1(inter);
     inter.getProtectVarSpace()->defineVar("test-cbv", cbv);
     aFuntool::cout << "cbv: " << cbv << "\n";
-    inter.getEnvVarSpace().setNumber("sys:error_std", 1);
     cbv->delReference();
 
+    auto import = new ImportFunction(inter);
+    inter.getProtectVarSpace()->defineVar("import", import);
+    aFuntool::cout << "import: " << import << "\n";
+    import->delReference();
+
+    inter.getEnvVarSpace().setNumber("sys:error_std", 1);
     auto tmp = new Func1(inter);
     aFuntool::cout << "tmp: " << tmp << "\n\n";
     tmp->delReference();

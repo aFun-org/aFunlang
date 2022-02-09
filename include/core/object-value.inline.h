@@ -49,14 +49,6 @@ namespace aFuncore {
     Object *Function::CallFunction::ArgCodeList::getObject() {
         return ret;
     }
-
-    ImportFunction::ImportFunction(Inter &inter_) : Object("Function", inter_) {
-
-    }
-
-    ImportFunction::ImportFunction(Environment &env_) : Object("Function", env_) {
-
-    }
 };
 
 #endif //AFUN_OBJECT_VALUE_INLINE_H
