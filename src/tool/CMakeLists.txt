@@ -29,18 +29,17 @@ add_library(tool-static STATIC "")
 # 基础宏定义
 set(definitions)
 if (WIN32 OR CYGWIN)
-    list(APPEND definitions AFUN_WIN32=1)
+    list(APPEND definitions AFUN_WIN32)
 endif()
 if (WIN32 AND NOT CYGWIN)
-    list(APPEND definitions AFUN_WIN32_NO_CYGWIN=1)
+    list(APPEND definitions AFUN_WIN32_NO_CYGWIN)
 endif()
 if (CYGWIN)
-    list(APPEND definitions AFUN_CYGWIN=1)
+    list(APPEND definitions AFUN_CYGWIN)
 endif()
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    list(APPEND definitions AFUN_DEBUG=1)
+    list(APPEND definitions AFUN_DEBUG)
 endif()
-
 
 foreach(tgt tool-shared tool-static)
     target_sources(${tgt} PRIVATE ${source} ${private_h} PUBLIC ${public_h_build} ${public_h_install})
@@ -57,19 +56,17 @@ foreach(tgt tool-shared tool-static)
                 AFUN_STATIC_SUFFIX="${CMAKE_STATIC_LIBRARY_SUFFIX}"
                 AFUN_EXE_SUFFIX="${CMAKE_EXECUTABLE_SUFFIX}")
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
+    target_link_libraries(${tgt} PUBLIC ${dlfcn_lib} PCRE2::8BIT Threads::Threads)
     define_FILENAME(${tgt})
 endforeach()
-
-target_link_libraries(tool-shared PUBLIC ${dlfcn_lib} PCRE2::8BIT Threads::Threads)
-target_link_libraries(tool-static PUBLIC ${dlfcn_lib} PCRE2::8BIT Threads::Threads)
 
 set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFuntool")
 set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFuntool-s")
 
-install(TARGETS tool-shared tool-static
-        EXPORT aFunlang
-        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT runtime
-        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
-        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT runtime
-        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT unsafe-dev)
+#install(TARGETS tool-shared tool-static
+#        EXPORT aFunlang
+#        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT runtime
+#        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
+#        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT runtime
+#        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+#        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT unsafe-dev)

@@ -44,10 +44,10 @@ set_target_properties(rt-static PROPERTIES OUTPUT_NAME "aFunit-s")
 target_link_libraries(rt-shared PUBLIC core-shared)
 target_link_libraries(rt-static PUBLIC core-static)
 
-install(TARGETS rt-shared rt-static
-        EXPORT aFunlang
-        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
-        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
-        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT base-runtime
-        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
-        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)
+#install(TARGETS rt-shared rt-static
+#        EXPORT aFunlang
+#        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT base-runtime
+#        ARCHIVE DESTINATION ${INSTALL_LIBDIR} COMPONENT dev
+#        LIBRARY DESTINATION ${INSTALL_LIBDIR} COMPONENT base-runtime
+#        PUBLIC_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT dev
+#        PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR} COMPONENT advanced-dev)

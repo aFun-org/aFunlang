@@ -32,9 +32,9 @@ foreach(tgt core-shared core-static)
     define_FILENAME(${tgt})
 endforeach()
 
-#set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
-#set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
-#
+set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
+set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
+
 target_link_libraries(core-shared PUBLIC tool-shared)
 target_link_libraries(core-static PUBLIC tool-static)
 #
