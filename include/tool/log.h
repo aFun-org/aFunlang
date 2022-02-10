@@ -1,19 +1,22 @@
 ﻿#ifndef AFUN_LOG_H
 #define AFUN_LOG_H
+#ifdef __cplusplus
 
 #include <iostream>
 #include "aFunToolExport.h"
-#include "macro.h"
+#include "tool-macro.h"
 
-#include "tool-type.h"
-#include "thread"
-#include "mutex"
-#include "condition_variable"
+#include "tool.h"
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
-#ifndef __pid_t_defined
+#endif
+
+#ifdef _MSC_VER
     typedef int pid_t;
-#define __pid_t_defined
 #endif
 
     enum LogLevel {
@@ -51,7 +54,7 @@ namespace aFuntool {
     class AFUN_TOOL_EXPORT LogFactory {
     public:
         Logger sys_log = Logger(*this, "SYSTEM");
-        LogFactory(const aFuntool::FilePath &path, bool is_async) noexcept(false);
+        LogFactory(const FilePath &path, bool is_async) noexcept(false);
         ~LogFactory();
         LogFactory(const LogFactory &)=delete;
         LogFactory &operator=(const LogFactory &)=delete;
@@ -98,7 +101,10 @@ namespace aFuntool {
         LogFactory &factor;
         std::mutex &mutex;
     };
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #include "log.inline.h"
 
@@ -156,4 +162,6 @@ namespace aFuntool {
 #endif
 
 #endif
+
+#endif  // __cplusplus
 #endif //AFUN_LOG_H

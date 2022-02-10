@@ -6,13 +6,16 @@
 #include <cstdio>
 #include <cstring>
 
-#include "tool-type.h"
+#include "tool.h"
 #include "md5.h"
 #include "file.h"
 #include "tool-exception.h"
 #include "__md5.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     struct MD5_CTX {
         unsigned int count[2];
         unsigned int state[4];
@@ -223,4 +226,7 @@ namespace aFuntool {
 
     template AFUN_TOOL_EXPORT char *getFileMd5(char *&path);
     template AFUN_TOOL_EXPORT std::string getFileMd5(std::string &path);
+
+#ifndef AFUN_TOOL_C
 }
+#endif

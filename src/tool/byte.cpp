@@ -2,10 +2,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "tool-type.h"
+#include "tool.h"
 #include "byte.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     enum EndianType endian = little_endian;
     enum EndianType save_as = little_endian;  // 默认以小端序存储
 
@@ -50,18 +53,18 @@ namespace aFuntool {
     /**
      * 读取一个C风格字符串
      */
-    bool byteReadStr(FILE *file, char *&str){
+    bool byteReadStr(FILE *file, char **str){
         uint16_t len;
         if (!byteReadInt<uint16_t>(file, &len))
             return false;
 
         if (len == 0) {
-            str = nullptr;
+            *str = nullptr;
             return true;
         }
 
-        str = safeCalloc<char>(len + 1);
-        return fread(str, sizeof(char), len, file) == len;
+        *str = safeCalloc<char>(len + 1);
+        return fread(*str, sizeof(char), len, file) == len;
     }
 
     /**
@@ -84,4 +87,6 @@ namespace aFuntool {
         return ret == len;
     }
 
+#ifndef AFUN_TOOL_C
 }
+#endif

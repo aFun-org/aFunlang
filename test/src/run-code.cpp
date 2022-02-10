@@ -14,6 +14,7 @@ class Func1 : public Function {
         std::list<ArgCodeList> *acl;
     public:
         CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, call_code{code_}, inter{inter_} {
+            (void)call_code;  // 放置 call_code unused
             acl = new std::list<ArgCodeList>;
             if (code_ != nullptr) {
                 ArgCodeList agr1 {code_->getSon()->toNext()};

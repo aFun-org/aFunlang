@@ -5,7 +5,7 @@
  */
 
 #include <cstdio>
-#include "tool-type.h"
+#include "tool.h"
 #include "tool-stdio.h"
 #include "mutex"
 
@@ -16,10 +16,16 @@
  * 实际上, khbit只能代表有内容输入而无法确定内容是否已经输入到缓冲区中
  */
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     OutStream cout{printf_stdout};
     OutStream cerr{printf_stderr};
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #ifdef AFUN_WIN32_NO_CYGWIN
 #include <cstring>
@@ -29,14 +35,17 @@ namespace aFuntool {
 // 获取CodePage, 并将内存中utf-8字符串转换为对应编码输出
 // cygwin环境下, 终端默认为uft-8
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
-    const int BUFF_SIZE = 40960;
-    char buffer[BUFF_SIZE + 1] = "";
-    size_t index = 0;
-    size_t next = 0;
-    size_t end = 0;
-    volatile sig_atomic_t ctrl_c = 0;
-    std::mutex buffer_mutex;  // 只有 export 的函数统一处理该互斥锁
+#endif
+
+    AFUN_STATIC const int BUFF_SIZE = 40960;
+    AFUN_STATIC char buffer[BUFF_SIZE + 1] = "";
+    AFUN_STATIC size_t buffer_index = 0;
+    AFUN_STATIC size_t buffer_next = 0;
+    AFUN_STATIC size_t buffer_end = 0;
+    AFUN_STATIC volatile sig_atomic_t ctrl_c = 0;
+    AFUN_STATIC std::mutex buffer_mutex;  // 只有 export 的函数统一处理该互斥锁
 
     int setCursorPosition(HANDLE std_o, CONSOLE_SCREEN_BUFFER_INFO *info_, SHORT x_){
         CONSOLE_SCREEN_BUFFER_INFO info;
@@ -73,43 +82,43 @@ namespace aFuntool {
         CONSOLE_SCREEN_BUFFER_INFO info;
         if (!GetConsoleScreenBufferInfo(std_o, &info))
             return 0;
-        if (setCursorPosition(std_o, &info, (SHORT) (end - next)) == -1)
+        if (setCursorPosition(std_o, &info, (SHORT) (buffer_end - buffer_next)) == -1)
             return 0;
-        next = end;
+        buffer_next = buffer_end;
         return 1;
     }
 
     int moveBuffer(){
-        if (index == 0)
+        if (buffer_index == 0)
             return 0;
-        memmove(buffer, buffer + index, BUFF_SIZE - index);
-        end = end - index;
-        next = next - index;
-        index = 0;
-        memset(buffer + end, 0, BUFF_SIZE - end);
+        memmove(buffer, buffer + buffer_index, BUFF_SIZE - buffer_index);
+        buffer_end = buffer_end - buffer_index;
+        buffer_next = buffer_next - buffer_index;
+        buffer_index = 0;
+        memset(buffer + buffer_end, 0, BUFF_SIZE - buffer_end);
         return 1;
     }
 
     int backChar(HANDLE std_o){
-        if (index != next) {  // 删除一个字符
+        if (buffer_index != buffer_next) {  // 删除一个字符
             if (setCursorPosition(std_o, nullptr, -1) == -1)  // 先一定位置在-1
                 return 0;
 
             CONSOLE_SCREEN_BUFFER_INFO info;
             if (!GetConsoleScreenBufferInfo(std_o, &info))
                 return 0;
-            memmove(buffer + next - 1, buffer + next, end - next + 1);
+            memmove(buffer + buffer_next - 1, buffer + buffer_next, buffer_end - buffer_next + 1);
 
             SetConsoleCursorPosition(std_o, info.dwCursorPosition);
-            for (size_t n = next - 1; n < end; n++)
+            for (size_t n = buffer_next - 1; n < buffer_end; n++)
                 fputc(' ', stdout);
 
             SetConsoleCursorPosition(std_o, info.dwCursorPosition);
-            fputs(buffer + next - 1, stdout);
+            fputs(buffer + buffer_next - 1, stdout);
 
             SetConsoleCursorPosition(std_o, info.dwCursorPosition);
-            next--;
-            end--;
+            buffer_next--;
+            buffer_end--;
         }
         return 1;
     }
@@ -117,9 +126,9 @@ namespace aFuntool {
     int enterChar(HANDLE std_o){
         if (!nextToEnd(std_o))
             return 0;
-        buffer[end] = '\n';
-        end++;
-        next++;
+        buffer[buffer_end] = '\n';
+        buffer_end++;
+        buffer_next++;
         fputc('\n', stdout);
         return 1;
     }
@@ -133,25 +142,25 @@ namespace aFuntool {
     int newChar(HANDLE std_i, char ch){
         if (ch == 0)
             return 1;
-        if (end == BUFF_SIZE && !moveBuffer())  // 对比 end 而不是 next
+        if (buffer_end == BUFF_SIZE && !moveBuffer())  // 对比 end 而不是 next
             return 0;
 
-        if (next != end) {  // insert 模式
+        if (buffer_next != buffer_end) {  // insert 模式
             CONSOLE_SCREEN_BUFFER_INFO info;
             if (!GetConsoleScreenBufferInfo(std_i, &info))
                 return 0;
-            memmove(buffer + next + 1, buffer + next, end - next);
-            buffer[next] = ch;
-            fputs(buffer + next, stdout);
+            memmove(buffer + buffer_next + 1, buffer + buffer_next, buffer_end - buffer_next);
+            buffer[buffer_next] = ch;
+            fputs(buffer + buffer_next, stdout);
             if (setCursorPosition(std_i, &info, 1) == -1)
                 return 0;
         } else {
-            buffer[next] = ch;
+            buffer[buffer_next] = ch;
             fputc(ch, stdout);
         }
 
-        next++;
-        end++;
+        buffer_next++;
+        buffer_end++;
         return 1;
     }
 
@@ -195,15 +204,15 @@ namespace aFuntool {
                     CONSOLE_SCREEN_BUFFER_INFO info;
                     if (!GetConsoleScreenBufferInfo(std_o, &info))
                         return -1;
-                    if (next > index) {
-                        next--;
+                    if (buffer_next > buffer_index) {
+                        buffer_next--;
                         if (setCursorPosition(std_o, nullptr, -1) == -1)
                             return 0;
                     }
                     return 0;
                 } else if (record.Event.KeyEvent.wVirtualKeyCode == VK_RIGHT) {  // 右
-                    if (next < end) {
-                        next++;
+                    if (buffer_next < buffer_end) {
+                        buffer_next++;
                         if (setCursorPosition(std_o, nullptr, 1) == -1)
                             return 0;
                     }
@@ -220,7 +229,7 @@ namespace aFuntool {
     }
 
     int fcheck_stdin(HANDLE std_i, HANDLE std_o){
-        if (end == index || end == 0 || buffer[end - 1] != '\n')
+        if (buffer_end == buffer_index || buffer_end == 0 || buffer[buffer_end - 1] != '\n')
             return checkNewInput(std_i, std_o);
         return 1;
     }
@@ -241,8 +250,8 @@ namespace aFuntool {
                 return EOF;
         }
 
-        re = (unsigned char) buffer[index];
-        index++;
+        re = (unsigned char) buffer[buffer_index];
+        buffer_index++;
         return re;
     }
 
@@ -265,10 +274,10 @@ namespace aFuntool {
 
         {
             size_t len_ = len - 1;
-            if (end - index < len_)
-                len_ = end - index;
-            memcpy(buf, buffer + index, len_);
-            index += len_;
+            if (buffer_end - buffer_index < len_)
+                len_ = buffer_end - buffer_index;
+            memcpy(buf, buffer + buffer_index, len_);
+            buffer_index += len_;
             nextToEnd(std_o);
             buf[len_] = '\0';  // 最后一位
         }
@@ -288,9 +297,9 @@ namespace aFuntool {
 
         std::unique_lock<std::mutex> ul{buffer_mutex};
         nextToEnd(std_o);
-        index = 0;
-        end = 0;
-        next = 0;
+        buffer_index = 0;
+        buffer_end = 0;
+        buffer_next = 0;
         memset(buffer, 0, BUFF_SIZE);
         return false;
     }
@@ -396,17 +405,17 @@ namespace aFuntool {
             return ungetc(ch, stdin);
 
         std::unique_lock<std::mutex> ul{buffer_mutex};
-        if (ch == 0 || (index == 0 && end == BUFF_SIZE)) {
+        if (ch == 0 || (buffer_index == 0 && buffer_end == BUFF_SIZE)) {
             return 0;
         }
 
-        if (index != 0) {
-            index--;
-            buffer[index] = static_cast<char>(ch);
-        } else if (end != BUFF_SIZE) {  // index == 0;
-            memmove(buffer, buffer + 1, end);  // 往回移动
-            end++;
-            next++;
+        if (buffer_index != 0) {
+            buffer_index--;
+            buffer[buffer_index] = static_cast<char>(ch);
+        } else if (buffer_end != BUFF_SIZE) {  // index == 0;
+            memmove(buffer, buffer + 1, buffer_end);  // 往回移动
+            buffer_end++;
+            buffer_next++;
             buffer[0] = static_cast<char>(ch);
         }
 
@@ -462,13 +471,19 @@ namespace aFuntool {
         safeFree(buf);
         return re;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #else
 #include <unistd.h>
 #include <fcntl.h>
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     std::mutex fcntl_mutex;  // 只有 export 的函数统一处理该互斥锁
     
     // 用于Linux平台的IO函数
@@ -526,5 +541,8 @@ namespace aFuntool {
         fcntl(STDIN_FILENO, F_SETFL, oldf);
         return !ferror(stdin) && !feof(stdin);
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 #endif

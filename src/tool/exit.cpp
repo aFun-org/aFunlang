@@ -4,7 +4,10 @@
 #include "tool-exit.h"
 #include "tool-exception.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     class ExitManager {
     public:
         ExitManager() noexcept : exit_mutex{},  data{} {
@@ -77,6 +80,7 @@ namespace aFuntool {
         exit(exit_code);
     }
 
+
     /**
      * 尝试执行退出函数
      */
@@ -109,4 +113,7 @@ namespace aFuntool {
     void aFunAtExit(aFunExitFunc func, void *data){
         manager.pushExitData(std::move(func), data);
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

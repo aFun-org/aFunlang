@@ -14,7 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstdarg>
-#include "tool-type.h"
+#include "tool.h"
 #include "log.h"
 #include "tool-exception.h"
 #include "log-macro.h"
@@ -38,7 +38,10 @@
 #define getpid() static_cast<long>(getpid())
 #endif
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     typedef struct LogNode LogNode;
     struct LogNode {  // 日志信息记录节点
         LogLevel level = log_info;
@@ -56,7 +59,7 @@ namespace aFuntool {
 
     void staticAnsyWritrLog(LogFactory::ansyData *data);
 
-    LogFactory::LogFactory(const aFuntool::FilePath &path, bool is_async) noexcept(false)
+    LogFactory::LogFactory(const FilePath &path, bool is_async) noexcept(false)
         : sys_log{*this, "SYSTEM", log_info}{
         std::unique_lock<std::mutex> ul{mutex_};
 
@@ -81,7 +84,7 @@ namespace aFuntool {
         if (csv_ == nullptr)
             throw FileOpenException(csv_path);
 
-#define CSV_FORMAT "%s,%s,%d,%d,%s,%lld,%s,%d,%s,%s\n"
+#define CSV_FORMAT "%s,%s,%lld,%lld,%s,%lld,%s,%d,%s,%s\n"
 #define CSV_TITLE  "Level,Logger,PID,TID,Data,Timestamp,File,Line,Function,Log\n"
         if (csv_head_write) {
             fprintf(csv_, CSV_TITLE);  // 设置 cvs 标题
@@ -166,14 +169,18 @@ namespace aFuntool {
                               const char *ti, time_t t,
                               const char *file, int line, const char *func,
                               const char *info){
-#define FORMAT "%s/[%s] %d %d {%s %lld} (%s:%d at %s) : '%s' \n"
+#define FORMAT "%s/[%s] %lld %lld {%s %lld} (%s:%d at %s) : '%s' \n"
         /* 写入文件日志 */
         if (log_ != nullptr) {
-            fprintf(log_, FORMAT, LogLevelName[level], id, pid_, tid, ti, static_cast<long long>(t), file, line, func, info);
+            fprintf(log_, FORMAT, LogLevelName[level], id,
+                    static_cast<long long>(pid_), static_cast<long long>(tid), ti,
+                    static_cast<long long>(t), file, line, func, info);
             fflush(log_);
         }
         if (csv_ != nullptr) {
-            fprintf(csv_, CSV_FORMAT, LogLevelName[level], id, pid_, tid, ti, static_cast<long long>(t), file, line, func, info);
+            fprintf(csv_, CSV_FORMAT, LogLevelName[level], id,
+                    static_cast<long long>(pid_), static_cast<long long>(tid), ti,
+                    static_cast<long long>(t), file, line, func, info);
             fflush(csv_);
         }
 
@@ -420,4 +427,7 @@ namespace aFuntool {
 #endif
         return 0;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

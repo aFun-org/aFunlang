@@ -1,10 +1,15 @@
 ﻿#ifndef AFUN_TOOL_EXCEPTION_H
 #define AFUN_TOOL_EXCEPTION_H
-#include "aFunToolExport.h"
-#include "macro.h"
-#include "tool-type.h"
+#ifdef __cplusplus
 
+#include "aFunToolExport.h"
+#include "tool-macro.h"
+#include "tool.h"
+
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     class AFUN_TOOL_EXPORT aFunException : public std::exception {
         std::string message;
     public:
@@ -39,8 +44,12 @@ namespace aFuntool {
         AFUN_INLINE explicit Exit(int exit_code_);
         AFUN_INLINE int getExitCode() const;
     };
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #include "tool-exception.inline.h"
 
+#endif
 #endif //AFUN_TOOL_EXCEPTION_H

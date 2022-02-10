@@ -3,10 +3,13 @@
  * 目标: 关于哈希表的实用函数
  */
 
-#include "tool-type.h"
+#include "tool.h"
 #include "hash.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     time33_t time33(const char *str){
         unsigned int hash = 5381;
         while (*str)
@@ -20,4 +23,7 @@ namespace aFuntool {
             hash += (hash << 5) + ch;
         return (hash & 0x7FFFFFFF);  // NOLINT
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

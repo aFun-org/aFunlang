@@ -1,6 +1,5 @@
 ﻿file(GLOB src_list RELATIVE ${CMAKE_CURRENT_LIST_DIR}
      ${CMAKE_CURRENT_LIST_DIR}/*.cpp)
-
 foreach(src IN LISTS src_list)
     cmake_path(GET src STEM file_name)
     add_executable(${file_name})
@@ -12,19 +11,39 @@ foreach(src IN LISTS src_list)
     define_FILENAME(${file_name})
     unset(file_name)
 endforeach()
+unset(src_list)
+
+file(GLOB src_list RELATIVE ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/*.c)
+foreach(src IN LISTS src_list)
+    cmake_path(GET src STEM file_name)
+    add_executable(${file_name})
+    target_sources(${file_name} PRIVATE ${src})
+    target_link_libraries(${file_name} PUBLIC tool-static-c)  # 链接静态库 (导出所有符号)
+    set_target_properties(${file_name}
+            PROPERTIES OUTPUT_NAME "test-${file_name}")
+    target_compile_definitions(${file_name} PRIVATE IN_CTEST)
+    define_FILENAME(${file_name})
+    unset(file_name)
+endforeach()
+unset(src_list)
 
 # tool 相关测试
 file(MD5 "${CMAKE_CURRENT_LIST_DIR}/../share/md5.txt" TOOL_MD5_ANS)
-add_new_test(tool-byte COMMAND "$<TARGET_FILE:tool-byte>")
 add_new_test(tool-mem COMMAND "$<TARGET_FILE:tool-mem>")
+add_new_test(tool-byte COMMAND "$<TARGET_FILE:tool-byte>")
 add_new_test(tool-dlc COMMAND "$<TARGET_FILE:tool-byte>" "$<TARGET_FILE:dlc-lib>")
 add_new_test(tool-regex COMMAND "$<TARGET_FILE:tool-regex>")
 add_new_test(tool-md5 COMMAND "$<TARGET_FILE:tool-md5>" "${TOOL_MD5_ANS}" "${CMAKE_CURRENT_LIST_DIR}/../share/md5.txt")
+add_new_test(tool-utf COMMAND "$<TARGET_FILE:tool-utf>")
 add_new_test(tool-logger COMMAND "$<TARGET_FILE:tool-logger>")
 add_new_test(tool-exit COMMAND "$<TARGET_FILE:tool-exit>")
 add_new_test(tool-hash COMMAND "$<TARGET_FILE:tool-hash>")
-add_new_test(tool-utf COMMAND "$<TARGET_FILE:tool-utf>")
 set_test_label(tool tool-mem tool-byte tool-dlc tool-regex tool-md5 tool-utf tool-logger tool-exit tool-hash)
+
+add_new_test(tool-c-hash COMMAND "$<TARGET_FILE:tool-c-hash>")
+add_new_test(tool-c-stdio COMMAND "$<TARGET_FILE:tool-c-stdio>")
+set_test_label(it tool-c-hash tool-c-stdio)
 
 add_new_test(core-init COMMAND "$<TARGET_FILE:core-init>")
 add_new_test(core-code COMMAND "$<TARGET_FILE:core-code>")
@@ -33,8 +52,11 @@ add_new_test(core-down-msg COMMAND "$<TARGET_FILE:core-down-msg>")
 add_new_test(core-up-msg COMMAND "$<TARGET_FILE:core-up-msg>")
 add_new_test(core-reader COMMAND "$<TARGET_FILE:core-reader>")
 add_new_test(core-lexical COMMAND "$<TARGET_FILE:core-lexical>")
+set_test_label(core core-init core-code core-env-var core-down-msg core-up-msg core-reader core-lexical)
 
 add_new_test(it-syntactic COMMAND "$<TARGET_FILE:it-syntactic>")
 add_new_test(it-init COMMAND "$<TARGET_FILE:it-init>")
+set_test_label(it it-syntactic it-init)
 
 add_new_test(run-code COMMAND "$<TARGET_FILE:run-code>")
+set_test_label(aFun run-code)

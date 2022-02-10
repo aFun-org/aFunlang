@@ -5,13 +5,16 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "tool-type.h"
+#include "tool.h"
 #include "str.h"
 
 #define NEW_STR(size) safeCalloc<char>((size) + 1)
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     char *charToStr(char ch){
         if (ch == NUL)
             return nullptr;
@@ -73,4 +76,7 @@ namespace aFuntool {
         }
         return new_str;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

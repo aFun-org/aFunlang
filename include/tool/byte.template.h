@@ -1,9 +1,13 @@
 ﻿#ifndef AFUN_BYTE_TEMPLATE_H
 #define AFUN_BYTE_TEMPLATE_H
+#ifdef __cplusplus
 
 #include "byte.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     /**
      * 写入一个整数
      * @tparam T 整数类型
@@ -53,6 +57,10 @@ namespace aFuntool {
 
         return re == 1;
     }
-}
 
-#endif //AFUN_BYTE_TEMPLATE_H
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif  // __cplusplus
+#endif // AFUN_BYTE_TEMPLATE_H

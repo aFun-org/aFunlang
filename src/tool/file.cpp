@@ -1,4 +1,5 @@
-#include "tool-type.h"
+#include <cstring>
+#include "tool.h"
 #include "file.h"
 #include "tool-stdio.h"
 
@@ -7,8 +8,10 @@
 #pragma warning(disable : 5105)  // 关闭 5105 的警告输出 (Windows.h中使用)
 #endif
 #include <Windows.h>
+#include <sys/stat.h>
 #else
 #include <unistd.h>
+#include <sys/stat.h>
 #endif
 
 #ifndef S_ISREG
@@ -19,7 +22,10 @@
 #define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
 #endif
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
 #ifdef AFUN_WIN32_NO_CYGWIN
     typedef struct _stat64 aFun_stat;
     typedef wchar_t aFun_path;
@@ -127,4 +133,7 @@ namespace aFuntool {
     int fileClose(FILE *file) {
         return fclose(file);
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

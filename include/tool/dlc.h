@@ -1,8 +1,10 @@
 ﻿#ifndef AFUN_DLC_H
 #define AFUN_DLC_H
+#ifdef __cplusplus
+
 #include <iostream>
 #include "aFunToolExport.h"
-#include "macro.h"
+#include "tool-macro.h"
 #include "dlfcn.h"  // CMake 处理 dlfcn.h 的位置
 
 /* 动态库工具(dlc): 处理动态库的使用 */
@@ -21,7 +23,10 @@
  * dlcExit: 释放所有动态库
  */
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     class DlcHandle;
 
     template <typename SYMBOL>
@@ -96,9 +101,12 @@ namespace aFuntool {
         AFUN_STATIC Handle *dlc;
     };
 
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #include "dlc.inline.h"
 #include "dlc.template.h"
 
+#endif
 #endif //AFUN_DLC_H

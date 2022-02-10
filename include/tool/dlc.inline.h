@@ -1,9 +1,13 @@
 ﻿#ifndef AFUN_DLC_INLINE_H
 #define AFUN_DLC_INLINE_H
+#ifdef __cplusplus
 
 #include "dlc.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     template<typename SYMBOL>
     DlcSymbol<SYMBOL> DlcHandle::getSymbol(const std::string &name){
         return handle_ != nullptr ? handle_->getSymbol<SYMBOL>(name) : DlcSymbol<SYMBOL>();
@@ -67,6 +71,10 @@ namespace aFuntool {
     bool DlcHandle::Handle::isOpen() const {
         return handle_ != nullptr;
     }
-}
 
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif
 #endif //AFUN_DLC_INLINE_H

@@ -1,7 +1,10 @@
-#include "tool-type.h"
+#include "tool.h"
 #include "encoding.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     /**
      * 检查给定字符串是否utf-8编码
      * @param str 字符串
@@ -36,4 +39,7 @@ namespace aFuntool {
 
         return true;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

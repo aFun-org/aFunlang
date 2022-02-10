@@ -1,7 +1,10 @@
-﻿#include "tool-type.h"
+﻿#include "tool.h"
 #include "dlc.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     DlcHandle::Handle *DlcHandle::dlc = nullptr;
 
     /**
@@ -72,4 +75,7 @@ namespace aFuntool {
             dlc = next;
         }
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

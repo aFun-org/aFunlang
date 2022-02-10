@@ -1,5 +1,6 @@
 ﻿#ifndef AFUN_MEM_TEMPLATE_H
 #define AFUN_MEM_TEMPLATE_H
+#ifdef __cplusplus
 
 #include <cstdlib>
 #include "log.h"
@@ -7,7 +8,10 @@
 #include "tool-logger.h"
 
 /* 取代calloc函数 */
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     template <typename T = void *>
     T *safeFree(T *ptr) {if (ptr != nullptr) free((void *)ptr); return nullptr;}
 
@@ -34,6 +38,10 @@ namespace aFuntool {
         }
         return re;
     }
-}
 
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif
 #endif //AFUN_MEM_TEMPLATE_H

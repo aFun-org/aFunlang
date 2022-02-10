@@ -3,7 +3,10 @@
 
 #include "tool-stdio.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     bool clear_ferror(FILE *file) {
         return ferror(file) && (clearerr(file), ferror(file));
     }
@@ -12,10 +15,16 @@ namespace aFuntool {
         return (ferror(stdin) || feof(stdin)) &&
                (clearerr(stdin), (ferror(stdin) || feof(stdin)));
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
 
 #ifdef AFUN_WIN32_NO_CYGWIN
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     int fputs_stdout(const char *str) {
         return fputs_std_(str, stdout);
     }
@@ -46,9 +55,20 @@ namespace aFuntool {
         va_end(ap);
         return re;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
+
 #else
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
+#ifndef __cplusplus
+#define nullptr NULL
+#endif
+
     int fgetc_stdin(){
         return fgetc(stdout);
     }
@@ -69,6 +89,7 @@ namespace aFuntool {
         return fputs(str, stderr);
     }
 
+#ifdef __cplusplus
     int vprintf_stdout(size_t, const char *format, va_list ap){
         return vfprintf(stdout, format, ap);
     }
@@ -92,12 +113,50 @@ namespace aFuntool {
         va_end(ap);
         return re;
     }
-}
+
+#else  // C 不允许省略形参名
+    int vprintf_stdout(size_t _, const char *format, va_list ap){
+        (void)_;  // 确保参数被使用
+        return vfprintf(stdout, format, ap);
+    }
+
+    int vprintf_stderr(size_t _, const char *format, va_list ap){
+        (void)_;  // 确保参数被使用
+        return vfprintf(stderr, format, ap);
+    }
+
+    size_t printf_stdout(size_t _, const char *format, ...) {
+        (void)_;  // 确保参数被使用
+        va_list ap;
+        va_start(ap, format);
+        size_t re = vfprintf(stdout, format, ap);
+        va_end(ap);
+        return re;
+    }
+
+    size_t printf_stderr(size_t _, const char *format, ...) {
+        (void)_;  // 确保参数被使用
+        va_list ap;
+        va_start(ap, format);
+        size_t re = vfprintf(stderr, format, ap);
+        va_end(ap);
+        return re;
+    }
 
 #endif
 
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif
+
+#ifdef __cplusplus
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
-    OutStream::OutStream(PrintFunction *func_) : func {func_} {
+#endif
+
+    OutStream::OutStream(PrintFunction *func_) noexcept : func {func_} {
 
     }
 
@@ -185,6 +244,10 @@ namespace aFuntool {
         func(0, "%lf", a);
         return *this;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
+#endif  // __cplusplus
 
 #endif //AFUN_STDIO_INLINE_H

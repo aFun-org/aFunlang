@@ -4,10 +4,14 @@
 
 #ifndef AFUN_DLC_TEMPLATE_H
 #define AFUN_DLC_TEMPLATE_H
+#ifdef __cplusplus
 
 #include "dlc.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     /**
      * 符号句柄
      * 注意: 不适用符号后需要 delete
@@ -63,6 +67,10 @@ namespace aFuntool {
         SYMBOL *symbol_ = nullptr;
         DlcHandle::Handle *handle_ = nullptr;
     };
-}
 
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif
 #endif //AFUN_DLC_TEMPLATE_H

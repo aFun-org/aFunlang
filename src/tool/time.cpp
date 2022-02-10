@@ -4,12 +4,15 @@
  */
 
 #include <ctime>
-#include "tool-type.h"
+#include "tool.h"
 #include "tool-time.h"
 #include "tool-stdio.h"
 #include "str.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     /**
      * 等待指定的秒数(ms) 支持小数
      */
@@ -87,4 +90,7 @@ namespace aFuntool {
         safeFree(tmp_ch);
         return ret;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif

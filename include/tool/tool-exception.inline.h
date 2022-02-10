@@ -1,9 +1,13 @@
 ﻿#ifndef AFUN_TOOL_EXCEPTION_INLINE_H
 #define AFUN_TOOL_EXCEPTION_INLINE_H
+#ifdef __cplusplus
 
 #include "tool-exception.h"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     aFunException::aFunException(std::string msg) : message{std::move(msg)} {
 
     }
@@ -35,6 +39,10 @@ namespace aFuntool {
     int Exit::getExitCode() const {
         return exit_code;
     }
-}
 
+#ifndef AFUN_TOOL_C
+}
+#endif
+
+#endif
 #endif //AFUN_TOOL_EXCEPTION_INLINE_H

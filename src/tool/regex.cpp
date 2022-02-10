@@ -3,7 +3,10 @@
 #include "encoding.h"
 #include "string"
 
+#ifndef AFUN_TOOL_C
 namespace aFuntool {
+#endif
+
     Regex::Regex(std::string pattern_) noexcept(false): pattern{std::move(pattern_)}, re{nullptr} {
         int error_code;
         size_t error_offset;
@@ -66,4 +69,7 @@ namespace aFuntool {
         pcre2_match_data_free(match_data);
         return result;
     }
+
+#ifndef AFUN_TOOL_C
 }
+#endif
