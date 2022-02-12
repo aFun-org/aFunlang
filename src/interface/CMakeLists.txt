@@ -37,8 +37,8 @@ endforeach()
 set_target_properties(it-shared PROPERTIES OUTPUT_NAME "aFunit")
 set_target_properties(it-static PROPERTIES OUTPUT_NAME "aFunit-s")
 
-target_link_libraries(it-shared PUBLIC core-shared)
-target_link_libraries(it-static PUBLIC core-static)
+target_link_libraries(it-shared PUBLIC tool-shared code-shared core-shared)
+target_link_libraries(it-static PUBLIC tool-static code-static core-static)
 
 #install(TARGETS it-shared it-static
 #        EXPORT aFunlang
