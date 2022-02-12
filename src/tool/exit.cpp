@@ -100,8 +100,8 @@ namespace aFuntool {
      * @param func 退出函数
      * @param data 参数
      */
-    bool aFunAtExitTry(aFunExitFunc func, void *data){
-        return manager.tryPushExitData(std::move(func), data);
+    bool aFunAtExitTry(const aFunExitFunc &func, void *data){
+        return manager.tryPushExitData(func, data);
     }
 
     /**
@@ -110,8 +110,18 @@ namespace aFuntool {
      * @param data 参数
      * @return
      */
-    void aFunAtExit(aFunExitFunc func, void *data){
-        manager.pushExitData(std::move(func), data);
+    void aFunAtExit(const aFunExitFunc &func, void *data){
+        manager.pushExitData(func, data);
+    }
+
+    /**
+     * 注册退出函数, aFun退出函数会在atexit退出函数之前执行
+     * @param func 退出函数
+     * @param data 参数
+     * @return
+     */
+    void aFunAtExit(const ExitFunc &func){
+        manager.pushExitData([func] (void *) {func();}, nullptr);
     }
 
 #ifndef AFUN_TOOL_C

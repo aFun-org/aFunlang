@@ -11,14 +11,16 @@ namespace aFuntool {
 #endif
 
     typedef std::function<void(void *)> aFunExitFunc;
+    typedef std::function<void()> ExitFunc;
 
     AFUN_TOOL_EXPORT void aFunExit(int exit_code) noexcept(false);
     [[noreturn]] AFUN_TOOL_EXPORT void aFunExitReal(int exit_code);
     AFUN_TOOL_EXPORT bool aFunTryExitPseudo();
     AFUN_TOOL_EXPORT void aFunExitPseudo();
 
-    AFUN_TOOL_EXPORT bool aFunAtExitTry(aFunExitFunc func, void *data);
-    AFUN_TOOL_EXPORT void aFunAtExit(aFunExitFunc func, void *data);
+    AFUN_TOOL_EXPORT bool aFunAtExitTry(const aFunExitFunc &func, void *data);
+    AFUN_TOOL_EXPORT void aFunAtExit(const aFunExitFunc &func, void *data);
+    AFUN_TOOL_EXPORT void aFunAtExit(const ExitFunc& func);
 
 #ifndef AFUN_TOOL_C
 }

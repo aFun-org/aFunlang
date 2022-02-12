@@ -10,4 +10,4 @@ namespace aFuncore {
 
 #include "core-logger.inline.h"
 
-#endif //AFUN_CORE_LOGGER_H
+#endif //AFUN_TOOL_LOGGER_H
