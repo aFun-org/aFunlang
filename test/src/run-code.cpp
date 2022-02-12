@@ -359,11 +359,12 @@ int main() {
     int exit_code = 0;
     try {
         auto factor = aFuntool::LogFactory(std::string(".") + aFuntool::SEP + "aFunlog", true);
+        auto it_logger = aFuntool::Logger(factor, "aFun");
         auto core_logger = aFuntool::Logger(factor, "aFun-core");
         auto sys_logger = aFuntool::Logger(factor, "aFun-sys");
-        auto info = aFuncore::InitInfo(factor, core_logger, sys_logger);
+        auto info = aFunit::InitInfo(factor, core_logger, core_logger, sys_logger, it_logger);
 
-        if (!aFunCoreInit(&info)) {
+        if (!aFunInit(&info)) {
             printf_stderr(0, "aFunlang init error.");
             aFunExit(EXIT_FAILURE);
         }

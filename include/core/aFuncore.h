@@ -1,7 +1,6 @@
 ﻿#ifndef AFUN_AFUNCORE_H
 #define AFUN_AFUNCORE_H
 
-#include "core-init.h"
 #include "core-logger.h"
 #include "msg.h"
 #include "env-var.h"

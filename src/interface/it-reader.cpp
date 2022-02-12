@@ -1,5 +1,5 @@
 ﻿#include "it-reader.h"
-#include "it-init.h"
+#include "init.h"
 
 namespace aFunit {
     size_t StringReader::readText(char *dest, size_t read_len, ReadMode &mode) {

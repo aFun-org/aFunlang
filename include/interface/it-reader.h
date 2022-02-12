@@ -3,7 +3,7 @@
 #include <functional>
 #include "aFunlangExport.h"
 #include "aFuncore.h"
-#include "it-init.h"
+#include "init.h"
 
 namespace aFunit {
     class AFUN_LANG_EXPORT StringReader : public aFuncore::Reader {

@@ -45,14 +45,15 @@ add_new_test(tool-c-hash COMMAND "$<TARGET_FILE:tool-c-hash>")
 add_new_test(tool-c-stdio COMMAND "$<TARGET_FILE:tool-c-stdio>")
 set_test_label(tool-c tool-c-hash tool-c-stdio)
 
-add_new_test(core-init COMMAND "$<TARGET_FILE:core-init>")
-add_new_test(core-code COMMAND "$<TARGET_FILE:core-code>")
+add_new_test(code-create COMMAND "$<TARGET_FILE:code-create>")
+set_test_label(code code-create)
+
 add_new_test(core-env-var COMMAND "$<TARGET_FILE:core-env-var>")
 add_new_test(core-down-msg COMMAND "$<TARGET_FILE:core-down-msg>")
 add_new_test(core-up-msg COMMAND "$<TARGET_FILE:core-up-msg>")
 add_new_test(core-reader COMMAND "$<TARGET_FILE:core-reader>")
 add_new_test(core-lexical COMMAND "$<TARGET_FILE:core-lexical>")
-set_test_label(core core-init core-code core-env-var core-down-msg core-up-msg core-reader core-lexical)
+set_test_label(core core-env-var core-down-msg core-up-msg core-reader core-lexical)
 
 add_new_test(it-syntactic COMMAND "$<TARGET_FILE:it-syntactic>")
 add_new_test(it-init COMMAND "$<TARGET_FILE:it-init>")
