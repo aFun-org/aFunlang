@@ -1,12 +1,12 @@
-﻿#ifndef AFUN_CORE_PARSER_H
-#define AFUN_CORE_PARSER_H
-#include "aFunToolExport.h"
-#include "reader.h"
+﻿#ifndef AFUN_PARSER_PARSER_H
+#define AFUN_PARSER_PARSER_H
+#include "aFunParserExport.h"
+#include "parser-reader.h"
 #include "aFuncode.h"
 #include <queue>
 
-namespace aFuncore {
-    class AFUN_CORE_EXPORT Parser {
+namespace aFunparser {
+    class AFUN_PARSER_EXPORT Parser {
     public:
         typedef enum LexicalStatus {
             lex_begin = 0,  // 起始类型
@@ -131,5 +131,5 @@ namespace aFuncore {
 
 }
 
-#include "core-parser.inline.h"
-#endif //AFUN_CORE_PARSER_H
+#include "parser-parser.inline.h"
+#endif //AFUN_PARSER_PARSER_H

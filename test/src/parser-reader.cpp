@@ -1,6 +1,6 @@
-﻿#include "reader.h"
+﻿#include "parser-reader.h"
 
-class ReaderText : public aFuncore::Reader {
+class ReaderText : public aFunparser::Reader {
     int count;
 public:
     ReaderText() : Reader{"Test", 0} {

@@ -29,7 +29,7 @@ namespace aFuncode {
         bool write_v1(FILE *f, bool debug=false) const;
         bool read_v1(FILE *f, bool debug=false);
     };
-    
+
     class AFUN_CODE_EXPORT Code::ByteCode {
         friend class Code;
     public:
@@ -44,6 +44,10 @@ namespace aFuncode {
             block_b = '[',
             block_c = '{',
         } BlockType;
+
+        AFUN_STATIC constexpr const char *E_PREFIX = "$`'";  /* element前缀 */
+        AFUN_STATIC constexpr const char *B_PREFIX = "$`'%^&<?>";  /* block前缀 */
+        AFUN_STATIC constexpr const char *ALL_PREFIX = "$`'%^&<?>";  /* 所有前缀 */
 
         explicit ByteCode(Code &belong, aFuntool::FileLine line);
         ByteCode(Code &belong, const std::string &element, aFuntool::FileLine line, char prefix=aFuntool::NUL);

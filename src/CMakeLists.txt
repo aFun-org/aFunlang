@@ -1,11 +1,13 @@
 ﻿set(build_include_tool ${PROJECT_SOURCE_DIR}/include/tool)
 set(build_include_code ${PROJECT_SOURCE_DIR}/include/code)
 set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
+set(build_include_parser ${PROJECT_SOURCE_DIR}/include/parser)
 set(build_include_interface ${PROJECT_SOURCE_DIR}/include/interface)
 
 set(install_include_tool ${INSTALL_INCLUDEDIR})
 set(install_include_code ${INSTALL_INCLUDEDIR})
 set(install_include_core ${INSTALL_INCLUDEDIR})
+set(install_include_parser ${INSTALL_INCLUDEDIR})
 set(install_include_interface ${INSTALL_INCLUDEDIR})
 
 set(build_include)
@@ -15,6 +17,7 @@ foreach(dir
         ${build_include_tool}
         ${build_include_code}
         ${build_include_core}
+        ${build_include_parser}
         ${build_include_interface})
     list(APPEND build_include $<BUILD_INTERFACE:${dir}>)
 endforeach()
@@ -23,8 +26,9 @@ set(install_include $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
 
 add_subdirectory(tool)
 add_subdirectory(code)
-add_subdirectory(core)  # core 依赖 tool
-add_subdirectory(interface)  # interface 依赖 core
+add_subdirectory(core)
+add_subdirectory(parser)
+add_subdirectory(interface)
 
 ## source在子目录中被使用, 为了避免子目录访问到source, 子目录将在此前面被执行
 #file(GLOB source

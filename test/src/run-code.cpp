@@ -357,7 +357,7 @@ int main() {
         auto it_logger = aFuntool::Logger(factor, "aFun");
         auto core_logger = aFuntool::Logger(factor, "aFun-core");
         auto sys_logger = aFuntool::Logger(factor, "aFun-sys");
-        auto info = aFunit::InitInfo(factor, core_logger, core_logger, sys_logger, it_logger);
+        auto info = aFunit::InitInfo(factor, core_logger, core_logger, core_logger, sys_logger, it_logger);
 
         if (!aFunInit(&info)) {
             aFuntool::printf_stderr(0, "aFunlang init error.");

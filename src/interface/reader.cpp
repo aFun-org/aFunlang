@@ -16,7 +16,7 @@ namespace aFunit {
         return read_len;
     }
 
-    size_t FileReader::readText(char *dest, size_t read_len, aFuncore::Reader::ReadMode &mode) {
+    size_t FileReader::readText(char *dest, size_t read_len, aFunparser::Reader::ReadMode &mode) {
         if (!no_first) {
             no_first = true;
             char ch;

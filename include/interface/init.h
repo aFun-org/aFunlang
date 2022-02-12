@@ -2,6 +2,7 @@
 #define AFUN_INIT_H
 #include "aFunlangExport.h"
 #include "aFuncore.h"
+#include "aFunparser.h"
 #include "aFuncode.h"
 #include "aFuntool.h"
 
@@ -9,6 +10,7 @@ namespace aFunit {
     struct InitInfo {
         aFuntool::LogFactory &factor;
         aFuntool::Logger &core_logger;
+        aFuntool::Logger &parser_logger;
         aFuntool::Logger &code_logger;
         aFuntool::Logger &sys_logger;
         aFuntool::Logger &afun_logger;
@@ -16,6 +18,7 @@ namespace aFunit {
         AFUN_INLINE InitInfo(aFuntool::LogFactory &factor_,
                              aFuntool::Logger &afun_logger_,
                              aFuntool::Logger &core_logger_,
+                             aFuntool::Logger &parser_logger_,
                              aFuntool::Logger &code_logger_,
                              aFuntool::Logger &sys_logger_);
     };

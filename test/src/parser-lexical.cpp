@@ -1,5 +1,5 @@
 ﻿#include <cstdio>
-#include "core-parser.h"
+#include "parser-parser.h"
 
 const char *str = "Hello_var\n"
                   "10 20.32 100var\n"
@@ -17,7 +17,7 @@ const char *str = "Hello_var\n"
                   ";= comment\n"
                   ";= var-300\n";
 
-class ReaderString : public aFuncore::Reader {
+class ReaderString : public aFunparser::Reader {
     std::string str;
     size_t index;
     size_t len;
@@ -44,15 +44,15 @@ public:
 
 int main() {
     auto reader = ReaderString(str, "str");
-    auto parser = aFuncore::Parser(reader);
+    auto parser = aFunparser::Parser(reader);
 
-    aFuncore::Parser::TokenType tt;
+    aFunparser::Parser::TokenType tt;
     std::string text;
 
     do {
         tt = parser.getTokenFromLexical(text);
         printf("tt = %d, text = %s\n", tt, text.c_str());
-    } while (tt != aFuncore::Parser::TK_EOF && tt != aFuncore::Parser::TK_ERROR);
+    } while (tt != aFunparser::Parser::TK_EOF && tt != aFunparser::Parser::TK_ERROR);
 
     return 0;
 }

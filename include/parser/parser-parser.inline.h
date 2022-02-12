@@ -1,8 +1,8 @@
-﻿#ifndef AFUN_CORE_PARSER_INLINE_H
-#define AFUN_CORE_PARSER_INLINE_H
-#include "core-parser.h"
+﻿#ifndef AFUN_PARSER_PARSER_INLINE_H
+#define AFUN_PARSER_PARSER_INLINE_H
+#include "parser-parser.h"
 
-namespace aFuncore {
+namespace aFunparser {
     Parser::Parser(Reader &reader_)
         : reader{reader_},
           lexical{lex_begin, TK_PREFIX, 0, 0, false, false},
@@ -34,4 +34,4 @@ namespace aFuncore {
     }
 }
 
-#endif //AFUN_CORE_PARSER_INLINE_H
+#endif //AFUN_PARSER_PARSER_INLINE_H

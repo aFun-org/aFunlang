@@ -5,11 +5,13 @@
 
 namespace aFunit {
     InitInfo::InitInfo(aFuntool::LogFactory &factor_,
-                               aFuntool::Logger &afun_logger_,
-                               aFuntool::Logger &core_logger_,
-                               aFuntool::Logger &code_logger_,
-                               aFuntool::Logger &sys_logger_)
-        : factor{factor_}, core_logger{core_logger_}, code_logger{code_logger_}, sys_logger{sys_logger_}, afun_logger{afun_logger_} {
+                       aFuntool::Logger &afun_logger_,
+                       aFuntool::Logger &core_logger_,
+                       aFuntool::Logger &parser_logger_,
+                       aFuntool::Logger &code_logger_,
+                       aFuntool::Logger &sys_logger_)
+        : factor{factor_}, core_logger{core_logger_}, parser_logger{parser_logger_}, code_logger{code_logger_},
+          sys_logger{sys_logger_}, afun_logger{afun_logger_} {
         aFuntool::aFunAtExit(aFuntool::DlcHandle::dlcExit);
     }
 

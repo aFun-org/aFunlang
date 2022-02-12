@@ -18,6 +18,7 @@ endfunction()
 define_export_head(tool-shared tool-static aFunToolExport AFUN_TOOL)
 define_export_head(code-shared code-static aFunCodeExport AFUN_CODE)
 define_export_head(core-shared core-static aFunCoreExport AFUN_CORE)
+define_export_head(parser-shared parser-static aFunParserExport AFUN_PARSER)
 define_export_head(it-shared it-static aFunlangExport AFUN_LANG)
 
 # 两个库需要额外定义

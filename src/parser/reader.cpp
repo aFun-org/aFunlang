@@ -1,7 +1,7 @@
-﻿#include "core-logger.h"
-#include "reader.h"
+﻿#include "parser-reader.h"
+#include "parser-logger.h"
 
-namespace aFuncore {
+namespace aFunparser {
     Reader::~Reader() {
         aFuntool::safeFree(buf);
     }
@@ -42,7 +42,7 @@ namespace aFuncore {
 
         if (!aFuntool::isCharUTF8(re)) {
             aFuntool::safeFree(re);
-            errorLog(aFunCoreLogger, "Is not utf-8");
+            errorLog(aFunParserLogger, "Is not utf-8");
             return nullptr;
         }
 

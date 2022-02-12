@@ -64,10 +64,7 @@ namespace aFuncore {
             prefix_exec_first = 1,
         } Prefix;
 
-        AFUN_STATIC const int PREFIX_COUNT = 2;
-        AFUN_STATIC constexpr const char *E_PREFIX = "$`'";  /* NOLINT element前缀 */
-        AFUN_STATIC constexpr const char *B_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
-        AFUN_STATIC constexpr const char *ALL_PREFIX = "$`'%^&<?>";  /* NOLINT block前缀 */
+        AFUN_STATIC const int PREFIX_COUNT = 2;  // env 记录的前缀  TODO-szh 取消
 
         explicit Inter(Environment &env_);
         Inter(const Inter &base_inter);

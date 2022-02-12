@@ -1,7 +1,7 @@
-﻿#include "core-parser.h"
-#include "core-logger.h"
+﻿#include "parser-parser.h"
+#include "parser-logger.h"
 
-namespace aFuncore {
+namespace aFunparser {
     bool Parser::getToken() {
         if (syntactic.back) {
             syntactic.back = false;

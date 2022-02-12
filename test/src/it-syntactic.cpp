@@ -4,7 +4,7 @@
 const char *str = "{if true [HelloWorld (10)]}\n";
 const char *str2 = "{if true [HelloWorld (10)\n";
 
-class ConsoleReader : public aFuncore::Reader {
+class ConsoleReader : public aFunparser::Reader {
 public:
     size_t STDIN_MAX_SIZE = 1024;
     explicit ConsoleReader(std::function<bool()> interrupt_, const aFuntool::FilePath &path_="console.aun");
@@ -26,7 +26,7 @@ inline ConsoleReader::ConsoleReader(std::function<bool()> interrupt_, const aFun
 }
 
 
-size_t ConsoleReader::readText(char *dest, size_t read_len, aFuncore::Reader::ReadMode &mode) {
+size_t ConsoleReader::readText(char *dest, size_t read_len, aFunparser::Reader::ReadMode &mode) {
     if (index == len) {  // 读取内容
         if (aFuntool::clear_stdin()) {
             mode = read_mode_error;
@@ -90,7 +90,7 @@ int main(int argc, char **) {
 
     {
         auto reader = aFunit::StringReader(str, "str");
-        auto parser = aFuncore::Parser(reader);
+        auto parser = aFunparser::Parser(reader);
         auto code = aFuncode::Code("test.aun");
         bool ret = parser.parserCode(code);
         if (!ret)
@@ -102,7 +102,7 @@ int main(int argc, char **) {
 
     {
         auto reader = aFunit::StringReader(str2, "str2");
-        auto parser = aFuncore::Parser(reader);
+        auto parser = aFunparser::Parser(reader);
         auto code = aFuncode::Code("test2.aun");
         parser.parserCode(code);
 
@@ -122,7 +122,7 @@ int main(int argc, char **) {
         aFuntool::fileClose(file);
 
         auto reader = aFunit::FileReader("test.aun");
-        auto parser = aFuncore::Parser(reader);
+        auto parser = aFunparser::Parser(reader);
         auto code = aFuncode::Code("test.aun");
         bool ret = parser.parserCode(code);
         if (!ret)
@@ -139,7 +139,7 @@ int main(int argc, char **) {
 
     {
         auto reader = ConsoleReader(nothing, "stdin.aun");
-        auto parser = aFuncore::Parser(reader);
+        auto parser = aFunparser::Parser(reader);
         auto code = aFuncode::Code("stdin.aun");
         bool ret = parser.parserCode(code);
 

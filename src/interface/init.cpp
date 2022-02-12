@@ -13,6 +13,7 @@ namespace aFunit {
 
         setAFunLogger(&info->afun_logger);
         aFuncore::setCoreLogger(&info->core_logger);
+        aFunparser::setParserLogger(&info->parser_logger);
         aFuncode::setCodeLogger(&info->code_logger);
         aFuntool::setSysLogger(&info->sys_logger);
 

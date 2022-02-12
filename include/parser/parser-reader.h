@@ -1,10 +1,10 @@
-﻿#ifndef AFUN_READER_H
-#define AFUN_READER_H
+﻿#ifndef AFUN_PARSER_READER_H
+#define AFUN_PARSER_READER_H
 #include "aFuntool.h"
-#include "aFunCoreExport.h"
+#include "aFunParserExport.h"
 
-namespace aFuncore {
-    class AFUN_CORE_EXPORT Reader {
+namespace aFunparser {
+    class AFUN_PARSER_EXPORT Reader {
     public:
         typedef enum ReadMode {
             read_mode_normal = 0,
@@ -43,6 +43,6 @@ namespace aFuncore {
     };
 }
 
-#include "reader.inline.h"
+#include "parser-reader.inline.h"
 
-#endif //AFUN_READER_H
+#endif //AFUN_PARSER_READER_H

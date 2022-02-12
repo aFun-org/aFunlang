@@ -3,9 +3,9 @@
  * 目标: aFunlang词法分析
  */
 #include <cctype>
-#include "core-parser.h"
-#include "core-logger.h"
-#include "inter.h"
+#include "parser-parser.h"
+#include "parser-logger.h"
+#include "aFuncode.h"
 
 #ifndef isascii
 #define isascii(c) (((c) & ~0x7f) == 0)
@@ -14,7 +14,7 @@
 #define isignore(ch) (isascii(ch) && (iscntrl(ch) || isspace(ch) || (ch) == ','))  /* 被忽略的符号 */
 #define iselement(ch) (!isascii(ch) || isgraph(ch))  /* 可以作为element的符号 */
 
-namespace aFuncore {
+namespace aFunparser {
     void Parser::setLexicalLast(LexicalStatus status, TokenType token) {
         lexical.status = status;
         lexical.last = reader.countRead();
@@ -54,7 +54,7 @@ namespace aFuncore {
         if (ch == aFuntool::NUL) {
             setLexicalLast(lex_nul, TK_EOF);
             return FINISH_TOKEN;
-        } else if (strchr(Inter::ALL_PREFIX, ch)) {  /* 属于前缀 */
+        } else if (strchr(aFuncode::Code::ByteCode::ALL_PREFIX, ch)) {  /* 属于前缀 */
             setLexicalLast(lex_prefix, TK_PREFIX);
             return FINISH_TOKEN;
         } else if (strchr("!@#", ch)) {
@@ -69,7 +69,7 @@ namespace aFuncore {
                     lexical.status = lex_prefix_block_c;
                     return CONTINUE_TOKEN;
                 default:
-                    fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    fatalErrorLog(aFunParserLogger, EXIT_FAILURE, "Switch illegal characters");
                     pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
@@ -94,7 +94,7 @@ namespace aFuncore {
                     setLexicalLast(lex_rc, TK_RC);
                     return FINISH_TOKEN;
                 default:
-                    fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    fatalErrorLog(aFunParserLogger, EXIT_FAILURE, "Switch illegal characters");
                     pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
@@ -137,7 +137,7 @@ namespace aFuncore {
                     setLexicalLast(lex_lc, TK_LC);
                     return FINISH_TOKEN;
                 default:
-                    fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    fatalErrorLog(aFunParserLogger, EXIT_FAILURE, "Switch illegal characters");
                     pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
@@ -153,7 +153,7 @@ namespace aFuncore {
                     setLexicalLast(lex_rc, TK_RC);
                     return FINISH_TOKEN;
                 default:
-                    fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    fatalErrorLog(aFunParserLogger, EXIT_FAILURE, "Switch illegal characters");
                     pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
                     return ERROR_TOKEN;
             }
@@ -373,7 +373,7 @@ namespace aFuncore {
                     re = doneElementLongEnd(ch);
                     break;
                 default:
-                    fatalErrorLog(aFunCoreLogger, EXIT_FAILURE, "Switch illegal characters");
+                    fatalErrorLog(aFunParserLogger, EXIT_FAILURE, "Switch illegal characters");
                     re = ERROR_TOKEN;
                     break;
             }

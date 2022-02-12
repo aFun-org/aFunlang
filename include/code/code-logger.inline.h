@@ -8,5 +8,4 @@ namespace aFuncode {
     }
 }
 
-
 #endif //AFUN_CODE_LOGGER_INLINE_H
