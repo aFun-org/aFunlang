@@ -1,6 +1,5 @@
 ﻿#include "aFuntool.h"
 #include <clocale>
-using namespace aFuntool;
 
 int main() {
     setlocale(LC_ALL, "");
@@ -10,7 +9,7 @@ int main() {
     const wchar_t *tmp2 = L"你好";
     const char *tmp3 = "你好";
 
-    convertWideByte(&tmp, tmp3, CP_UTF8);
+    aFuntool::convertWideByte(&tmp, tmp3, CP_UTF8);
 
     std::wcout << tmp << std::endl;
     std::wcout << tmp2 << std::endl;

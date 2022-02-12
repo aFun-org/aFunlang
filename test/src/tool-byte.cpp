@@ -1,6 +1,5 @@
 ﻿#include <cstdio>
 #include "aFuntool.h"
-using namespace aFuntool;
 
 
 #define TEST_WRITE(test, type) do{\
@@ -11,8 +10,8 @@ if (!(test)) { \
 
 #define TEST_READ(test, type) do{\
 if (!(test)) { \
-fprintf(stderr, "Test read wrong: " #type "\n"); \
-return EXIT_FAILURE; \
+    fprintf(stderr, "Test read wrong: " #type "\n"); \
+    return EXIT_FAILURE; \
 }}while(0)
 
 int main() {
@@ -22,21 +21,21 @@ int main() {
     int64_t test64 = 40;
     const std::string testStr = "test";
 
-    getEndian();
+    aFuntool::getEndian();
 
-    FILE *file = fileOpen("test.byte", "wb");
+    FILE *file = aFuntool::fileOpen("test.byte", "wb");
     if (file == nullptr) {
         fprintf(stderr, "Can't not creat file: test.byte\n");
         return EXIT_FAILURE;
     }
 
-    TEST_WRITE(byteWriteInt(file, test8), uint8_t);
-    TEST_WRITE(byteWriteInt(file, test16), uint16_t);
-    TEST_WRITE(byteWriteInt(file, test32), uint32_t);
-    TEST_WRITE(byteWriteInt(file, test64), uint64_t);
-    TEST_WRITE(byteWriteStr(file, testStr), str);
+    TEST_WRITE(aFuntool::byteWriteInt(file, test8), uint8_t);
+    TEST_WRITE(aFuntool::byteWriteInt(file, test16), uint16_t);
+    TEST_WRITE(aFuntool::byteWriteInt(file, test32), uint32_t);
+    TEST_WRITE(aFuntool::byteWriteInt(file, test64), uint64_t);
+    TEST_WRITE(aFuntool::byteWriteStr(file, testStr), str);
 
-    fileClose(file);
+    aFuntool::fileClose(file);
 
     int8_t rtest8;
     int16_t rtest16;
@@ -44,17 +43,17 @@ int main() {
     int64_t rtest64;
     std::string rtestStr;
 
-    file = fileOpen("test.byte", "rb");
+    file = aFuntool::fileOpen("test.byte", "rb");
     if (file == nullptr) {
         fprintf(stderr, "Can't not read file: test.byte\n");
         return EXIT_FAILURE;
     }
 
-    TEST_READ(byteReadInt(file, (uint8_t *)&rtest8), uint8_t);
-    TEST_READ(byteReadInt(file, (uint16_t *)&rtest16), uint16_t);
-    TEST_READ(byteReadInt(file, (uint32_t *)&rtest32), uint32_t);
-    TEST_READ(byteReadInt(file, (uint64_t *)&rtest64), uint64_t);
-    TEST_READ(byteReadStr(file, rtestStr), str);
+    TEST_READ(aFuntool::byteReadInt(file, (uint8_t *)&rtest8), uint8_t);
+    TEST_READ(aFuntool::byteReadInt(file, (uint16_t *)&rtest16), uint16_t);
+    TEST_READ(aFuntool::byteReadInt(file, (uint32_t *)&rtest32), uint32_t);
+    TEST_READ(aFuntool::byteReadInt(file, (uint64_t *)&rtest64), uint64_t);
+    TEST_READ(aFuntool::byteReadStr(file, rtestStr), str);
 
     if (rtest8 != test8 || rtest16 != test16 || rtest32 != test32 || rtest64 != test64 || rtestStr != testStr) {
         printf("error.\n");
@@ -66,7 +65,7 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    fileClose(file);
+    aFuntool::fileClose(file);
     printf("success.\n");
     return EXIT_SUCCESS;
 }

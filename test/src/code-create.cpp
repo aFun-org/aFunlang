@@ -1,25 +1,27 @@
 ﻿#include "aFuncode.h"
-using namespace aFuncode;
-using namespace aFuntool;
 
 int main() {
     {
-        Code start = Code("test.aun");
-        start.getByteCode()->connect(new Code::ByteCode(start, "Test", 1))->connect(
-                new Code::ByteCode(start, Code::ByteCode::block_p, new Code::ByteCode(start, Code::ByteCode::block_p,
-                                                                                      new Code::ByteCode(start, "Test3",
-                                                                                                         2), 2), 2));
+        auto start = aFuncode::Code("test.aun");
+        start.getByteCode()->connect(new aFuncode::Code::ByteCode(start, "Test", 1))->connect(
+                new aFuncode::Code::ByteCode(start,
+                                             aFuncode::Code::ByteCode::block_p,
+                                             new aFuncode::Code::ByteCode(start,
+                                                                          aFuncode::Code::ByteCode::block_p,
+                                                                          new aFuncode::Code::ByteCode(start,
+                                                                                                       "Test3",
+                                                                                                       2), 2), 2));
         start.display();
         std::string md5 = start.getMD5_v1();
         printf("md5: %s\n", md5.c_str());
 
-        getEndian();
+        aFuntool::getEndian();
 
         start.writeByteCode("test.aun");
     }
 
     {
-        Code start = Code("test.aun");
+        aFuncode::Code start = aFuncode::Code("test.aun");
         start.readByteCode("test.aun");
 
         start.display();

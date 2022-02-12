@@ -1,10 +1,9 @@
 ﻿#include <cstdio>
 #include <iostream>
 #include "aFuntool.h"
-using namespace aFuntool;
 
 int main() {
-    Regex rg {"Hello嘿.*d"};
+    aFuntool::Regex rg {"Hello嘿.*d"};
     int rc1 = rg.match("Hello嘿World");
     int rc2 = rg.match("Nossss");
 
@@ -14,7 +13,7 @@ int main() {
     } else
         printf("rg1 success\n");
 
-    Regex rg2 {"你|好"};
+    aFuntool::Regex rg2 {"你|好"};
     int rc3 = rg2.match("你");
     int rc4 = rg2.match("Nosssss");
 

@@ -1,16 +1,14 @@
 ﻿#include "msg.h"
-using namespace aFuncore;
-using namespace aFuntool;
 
 int main() {
-    auto *um = new UpMessage(nullptr);
-    um->pushMessage("test-1", new Message());
-    std::cout << um->getMessage<Message>("test-1") << std::endl;
+    auto *um = new aFuncore::UpMessage(nullptr);
+    um->pushMessage("test-1", new aFuncore::Message());
+    std::cout << um->getMessage<aFuncore::Message>("test-1") << std::endl;
 
-    auto *um2 = new UpMessage(um);
-    um2->pushMessage("test-2", new Message());
-    std::cout << um2->getMessage<Message>("test-1") << std::endl;
-    std::cout << um2->getMessage<Message>("test-2") << std::endl;
+    auto *um2 = new aFuncore::UpMessage(um);
+    um2->pushMessage("test-2", new aFuncore::Message());
+    std::cout << um2->getMessage<aFuncore::Message>("test-1") << std::endl;
+    std::cout << um2->getMessage<aFuncore::Message>("test-2") << std::endl;
 
     auto msg1 = um2->popMessage("test-2");
     auto msg2 = um2->popMessage("test-1");
@@ -21,8 +19,8 @@ int main() {
     delete msg2;
     delete um2;
 
-    std::cout << um->getMessage<Message>("test-1") << std::endl;
-    std::cout << um->getMessage<Message>("test-2") << std::endl;
+    std::cout << um->getMessage<aFuncore::Message>("test-1") << std::endl;
+    std::cout << um->getMessage<aFuncore::Message>("test-2") << std::endl;
 
     delete um;
     return 0;

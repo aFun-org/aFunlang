@@ -1,20 +1,15 @@
 ﻿#include "aFunit.h"
 
-using namespace aFunit;
-using namespace aFuncore;
-using namespace aFuncode;
-using namespace aFuntool;
+void progressInterEvent(aFuncore::Inter &inter);
 
-void progressInterEvent(Inter &inter);
-
-class Func1 : public Function {
+class Func1 : public aFuncore::Function {
     class CallFunc1 : public CallFunction {
-        Code &func_code;
-        const Code::ByteCode *call_code;
-        Inter &inter;
+        aFuncode::Code &func_code;
+        const aFuncode::Code::ByteCode *call_code;
+        aFuncore::Inter &inter;
         std::list<ArgCodeList> *acl;
     public:
-        CallFunc1(Code &func_code_, const Code::ByteCode *code_, Inter &inter_) : func_code{func_code_}, call_code{code_}, inter{inter_} {
+        CallFunc1(aFuncode::Code &func_code_, const aFuncode::Code::ByteCode *code_, aFuncore::Inter &inter_) : func_code{func_code_}, call_code{code_}, inter{inter_} {
             (void)call_code;  // 放置 call_code unused
             acl = new std::list<ArgCodeList>;
             if (code_ != nullptr) {
@@ -23,16 +18,16 @@ class Func1 : public Function {
             }
         }
 
-        std::list<ArgCodeList> *getArgCodeList(Inter &, Activation &, const Code::ByteCode *) override {
+        std::list<ArgCodeList> *getArgCodeList(aFuncore::Inter &, aFuncore::Activation &, const aFuncode::Code::ByteCode *) override {
             return acl;
         }
 
         void runFunction() override {
             if (acl->empty())
-                printf_stdout(0, "runFunction No AegCodeList\n");
+                aFuntool::printf_stdout(0, "runFunction No AegCodeList\n");
             else
-                printf_stdout(0, "runFunction : %p\n", acl->begin()->getObject());
-            new ExeActivation(func_code, inter);
+                aFuntool::printf_stdout(0, "runFunction : %p\n", acl->begin()->getObject());
+            new aFuncore::ExeActivation(func_code, inter);
         }
 
         ~CallFunc1() override {
@@ -40,93 +35,93 @@ class Func1 : public Function {
         }
     };
 
-    Code func_code;
+    aFuncode::Code func_code;
 public:
-    explicit Func1(Inter &inter_) : Object("Function", inter_), func_code {"run-code.aun"} {
+    explicit Func1(aFuncore::Inter &inter_) : Object("Function", inter_), func_code {"run-code.aun"} {
         func_code.getByteCode()->connect(
-                new Code::ByteCode(func_code, Code::ByteCode::block_p,
-                                   new Code::ByteCode(func_code, "test-var", 1), 0));
+                new aFuncode::Code::ByteCode(func_code, aFuncode::Code::ByteCode::block_p,
+                                             new aFuncode::Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
     ~Func1() override = default;
 
-    CallFunc1 *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
+    CallFunc1 *getCallFunction(const aFuncode::Code::ByteCode *code, aFuncore::Inter &inter) override {
         return new CallFunc1(func_code, code, inter);
     }
 
     bool isInfix() override {return true;}
 
-    void destruct(Inter &gc_inter) override {
+    void destruct(aFuncore::Inter &gc_inter) override {
         aFuntool::printf_stdout(0, "%p destruct\n", this);
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
-                                                       new Code::ByteCode(code, "test-var", 1), 0));
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                                 new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
         gc_inter.runCode(code);
         progressInterEvent(gc_inter);
     };
 };
 
-class Literaler1 : public Literaler {
-    Code func_code;
+class Literaler1 : public aFuncore::Literaler {
+    aFuncode::Code func_code;
 public:
-    explicit Literaler1(Inter &inter_) : Object("Data", inter_), func_code{"run-code.aun"} {
+    explicit Literaler1(aFuncore::Inter &inter_) : Object("Data", inter_), func_code{"run-code.aun"} {
         func_code.getByteCode()->connect(
-                new Code::ByteCode(func_code, Code::ByteCode::block_p,
-                                   new Code::ByteCode(func_code, "test-var", 1), 0));
+                new aFuncode::Code::ByteCode(func_code, aFuncode::Code::ByteCode::block_p,
+                                             new aFuncode::Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
     ~Literaler1() override = default;
 
-    void getObject(const std::string &literal, char prefix, Inter &inter, Activation &) override {
-        aFuntool::cout << "Literaler1: " << literal  << "prefix: " << (prefix == NUL ? '-' : prefix) << "\n";
-        new ExeActivation(func_code, inter);
+    void getObject(const std::string &literal, char prefix, aFuncore::Inter &inter, aFuncore::Activation &) override {
+        aFuntool::cout << "Literaler1: " << literal  << "prefix: " << (prefix == aFuntool::NUL ? '-' : prefix) << "\n";
+        new aFuncore::ExeActivation(func_code, inter);
     }
 };
 
-class CBV1 : public CallBackVar {
-    Code func_code;
+class CBV1 : public aFuncore::CallBackVar {
+    aFuncode::Code func_code;
 public:
-    explicit CBV1(Inter &inter_) : Object("CBV1", inter_), func_code{"run-code.aun"} {
+    explicit CBV1(aFuncore::Inter &inter_) : Object("CBV1", inter_), func_code{"run-code.aun"} {
         func_code.getByteCode()->connect(
-                new Code::ByteCode(func_code, Code::ByteCode::block_p,
-                                   new Code::ByteCode(func_code, "test-var", 1), 0));
+                new aFuncode::Code::ByteCode(func_code, aFuncode::Code::ByteCode::block_p,
+                                             new aFuncode::Code::ByteCode(func_code, "test-var", 1), 0));
     }
 
     ~CBV1() override = default;
 
-    void callBack(Inter &inter, Activation &) override {
+    void callBack(aFuncore::Inter &inter, aFuncore::Activation &) override {
         aFuntool::cout << "CallBackVar callback\n";
-        new ExeActivation(func_code, inter);
+        new aFuncore::ExeActivation(func_code, inter);
     }
 };
 
-class ImportFunction : public Function {
+class ImportFunction : public aFuncore::Function {
     class CallFunc : public CallFunction {
-        const Code::ByteCode *call_code;
-        Inter &inter;
+        const aFuncode::Code::ByteCode *call_code;
+        aFuncore::Inter &inter;
         std::list<ArgCodeList> *acl;
         std::string import;
     public:
-        CallFunc(const Code::ByteCode *code_, Inter &inter_) : call_code{code_}, inter{inter_} {
+        CallFunc(const aFuncode:: Code::ByteCode *code_, aFuncore::Inter &inter_) : call_code{code_}, inter{inter_} {
             if (code_ == nullptr ||
                 code_->getSon() == nullptr ||
                 code_->getSon()->toNext() == nullptr ||
-                code_->getSon()->toNext()->getType() != Code::ByteCode::code_element)
-                throw ArgumentError();
+                code_->getSon()->toNext()->getType() != aFuncode::Code::ByteCode::code_element)
+                throw aFuncore::ArgumentError();
             acl = new std::list<ArgCodeList>;
             import = code_->getSon()->toNext()->getElement();
         }
 
-        std::list<ArgCodeList> *getArgCodeList(Inter &,
-                                               Activation &,
-                                               const Code::ByteCode *) override {
+        std::list<ArgCodeList> *getArgCodeList(aFuncore::Inter &,
+                                               aFuncore::Activation &,
+                                               const aFuncode::Code::ByteCode *) override {
             return acl;
         }
 
         void runFunction() override {
             auto &stream = inter.getActivation()->getDownStream();
             auto none = new Object("None", inter);
-            stream.pushMessage("NORMAL", new NormalMessage(none));
+            stream.pushMessage("NORMAL", new aFuncore::NormalMessage(none));
             none->delReference();
             aFuntool::cout << "Import " << import << " : " << call_code << "\n";
         }
@@ -137,29 +132,29 @@ class ImportFunction : public Function {
     };
 
 public:
-    AFUN_INLINE explicit ImportFunction(Inter &inter_) : Object("Function", inter_) {
+    AFUN_INLINE explicit ImportFunction(aFuncore::Inter &inter_) : Object("Function", inter_) {
 
     }
 
-    AFUN_INLINE explicit ImportFunction(Environment &env_) : Object("Function", env_) {
+    AFUN_INLINE explicit ImportFunction(aFuncore::Environment &env_) : Object("Function", env_) {
 
     }
 
     ~ImportFunction() override = default;
 
-    CallFunc *getCallFunction(const Code::ByteCode *code, Inter &inter) override {
+    CallFunc *getCallFunction(const aFuncode::Code::ByteCode *code, aFuncore::Inter &inter) override {
         return new CallFunc(code, inter);
     }
 };
 
-void printMessage(const std::string &type, Message *msg, Inter &inter) {
+void printMessage(const std::string &type, aFuncore::Message *msg, aFuncore::Inter &inter) {
     if (type == "NORMAL") {
-        auto *msg_ = dynamic_cast<NormalMessage *>(msg);
+        auto *msg_ = dynamic_cast<aFuncore::NormalMessage *>(msg);
         if (msg_ == nullptr)
             return;
         aFuntool::printf_stdout(0, "NORMAL: %p\n", msg_->getObject());
     } else if (type == "ERROR") {
-        auto *msg_ = dynamic_cast<ErrorMessage *>(msg);
+        auto *msg_ = dynamic_cast<aFuncore::ErrorMessage *>(msg);
         if (msg_ == nullptr)
             return;
         int32_t error_std = 0;
@@ -178,7 +173,7 @@ void printMessage(const std::string &type, Message *msg, Inter &inter) {
     }
 }
 
-void progressInterEvent(Inter &inter) {
+void progressInterEvent(aFuncore::Inter &inter) {
     std::string type;
     for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
         printMessage(type, msg, inter);
@@ -186,20 +181,20 @@ void progressInterEvent(Inter &inter) {
     }
 }
 
-void thread_test(Inter &son) {
-    auto code = Code("run-code.aun");
-    code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
-                                                   new Code::ByteCode(code, "test-var", 1), 0));
+void thread_test(aFuncore::Inter &son) {
+    auto code = aFuncode::Code("run-code.aun");
+    code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                             new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
     son.runCode(code);
     progressInterEvent(son);
-    fputs_stdout("\n");
+    aFuntool::fputs_stdout("\n");
 }
 
 int Main() {
-    Environment env{};
-    Inter inter {env};
+    aFuncore::Environment env{};
+    aFuncore::Inter inter {env};
 
-    auto obj = new Object("Object", inter);
+    auto obj = new aFuncore::Object("Object", inter);
     inter.getProtectVarSpace()->defineVar("test-var", obj);
     aFuntool::cout << "obj: " << obj << "\n";
     obj->delReference();
@@ -238,95 +233,95 @@ int Main() {
 
 
     {
-        fputs_stdout("Test-1: block-p & get test-var\n");
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
-                                                       new Code::ByteCode(code, "test-var", 1), 0));
+        aFuntool::fputs_stdout("Test-1: block-p & get test-var\n");
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                                 new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-2: block-c & run {test-func test-var}\n");
-        auto code = Code("run-code.aun");
+        aFuntool::fputs_stdout("Test-2: block-c & run {test-func test-var}\n");
+        auto code = aFuncode::Code("run-code.aun");
 
-        auto arg = new Code::ByteCode(code, "test-func", 1);
-        arg->connect(new Code::ByteCode(code, "test-var", 1));
+        auto arg = new aFuncode::Code::ByteCode(code, "test-func", 1);
+        arg->connect(new aFuncode::Code::ByteCode(code, "test-var", 1));
 
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_c, arg, 0));
 
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-3: block-b & run [test-var test-func]\n");
-        auto code = Code("run-code.aun");
+        aFuntool::fputs_stdout("Test-3: block-b & run [test-var test-func]\n");
+        auto code = aFuncode::Code("run-code.aun");
 
-        auto arg = new Code::ByteCode(code, "test-var", 1);
-        arg->connect(new Code::ByteCode(code, "test-func", 1));
+        auto arg = new aFuncode::Code::ByteCode(code, "test-var", 1);
+        arg->connect(new aFuncode::Code::ByteCode(code, "test-func", 1));
 
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_b, arg, 0));
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_b, arg, 0));
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-4: test-literaler\n");
+        aFuntool::fputs_stdout("Test-4: test-literaler\n");
         inter.pushLiteral("data[0-9]", "test-literaler", false);
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, "data4", 1));
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "data4", 1));
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-5: test-cbv\n");
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, "test-cbv", 1));
+        aFuntool::fputs_stdout("Test-5: test-cbv\n");
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "test-cbv", 1));
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-6: run-function\n");
+        aFuntool::fputs_stdout("Test-6: run-function\n");
         inter.runCode(func);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
-        fputs_stdout("Test-7: {import test}\n");
-        auto code = Code("run-code.aun");
+        aFuntool::fputs_stdout("Test-7: {import test}\n");
+        auto code = aFuncode::Code("run-code.aun");
 
-        auto arg = new Code::ByteCode(code, "import", 1);
-        arg->connect(new Code::ByteCode(code, "test", 1));
+        auto arg = new aFuncode::Code::ByteCode(code, "import", 1);
+        arg->connect(new aFuncode::Code::ByteCode(code, "test", 1));
 
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_c, arg, 0));
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_c, arg, 0));
 
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     {
         /* 多线程 */
-        fputs_stdout("Test-8: thread\n");
-        Inter son{inter};
+        aFuntool::fputs_stdout("Test-8: thread\n");
+        auto son = aFuncore::Inter(inter);
         std::thread thread{thread_test, std::ref(son)};
 
         {
-            auto code = Code("run-code.aun");
-            code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
-                                                           new Code::ByteCode(code, "test-var", 1), 0));
+            auto code = aFuncode::Code("run-code.aun");
+            code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                                     new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
             inter.runCode(code);
             progressInterEvent(inter);
-            fputs_stdout("\n");
+            aFuntool::fputs_stdout("\n");
         }
 
         thread.join();
@@ -334,20 +329,20 @@ int Main() {
 
     /* 执行错误的代码 */
     {
-        fputs_stdout("Test-a: error not var\n");
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, "test-not-var", 1));
+        aFuntool::fputs_stdout("Test-a: error not var\n");
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "test-not-var", 1));
         inter.runCode(code);
         progressInterEvent(inter);
-        fputs_stdout("\n");
+        aFuntool::fputs_stdout("\n");
     }
 
     inter.setInterExit();
 
     {
-        auto code = Code("run-code.aun");
-        code.getByteCode()->connect(new Code::ByteCode(code, Code::ByteCode::block_p,
-                                                       new Code::ByteCode(code, "test-var", 1), 0));
+        auto code = aFuncode::Code("run-code.aun");
+        code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                                 new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
         inter.runCode(code);
         progressInterEvent(inter);
     }
@@ -365,14 +360,14 @@ int main() {
         auto info = aFunit::InitInfo(factor, core_logger, core_logger, sys_logger, it_logger);
 
         if (!aFunInit(&info)) {
-            printf_stderr(0, "aFunlang init error.");
-            aFunExit(EXIT_FAILURE);
+            aFuntool::printf_stderr(0, "aFunlang init error.");
+            aFuntool::aFunExit(EXIT_FAILURE);
         }
 
         exit_code = Main();
-        aFunExit(exit_code);
+        aFuntool::aFunExit(exit_code);
     } catch (aFuntool::Exit &e) {
         exit_code = e.getExitCode();
     }
-    aFunExitReal(exit_code);
+    aFuntool::aFunExitReal(exit_code);
 }

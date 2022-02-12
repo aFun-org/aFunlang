@@ -1,9 +1,7 @@
 ﻿#include "env-var.h"
-using namespace aFuncore;
-using namespace aFuntool;
 
 int main() {
-    auto *evs = new EnvVarSpace();
+    auto *evs = new aFuncore::EnvVarSpace();
 
     evs->setString("a", "string");
     evs->setNumber("a", 20);

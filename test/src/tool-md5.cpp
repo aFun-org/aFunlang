@@ -1,5 +1,4 @@
 ﻿#include "aFuntool.h"
-using namespace aFuntool;
 
 int main(int argc, char **argv) {
     if (argc != 3)
@@ -7,7 +6,7 @@ int main(int argc, char **argv) {
 
     char *md5_answer = argv[1];
     char *file_path = argv[2];
-    char *my_md5 = getFileMd5(file_path);
+    char *my_md5 = aFuntool::getFileMd5(file_path);
 
     bool ret = !strcmp(my_md5, md5_answer);
     aFuntool::safeFree(my_md5);
