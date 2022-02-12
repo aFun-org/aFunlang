@@ -5,7 +5,7 @@
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "object.h"
-#include "code.h"
+#include "aFuncode.h"
 #include "inter.h"
 
 namespace aFuncore {
@@ -83,7 +83,7 @@ namespace aFuncore {
     public:
         class AFUN_CORE_EXPORT CallFunction;
 
-        virtual CallFunction *getCallFunction(const Code::ByteCode *code, Inter &inter) = 0;
+        virtual CallFunction *getCallFunction(const aFuncode::Code::ByteCode *code, Inter &inter) = 0;
         virtual bool isInfix();
     };
 
@@ -96,14 +96,14 @@ namespace aFuncore {
         CallFunction(const CallFunction &)=delete;
         CallFunction &operator=(const CallFunction &)=delete;
 
-        virtual std::list<ArgCodeList> *getArgCodeList(Inter &inter, Activation &activation, const Code::ByteCode *call) = 0;
+        virtual std::list<ArgCodeList> *getArgCodeList(Inter &inter, Activation &activation, const aFuncode::Code::ByteCode *call) = 0;
         virtual void runFunction() = 0;
     };
 
     class Function::CallFunction::ArgCodeList {
     public:
-        const Code::ByteCode *code = nullptr;
-        AFUN_INLINE explicit ArgCodeList(const Code::ByteCode *code = nullptr);
+        const aFuncode::Code::ByteCode *code = nullptr;
+        AFUN_INLINE explicit ArgCodeList(const aFuncode::Code::ByteCode *code = nullptr);
         AFUN_INLINE ~ArgCodeList();
         AFUN_INLINE Object *setObject(Object *res);
         AFUN_INLINE Object *getObject();

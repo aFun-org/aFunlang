@@ -1,4 +1,4 @@
-﻿#include "core-init.h"
+﻿#include "core-logger.h"
 #include "reader.h"
 
 namespace aFuncore {

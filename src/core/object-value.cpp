@@ -1,6 +1,6 @@
 ﻿#include "object-value.h"
 #include "inter.h"
-#include "core-init.h"
+#include "core-logger.h"
 #include "core-exception.h"
 #include "core-activation.h"
 

@@ -1,7 +1,7 @@
 ﻿#include "code.h"
-#include "core-init.h"
+#include "code-logger.h"
 
-namespace aFuncore {
+namespace aFuncode {
     Code::~Code(){
         ByteCode *next_tmp;
         while (code != nullptr) {
@@ -29,7 +29,7 @@ namespace aFuncore {
      */
     void Code::display() const{
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "Code display all did not with `start`");
+            errorLog(aFunCodeLogger, "Code display all did not with `start`");
             return;
         }
 
@@ -56,7 +56,7 @@ namespace aFuncore {
 
 #define done(write) do{ \
 if(!(write)){ \
-    errorLog(aFunCoreLogger, "Write/Read bytecode fail: %s [%p]", #write, f); \
+    errorLog(aFunCodeLogger, "Write/Read bytecode fail: %s [%p]", #write, f); \
     return false; \
 }} while(0)
     /**
@@ -68,10 +68,10 @@ if(!(write)){ \
      */
     bool Code::write_v1(FILE *f, bool debug) const{
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "Code write all did not with `start`");
+            errorLog(aFunCodeLogger, "Code write all did not with `start`");
             return false;
         } else
-            debugLog(aFunCoreLogger, "Write Bytecode to %p (debug: %d)", f, debug);
+            debugLog(aFunCodeLogger, "Write Bytecode to %p (debug: %d)", f, debug);
 
         const Code::ByteCode *tmp = code;
         while (tmp != nullptr) {
@@ -104,10 +104,10 @@ if(!(write)){ \
      */
     bool Code::read_v1(FILE *f, bool debug) {
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "Code read all did not with `start`");
+            errorLog(aFunCodeLogger, "Code read all did not with `start`");
             return false;
         } else
-            debugLog(aFunCoreLogger, "Read Bytecode from %p (debug: %d)", f, debug);
+            debugLog(aFunCodeLogger, "Read Bytecode from %p (debug: %d)", f, debug);
 
         Code::ByteCode *father_ = nullptr;
         Code::ByteCode *next_ = code;
@@ -120,7 +120,7 @@ if(!(write)){ \
                     goto RETURN;
                 case 3:
                     if (next_ == nullptr) {
-                        errorLog(aFunCoreLogger, "Code without father");
+                        errorLog(aFunCodeLogger, "Code without father");
                         return false;
                     }
                     next_ = next_->father;
@@ -132,12 +132,12 @@ if(!(write)){ \
                     else if (next_ != nullptr)
                         ret = next_->read_v1(f, debug, type_, false);
                     else {
-                        errorLog(aFunCoreLogger, "Code read with unknown error");
+                        errorLog(aFunCodeLogger, "Code read with unknown error");
                         return false;
                     }
 
                     if (ret == nullptr) {
-                        errorLog(aFunCoreLogger, "Code read fail");
+                        errorLog(aFunCodeLogger, "Code read fail");
                         return false;
                     } else if (type_ == ByteCode::code_block) {
                         next_ = nullptr;
@@ -162,7 +162,7 @@ RETURN:
      */
     std::string Code::getMD5_v1() const{
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "Code get md5 all did not with `start`");
+            errorLog(aFunCodeLogger, "Code get md5 all did not with `start`");
             return "";
         }
 
@@ -202,7 +202,7 @@ RETURN:
 
 #define done(write) do{ \
 if(!(write)){           \
-    errorLog(aFunCoreLogger, "Write/Read bytecode file fail: %s [%p]", #write, f); \
+    errorLog(aFunCodeLogger, "Write/Read bytecode file fail: %s [%p]", #write, f); \
     goto RETURN_FALSE; \
 }}while(0)
 
@@ -214,16 +214,16 @@ if(!(write)){           \
      */
     bool Code::writeByteCode(const aFuntool::FilePath &file_path, bool debug) const{
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "ByteCode write all did not with `start`");
+            errorLog(aFunCodeLogger, "ByteCode write all did not with `start`");
             return false;
         }
 
         FILE *f = aFuntool::fileOpen(file_path, "wb");
         if (f == nullptr) {
-            errorLog(aFunCoreLogger, "Write ByteCode file create file fail.");
+            errorLog(aFunCodeLogger, "Write ByteCode file create file fail.");
             return false;
         } else
-            debugLog(aFunCoreLogger, "Write Bytecode file %s [%p] (debug: %d)", file_path.c_str(), f, debug);
+            debugLog(aFunCodeLogger, "Write Bytecode file %s [%p] (debug: %d)", file_path.c_str(), f, debug);
 
         done(aFuntool::byteWriteStr(f, ByteCodeHead));
         done(aFuntool::byteWriteInt(f, int16_t(MaxByteCodeVersion)));
@@ -231,12 +231,12 @@ if(!(write)){           \
         done(aFuntool::byteWriteInt(f, int8_t(debug)));
         done(write_v1(f, debug));
         aFuntool::fileClose(f);
-        debugLog(aFunCoreLogger, "Write Bytecode file success");
+        debugLog(aFunCodeLogger, "Write Bytecode file success");
         return true;
 
 RETURN_FALSE:
         aFuntool::fileClose(f);
-        debugLog(aFunCoreLogger, "Write Bytecode file fail");
+        debugLog(aFunCodeLogger, "Write Bytecode file fail");
         return false;
     }
 
@@ -247,16 +247,16 @@ RETURN_FALSE:
      */
     bool Code::readByteCode(const aFuntool::FilePath &file_path){
         if (code->type != ByteCode::code_start) {
-            errorLog(aFunCoreLogger, "ByteCode read all did not with `start`");
+            errorLog(aFunCodeLogger, "ByteCode read all did not with `start`");
             return false;
         }
 
         FILE *f = aFuntool::fileOpen(file_path, "rb");
         if (f == nullptr) {
-            warningLog(aFunCoreLogger, "Read ByteCode read file fail.");
+            warningLog(aFunCodeLogger, "Read ByteCode read file fail.");
             return false;
         } else
-            debugLog(aFunCoreLogger, "Read Bytecode file %s [%p]", file_path.c_str(), f);
+            debugLog(aFunCodeLogger, "Read Bytecode file %s [%p]", file_path.c_str(), f);
 
         std::string head;
         done(aFuntool::byteReadStr(f, head));
@@ -267,7 +267,7 @@ RETURN_FALSE:
         done(aFuntool::byteReadInt(f, &version));
         switch (version) {  // NOLINT 为拓展方便, 使用switch-case而不是if-else
             case 1: {
-                debugLog(aFunCoreLogger, "Read Bytecode file version 1");
+                debugLog(aFunCodeLogger, "Read Bytecode file version 1");
                 std::string md5;
                 int8_t debug;
                 done(aFuntool::byteReadStr(f, md5));
@@ -280,16 +280,16 @@ RETURN_FALSE:
                 break;
             }
             default:
-                errorLog(aFunCoreLogger, "Read Bytecode file bad version");
+                errorLog(aFunCodeLogger, "Read Bytecode file bad version");
                 goto RETURN_FALSE;
         }
         aFuntool::fileClose(f);
-        debugLog(aFunCoreLogger, "Read Bytecode file success");
+        debugLog(aFunCodeLogger, "Read Bytecode file success");
         return true;
 
 RETURN_FALSE:
         aFuntool::fileClose(f);
-        debugLog(aFunCoreLogger, "Read Bytecode file fail");
+        debugLog(aFunCodeLogger, "Read Bytecode file fail");
         return false;
     }
 
@@ -319,7 +319,7 @@ RETURN_FALSE:
         this->line = line;
 
         if (!aFuntool::isCharUTF8(element)) {
-            errorLog(aFunCoreLogger, "Element not utf-8");
+            errorLog(aFunCodeLogger, "Element not utf-8");
             this->data.element = nullptr;
         } else
             this->data.element = aFuntool::strCopy(element.c_str());
@@ -365,12 +365,12 @@ RETURN_FALSE:
             return tmp;
 
         if (new_code->type == code_start) {
-            errorLog(aFunCoreLogger, "Code connect with `start`");
+            errorLog(aFunCodeLogger, "Code connect with `start`");
             return tmp;
         }
 
         if (&new_code->belong != &tmp->belong) {
-            errorLog(aFunCoreLogger, "Code connect with difference belong");
+            errorLog(aFunCodeLogger, "Code connect with difference belong");
             return tmp;
         }
 
@@ -401,7 +401,7 @@ RETURN_FALSE:
 
 #define done(write) do{ \
 if(!(write)){           \
-    errorLog(aFunCoreLogger, "Write Code::ByteCode fail: %s [%p]", #write, f); \
+    errorLog(aFunCodeLogger, "Write Code::ByteCode fail: %s [%p]", #write, f); \
     return false; \
 }}while(0)
 
@@ -438,7 +438,7 @@ if(!(write)){           \
 #undef done
 #define done(write) do{ \
 if(!(write)){           \
-    errorLog(aFunCoreLogger, "Read Code::ByteCode fail: %s [%p]", #write, f); \
+    errorLog(aFunCodeLogger, "Read Code::ByteCode fail: %s [%p]", #write, f); \
     return nullptr;         \
 }}while(0)
 
@@ -471,7 +471,7 @@ if(!(write)){           \
                 break;
             }
             default:
-                errorLog(aFunCoreLogger, "Read code with bad type.");
+                errorLog(aFunCodeLogger, "Read code with bad type.");
                 return nullptr;
         }
 
@@ -483,7 +483,7 @@ if(!(write)){           \
 
         if (to_son) {
             if (type != code_block || data.block.son != nullptr) {
-                errorLog(aFunCoreLogger, "Read son with bad type.");
+                errorLog(aFunCodeLogger, "Read son with bad type.");
                 delete ret;
                 return nullptr;
             }

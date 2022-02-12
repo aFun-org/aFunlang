@@ -1,5 +1,5 @@
-﻿#include "code.h"
-using namespace aFuncore;
+﻿#include "aFuncode.h"
+using namespace aFuncode;
 using namespace aFuntool;
 
 int main() {

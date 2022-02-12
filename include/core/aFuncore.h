@@ -2,7 +2,7 @@
 #define AFUN_AFUNCORE_H
 
 #include "core-init.h"
-#include "code.h"
+#include "core-logger.h"
 #include "msg.h"
 #include "env-var.h"
 #include "inter.h"

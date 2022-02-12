@@ -1,10 +1,10 @@
 ﻿#ifndef AFUN_CODE_H
 #define AFUN_CODE_H
 #include "aFuntool.h"
-#include "aFunCoreExport.h"
+#include "aFunCodeExport.h"
 
-namespace aFuncore {
-    class AFUN_CORE_EXPORT Code {
+namespace aFuncode {
+    class AFUN_CODE_EXPORT Code {
     public:
         class ByteCode;
 
@@ -30,7 +30,7 @@ namespace aFuncore {
         bool read_v1(FILE *f, bool debug=false);
     };
     
-    class AFUN_CORE_EXPORT Code::ByteCode {
+    class AFUN_CODE_EXPORT Code::ByteCode {
         friend class Code;
     public:
         typedef enum CodeType {

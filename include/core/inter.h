@@ -5,7 +5,7 @@
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 
-#include "code.h"
+#include "aFuncode.h"
 #include "env-var.h"
 #include "msg.h"
 
@@ -92,7 +92,7 @@ namespace aFuncore {
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
         bool runCode();
-        bool runCode(const Code &code);
+        bool runCode(const aFuncode::Code &code);
         bool runCode(Object *obj);
 
         AFUN_INLINE InterStatus setInterStop();

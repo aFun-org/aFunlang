@@ -1,6 +1,6 @@
 ﻿#include "inter.h"
 #include "core-activation.h"
-#include "core-init.h"
+#include "core-logger.h"
 #include "msg.h"
 #include "core-exception.h"
 
@@ -46,7 +46,7 @@ namespace aFuncore {
                 return false;
             }
 
-            const Code::ByteCode *code = nullptr;
+            const aFuncode::Code::ByteCode *code = nullptr;
             Activation::ActivationStatus as = activation->getCode(code);
             switch (as) {
                 case Activation::as_end: {
@@ -74,7 +74,7 @@ namespace aFuncore {
      * @param code 代码
      * @return
      */
-    bool Inter::runCode(const Code &code){
+    bool Inter::runCode(const aFuncode::Code &code){
         if (activation != nullptr) {
             errorLog(aFunCoreLogger, "Run code with activation");
             return false;

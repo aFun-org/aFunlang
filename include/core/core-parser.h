@@ -2,7 +2,7 @@
 #define AFUN_CORE_PARSER_H
 #include "aFunToolExport.h"
 #include "reader.h"
-#include "code.h"
+#include "aFuncode.h"
 #include <queue>
 
 namespace aFuncore {
@@ -74,7 +74,7 @@ namespace aFuncore {
         AFUN_INLINE explicit Parser(Reader &reader_);
 
         TokenType getTokenFromLexical(std::string &text);
-        bool parserCode(Code &code);
+        bool parserCode(aFuncode::Code &code);
 
         [[nodiscard]] AFUN_INLINE size_t countEvent() const;
         AFUN_INLINE ParserEvent popEvent();
@@ -120,10 +120,10 @@ namespace aFuncore {
         bool goBackToken();
 
         AFUN_STATIC const size_t SYNTACTIC_MAX_DEPTH = 218;
-        Code::ByteCode *codeSelf(Code &code, size_t deep, char prefix);
-        Code::ByteCode *codePrefix(Code &code, size_t deep);
-        Code::ByteCode *codeList(Code &code, size_t deep);
-        Code::ByteCode *codeListEnd(Code &code);
+        aFuncode::Code::ByteCode *codeSelf(aFuncode::Code &code, size_t deep, char prefix);
+        aFuncode::Code::ByteCode *codePrefix(aFuncode::Code &code, size_t deep);
+        aFuncode::Code::ByteCode *codeList(aFuncode::Code &code, size_t deep);
+        aFuncode::Code::ByteCode *codeListEnd(aFuncode::Code &code);
 
         AFUN_INLINE void pushEvent(const ParserEvent &new_event);
         AFUN_INLINE void pushEvent(ParserEvent &&new_event);

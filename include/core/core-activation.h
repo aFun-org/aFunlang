@@ -3,7 +3,7 @@
 #include "aFuntool.h"
 #include "aFunCoreExport.h"
 #include "msg.h"
-#include "code.h"
+#include "aFuncode.h"
 #include "object-value.h"
 
 namespace aFuncore {
@@ -51,8 +51,8 @@ namespace aFuncore {
         virtual ~Activation();
         Activation &operator=(const Activation &)=delete;
 
-        virtual ActivationStatus getCode(const Code::ByteCode *&code) = 0;
-        virtual void runCode(const Code::ByteCode *code);
+        virtual ActivationStatus getCode(const aFuncode::Code::ByteCode *&code) = 0;
+        virtual void runCode(const aFuncode::Code::ByteCode *code);
         virtual void endRun();
 
         [[nodiscard]] AFUN_INLINE VarList &getVarlist();
@@ -71,41 +71,41 @@ namespace aFuncore {
         aFuntool::FilePath path;
         aFuntool::FileLine line;
 
-        virtual void runCodeElement(const Code::ByteCode *code);
-        virtual void runCodeBlockP(const Code::ByteCode *code);
-        virtual void runCodeBlockC(const Code::ByteCode *code);
-        virtual void runCodeBlockB(const Code::ByteCode *code);
+        virtual void runCodeElement(const aFuncode::Code::ByteCode *code);
+        virtual void runCodeBlockP(const aFuncode::Code::ByteCode *code);
+        virtual void runCodeBlockC(const aFuncode::Code::ByteCode *code);
+        virtual void runCodeBlockB(const aFuncode::Code::ByteCode *code);
     };
 
     class AFUN_CORE_EXPORT ExeActivation : public Activation {
     public:
-        AFUN_INLINE ExeActivation(const Code &code, Inter &inter_);
-        AFUN_INLINE ExeActivation(const Code::ByteCode *code, Inter &inter_);
-        ActivationStatus getCode(const Code::ByteCode *&code) override;
-        [[nodiscard]] AFUN_INLINE const Code::ByteCode *getStart() const;
+        AFUN_INLINE ExeActivation(const aFuncode::Code &code, Inter &inter_);
+        AFUN_INLINE ExeActivation(const aFuncode::Code::ByteCode *code, Inter &inter_);
+        ActivationStatus getCode(const aFuncode::Code::ByteCode *&code) override;
+        [[nodiscard]] AFUN_INLINE const aFuncode::Code::ByteCode *getStart() const;
 
     private:
-        const Code::ByteCode *start;
-        const Code::ByteCode *next;
+        const aFuncode::Code::ByteCode *start;
+        const aFuncode::Code::ByteCode *next;
         bool first=true;
     };
 
     class AFUN_CORE_EXPORT TopActivation : public ExeActivation {
     public:
-        explicit TopActivation(const Code &code, Inter &inter_);
+        explicit TopActivation(const aFuncode::Code &code, Inter &inter_);
         ~TopActivation() override = default;
-        [[nodiscard]] AFUN_INLINE const Code &getBase() const;
+        [[nodiscard]] AFUN_INLINE const aFuncode::Code &getBase() const;
 
     private:
-        const Code &base;
+        const aFuncode::Code &base;
     };
 
     class AFUN_CORE_EXPORT FuncActivation : public Activation {
     public:
-        AFUN_INLINE explicit FuncActivation(const Code::ByteCode *code, Inter &inter_);
+        AFUN_INLINE explicit FuncActivation(const aFuncode::Code::ByteCode *code, Inter &inter_);
         explicit FuncActivation(Function *func, Inter &inter_);
         ~FuncActivation() override;
-        ActivationStatus getCode(const Code::ByteCode *&code) override;
+        ActivationStatus getCode(const aFuncode::Code::ByteCode *&code) override;
         void endRun() override;
 
     private:
@@ -116,7 +116,7 @@ namespace aFuncore {
         } status = func_first;
 
         bool on_tail = false;
-        const Code::ByteCode *call;
+        const aFuncode::Code::ByteCode *call;
 
         Function *func = nullptr;
         Function::CallFunction *call_func = nullptr;

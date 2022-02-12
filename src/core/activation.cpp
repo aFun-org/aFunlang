@@ -1,8 +1,8 @@
 ﻿#include "core-activation.h"
 #include "inter.h"
-#include "core-init.h"
+#include "core-logger.h"
 #include "msg.h"
-#include "code.h"
+#include "aFuncode.h"
 #include "core-exception.h"
 
 namespace aFuncore {
@@ -55,24 +55,24 @@ namespace aFuncore {
      * 运行代码
      * @param code
      */
-    void Activation::runCode(const Code::ByteCode *code){
+    void Activation::runCode(const aFuncode::Code::ByteCode *code){
         auto code_type = code->getType();
-        if (code_type == Code::ByteCode::code_start) {  // start 不处理 msg
+        if (code_type == aFuncode::Code::ByteCode::code_start) {  // start 不处理 msg
             auto *none = new Object("None", inter);
             down.pushMessage("NORMAL", new NormalMessage(none));
             none->delReference();
         } else {
-            if (code_type == Code::ByteCode::code_element) {
+            if (code_type == aFuncode::Code::ByteCode::code_element) {
                 runCodeElement(code);
             } else
                 switch (code->getBlockType()) {
-                    case Code::ByteCode::block_p:  // 顺序执行
+                    case aFuncode::Code::ByteCode::block_p:  // 顺序执行
                         runCodeBlockP(code);
                         break;
-                    case Code::ByteCode::block_b:
+                    case aFuncode::Code::ByteCode::block_b:
                         runCodeBlockB(code);
                         break;
-                    case Code::ByteCode::block_c:
+                    case aFuncode::Code::ByteCode::block_c:
                         runCodeBlockC(code);
                         break;
                     default:
@@ -82,7 +82,7 @@ namespace aFuncore {
         }
     }
 
-    void Activation::runCodeElement(const Code::ByteCode *code){
+    void Activation::runCodeElement(const aFuncode::Code::ByteCode *code){
         std::string literaler_name;
         bool in_protect = false;
         Object *obj = nullptr;
@@ -111,19 +111,19 @@ namespace aFuncore {
         }
     }
 
-    void Activation::runCodeBlockP(const Code::ByteCode *code){
+    void Activation::runCodeBlockP(const aFuncode::Code::ByteCode *code){
         new ExeActivation(code->getSon(), inter);
     }
 
-    void Activation::runCodeBlockC(const Code::ByteCode *code){
+    void Activation::runCodeBlockC(const aFuncode::Code::ByteCode *code){
         new FuncActivation(code, inter);
     }
 
-    void Activation::runCodeBlockB(const Code::ByteCode *code){
+    void Activation::runCodeBlockB(const aFuncode::Code::ByteCode *code){
         new FuncActivation(code, inter);
     }
 
-    Activation::ActivationStatus ExeActivation::getCode(const Code::ByteCode *&code){
+    Activation::ActivationStatus ExeActivation::getCode(const aFuncode::Code::ByteCode *&code){
         code = next;
         if (code == nullptr)
             return as_end;
@@ -233,7 +233,7 @@ namespace aFuncore {
         }
     }
 
-    TopActivation::TopActivation(const Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
+    TopActivation::TopActivation(const aFuncode::Code &code, Inter &inter_) : ExeActivation(code, inter_), base{code} {
 
     }
 
@@ -248,13 +248,13 @@ namespace aFuncore {
         delete call_func;
     }
 
-    Activation::ActivationStatus FuncActivation::getCode(const Code::ByteCode *&code) {
+    Activation::ActivationStatus FuncActivation::getCode(const aFuncode::Code::ByteCode *&code) {
         if (on_tail)
             return as_end;
 
         if (status == func_first) {
             switch (call->getBlockType()) {
-                case Code::ByteCode::block_c:
+                case aFuncode::Code::ByteCode::block_c:
                     status = func_get_func;
                     code = call->getSon();
                     if (code == nullptr) {
@@ -266,14 +266,14 @@ namespace aFuncore {
                     if (!code->getFilePath().empty())
                         path = code->getFilePath();
                     return as_run;
-                case Code::ByteCode::block_b: {
+                case aFuncode::Code::ByteCode::block_b: {
                     std::string prefix;
                     if (!inter.getEnvVarSpace().findString("sys:prefix", prefix) ||
                         prefix.size() != Inter::PREFIX_COUNT)
                         prefix = "''";
                     char quote = prefix[Inter::prefix_quote];
-                    for (Code::ByteCode *var = call->getSon(); var != nullptr; var = var->toNext()) {
-                        if (var->getType() != Code::ByteCode::code_element || var->getPrefix() == quote ||
+                    for (aFuncode::Code::ByteCode *var = call->getSon(); var != nullptr; var = var->toNext()) {
+                        if (var->getType() != aFuncode::Code::ByteCode::code_element || var->getPrefix() == quote ||
                             inter.checkLiteral(var->getElement()))
                             continue;
                         Object *obj = varlist.findObject(var->getElement());

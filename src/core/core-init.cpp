@@ -1,5 +1,6 @@
 ﻿#include <clocale>
 #include "core-init.h"
+#include "core-logger.h"
 
 namespace aFuncore {
     aFuntool::Logger *aFunCoreLogger = nullptr;

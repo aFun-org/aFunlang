@@ -29,7 +29,7 @@ namespace aFuncore {
         bool ret = is_protect; is_protect = protect; return ret;
     }
 
-    Function::CallFunction::ArgCodeList::ArgCodeList(const Code::ByteCode *code_) : code{code_}, ret{nullptr} {
+    Function::CallFunction::ArgCodeList::ArgCodeList(const aFuncode::Code::ByteCode *code_) : code{code_}, ret{nullptr} {
 
     }
 

@@ -1,5 +1,5 @@
 ﻿#include "core-parser.h"
-#include "core-init.h"
+#include "core-logger.h"
 
 namespace aFuncore {
     bool Parser::getToken() {
@@ -19,18 +19,18 @@ namespace aFuncore {
         return true;
     }
 
-    Code::ByteCode *Parser::codeSelf(Code &code, size_t depth, char prefix) {  // NOLINT
+    aFuncode::Code::ByteCode *Parser::codeSelf(aFuncode::Code &code, size_t depth, char prefix) {  // NOLINT
         depth++;
         getToken();
         switch (syntactic.token) {
             case TK_ELEMENT_SHORT:
             case TK_ELEMENT_LONG:
-                return new Code::ByteCode(code, syntactic.text, reader.getFileLine(), prefix);
+                return new aFuncode::Code::ByteCode(code, syntactic.text, reader.getFileLine(), prefix);
             case TK_LP: {
-                Code::ByteCode *code_list;
+                aFuncode::Code::ByteCode *code_list;
                 if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                    code_list = new Code::ByteCode(code, Code::ByteCode::block_p, code_list, reader.getFileLine(), prefix);
+                    code_list = new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p, code_list, reader.getFileLine(), prefix);
                 } else {
                     pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
                     syntactic.is_error = true;
@@ -47,10 +47,10 @@ namespace aFuncore {
                 return code_list;
             }
             case TK_LB: {
-                Code::ByteCode *code_list;
+                aFuncode::Code::ByteCode *code_list;
                 if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                    code_list = new Code::ByteCode(code, Code::ByteCode::block_b, code_list, reader.getFileLine(), prefix);
+                    code_list = new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_b, code_list, reader.getFileLine(), prefix);
                 } else {
                     pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
                     syntactic.is_error = true;
@@ -67,10 +67,10 @@ namespace aFuncore {
                 return code_list;
             }
             case TK_LC: {
-                Code::ByteCode *code_list;
+                aFuncode::Code::ByteCode *code_list;
                 if (depth <= SYNTACTIC_MAX_DEPTH) {
                     code_list = codeList(code, depth);
-                    code_list = new Code::ByteCode(code, Code::ByteCode::block_c, code_list, reader.getFileLine(), prefix);
+                    code_list = new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_c, code_list, reader.getFileLine(), prefix);
                 } else {
                     pushEvent({ParserEvent::syntactic_error_nested_too_deep, reader.getFileLine(), ""});
                     syntactic.is_error = true;
@@ -95,7 +95,7 @@ namespace aFuncore {
         }
     }
 
-    Code::ByteCode *Parser::codePrefix(Code &code, size_t depth) {  // NOLINT
+    aFuncode::Code::ByteCode *Parser::codePrefix(aFuncode::Code &code, size_t depth) {  // NOLINT
         char ch = aFuntool::NUL;
         getToken();
         if (syntactic.token != TK_PREFIX) {
@@ -110,10 +110,10 @@ namespace aFuncore {
         return codeSelf(code, depth, ch);
     }
 
-    Code::ByteCode *Parser::codeList(Code &code, size_t depth) {  // NOLINT
-        Code::ByteCode *re = nullptr;
-        Code::ByteCode *new_re = nullptr;
-        Code::ByteCode *code_list;
+    aFuncode::Code::ByteCode *Parser::codeList(aFuncode::Code &code, size_t depth) {  // NOLINT
+        aFuncode::Code::ByteCode *re = nullptr;
+        aFuncode::Code::ByteCode *new_re = nullptr;
+        aFuncode::Code::ByteCode *code_list;
 
         while (true) {
             getToken();
@@ -153,7 +153,7 @@ namespace aFuncore {
         }
     }
 
-    Code::ByteCode *Parser::codeListEnd(Code &code) {
+    aFuncode::Code::ByteCode *Parser::codeListEnd(aFuncode::Code &code) {
         getToken();
         switch (syntactic.token) {
             case TK_EOF:
@@ -166,7 +166,7 @@ namespace aFuncore {
             case TK_LB:
             case TK_LC: {
                 goBackToken();
-                Code::ByteCode *re = codeList(code, 0);
+                aFuncode::Code::ByteCode *re = codeList(code, 0);
                 getToken();
                 if (syntactic.token != TK_EOF && syntactic.token != TK_ERROR) {
                     pushEvent({ParserEvent::parser_error_unknown, reader.getFileLine(), ""});
@@ -181,8 +181,8 @@ namespace aFuncore {
         }
     }
 
-    bool Parser::parserCode(Code &code) {
-        Code::ByteCode *bytecode = codeListEnd(code);
+    bool Parser::parserCode(aFuncode::Code &code) {
+        aFuncode::Code::ByteCode *bytecode = codeListEnd(code);
         code.getByteCode()->connect(bytecode);
         
         if (syntactic.is_error || reader.isError() || lexical.is_error)

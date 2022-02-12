@@ -2,6 +2,7 @@
 
 using namespace aFunit;
 using namespace aFuncore;
+using namespace aFuncode;
 using namespace aFuntool;
 
 void progressInterEvent(Inter &inter);

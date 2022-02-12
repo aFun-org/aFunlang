@@ -1,29 +1,28 @@
 ﻿set(build_include_tool ${PROJECT_SOURCE_DIR}/include/tool)
-set(install_include_tool ${INSTALL_INCLUDEDIR})
-
+set(build_include_code ${PROJECT_SOURCE_DIR}/include/code)
 set(build_include_core ${PROJECT_SOURCE_DIR}/include/core)
-set(install_include_core ${INSTALL_INCLUDEDIR})
-
 set(build_include_interface ${PROJECT_SOURCE_DIR}/include/interface)
+
+set(install_include_tool ${INSTALL_INCLUDEDIR})
+set(install_include_code ${INSTALL_INCLUDEDIR})
+set(install_include_core ${INSTALL_INCLUDEDIR})
 set(install_include_interface ${INSTALL_INCLUDEDIR})
 
-set(build_include_
-    ${hgt_dir}
-    ${base_include_dir}
-    ${build_include_tool}
-    ${build_include_core}
-    ${build_include_core_info}
-    ${build_include_interface})
-
 set(build_include)
-foreach(dir IN LISTS build_include_)
+foreach(dir
+        ${hgt_dir}
+        ${base_include_dir}
+        ${build_include_tool}
+        ${build_include_code}
+        ${build_include_core}
+        ${build_include_interface})
     list(APPEND build_include $<BUILD_INTERFACE:${dir}>)
 endforeach()
-unset(build_include_)
 
 set(install_include $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>)
 
 add_subdirectory(tool)
+add_subdirectory(code)
 add_subdirectory(core)  # core 依赖 tool
 add_subdirectory(interface)  # interface 依赖 core
 
@@ -50,11 +49,11 @@ add_subdirectory(interface)  # interface 依赖 core
 #                AFUN_MAJOR_VERSION=${PROJECT_VERSION_MAJOR}
 #                AFUN_MINOR_VERSION=${PROJECT_VERSION_MINOR}
 #                AFUN_PATCH_VERSION=${PROJECT_VERSION_PATCH})
-#    define_FILENAME(${tgt})
+#    define_filename(${tgt})
 #endforeach()
 #
-#target_link_libraries(aFun-xx PUBLIC rt-shared FFlags::fflags)
-#target_link_libraries(aFun-ct PUBLIC rt-static FFlags::fflags)
+#target_link_libraries(aFun-xx PUBLIC it-shared FFlags::fflags)
+#target_link_libraries(aFun-ct PUBLIC it-static FFlags::fflags)
 #
 #install(TARGETS aFun-xx aFun-ct
 #        RUNTIME DESTINATION ${INSTALL_BINDIR} COMPONENT dev

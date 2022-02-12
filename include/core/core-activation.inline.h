@@ -52,23 +52,23 @@ namespace aFuncore {
         return var ? var->getData() : nullptr;
     }
 
-    ExeActivation::ExeActivation(const Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
+    ExeActivation::ExeActivation(const aFuncode::Code &code, Inter &inter_) : Activation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
 
     }
 
-    ExeActivation::ExeActivation(const Code::ByteCode *code, Inter &inter_) : Activation(inter_), start{code}, next{code} {
+    ExeActivation::ExeActivation(const aFuncode::Code::ByteCode *code, Inter &inter_) : Activation(inter_), start{code}, next{code} {
 
     }
 
-    const Code::ByteCode *ExeActivation::getStart() const{
+    const aFuncode::Code::ByteCode *ExeActivation::getStart() const{
         return start;
     }
 
-    const Code &TopActivation::getBase() const {
+    const aFuncode::Code &TopActivation::getBase() const {
         return base;
     }
 
-    FuncActivation::FuncActivation(const Code::ByteCode *code, Inter &inter_) : Activation(inter_), call{code} {
+    FuncActivation::FuncActivation(const aFuncode::Code::ByteCode *code, Inter &inter_) : Activation(inter_), call{code} {
 
     }
 }

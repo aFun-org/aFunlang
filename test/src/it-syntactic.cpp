@@ -91,7 +91,7 @@ int main(int argc, char **) {
     {
         auto reader = aFunit::StringReader(str, "str");
         auto parser = aFuncore::Parser(reader);
-        auto code = aFuncore::Code("test.aun");
+        auto code = aFuncode::Code("test.aun");
         bool ret = parser.parserCode(code);
         if (!ret)
             return 1;
@@ -103,7 +103,7 @@ int main(int argc, char **) {
     {
         auto reader = aFunit::StringReader(str2, "str2");
         auto parser = aFuncore::Parser(reader);
-        auto code = aFuncore::Code("test2.aun");
+        auto code = aFuncode::Code("test2.aun");
         parser.parserCode(code);
 
         while (parser.countEvent() != 0) {
@@ -123,7 +123,7 @@ int main(int argc, char **) {
 
         auto reader = aFunit::FileReader("test.aun");
         auto parser = aFuncore::Parser(reader);
-        auto code = aFuncore::Code("test.aun");
+        auto code = aFuncode::Code("test.aun");
         bool ret = parser.parserCode(code);
         if (!ret)
             return 1;
@@ -140,7 +140,7 @@ int main(int argc, char **) {
     {
         auto reader = ConsoleReader(nothing, "stdin.aun");
         auto parser = aFuncore::Parser(reader);
-        auto code = aFuncore::Code("stdin.aun");
+        auto code = aFuncode::Code("stdin.aun");
         bool ret = parser.parserCode(code);
 
         if (ret) {

@@ -2,7 +2,7 @@
 #define AFUN_CODE_INLINE_H
 #include "code.h"
 
-namespace aFuncore {
+namespace aFuncode {
     Code::Code(aFuntool::FilePath file_) : code{new ByteCode(*this, 0)}, file{std::move(file_)} {
 
     }
