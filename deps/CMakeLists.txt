@@ -49,6 +49,9 @@ add_custom_command(TARGET PCRE2-build POST_BUILD
         COMMAND ${CMAKE_COMMAND}
         "${CMAKE_CURRENT_LIST_DIR}/pcre2"
         "-DCMAKE_INSTALL_PREFIX:PATH=${PCRE2_ROOT}"
+        "-DPCRE2_STATIC_PIC=ON"
+        "-DPCRE2_BUILD_TESTS=OFF"
+        "-DPCRE2_BUILD_PCRE2GREP=OFF"
         "-G ${CMAKE_GENERATOR}"
         COMMAND ${CMAKE_COMMAND} --build .
         COMMAND ${CMAKE_COMMAND} --install .
