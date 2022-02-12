@@ -158,18 +158,10 @@ void printMessage(const std::string &type, aFuncore::Message *msg, aFuncore::Int
         if (msg_ == nullptr)
             return;
         int32_t error_std = 0;
-        inter.getEnvVarSpace().findNumber("sys:error_std", error_std);
-        if (error_std == 0) {
-            aFuntool::printf_stderr(0, "Error TrackBack\n");
-            for (auto &begin: msg_->getTrackBack())
-                aFuntool::printf_stderr(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
-            aFuntool::printf_stderr(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
-        } else {
-            aFuntool::printf_stdout(0, "Error TrackBack\n");
-            for (auto &begin: msg_->getTrackBack())
-                aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
-            aFuntool::printf_stdout(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
-        }
+        aFuntool::printf_stdout(0, "Error TrackBack\n");
+        for (auto &begin: msg_->getTrackBack())
+            aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
+        aFuntool::printf_stdout(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
     }
 }
 
@@ -219,7 +211,6 @@ int Main() {
     aFuntool::cout << "import: " << import << "\n";
     import->delReference();
 
-    inter.getEnvVarSpace().setNumber("sys:error_std", 1);
     auto tmp = new Func1(inter);
     aFuntool::cout << "tmp: " << tmp << "\n\n";
     tmp->delReference();

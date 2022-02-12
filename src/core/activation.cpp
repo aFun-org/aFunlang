@@ -268,10 +268,9 @@ namespace aFuncore {
                     return as_run;
                 case aFuncode::Code::ByteCode::block_b: {
                     std::string prefix;
-                    if (!inter.getEnvVarSpace().findString("sys:prefix", prefix) ||
-                        prefix.size() != Inter::PREFIX_COUNT)
-                        prefix = "''";
-                    char quote = prefix[Inter::prefix_quote];
+                    if (!inter.getEnvVarSpace().findString("sys:prefix-quote", prefix) || prefix.size() != 1)
+                        prefix = "'";
+                    char quote = prefix[0];
                     for (aFuncode::Code::ByteCode *var = call->getSon(); var != nullptr; var = var->toNext()) {
                         if (var->getType() != aFuncode::Code::ByteCode::code_element || var->getPrefix() == quote ||
                             inter.checkLiteral(var->getElement()))

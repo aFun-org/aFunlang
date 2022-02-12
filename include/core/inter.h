@@ -59,11 +59,6 @@ namespace aFuncore {
             inter_exit = 3,  // 解释器退出
         } InterStatus;
 
-        typedef enum Prefix {
-            prefix_quote = 0,  // 变量引用
-            prefix_exec_first = 1,
-        } Prefix;
-
         AFUN_STATIC const int PREFIX_COUNT = 2;  // env 记录的前缀  TODO-szh 取消
 
         explicit Inter(Environment &env_);

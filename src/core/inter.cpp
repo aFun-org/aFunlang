@@ -173,7 +173,12 @@ namespace aFuncore {
             }
             Object::deleteUnreachable(del);
             Object::destructUnreachable(des, gc_inter);
-            aFuntool::safeSleep(1);
+
+            int32_t intervals = 1000;
+            envvar.findNumber("sys:gc-intervals", intervals);
+            if (intervals < 100)
+                intervals = 100;
+            std::this_thread::sleep_for(std::chrono::milliseconds(intervals));
         }
 
         Object::destructAll(gc, gc_inter); /* 不需要mutex锁 */
@@ -183,12 +188,9 @@ namespace aFuncore {
         : reference{0}, destruct{false}, gc_inter{*(new Inter(*this))}, protect{new ProtectVarSpace(*this)} {
         /* 生成 gc_inter 后, reference == 1 */
 
-        envvar.setNumber("sys:gc-runtime", 2);
-        envvar.setString("sys:prefix", "''");  // 引用，顺序执行
+        envvar.setNumber("sys:gc-intervals", 1000);
         envvar.setNumber("sys:exit-code", 0);
         envvar.setNumber("sys:argc", argc);
-        envvar.setNumber("sys:error_std", 0);
-
         for (int i = 0; i < argc; i++) {
             char buf[20];
             snprintf(buf, 10, "sys:arg%d", i);
