@@ -24,22 +24,6 @@ if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
 endif()
 
 execute_process(
-        COMMAND ${CMAKE_COMMAND} -E make_directory fflags
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
-
-add_custom_target(FFlags-build)
-add_custom_command(TARGET FFlags-build POST_BUILD
-        COMMAND ${CMAKE_COMMAND}
-        "${CMAKE_CURRENT_LIST_DIR}/fflags"
-        "-DCMAKE_INSTALL_PREFIX:PATH=${FFlags_ROOT}"
-        "-G ${CMAKE_GENERATOR}"
-        COMMAND ${CMAKE_COMMAND} --build .
-        COMMAND ${CMAKE_COMMAND} --install .
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/fflags
-        COMMENT "Build FFlags")
-
-execute_process(
         COMMAND ${CMAKE_COMMAND} -E make_directory pcre2
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
