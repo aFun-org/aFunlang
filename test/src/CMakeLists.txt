@@ -43,7 +43,7 @@ set_test_label(tool tool-mem tool-byte tool-dlc tool-regex tool-md5 tool-utf too
 
 add_new_test(tool-c-hash COMMAND "$<TARGET_FILE:tool-c-hash>")
 add_new_test(tool-c-stdio COMMAND "$<TARGET_FILE:tool-c-stdio>")
-set_test_label(it tool-c-hash tool-c-stdio)
+set_test_label(tool-c tool-c-hash tool-c-stdio)
 
 add_new_test(core-init COMMAND "$<TARGET_FILE:core-init>")
 add_new_test(core-code COMMAND "$<TARGET_FILE:core-code>")
