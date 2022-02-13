@@ -9,7 +9,6 @@ namespace aFuncore {
         AFUN_INLINE explicit Message() = default;
         virtual ~Message() = default;
         Message &operator=(const Message &)=delete;
-
     };
 }
 

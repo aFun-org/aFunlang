@@ -72,6 +72,8 @@ namespace aFunparser {
         };
 
         AFUN_INLINE explicit Parser(Reader &reader_);
+        Parser(const Parser &) = delete;
+        Parser &operator=(const Parser &) = delete;
 
         TokenType getTokenFromLexical(std::string &text);
         bool parserCode(aFuncode::Code &code);
