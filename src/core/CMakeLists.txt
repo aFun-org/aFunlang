@@ -27,7 +27,7 @@ foreach(tgt core-shared core-static)
 endforeach()
 
 set_target_properties(core-shared PROPERTIES OUTPUT_NAME "aFuncore")
-set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore-s")
+set_target_properties(core-static PROPERTIES OUTPUT_NAME "aFuncore_s")
 
 target_link_libraries(core-shared PUBLIC tool-shared code-shared)
 target_link_libraries(core-static PUBLIC tool-static code-static)

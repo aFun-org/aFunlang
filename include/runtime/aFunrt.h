@@ -1,10 +1,10 @@
 #ifndef AFUN_AFUNRT_H
 #define AFUN_AFUNRT_H
 
-#include "rt-activation.h"
-#include "rt-logger.h"
-#include "rt-message.h"
-#include "rt-object.h"
-#include "rt-exception.h"
+#include "rt_activation.h"
+#include "rt_logger.h"
+#include "rt_message.h"
+#include "rt_object.h"
+#include "rt_exception.h"
 
 #endif //AFUN_AFUNRT_H

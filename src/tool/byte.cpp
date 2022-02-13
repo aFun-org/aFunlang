@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "tool.h"
-#include "byte.h"
+#include "tool_byte.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

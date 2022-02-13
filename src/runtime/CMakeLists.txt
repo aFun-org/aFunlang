@@ -27,7 +27,7 @@ foreach(tgt rt-shared rt-static)
 endforeach()
 
 set_target_properties(rt-shared PROPERTIES OUTPUT_NAME "aFunrt")
-set_target_properties(rt-static PROPERTIES OUTPUT_NAME "aFunrt-s")
+set_target_properties(rt-static PROPERTIES OUTPUT_NAME "aFunrt_s")
 
 target_link_libraries(rt-shared PUBLIC tool-shared code-shared core-shared)
 target_link_libraries(rt-static PUBLIC tool-static code-static core-static)

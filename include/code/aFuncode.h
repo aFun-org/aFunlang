@@ -2,6 +2,6 @@
 #define AFUN_AFUNCODE_H
 
 #include "code.h"
-#include "code-logger.h"
+#include "code_logger.h"
 
 #endif //AFUN_AFUNCODE_H

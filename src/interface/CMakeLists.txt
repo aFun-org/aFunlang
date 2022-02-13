@@ -23,19 +23,13 @@ foreach(tgt it-shared it-static)
     target_sources(${tgt}
                    PRIVATE ${source}
                    PUBLIC ${public_h_build} ${public_h_install})
-    target_include_directories(${tgt}
-                               PRIVATE
-                                   "${CMAKE_CURRENT_LIST_DIR}/../core"
-                                   "${CMAKE_CURRENT_LIST_DIR}"  # aFunTool内的程序需要使用
-                               PUBLIC
-                                   ${build_include}
-                                   ${install_include})
+    target_include_directories(${tgt} PUBLIC ${build_include} ${install_include})
     set_target_properties(${tgt} PROPERTIES PUBLIC_HEADER "${public_h_build}")
     define_filename(${tgt})
 endforeach()
 
 set_target_properties(it-shared PROPERTIES OUTPUT_NAME "aFunit")
-set_target_properties(it-static PROPERTIES OUTPUT_NAME "aFunit-s")
+set_target_properties(it-static PROPERTIES OUTPUT_NAME "aFunit_s")
 
 target_link_libraries(it-shared PUBLIC tool-shared code-shared core-shared parser-shared)
 target_link_libraries(it-static PUBLIC tool-static code-static core-static parser-static)

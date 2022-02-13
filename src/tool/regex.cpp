@@ -1,6 +1,6 @@
-﻿#include "tool-exception.h"
-#include "tool-regex.h"
-#include "encoding.h"
+﻿#include "tool_exception.h"
+#include "tool_regex.h"
+#include "tool_encoding.h"
 #include "string"
 
 #ifndef AFUN_TOOL_C

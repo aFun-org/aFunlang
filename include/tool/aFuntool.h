@@ -7,25 +7,25 @@
 #ifndef AFUN_AFUNTOOL_H
 #define AFUN_AFUNTOOL_H
 
-#include "tool-macro.h"
+#include "tool_macro.h"
 
 #include "tool.h"
 #include "aFunToolExport.h"
 
-#include "tool-exception.h"
-#include "tool-stdio.h"
-#include "tool-exit.h"
-#include "byte.h"
-#include "dlc.h"
-#include "directory.h"
-#include "encoding.h"
-#include "file.h"
-#include "hash.h"
-#include "md5.h"
-#include "path.h"
-#include "tool-regex.h"
-#include "str.h"
-#include "tool-time.h"
-#include "log.h"
+#include "tool_exception.h"
+#include "tool_stdio.h"
+#include "tool_exit.h"
+#include "tool_byte.h"
+#include "tool_dlc.h"
+#include "tool_directory.h"
+#include "tool_encoding.h"
+#include "tool_file.h"
+#include "tool_hash.h"
+#include "tool_md5.h"
+#include "tool_path.h"
+#include "tool_regex.h"
+#include "tool_str.h"
+#include "tool_time.h"
+#include "tool_log.h"
 
 #endif //AFUN_AFUNTOOL_H

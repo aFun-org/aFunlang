@@ -1,5 +1,5 @@
-﻿#include "parser-parser.h"
-#include "parser-logger.h"
+﻿#include "parser_syntax.h"
+#include "parser_logger.h"
 
 namespace aFunparser {
     bool Parser::getToken() {

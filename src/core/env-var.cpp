@@ -1,5 +1,5 @@
-﻿#include "env-var.h"
-#include "object.h"
+﻿#include "core_env_var.h"
+#include "core_object.h"
 
 namespace aFuncore {
     EnvVarSpace::~EnvVarSpace() {

@@ -1,4 +1,4 @@
-﻿#include "it-reader.h"
+﻿#include "it_reader.h"
 #include "init.h"
 
 namespace aFunit {

@@ -1,7 +1,7 @@
 #include <cstring>
 #include "tool.h"
-#include "file.h"
-#include "tool-stdio.h"
+#include "tool_file.h"
+#include "tool_stdio.h"
 
 #ifdef AFUN_WIN32_NO_CYGWIN
 #ifdef _MSC_VER

@@ -15,14 +15,14 @@
 #include <cstdlib>
 #include <cstdarg>
 #include "tool.h"
-#include "log.h"
-#include "tool-exception.h"
-#include "log-macro.h"
-#include "tool-time.h"
-#include "file.h"
-#include "tool-stdio.h"
-#include "str.h"
-#include "tool-exit.h"
+#include "tool_log.h"
+#include "tool_exception.h"
+#include "tool_log_macro.h"
+#include "tool_time.h"
+#include "tool_file.h"
+#include "tool_stdio.h"
+#include "tool_str.h"
+#include "tool_exit.h"
 
 #ifdef AFUN_WIN32
 

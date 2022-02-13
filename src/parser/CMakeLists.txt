@@ -27,7 +27,7 @@ foreach(tgt parser-shared parser-static)
 endforeach()
 
 set_target_properties(parser-shared PROPERTIES OUTPUT_NAME "aFunparser")
-set_target_properties(parser-static PROPERTIES OUTPUT_NAME "aFunparser-s")
+set_target_properties(parser-static PROPERTIES OUTPUT_NAME "aFunparser_s")
 
 target_link_libraries(parser-shared PUBLIC tool-shared code-shared)
 target_link_libraries(parser-static PUBLIC tool-static code-static)

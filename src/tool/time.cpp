@@ -5,9 +5,9 @@
 
 #include <ctime>
 #include "tool.h"
-#include "tool-time.h"
-#include "tool-stdio.h"
-#include "str.h"
+#include "tool_time.h"
+#include "tool_stdio.h"
+#include "tool_str.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

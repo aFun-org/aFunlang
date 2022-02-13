@@ -7,9 +7,9 @@
 #include <cstring>
 
 #include "tool.h"
-#include "md5.h"
-#include "file.h"
-#include "tool-exception.h"
+#include "tool_md5.h"
+#include "tool_file.h"
+#include "tool_exception.h"
 #include "__md5.h"
 
 #ifndef AFUN_TOOL_C

@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "tool.h"
-#include "str.h"
+#include "tool_str.h"
 
 #define NEW_STR(size) safeCalloc<char>((size) + 1)
 #define STR_LEN(p) (((p) == NULL) ? 0 : strlen((p)))

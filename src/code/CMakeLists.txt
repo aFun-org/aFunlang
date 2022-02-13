@@ -28,7 +28,7 @@ foreach(tgt code-shared code-static)
 endforeach()
 
 set_target_properties(code-shared PROPERTIES OUTPUT_NAME "aFuncode")
-set_target_properties(code-static PROPERTIES OUTPUT_NAME "aFuncode-s")
+set_target_properties(code-static PROPERTIES OUTPUT_NAME "aFuncode_s")
 
 target_link_libraries(code-shared PUBLIC tool-shared)
 target_link_libraries(code-static PUBLIC tool-static)

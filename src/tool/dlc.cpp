@@ -1,5 +1,5 @@
 ﻿#include "tool.h"
-#include "dlc.h"
+#include "tool_dlc.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

@@ -1,4 +1,4 @@
-﻿#include "tool-exception.h"
+﻿#include "tool_exception.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

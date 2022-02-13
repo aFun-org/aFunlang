@@ -1,5 +1,5 @@
 #include "tool.h"
-#include "encoding.h"
+#include "tool_encoding.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

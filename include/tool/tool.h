@@ -5,7 +5,7 @@
 
 #ifndef AFUN_TOOL_H
 #define AFUN_TOOL_H
-#include "tool-macro.h"
+#include "tool_macro.h"
 
 #ifdef __cplusplus
 #include <iostream>
@@ -36,6 +36,6 @@ namespace aFuntool {
 }
 #endif
 
-#include "mem.h"  // 该定义需要放到下面
+#include "tool_mem.h"  // 该定义需要放到下面
 
 #endif //AFUN_TOOL_H

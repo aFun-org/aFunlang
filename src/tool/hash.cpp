@@ -4,7 +4,7 @@
  */
 
 #include "tool.h"
-#include "hash.h"
+#include "tool_hash.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

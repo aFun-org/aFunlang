@@ -1,7 +1,7 @@
-#include "inter.h"
-#include "object.h"
-#include "environment.h"
-#include "core-exception.h"
+#include "core_inter.h"
+#include "core_object.h"
+#include "core_environment.h"
+#include "core_exception.h"
 
 namespace aFuncore {
     void Environment::gcThread() {

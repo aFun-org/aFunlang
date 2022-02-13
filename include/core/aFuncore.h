@@ -1,14 +1,14 @@
 ﻿#ifndef AFUN_AFUNCORE_H
 #define AFUN_AFUNCORE_H
 
-#include "core-logger.h"
-#include "core-message.h"
-#include "core-message-stream.h"
-#include "env-var.h"
-#include "environment.h"
-#include "inter.h"
-#include "object.h"
-#include "core-activation.h"
-#include "core-exception.h"
+#include "core_logger.h"
+#include "core_message.h"
+#include "core_message_stream.h"
+#include "core_env_var.h"
+#include "core_environment.h"
+#include "core_inter.h"
+#include "core_object.h"
+#include "core_activation.h"
+#include "core_exception.h"
 
 #endif //AFUN_AFUNCORE_H

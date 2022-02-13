@@ -1,6 +1,6 @@
-﻿#include "object.h"
-#include "inter.h"
-#include "core-logger.h"
+﻿#include "core_object.h"
+#include "core_inter.h"
+#include "core_logger.h"
 
 namespace aFuncore {
     Object::Object(std::string type_, Inter &inter)

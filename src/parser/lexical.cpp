@@ -3,8 +3,8 @@
  * 目标: aFunlang词法分析
  */
 #include <cctype>
-#include "parser-parser.h"
-#include "parser-logger.h"
+#include "parser_syntax.h"
+#include "parser_logger.h"
 #include "aFuncode.h"
 
 #ifndef isascii

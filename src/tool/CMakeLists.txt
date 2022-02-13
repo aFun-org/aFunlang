@@ -69,9 +69,9 @@ foreach(tgt tool-shared-c tool-static-c)
 endforeach()
 
 set_target_properties(tool-shared PROPERTIES OUTPUT_NAME "aFuntool")
-set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFuntool-s")
-set_target_properties(tool-shared-c PROPERTIES OUTPUT_NAME "aFuntool-c")
-set_target_properties(tool-static-c PROPERTIES OUTPUT_NAME "aFuntool-sc")
+set_target_properties(tool-static PROPERTIES OUTPUT_NAME "aFuntool_s")
+set_target_properties(tool-shared-c PROPERTIES OUTPUT_NAME "aFuntool_c")
+set_target_properties(tool-static-c PROPERTIES OUTPUT_NAME "aFuntool_sc")
 
 #install(TARGETS tool-shared tool-static
 #        EXPORT aFunlang

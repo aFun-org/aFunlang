@@ -1,8 +1,8 @@
 ﻿#include <mutex>
 #include <stack>
 #include <utility>
-#include "tool-exit.h"
-#include "tool-exception.h"
+#include "tool_exit.h"
+#include "tool_exception.h"
 
 #ifndef AFUN_TOOL_C
 namespace aFuntool {

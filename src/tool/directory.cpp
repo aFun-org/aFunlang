@@ -5,11 +5,11 @@
 
 #include <cctype>
 
-#include "directory.h"
-#include "path.h"
-#include "str.h"
-#include "log.h"
-#include "tool-stdio.h"
+#include "tool_directory.h"
+#include "tool_path.h"
+#include "tool_str.h"
+#include "tool_log.h"
+#include "tool_stdio.h"
 
 #ifdef AFUN_WIN32_NO_CYGWIN
 #ifdef _MSC_VER

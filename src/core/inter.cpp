@@ -1,7 +1,7 @@
-﻿#include "inter.h"
-#include "core-activation.h"
-#include "core-logger.h"
-#include "core-exception.h"
+﻿#include "core_inter.h"
+#include "core_activation.h"
+#include "core_logger.h"
+#include "core_exception.h"
 
 namespace aFuncore {
     Inter::Inter(Environment &env_)

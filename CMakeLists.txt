@@ -89,7 +89,7 @@ endif()
 
 #include(${CMAKE_CURRENT_LIST_DIR}/lang/hgt.cmake)  # 安装lang库
 add_subdirectory(src)
-include(export-head)
+include(export_head)
 
 #install(EXPORT aFunlang
 #        NAMESPACE "aFunlang::"

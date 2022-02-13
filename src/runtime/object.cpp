@@ -1,4 +1,4 @@
-#include "rt-object.h"
+#include "rt_object.h"
 
 namespace aFunrt {
     Var::Var(Object *data_, aFuncore::Inter &inter) : Object("Var", inter), env{inter.getEnvironment()}, data{data_}{

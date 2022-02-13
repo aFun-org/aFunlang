@@ -1,5 +1,5 @@
-﻿#include "parser-reader.h"
-#include "parser-logger.h"
+﻿#include "parser_reader.h"
+#include "parser_logger.h"
 
 namespace aFunparser {
     Reader::~Reader() {

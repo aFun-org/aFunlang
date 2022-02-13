@@ -3,9 +3,10 @@
 
 foreach(src IN LISTS src_list)
     cmake_path(GET src STEM file_name)
-    add_library(${file_name} SHARED ${src})
-    set_target_properties(${file_name}
-                          PROPERTIES OUTPUT_NAME "test-lib-${file_name}")
-    define_filename(${file_name})
+    string(REPLACE "_" "-" target_name ${file_name})
+    add_library(${target_name} SHARED ${src})
+    set_target_properties(${target_name} PROPERTIES OUTPUT_NAME "test_${file_name}")
+    define_filename(${target_name})
     unset(file_name)
+    unset(target_name)
 endforeach()
