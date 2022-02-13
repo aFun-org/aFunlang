@@ -1,26 +1,10 @@
-#ifndef AFUN_RT_MESSAGE_H
-#define AFUN_RT_MESSAGE_H
+#ifndef AFUN_RT_ERROR_MESSAGE_H
+#define AFUN_RT_ERROR_MESSAGE_H
 #include "aFunRuntimeExport.h"
 #include "aFuncore.h"
+#include "rt_top_message.h"
 
 namespace aFunrt {
-    class TopMessage : public virtual aFuncore::Message {
-    public:
-        virtual void topProgress(aFuncore::Inter &inter, aFuncore::Activation &activation) = 0;
-    };
-
-    class AFUN_RT_EXPORT NormalMessage : public TopMessage {
-    public:
-        explicit NormalMessage(aFuncore::Object *obj_);
-        AFUN_INLINE NormalMessage(NormalMessage &&msg) noexcept;
-        ~NormalMessage() override;
-        void topProgress(aFuncore::Inter &inter, aFuncore::Activation &activation) override;
-        AFUN_INLINE aFuncore::Object *getObject();
-
-    private:
-        aFuncore::Object *obj;
-    };
-
     class AFUN_RT_EXPORT ErrorMessage : public TopMessage {
     public:
         struct TrackBack {
@@ -44,5 +28,5 @@ namespace aFunrt {
     };
 }
 
-#include "rt_message.inline.h"
-#endif //AFUN_RT_MESSAGE_H
+#include "rt_error_message.inline.h"
+#endif //AFUN_RT_ERROR_MESSAGE_H

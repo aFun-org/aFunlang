@@ -1,6 +1,6 @@
-#ifndef AFUN_RT_ACTIVATION_TEMPLATE_H
-#define AFUN_RT_ACTIVATION_TEMPLATE_H
-#include "rt_activation.h"
+#ifndef AFUN_RT_NORMAL_ACTIVATION_TEMPLATE_H
+#define AFUN_RT_NORMAL_ACTIVATION_TEMPLATE_H
+#include "rt_normal_activation.h"
 
 namespace aFunrt {
     template <typename Callable, typename...T>
@@ -11,4 +11,4 @@ namespace aFunrt {
 }
 
 
-#endif //AFUN_RT_ACTIVATION_TEMPLATE_H
+#endif //AFUN_RT_NORMAL_ACTIVATION_TEMPLATE_H

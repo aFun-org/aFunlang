@@ -1,35 +1,12 @@
-#include "rt_object.h"
+#include "rt_varspace_object.h"
 
 namespace aFunrt {
-    Var::Var(Object *data_, aFuncore::Inter &inter) : Object("Var", inter), env{inter.getEnvironment()}, data{data_}{
-
-    }
-
-    Var::Var(Object *data_, aFuncore::Environment &env_) : Object("Var", env_), env{env_}, data{data_}{
-
-    }
-
-
     VarSpace::VarSpace(aFuncore::Inter &inter) : Object("VarSpace", inter), env{inter.getEnvironment()}{
 
     }
 
     VarSpace::VarSpace(aFuncore::Environment &env_) : Object("VarSpace", env_), env{env_}{
 
-    }
-
-    void Var::linkObject(std::queue<Object *> &queue) {
-        queue.push(getData());
-    }
-
-    aFuncore::Object *Var::getData() {
-        std::unique_lock<std::mutex> mutex{lock};
-        return data;
-    }
-
-    void Var::setData(Object *data_) {
-        std::unique_lock<std::mutex> mutex{lock};
-        data = data_;
     }
 
     /**
@@ -107,13 +84,5 @@ namespace aFunrt {
     void VarSpace::linkObject(std::queue<Object *> &queue) {
         for (auto tmp : var)
             queue.push(tmp.second);
-    }
-
-    bool Function::isInfix() {
-        return false;
-    }
-
-    bool CallBackVar::isCallBack(aFuncore::Inter &, aFuncore::Activation &) {
-        return true;
     }
 }

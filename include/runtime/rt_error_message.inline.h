@@ -1,16 +1,8 @@
-#ifndef AFUN_RT_MESSAGE_INLINE_H
-#define AFUN_RT_MESSAGE_INLINE_H
-#include "rt_message.h"
+#ifndef AFUN_RT_ERROR_MESSAGE_INLINE_H
+#define AFUN_RT_ERROR_MESSAGE_INLINE_H
+#include "rt_error_message.h"
 
 namespace aFunrt {
-    NormalMessage::NormalMessage(NormalMessage &&msg) noexcept : obj {msg.obj}{
-        msg.obj = nullptr;
-    }
-
-    aFuncore::Object *NormalMessage::getObject() {
-        return obj;
-    }
-
     ErrorMessage::ErrorMessage(ErrorMessage &&msg) noexcept
             : inter{msg.inter}, error_type{std::move(msg.error_type)},
               error_info{std::move(msg.error_info)}, trackback{std::move(msg.trackback)}{
@@ -30,5 +22,4 @@ namespace aFunrt {
     }
 }
 
-
-#endif //AFUN_RT_MESSAGE_INLINE_H
+#endif //AFUN_RT_ERROR_MESSAGE_INLINE_H

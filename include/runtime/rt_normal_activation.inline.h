@@ -1,7 +1,7 @@
-#ifndef AFUN_RT_ACTIVATION_INLINE_H
-#define AFUN_RT_ACTIVATION_INLINE_H
+#ifndef AFUN_RT_NORMAL_ACTIVATION_INLINE_H
+#define AFUN_RT_NORMAL_ACTIVATION_INLINE_H
 
-#include "rt_activation.h"
+#include "rt_normal_activation.h"
 
 namespace aFunrt {
     NormalActivation::VarList &NormalActivation::getVarlist(){
@@ -35,27 +35,7 @@ namespace aFunrt {
         Var *var = findVar(name);
         return var ? var->getData() : nullptr;
     }
-
-    ExeActivation::ExeActivation(const aFuncode::Code &code, aFuncore::Inter &inter_) : NormalActivation(inter_), start{code.getByteCode()}, next{code.getByteCode()} {
-
-    }
-
-    ExeActivation::ExeActivation(const aFuncode::Code::ByteCode *code, aFuncore::Inter &inter_) : NormalActivation(inter_), start{code}, next{code} {
-
-    }
-
-    const aFuncode::Code::ByteCode *ExeActivation::getStart() const{
-        return start;
-    }
-
-    const aFuncode::Code &TopActivation::getBase() const {
-        return base;
-    }
-
-    FuncActivation::FuncActivation(const aFuncode::Code::ByteCode *code, aFuncore::Inter &inter_) : NormalActivation(inter_), call{code} {
-
-    }
 }
 
 
-#endif //AFUN_RT_ACTIVATION_INLINE_H
+#endif //AFUN_RT_NORMAL_ACTIVATION_INLINE_H

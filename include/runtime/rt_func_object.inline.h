@@ -1,18 +1,8 @@
-#ifndef AFUN_RT_OBJECT_INLINE_H
-#define AFUN_RT_OBJECT_INLINE_H
-#include "rt_object.h"
+#ifndef AFUN_RT_FUNC_OBJECT_INLINE_H
+#define AFUN_RT_FUNC_OBJECT_INLINE_H
+#include "rt_func_object.h"
 
 namespace aFunrt {
-    size_t VarSpace::getCount() {
-        std::unique_lock<std::mutex> mutex{lock};
-        return var.size();
-    }
-
-    aFuncore::Object *VarSpace::findObject(const std::string &name) {
-        Var *ret = findVar(name);
-        return ret ? ret->getData() : nullptr;
-    }
-
     Function::CallFunction::ArgCodeList::ArgCodeList(const aFuncode::Code::ByteCode *code_) : code{code_}, ret{nullptr} {
 
     }
@@ -36,4 +26,4 @@ namespace aFunrt {
 };
 
 
-#endif //AFUN_RT_OBJECT_INLINE_H
+#endif //AFUN_RT_FUNC_OBJECT_INLINE_H

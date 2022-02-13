@@ -1,7 +1,7 @@
-#ifndef AFUN_RT_OBJECT_TEMPLATE_H
-#define AFUN_RT_OBJECT_TEMPLATE_H
+#ifndef AFUN_RT_VARSPACE_OBJECT_TEMPLATE_H
+#define AFUN_RT_VARSPACE_OBJECT_TEMPLATE_H
 
-#include "rt_object.h"
+#include "rt_varspace_object.h"
 
 namespace aFunrt {
     template <typename Callable, typename...T>
@@ -22,4 +22,4 @@ namespace aFunrt {
     }
 }
 
-#endif //AFUN_RT_OBJECT_TEMPLATE_H
+#endif //AFUN_RT_VARSPACE_OBJECT_TEMPLATE_H
