@@ -1,6 +1,6 @@
-﻿#ifndef AFUN_MSG_TEMPLATE_H
-#define AFUN_MSG_TEMPLATE_H
-#include "msg.h"
+﻿#ifndef AFUN_CORE_MESSAGE_STREAM_TEMPLATE_H
+#define AFUN_CORE_MESSAGE_STREAM_TEMPLATE_H
+#include "core-message-stream.h"
 
 namespace aFuncore {
     template<class T>
@@ -18,13 +18,13 @@ namespace aFuncore {
     }
 
     template<typename Callable, typename... T>
-    void UpMessage::forEachAll(Callable func, T... arg) {
-        for (const UpMessage *up = this; up != nullptr; up = up->old)
+    void UpMessageStream::forEachAll(Callable func, T... arg) {
+        for (const UpMessageStream *up = this; up != nullptr; up = up->old)
             up->MessageStream::forEach(func, arg...);
     }
 
     template<typename Callable, typename... T>
-    void InterMessage::forEach(Callable func, T... arg) {
+    void InterMessageStream::forEach(Callable func, T... arg) {
         std::unique_lock<std::mutex> mutex{lock};
         for (auto &msg : stream) {
             mutex.unlock();
@@ -34,11 +34,11 @@ namespace aFuncore {
     }
 
     template<typename Callable, typename... T>
-    void InterMessage::forEachLock(Callable func, T... arg) {
+    void InterMessageStream::forEachLock(Callable func, T... arg) {
         std::unique_lock<std::mutex> mutex{lock};
         for (auto &msg : stream)
             func(msg.second, arg...);
     }
 }
 
-#endif //AFUN_MSG_TEMPLATE_H
+#endif //AFUN_CORE_MESSAGE_STREAM_TEMPLATE_H

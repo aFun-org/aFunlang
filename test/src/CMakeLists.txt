@@ -4,7 +4,7 @@ foreach(src IN LISTS src_list)
     cmake_path(GET src STEM file_name)
     add_executable(${file_name})
     target_sources(${file_name} PRIVATE ${src})
-    target_link_libraries(${file_name} PUBLIC tool-static code-static core-static parser-static it-static)  # 链接静态库 (导出所有符号)
+    target_link_libraries(${file_name} PUBLIC tool-static code-static core-static parser-static rt-static it-static)  # 链接静态库 (导出所有符号)
     set_target_properties(${file_name}
                           PROPERTIES OUTPUT_NAME "test-${file_name}")
     target_compile_definitions(${file_name} PRIVATE IN_CTEST)

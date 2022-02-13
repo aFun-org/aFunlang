@@ -1,8 +1,9 @@
 ﻿#include "inter.h"
 #include "core-activation.h"
 #include "core-logger.h"
-#include "msg.h"
+#include "core-message-stream.h"
 #include "core-exception.h"
+#include "object.h"
 
 namespace aFuncore {
     Inter::Inter(Environment &env_)
@@ -26,7 +27,6 @@ namespace aFuncore {
      */
     void Inter::enable(){
         if (status == inter_init) {
-            env.protect->setProtect(true);
             status = inter_normal;
         }
     }
@@ -61,48 +61,11 @@ namespace aFuncore {
                     break;
                 default:
                     errorLog(aFunCoreLogger, "Error activation status.");
-                    activation->getDownStream().pushMessage("ERROR",
-                                                            new ErrorMessage("RuntimeError", "Error activation status.", activation));
+                    delete popActivation();
                     break;
             }
         }
         return true;
-    }
-
-    /**
-     * 运行代码
-     * @param code 代码
-     * @return
-     */
-    bool Inter::runCode(const aFuncode::Code &code){
-        if (activation != nullptr) {
-            errorLog(aFunCoreLogger, "Run code with activation");
-            return false;
-        }
-
-        new TopActivation(code, *this);
-        return runCode();
-    }
-
-    /**
-     * 函数调用
-     * @param code 代码
-     * @return
-     */
-    bool Inter::runCode(Object *func){
-        if (activation != nullptr) {
-            errorLog(aFunCoreLogger, "Run function with activation");
-            return false;
-        }
-
-        auto func_obj = dynamic_cast<Function *>(func);
-        if (func_obj == nullptr) {
-            errorLog(aFunCoreLogger, "Run without function");
-            return false;
-        }
-
-        new FuncActivation(func_obj, *this);
-        return runCode();
     }
 
     /**
@@ -175,7 +138,7 @@ namespace aFuncore {
             Object::destructUnreachable(des, gc_inter);
 
             int32_t intervals = 1000;
-            envvar.findNumber("sys:gc-intervals", intervals);
+            env_var.findNumber("sys:gc-intervals", intervals);
             if (intervals < 100)
                 intervals = 100;
             std::this_thread::sleep_for(std::chrono::milliseconds(intervals));
@@ -185,16 +148,16 @@ namespace aFuncore {
     }
 
     Environment::Environment(int argc, char **argv)
-        : reference{0}, destruct{false}, gc_inter{*(new Inter(*this))}, protect{new ProtectVarSpace(*this)} {
+        : reference{0}, destruct{false}, gc_inter{*(new Inter(*this))}, env_var{*new EnvVarSpace()} {
         /* 生成 gc_inter 后, reference == 1 */
 
-        envvar.setNumber("sys:gc-intervals", 1000);
-        envvar.setNumber("sys:exit-code", 0);
-        envvar.setNumber("sys:argc", argc);
+        env_var.setNumber("sys:gc-intervals", 1000);
+        env_var.setNumber("sys:exit-code", 0);
+        env_var.setNumber("sys:argc", argc);
         for (int i = 0; i < argc; i++) {
             char buf[20];
             snprintf(buf, 10, "sys:arg%d", i);
-            envvar.setString(buf, argv[i]);
+            env_var.setString(buf, argv[i]);
         }
 
         gc_thread = std::thread([this](){this->gcThread();});
@@ -214,8 +177,7 @@ namespace aFuncore {
 
         gc_thread.join();
         delete &gc_inter;
-
-        protect->delReference();
+        delete &env_var;
 
         Object::deleteAll(gc); /* 不需要mutex锁 */
 

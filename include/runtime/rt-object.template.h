@@ -1,9 +1,9 @@
-﻿#ifndef AFUN_OBJECT_VALUE_TEMPLATE_H
-#define AFUN_OBJECT_VALUE_TEMPLATE_H
+#ifndef AFUN_RT_OBJECT_TEMPLATE_H
+#define AFUN_RT_OBJECT_TEMPLATE_H
 
-#include "object-value.h"
+#include "rt-object.h"
 
-namespace aFuncore {
+namespace aFunrt {
     template <typename Callable, typename...T>
     void VarSpace::forEach(Callable func, T...arg) {
         std::unique_lock<std::mutex> mutex{lock};
@@ -22,4 +22,4 @@ namespace aFuncore {
     }
 }
 
-#endif //AFUN_OBJECT_VALUE_TEMPLATE_H
+#endif //AFUN_RT_OBJECT_TEMPLATE_H

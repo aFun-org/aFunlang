@@ -3,6 +3,10 @@
 #include "inter.h"
 
 namespace aFuncore {
+    EnvVarSpace &Environment::getEnvVarSpace() {
+        return env_var;
+    }
+
     Environment &Inter::getEnvironment() {
         return env;
     }
@@ -37,10 +41,6 @@ namespace aFuncore {
         return (status == inter_exit);
     }
 
-    ProtectVarSpace *Inter::getProtectVarSpace() const {
-        return env.protect;
-    }
-
     const std::list<Activation *> &Inter::getStack() const {
         return stack;
     }
@@ -50,14 +50,14 @@ namespace aFuncore {
     }
 
     EnvVarSpace &Inter::getEnvVarSpace() {
-        return env.envvar;
+        return env.env_var;
     }
 
-    InterOutMessage &Inter::getOutMessageStream() {
+    InterOutMessageStream &Inter::getOutMessageStream() {
         return out;
     }
 
-    InterInMessage &Inter::getInMessageStream() {
+    InterInMessageStream &Inter::getInMessageStream() {
         return in;
     }
 

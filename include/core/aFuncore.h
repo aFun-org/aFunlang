@@ -2,11 +2,11 @@
 #define AFUN_AFUNCORE_H
 
 #include "core-logger.h"
-#include "msg.h"
+#include "core-message.h"
+#include "core-message-stream.h"
 #include "env-var.h"
 #include "inter.h"
 #include "object.h"
-#include "object-value.h"
 #include "core-activation.h"
 #include "core-exception.h"
 

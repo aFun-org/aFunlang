@@ -2,20 +2,15 @@
 #define AFUN_INTER_H
 #include <list>
 #include <mutex>
-#include "aFuntool.h"
 #include "aFunCoreExport.h"
-
+#include "aFuntool.h"
 #include "aFuncode.h"
 #include "env-var.h"
-#include "msg.h"
+#include "core-message-stream.h"
+#include "core-activation.h"
+#include "object.h"
 
 namespace aFuncore {
-    class Activation;
-    class Object;
-    class Var;
-    class ProtectVarSpace;
-    class VarSpace;
-    class Object;
     class Inter;
 
     class AFUN_CORE_EXPORT Environment {
@@ -33,6 +28,7 @@ namespace aFuncore {
         AFUN_INLINE size_t operator++(int);
         AFUN_INLINE size_t operator--(int);
 
+        [[nodiscard]] AFUN_INLINE EnvVarSpace &getEnvVarSpace();
     private:
         std::mutex lock;
         size_t reference;  // 引用计数
@@ -43,8 +39,7 @@ namespace aFuncore {
         void gcThread();
 
     protected:  // 位于 mutex 之下
-        ProtectVarSpace *const protect;  // 保护变量空间
-        EnvVarSpace envvar;
+        EnvVarSpace &env_var;
     };
 
     class AFUN_CORE_EXPORT Inter {
@@ -59,8 +54,6 @@ namespace aFuncore {
             inter_exit = 3,  // 解释器退出
         } InterStatus;
 
-        AFUN_STATIC const int PREFIX_COUNT = 2;  // env 记录的前缀  TODO-szh 取消
-
         explicit Inter(Environment &env_);
         Inter(const Inter &base_inter);
         ~Inter();
@@ -72,20 +65,20 @@ namespace aFuncore {
         [[nodiscard]] AFUN_INLINE bool isInterStop() const;
         [[nodiscard]] AFUN_INLINE bool isInterExit() const;
         [[nodiscard]] AFUN_INLINE Environment &getEnvironment();
-        [[nodiscard]] AFUN_INLINE ProtectVarSpace *getProtectVarSpace() const;
         [[nodiscard]] AFUN_INLINE const std::list<Activation *> &getStack() const;
         [[nodiscard]] AFUN_INLINE Activation *getActivation() const;
         [[nodiscard]] bool checkLiteral(const std::string &element) const;
         [[nodiscard]] bool checkLiteral(const std::string &element, std::string &literaler, bool &in_protect) const;
         [[nodiscard]] AFUN_INLINE EnvVarSpace &getEnvVarSpace();
-        [[nodiscard]] AFUN_INLINE InterOutMessage &getOutMessageStream();
-        [[nodiscard]] AFUN_INLINE InterInMessage &getInMessageStream();
+        [[nodiscard]] AFUN_INLINE InterOutMessageStream &getOutMessageStream();
+        [[nodiscard]] AFUN_INLINE InterInMessageStream &getInMessageStream();
 
         bool pushLiteral(const std::string &pattern, const std::string &literaler, bool in_protect);
 
+        AFUN_INLINE void pushActivation(Activation *new_activation);
+        AFUN_INLINE Activation *popActivation();
+
         bool runCode();
-        bool runCode(const aFuncode::Code &code);
-        bool runCode(Object *obj);
 
         AFUN_INLINE InterStatus setInterStop();
         AFUN_INLINE InterStatus setInterExit();
@@ -97,13 +90,10 @@ namespace aFuncore {
         std::list<Activation *> stack;
         Activation *activation;  // 活动记录
 
-        InterOutMessage out;
-        InterInMessage in;
+        InterOutMessageStream out;
+        InterInMessageStream in;
 
         std::list<LiteralRegex> literal;
-
-        AFUN_INLINE void pushActivation(Activation *new_activation);
-        AFUN_INLINE Activation *popActivation();
     };
 
     struct Inter::LiteralRegex {

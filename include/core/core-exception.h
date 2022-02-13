@@ -12,19 +12,6 @@ namespace aFuncore {
     public:
         AFUN_INLINE EnvironmentDestructException();
     };
-
-    class RuntimeError : public aFuncoreException {
-        std::string type;
-    public:
-        AFUN_INLINE RuntimeError(const std::string &msg, std::string type);
-        AFUN_INLINE const std::string &getType() const;
-    };
-
-    class ArgumentError : public RuntimeError {
-        std::string type;
-    public:
-        AFUN_INLINE ArgumentError();
-    };
 }
 
 #include "core-exception.inline.h"

@@ -1,36 +1,9 @@
-﻿#include "msg.h"
+﻿#include "core-message-stream.h"
 #include "core-activation.h"
 #include "inter.h"
 #include "env-var.h"
 
 namespace aFuncore {
-    NormalMessage::NormalMessage(Object *obj_) : obj {obj_} {
-        obj->addReference();
-    }
-
-    NormalMessage::~NormalMessage(){
-        if (obj != nullptr) {
-            obj->delReference();
-            obj = nullptr;
-        }
-    }
-
-    void NormalMessage::topProgress(Inter &inter, Activation &){
-        inter.getOutMessageStream().pushMessage("NORMAL", new NormalMessage(std::move(*this)));
-    }
-
-    ErrorMessage::ErrorMessage(std::string error_type_, std::string error_info_, Activation *start)
-        : inter{start->inter}, error_type{std::move(error_type_)}, error_info{std::move(error_info_)} {
-        for (const auto activation : inter.getStack()) {
-            if (activation->getFileLine() != 0)
-                trackback.push_front({activation->getFilePath(), activation->getFileLine()});
-        }
-    }
-
-    void ErrorMessage::topProgress(Inter &inter_, Activation &){
-        inter_.getOutMessageStream().pushMessage("ERROR", new ErrorMessage(std::move(*this)));
-    }
-
     MessageStream::~MessageStream(){
         for (auto &msg : stream)
             delete msg.second;
@@ -70,12 +43,12 @@ namespace aFuncore {
         return msg;
     }
 
-    UpMessage::UpMessage(const UpMessage *old_) : MessageStream(), old{old_} {
+    UpMessageStream::UpMessageStream(const UpMessageStream *old_) : MessageStream(), old{old_} {
 
     }
 
-    Message *UpMessage::_getMessage(const std::string &type) const {
-        for (const UpMessage *up = this; up != nullptr; up = up->old) {
+    Message *UpMessageStream::_getMessage(const std::string &type) const {
+        for (const UpMessageStream *up = this; up != nullptr; up = up->old) {
             Message *ret = up->MessageStream::_getMessage(type);
             if (ret != nullptr)
                 return ret;
@@ -87,11 +60,11 @@ namespace aFuncore {
      * 拼接数据流 (将this合并到msg)
      * @param msg
      */
-    void DownMessage::joinMsg(DownMessage &msg){
+    void DownMessageStream::joinMsg(DownMessageStream &msg){
         msg.stream.merge(stream);
     }
 
-    Message *InterMessage::popFrontMessage(std::string &type) {
+    Message *InterMessageStream::popFrontMessage(std::string &type) {
         std::unique_lock<std::mutex> mutex{lock};
         if (stream.empty())
             return nullptr;
@@ -101,12 +74,12 @@ namespace aFuncore {
         return ret;
     }
 
-    Message *InterMessage::popMessage(const std::string &type) {
+    Message *InterMessageStream::popMessage(const std::string &type) {
         std::unique_lock<std::mutex> mutex{lock};
         return MessageStream::popMessage(type);
     }
 
-    void InterMessage::pushMessage(const std::string &type, Message *msg) {
+    void InterMessageStream::pushMessage(const std::string &type, Message *msg) {
         std::unique_lock<std::mutex> mutex{lock};
         MessageStream::pushMessage(type, msg);
     }

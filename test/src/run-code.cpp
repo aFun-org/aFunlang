@@ -1,8 +1,54 @@
 ﻿#include "aFunit.h"
+#include "aFunrt.h"
 
-void progressInterEvent(aFuncore::Inter &inter);
+void printMessage(const std::string &type, aFuncore::Message *msg, aFuncore::Inter &) {
+    if (type == "NORMAL") {
+        auto *msg_ = dynamic_cast<aFunrt::NormalMessage *>(msg);
+        if (msg_ == nullptr)
+            return;
+        aFuntool::printf_stdout(0, "NORMAL: %p\n", msg_->getObject());
+    } else if (type == "ERROR") {
+        auto *msg_ = dynamic_cast<aFunrt::ErrorMessage *>(msg);
+        if (msg_ == nullptr)
+            return;
+        aFuntool::printf_stdout(0, "Error TrackBack\n");
+        for (auto &begin: msg_->getTrackBack())
+            aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
+        aFuntool::printf_stdout(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
+    }
+}
 
-class Func1 : public aFuncore::Function {
+void progressInterEvent(aFuncore::Inter &inter) {
+    std::string type;
+    for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
+        printMessage(type, msg, inter);
+        delete msg;
+    }
+}
+
+bool runCode(aFuncore::Inter &inter, aFuncode::Code &code) {
+    auto activation = new aFunrt::TopActivation(code, inter);
+    inter.pushActivation(activation);
+    return inter.runCode();
+}
+
+bool runCode(aFuncore::Inter &inter, aFuncore::Object *func) {
+    auto func_obj = dynamic_cast<aFunrt::Function *>(func);
+    auto activation = new aFunrt::FuncActivation(func_obj, inter);
+    inter.pushActivation(activation);
+    return inter.runCode();
+}
+
+void thread_test(aFuncore::Inter &son) {
+    auto code = aFuncode::Code("run-code.aun");
+    code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
+                                                             new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
+    runCode(son, code);
+    progressInterEvent(son);
+    aFuntool::fputs_stdout("\n");
+}
+
+class Func1 : public aFunrt::Function {
     class CallFunc1 : public CallFunction {
         aFuncode::Code &func_code;
         const aFuncode::Code::ByteCode *call_code;
@@ -27,7 +73,7 @@ class Func1 : public aFuncore::Function {
                 aFuntool::printf_stdout(0, "runFunction No AegCodeList\n");
             else
                 aFuntool::printf_stdout(0, "runFunction : %p\n", acl->begin()->getObject());
-            new aFuncore::ExeActivation(func_code, inter);
+            inter.pushActivation(new aFunrt::ExeActivation(func_code, inter));
         }
 
         ~CallFunc1() override {
@@ -56,12 +102,12 @@ public:
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
                                                                  new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
-        gc_inter.runCode(code);
+        runCode(gc_inter, code);
         progressInterEvent(gc_inter);
     };
 };
 
-class Literaler1 : public aFuncore::Literaler {
+class Literaler1 : public aFunrt::Literaler {
     aFuncode::Code func_code;
 public:
     explicit Literaler1(aFuncore::Inter &inter_) : Object("Data", inter_), func_code{"run-code.aun"} {
@@ -74,11 +120,11 @@ public:
 
     void getObject(const std::string &literal, char prefix, aFuncore::Inter &inter, aFuncore::Activation &) override {
         aFuntool::cout << "Literaler1: " << literal  << "prefix: " << (prefix == aFuntool::NUL ? '-' : prefix) << "\n";
-        new aFuncore::ExeActivation(func_code, inter);
+        inter.pushActivation(new aFunrt::ExeActivation(func_code, inter));
     }
 };
 
-class CBV1 : public aFuncore::CallBackVar {
+class CBV1 : public aFunrt::CallBackVar {
     aFuncode::Code func_code;
 public:
     explicit CBV1(aFuncore::Inter &inter_) : Object("CBV1", inter_), func_code{"run-code.aun"} {
@@ -91,11 +137,11 @@ public:
 
     void callBack(aFuncore::Inter &inter, aFuncore::Activation &) override {
         aFuntool::cout << "CallBackVar callback\n";
-        new aFuncore::ExeActivation(func_code, inter);
+        inter.pushActivation(new aFunrt::ExeActivation(func_code, inter));
     }
 };
 
-class ImportFunction : public aFuncore::Function {
+class ImportFunction : public aFunrt::Function {
     class CallFunc : public CallFunction {
         const aFuncode::Code::ByteCode *call_code;
         aFuncore::Inter &inter;
@@ -107,7 +153,7 @@ class ImportFunction : public aFuncore::Function {
                 code_->getSon() == nullptr ||
                 code_->getSon()->toNext() == nullptr ||
                 code_->getSon()->toNext()->getType() != aFuncode::Code::ByteCode::code_element)
-                throw aFuncore::ArgumentError();
+                throw aFunrt::ArgumentError();
             acl = new std::list<ArgCodeList>;
             import = code_->getSon()->toNext()->getElement();
         }
@@ -121,7 +167,7 @@ class ImportFunction : public aFuncore::Function {
         void runFunction() override {
             auto &stream = inter.getActivation()->getDownStream();
             auto none = new Object("None", inter);
-            stream.pushMessage("NORMAL", new aFuncore::NormalMessage(none));
+            stream.pushMessage("NORMAL", new aFunrt::NormalMessage(none));
             none->delReference();
             aFuntool::cout << "Import " << import << " : " << call_code << "\n";
         }
@@ -147,67 +193,32 @@ public:
     }
 };
 
-void printMessage(const std::string &type, aFuncore::Message *msg, aFuncore::Inter &inter) {
-    if (type == "NORMAL") {
-        auto *msg_ = dynamic_cast<aFuncore::NormalMessage *>(msg);
-        if (msg_ == nullptr)
-            return;
-        aFuntool::printf_stdout(0, "NORMAL: %p\n", msg_->getObject());
-    } else if (type == "ERROR") {
-        auto *msg_ = dynamic_cast<aFuncore::ErrorMessage *>(msg);
-        if (msg_ == nullptr)
-            return;
-        int32_t error_std = 0;
-        aFuntool::printf_stdout(0, "Error TrackBack\n");
-        for (auto &begin: msg_->getTrackBack())
-            aFuntool::printf_stdout(0, "  File \"%s\", line %d\n", begin.path.c_str(), begin.line);
-        aFuntool::printf_stdout(0, "%s: %s\n", msg_->getErrorType().c_str(), msg_->getErrorInfo().c_str());
-    }
-}
-
-void progressInterEvent(aFuncore::Inter &inter) {
-    std::string type;
-    for (auto msg = inter.getOutMessageStream().popFrontMessage(type); msg != nullptr; msg = inter.getOutMessageStream().popFrontMessage(type)) {
-        printMessage(type, msg, inter);
-        delete msg;
-    }
-}
-
-void thread_test(aFuncore::Inter &son) {
-    auto code = aFuncode::Code("run-code.aun");
-    code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
-                                                             new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
-    son.runCode(code);
-    progressInterEvent(son);
-    aFuntool::fputs_stdout("\n");
-}
-
 int Main() {
     aFuncore::Environment env{};
     aFuncore::Inter inter {env};
 
     auto obj = new aFuncore::Object("Object", inter);
-    inter.getProtectVarSpace()->defineVar("test-var", obj);
+    inter.getEnvVarSpace().setObject("test-var", obj);
     aFuntool::cout << "obj: " << obj << "\n";
     obj->delReference();
 
     auto func = new Func1(inter);
-    inter.getProtectVarSpace()->defineVar("test-func", func);
+    inter.getEnvVarSpace().setObject("test-func", func);
     aFuntool::cout << "func: " << func << "\n";
     func->delReference();
 
     auto literaler = new Literaler1(inter);
-    inter.getProtectVarSpace()->defineVar("test-literaler", literaler);
+    inter.getEnvVarSpace().setObject("test-literaler", literaler);
     aFuntool::cout << "literaler: " << literaler << "\n";
     literaler->delReference();
 
     auto cbv = new CBV1(inter);
-    inter.getProtectVarSpace()->defineVar("test-cbv", cbv);
+    inter.getEnvVarSpace().setObject("test-cbv", cbv);
     aFuntool::cout << "cbv: " << cbv << "\n";
     cbv->delReference();
 
     auto import = new ImportFunction(inter);
-    inter.getProtectVarSpace()->defineVar("import", import);
+    inter.getEnvVarSpace().setObject("import", import);
     aFuntool::cout << "import: " << import << "\n";
     import->delReference();
 
@@ -228,7 +239,7 @@ int Main() {
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
                                                                  new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -242,7 +253,7 @@ int Main() {
 
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_c, arg, 0));
 
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -255,7 +266,7 @@ int Main() {
         arg->connect(new aFuncode::Code::ByteCode(code, "test-func", 1));
 
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_b, arg, 0));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -265,7 +276,7 @@ int Main() {
         inter.pushLiteral("data[0-9]", "test-literaler", false);
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "data4", 1));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -274,14 +285,14 @@ int Main() {
         aFuntool::fputs_stdout("Test-5: test-cbv\n");
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "test-cbv", 1));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
 
     {
         aFuntool::fputs_stdout("Test-6: run-function\n");
-        inter.runCode(func);
+        runCode(inter, func);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -295,7 +306,7 @@ int Main() {
 
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_c, arg, 0));
 
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -310,7 +321,7 @@ int Main() {
             auto code = aFuncode::Code("run-code.aun");
             code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
                                                                      new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
-            inter.runCode(code);
+            runCode(inter, code);
             progressInterEvent(inter);
             aFuntool::fputs_stdout("\n");
         }
@@ -323,7 +334,7 @@ int Main() {
         aFuntool::fputs_stdout("Test-a: error not var\n");
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, "test-not-var", 1));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
         aFuntool::fputs_stdout("\n");
     }
@@ -334,7 +345,7 @@ int Main() {
         auto code = aFuncode::Code("run-code.aun");
         code.getByteCode()->connect(new aFuncode::Code::ByteCode(code, aFuncode::Code::ByteCode::block_p,
                                                                  new aFuncode::Code::ByteCode(code, "test-var", 1), 0));
-        inter.runCode(code);
+        runCode(inter, code);
         progressInterEvent(inter);
     }
 

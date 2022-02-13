@@ -1,11 +1,11 @@
-﻿#include "msg.h"
+﻿#include "core-message-stream.h"
 
 int main() {
-    auto *um = new aFuncore::UpMessage(nullptr);
+    auto *um = new aFuncore::UpMessageStream(nullptr);
     um->pushMessage("test-1", new aFuncore::Message());
     std::cout << um->getMessage<aFuncore::Message>("test-1") << std::endl;
 
-    auto *um2 = new aFuncore::UpMessage(um);
+    auto *um2 = new aFuncore::UpMessageStream(um);
     um2->pushMessage("test-2", new aFuncore::Message());
     std::cout << um2->getMessage<aFuncore::Message>("test-1") << std::endl;
     std::cout << um2->getMessage<aFuncore::Message>("test-2") << std::endl;
