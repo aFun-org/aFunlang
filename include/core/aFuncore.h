@@ -5,6 +5,7 @@
 #include "core-message.h"
 #include "core-message-stream.h"
 #include "env-var.h"
+#include "environment.h"
 #include "inter.h"
 #include "object.h"
 #include "core-activation.h"

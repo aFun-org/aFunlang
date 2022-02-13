@@ -3,10 +3,6 @@
 #include "inter.h"
 
 namespace aFuncore {
-    EnvVarSpace &Environment::getEnvVarSpace() {
-        return env_var;
-    }
-
     Environment &Inter::getEnvironment() {
         return env;
     }
