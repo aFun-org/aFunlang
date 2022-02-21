@@ -27,7 +27,8 @@ unset(include_n)
 add_custom_target(hgt ALL)
 add_custom_command(TARGET hgt POST_BUILD
                    COMMAND ${HGT_COMMAND}
-                   COMMENT "The hgt generate file: base")
+                   COMMENT "The hgt generate file: base"
+		   VERBATIM)
 
 execute_process(COMMAND ${HGT_COMMAND}
                 RESULT_VARIABLE re

@@ -31,7 +31,8 @@ macro(set_copy_command target a b)
     add_custom_command(TARGET ${target} POST_BUILD
             COMMAND "${CMAKE_COMMAND}" "-E" "copy_if_different" "${a}" "${b}"
             COMMENT "Copy ${a} to ${b}."
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+	    VERBATIM)
 endmacro()
 
 function(_wi_build_import_inline target run)
