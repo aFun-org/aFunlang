@@ -16,7 +16,7 @@ if (WIN32 AND NOT CYGWIN)  # cygwin 不依赖 dl
             COMMAND ${CMAKE_COMMAND}
                     "${CMAKE_CURRENT_LIST_DIR}/dlfcn-win32"
                     "-DCMAKE_INSTALL_PREFIX:PATH=${dlfcn-win32_ROOT}"
-                    "-G ${CMAKE_GENERATOR}"
+                    "-G" "${CMAKE_GENERATOR}"
             COMMAND ${CMAKE_COMMAND} --build .
             COMMAND ${CMAKE_COMMAND} --install .
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/dlfcn-win32
