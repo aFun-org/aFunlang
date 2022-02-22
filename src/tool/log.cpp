@@ -339,8 +339,8 @@ namespace aFuntool {
 
 #undef trackLog
 
-    int Logger::writeTrackLog(const char *file, int line, const char *func,
-                              const char *format, ...){
+    int Logger::writeTrackLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                              [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...){
 #if aFunWriteTrack
         va_list ap;
         va_start(ap, format);
@@ -350,8 +350,8 @@ namespace aFuntool {
 
 #undef debugLog
 
-    int Logger::writeDebugLog(const char *file, int line, const char *func,
-                              const char *format, ...){
+    int Logger::writeDebugLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                              [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...){
 #if aFunWriteDebug
         va_list ap;
         va_start(ap, format);
@@ -361,8 +361,8 @@ namespace aFuntool {
 
 #undef infoLog
 
-    int Logger::writeInfoLog(const char *file, int line, const char *func,
-                             const char *format, ...){
+    int Logger::writeInfoLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                             [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...){
 #if aFunWriteInfo
         va_list ap;
         va_start(ap, format);
@@ -372,8 +372,8 @@ namespace aFuntool {
 
 #undef warningLog
 
-    int Logger::writeWarningLog(const char *file, int line, const char *func,
-                                const char *format, ...){
+    int Logger::writeWarningLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                                [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...){
 #if !aFunIgnoreWarning
         va_list ap;
         va_start(ap, format);
@@ -383,8 +383,8 @@ namespace aFuntool {
 
 #undef errorLog
 
-    int Logger::writeErrorLog(const char *file, int line, const char *func,
-                              const char *format, ...){
+    int Logger::writeErrorLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                              [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...){
 #if !aFunIgnoreError
         va_list ap;
         va_start(ap, format);
@@ -394,8 +394,9 @@ namespace aFuntool {
 
 #undef sendErrorLog
 
-    int Logger::writeSendErrorLog(const char *file, int line, const char *func,
-                                  const char *format, ...) noexcept(false) {
+    int Logger::writeSendErrorLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                                  [[maybe_unused]] const char *func, [[maybe_unused]] const char *format, ...)
+                                  noexcept(false) {
 #ifndef aFunOFFAllLog
 #if !aFunIgnoreSendError
         va_list ap;
@@ -412,8 +413,9 @@ namespace aFuntool {
 
 #undef fatalErrorLog
 
-    int Logger::writeFatalErrorLog(const char *file, int line, const char *func,
-                                   int exit_code, const char *format, ...) noexcept(false){
+    int Logger::writeFatalErrorLog([[maybe_unused]] const char *file, [[maybe_unused]] int line,
+                                   [[maybe_unused]] const char *func, [[maybe_unused]] int exit_code,
+                                   [[maybe_unused]] const char *format, ...) noexcept(false){
 #ifndef aFunOFFAllLog
 #if !aFunIgnoreFatal
         va_list ap;
