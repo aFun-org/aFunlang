@@ -95,7 +95,9 @@ int main(int argc, char **) {
         bool ret = parser.parserCode(code);
         if (!ret)
             return 1;
-        code.display();
+#ifdef AFUN_DEBUG
+	code.display();
+#endif
         md5_1 = code.getMD5_v1();
         aFuntool::cout << "Code1 md5: %s" << md5_1 << "\n";
     }
@@ -127,7 +129,9 @@ int main(int argc, char **) {
         bool ret = parser.parserCode(code);
         if (!ret)
             return 1;
-        code.display();
+#ifdef AFUN_DEBUG
+	code.display();
+#endif
         md5_2 = code.getMD5_v1();
         aFuntool::cout << "Code2 md5: %s" << md5_2 << "\n";
     }
@@ -144,7 +148,9 @@ int main(int argc, char **) {
         bool ret = parser.parserCode(code);
 
         if (ret) {
-            code.display();
+#ifdef AFUN_DEBUG
+	    code.display();
+#endif
         } else {
             while (parser.countEvent() != 0) {
                 auto event = parser.popEvent();

@@ -11,7 +11,9 @@ int main() {
                                                                           new aFuncode::Code::ByteCode(start,
                                                                                                        "Test3",
                                                                                                        2), 2), 2));
-        start.display();
+#ifdef AFUN_DEBUG
+	start.display();
+#endif
         std::string md5 = start.getMD5_v1();
         printf("md5: %s\n", md5.c_str());
 
@@ -24,7 +26,9 @@ int main() {
         aFuncode::Code start = aFuncode::Code("test.aun");
         start.readByteCode("test.aun");
 
+#ifdef AFUN_DEBUG
         start.display();
+#endif
         std::string md5 = start.getMD5_v1();
         printf("md5: %s\n", md5.c_str());
     }
